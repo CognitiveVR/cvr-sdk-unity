@@ -17,6 +17,13 @@ namespace Cognitive3D
 {
     internal class SceneSetupWindow : EditorWindow
     {
+#if C3D_OCULUS
+        bool wantEyeTrackingEnabled;
+        bool wantPassthroughEnabled;
+        bool wantSocialEnabled;
+        bool wantHandTrackingEnabled;
+#endif
+
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
@@ -164,6 +171,7 @@ namespace Cognitive3D
         GameObject leftcontroller;
         GameObject rightcontroller;
         GameObject mainCameraObject;
+        GameObject trackingSpace;
 
         [System.NonSerialized]
         bool initialPlayerSetup;
@@ -178,6 +186,7 @@ namespace Cognitive3D
             {
                 mainCameraObject = camera.gameObject;
             }
+
             foreach(var dyn in FindObjectsOfType<DynamicObject>())
             {
                 if (dyn.IsController && dyn.IsRight)
@@ -188,6 +197,12 @@ namespace Cognitive3D
                 {
                     leftcontroller = dyn.gameObject;
                 }
+            }
+
+            RoomTrackingSpace trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
+            if (trackingSpaceInScene != null)
+            {
+                trackingSpace = trackingSpaceInScene.gameObject;
             }
 
             if (leftcontroller != null && rightcontroller != null)
@@ -214,6 +229,22 @@ namespace Cognitive3D
                 leftcontroller = manager.leftHandAnchor.gameObject;
                 rightcontroller = manager.rightHandAnchor.gameObject;
             }
+
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+            OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+            if (ovrManager != null)
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                wantEyeTrackingEnabled = (bool)fi.GetValue(ovrManager);
+            }
+            else
+            {
+                wantEyeTrackingEnabled = false;
+                Debug.LogWarning("OVRManager not found in scene!");
+            }
+            wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+            wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+
 #elif C3D_VIVEWAVE
             //TODO investigate if automatically detecting vive wave controllers is possible
 #elif C3D_PICOVR
@@ -252,7 +283,8 @@ namespace Cognitive3D
             }
         }
 
-        bool AllControllerSetupComplete;
+        bool AllSetupComplete;
+
         void ControllerUpdate()
         {
             PlayerSetupStart();
@@ -263,7 +295,7 @@ namespace Cognitive3D
             int hmdRectHeight = 150;
 
             GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
-            if (GUI.Button(new Rect(130, hmdRectHeight, 310, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
+            if (GUI.Button(new Rect(180, hmdRectHeight, 255, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
             {
                 Selection.activeGameObject = mainCameraObject;
             }
@@ -310,11 +342,41 @@ namespace Cognitive3D
                 }
             }
 
+
+            // tracking space
+            int hmdRectHeight2 = 185;
+
+            GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
+            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
+            {
+                Selection.activeGameObject = trackingSpace;
+            }
+
+            int pickerID_HMD2 = 5689467;
+            if (GUI.Button(new Rect(440, hmdRectHeight2, 30, 30), EditorCore.SearchIconWhite))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    trackingSpace, true, "", pickerID_HMD2);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD2)
+                {
+                    trackingSpace = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                }
+            }
+            if (trackingSpace == null)
+            {
+                GUI.Label(new Rect(400, hmdRectHeight2, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
+            }
+
             //controllers
 #if C3D_STEAMVR2
-            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 200, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
+            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
             bool leftControllerIsValid = false;
@@ -323,28 +385,29 @@ namespace Cognitive3D
             leftControllerIsValid = leftcontroller != null;
             rightControllerIsValid = rightcontroller != null;
 
-            AllControllerSetupComplete = false;
+            AllSetupComplete = false;
             if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
             {
                 var rdyn = rightcontroller.GetComponent<DynamicObject>();
                 if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
                 {
                     var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false)
+                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false
+                        && (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() != null)) // Make sure tracking space isn't null before accessing its component
                     {
-                        AllControllerSetupComplete = true;
+                        AllSetupComplete = true;
                     }
                 }
             }
-            int handOffset = 240;
+            int handOffset = 290;
 
             //left hand label
-            GUI.Label(new Rect(30, handOffset + 15, 50, 30), "Left", "boldlabel");
+            GUI.Label(new Rect(30, handOffset + 15, 150, 30), "Left Controller", "boldlabel");
 
             string leftname = "Missing";
             if (leftcontroller != null)
                 leftname = leftcontroller.gameObject.name;
-            if (GUI.Button(new Rect(130, handOffset + 15, 310, 30), leftname, "button_blueoutline"))
+            if (GUI.Button(new Rect(180, handOffset + 15, 255, 30), leftname, "button_blueoutline"))
             {
                 Selection.activeGameObject = leftcontroller;
             }
@@ -371,13 +434,13 @@ namespace Cognitive3D
             }
 
             //right hand label
-            GUI.Label(new Rect(30, handOffset + 50, 50, 30), "Right", "boldlabel");
+            GUI.Label(new Rect(30, handOffset + 50, 150, 30), "Right Controller", "boldlabel");
 
             string rightname = "Missing";
             if (rightcontroller != null)
                 rightname = rightcontroller.gameObject.name;
 
-            if (GUI.Button(new Rect(130, handOffset + 50, 310, 30), rightname, "button_blueoutline"))
+            if (GUI.Button(new Rect(180, handOffset + 50, 255, 30), rightname, "button_blueoutline"))
             {
                 Selection.activeGameObject = rightcontroller;
             }
@@ -404,7 +467,7 @@ namespace Cognitive3D
             }
 
             //drag and drop
-            if (new Rect(30, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
+            if (new Rect(180, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -412,7 +475,7 @@ namespace Cognitive3D
                     rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
-            else if (new Rect(30, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
+            else if (new Rect(180, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -420,7 +483,7 @@ namespace Cognitive3D
                     leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
-            else if (new Rect(30, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
+            else if (new Rect(180, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
             {
                 DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                 if (Event.current.type == EventType.DragPerform)
@@ -428,27 +491,40 @@ namespace Cognitive3D
                     mainCameraObject = (GameObject)DragAndDrop.objectReferences[0];
                 }
             }
+            else if (new Rect(180, hmdRectHeight2, 440, 30).Contains(Event.current.mousePosition)) // trackingSpace
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    trackingSpace = (GameObject)DragAndDrop.objectReferences[0];
+                }
+            }
 
-            if (GUI.Button(new Rect(150, 340, 200, 30), new GUIContent("Setup Controller GameObjects","Attach Dynamic Object components to the controllers and configures them to record button inputs")))
+            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
+                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
+                {
+                    trackingSpace.AddComponent<RoomTrackingSpace>();
+                }
+
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
             }
 
-            if (AllControllerSetupComplete)
+            if (AllSetupComplete)
             {
-                GUI.Label(new Rect(120, 340, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 400, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(118, 340, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 400, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
             //generate default input file if it doesn't already exist
             bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
-            if (GUI.Button(new Rect(150, 380, 200, 30), "Append Input Bindings"))
+            if (GUI.Button(new Rect(160, 450, 200, 30), "Append Input Bindings"))
             {
                 if (SteamVR_Input.actionFile == null)
                 {
@@ -472,11 +548,11 @@ namespace Cognitive3D
             }
             if (DoesC3DInputActionSetExist())
             {
-                GUI.Label(new Rect(120, 380, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 450, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(118, 380, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 450, 32, 32), EditorCore.Alert, "image_centered");
             }
 #endif
         }
@@ -576,118 +652,226 @@ namespace Cognitive3D
 #if C3D_OCULUS
 
             GUI.Label(steptitlerect, "ADDITIONAL OCULUS SETUP", "steptitle");
-            var eyeManager = Object.FindObjectOfType<OVRFaceExpressions>();
-            bool eyeManagerExists = eyeManager != null;
+            GUI.Label(new Rect(30, 40, 440, 440), "Please select the additional Oculus features you would like to include:", "normallabel");
 
-            GUI.Label(new Rect(30, 30, 440, 440), "If you are using the Eye Tracking feature, the scene needs an OVRFaceExpressions component, which doesn't exist by default." +
-    "\n\nUse the button below to add a OVRFaceExpression component to the scene if it does not already exist." +
-    "\n\nIf you are not using the Eye Tracking feature, you can skip this step.", "normallabel");
+            // Social Data
+            GUI.Label(new Rect(140, 120, 440, 440), "Oculus Social Data*", "normallabel");
+            Rect infoRect = new Rect(320, 115, 30, 30);
+            GUI.Label(infoRect, new GUIContent(EditorCore.Info, "Records user Oculus ID, username, and party size."), "image_centered");
 
-            //button to create new gameobject with component
-            if (GUI.Button(new Rect(150, 220, 200, 30), "Create OVRFaceExpression"))
-            {
-                if (eyeManager == null)
-                {
-                    var m_EyeManager = new GameObject("OVRFaceExpressions");
-                    m_EyeManager.AddComponent<OVRFaceExpressions>();
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-                    eyeManagerExists = true;
-                } 
-            }
+            Rect checkboxRect = new Rect(105, 115, 30, 30);
 
-            //a checkmark if the component already exists
-            if (eyeManagerExists == false)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 220, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 220, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-
-
-            //eye tracking support
-            if (GUI.Button(new Rect(150, 260, 200, 30), "Enable Eye Tracking Support"))
-            {
-                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
-                var ovrManager = Object.FindObjectOfType<OVRManager>();
-                if (ovrManager != null)
-                {
-                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                    fi.SetValue(ovrManager, true);
-                    EditorUtility.SetDirty(ovrManager);
-                }
-            }
-            if (OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 260, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 260, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-
-            //face tracking support
-            if (GUI.Button(new Rect(150, 300, 200, 30), "Enable Face Tracking Support"))
-            {
-                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
-                var ovrManager = Object.FindObjectOfType<OVRManager>();
-                if (ovrManager != null)
-                {
-                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                    fi.SetValue(ovrManager,true);
-                    EditorUtility.SetDirty(ovrManager);
-                }
-            }
-            if (OVRProjectConfig.CachedProjectConfig.faceTrackingSupport != OVRProjectConfig.FeatureSupport.Required)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 300, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 300, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-
-            GUI.Label(new Rect(30, 380, 440, 440), "Toggle additional features", "normallabel");
-            GUI.Label(new Rect(110, 410, 440, 440), "Enable collection of Oculus Social Data*", "normallabel");
-            GUI.Label(new Rect(20, 470, 440, 440), "*Recommended for publishing to the Meta App Store", "caption");
-            Rect infoRect = new Rect(420, 405, 30, 30);
-
-            if (GUI.Button(infoRect, EditorCore.Info, "image_centered"))
-            {
-                Application.OpenURL("https://docs.cognitive3d.com/unity/components/#oculus-social-data");
-            }
-
-            Rect checkboxRect = new Rect(80, 405, 30, 30);
-            if (Cognitive3D_Manager.Instance.GetComponent<OculusSocial>())
+            if (wantSocialEnabled)
             {
                 if (GUI.Button(checkboxRect, EditorCore.BoxCheckmark, "image_centered"))
                 {
-                    DestroyImmediate(Cognitive3D_Manager.Instance.GetComponent<OculusSocial>());
+                    wantSocialEnabled = false;
                 }
             }
             else
             {
                 if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
                 {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
+                    wantSocialEnabled = true;
                 }
             }
 
+
+            // Mixed Reality
+            GUI.Label(new Rect(140, 175, 440, 440), "Mixed Reality", "normallabel");
+            Rect infoRect2 = new Rect(320, 170, 30, 30);
+            GUI.Label(infoRect2, new GUIContent(EditorCore.Info, "Records if/when passthrough cameras are enabled."), "image_centered");
+            Rect checkboxRect2 = new Rect(105, 170, 30, 30);
+            if (wantPassthroughEnabled)
+            {
+                if (GUI.Button(checkboxRect2, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantPassthroughEnabled = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect2, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantPassthroughEnabled = true;
+                }
+            }
+
+            // Eye Tracking
+            GUI.Label(new Rect(140, 230, 440, 440), "Quest Pro Eyetracking", "normallabel");
+            Rect infoRect3 = new Rect(320, 225, 30, 30);
+            GUI.Label(infoRect3, new GUIContent(EditorCore.Info, "Enables eyetracking for more accurate understanding of user attention. Currently this requires the OVRFaceExpressions component, which will be added automatically."), "image_centered");
+
+            Rect checkboxRect3 = new Rect(105, 225, 30, 30);
+            if (wantEyeTrackingEnabled)
+            {
+                if (GUI.Button(checkboxRect3, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantEyeTrackingEnabled = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect3, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantEyeTrackingEnabled = true;
+                }
+            }
+
+            // Hand Tracking
+            GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
+            Rect infoRect4 = new Rect(320, 280, 30, 30);
+            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings ."), "image_centered");
+
+            Rect checkboxRect4 = new Rect(105, 280, 30, 30);
+            if (wantHandTrackingEnabled)
+            {
+                if (GUI.Button(checkboxRect4, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantHandTrackingEnabled = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantHandTrackingEnabled = true;
+                }
+            }
+
+            // Footer
+            GUI.Label(new Rect(20, 460, 440, 440), "*Recommended for publishing to the Meta App Store", "caption");
 #else
             currentPage++;
 #endif
         }
 
+#if C3D_OCULUS
+        void ApplyOculusSettings()
+        {
+            if (wantEyeTrackingEnabled)
+            {
+                SetEyeTrackingState(true);
+            }
+            else
+            {
+                //face expressions component isn't destroyed and face tracking permissions aren't reset
+                //we don't know if developers are using these features themselves, so it is safer to leave them how they are rather than destroy everything
+            }
+            if (wantPassthroughEnabled)
+            {
+                var passthrough = FindObjectOfType<OculusPassthrough>();
+                if (passthrough == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusPassthrough>();
+                }
+            }
+            else
+            {
+                var passthrough = FindObjectOfType<OculusPassthrough>();
+                if (passthrough != null)
+                {
+                    DestroyImmediate(passthrough);
+                }
+            }
+            if (wantSocialEnabled)
+            {
+                var social = FindObjectOfType<OculusSocial>();
+                if (social == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
+                }
+            }
+            else
+            {
+                var social = FindObjectOfType<OculusSocial>();
+                if (social != null)
+                {
+                    DestroyImmediate(social);
+                }
+            }
+            if (wantHandTrackingEnabled)
+            {
+                var hand = FindObjectOfType<HandTracking>();
+                if (hand == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<HandTracking>();
+                }
+            }
+            else
+            {
+                var hand = FindObjectOfType<HandTracking>();
+                if (hand != null)
+                {
+                    DestroyImmediate(hand);
+                }
+            }
+
+        }   
+#endif
+
+#if C3D_OCULUS
+
+        void SetEyeTrackingState(bool state)
+        {
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+
+            if (state)
+            {
+                // Enable Eye Tracking
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.Required;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions == null)
+                {
+                    // Face Expressions
+                    var m_EyeManager = new GameObject("OVRFaceExpressions");
+                    m_EyeManager.AddComponent<OVRFaceExpressions>();
+                }
+
+                // Face Tracking
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.None;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, true);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+            else
+            {
+                // Disable Eye Tracking
+                OVRProjectConfig.CachedProjectConfig.eyeTrackingSupport = OVRProjectConfig.FeatureSupport.None;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, false);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+
+                // Destroy Face Expressions component
+                if (GameObject.FindObjectOfType<OVRFaceExpressions>())
+                {
+                    DestroyImmediate(GameObject.FindObjectOfType<OVRFaceExpressions>());
+                }
+
+                // Face Tracking
+                OVRProjectConfig.CachedProjectConfig.faceTrackingSupport = OVRProjectConfig.FeatureSupport.None;
+                if (ovrManager != null)
+                {
+                    var fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    fi.SetValue(ovrManager, false);
+                    EditorUtility.SetDirty(ovrManager);
+                }
+            }
+        }
+#endif
 
         Texture2D isoSceneImage;
 
@@ -756,11 +940,11 @@ namespace Cognitive3D
                 ExportUtility.ExportGLTFScene();
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                string objPath = EditorCore.GetSubDirectoryPath(fullName);
-                string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
-                System.IO.File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+                string path = EditorCore.GetSubDirectoryPath(fullName);
 
-                DebugInformationWindow.WriteDebugToFile(objPath + "debug.log");
+                ExportUtility.GenerateSettingsFile(path, fullName);
+
+                DebugInformationWindow.WriteDebugToFile(path + "debug.log");
                 EditorUtility.SetDirty(EditorCore.GetPreferences());
 
                 UnityEditor.AssetDatabase.SaveAssets();
@@ -1044,8 +1228,8 @@ namespace Cognitive3D
                     break;
                 case Page.PlayerSetup:
 #if C3D_STEAMVR2
-                    appearDisabled = !AllControllerSetupComplete;
-                    if (!AllControllerSetupComplete)
+                    appearDisabled = !AllSetupComplete;
+                    if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {
@@ -1065,8 +1249,8 @@ namespace Cognitive3D
                     }
 
 #else
-                    appearDisabled = !AllControllerSetupComplete;
-                    if (!AllControllerSetupComplete)
+                    appearDisabled = !AllSetupComplete;
+                    if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {
@@ -1077,6 +1261,9 @@ namespace Cognitive3D
                     onclick += () => { numberOfLightsInScene = FindObjectsOfType<Light>().Length; };
                     break;
                 case Page.QuestProSetup:
+#if C3D_OCULUS
+                    onclick += () => ApplyOculusSettings();
+#endif
                     break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
@@ -1108,8 +1295,8 @@ namespace Cognitive3D
                         {
                             //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
                             AggregationManifest manifest = new AggregationManifest();
-                            DynamicObjectsWindow.AddOrReplaceDynamic(manifest, GetDynamicObjectsInScene());
-                            DynamicObjectsWindow.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                            manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
+                            EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
                         }
                         else
                         {

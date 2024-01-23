@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/HMD Height")]
     public class HMDHeight : AnalyticsComponentBase
     {

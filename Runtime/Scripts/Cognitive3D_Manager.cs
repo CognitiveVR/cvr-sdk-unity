@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.3.8";
+        public static readonly string SDK_VERSION = "1.4.2";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -55,10 +55,10 @@ namespace Cognitive3D
         [Tooltip("Delay before starting a session. This delay can ensure other SDKs have properly initialized")]
         public float StartupDelayTime = 0;
 
-        [Tooltip("Send HMD Battery Level on the Start and End of the application")]
-        public bool SendBatteryLevelOnStartAndEnd;
-
         private readonly List<Scene> sceneList = new List<Scene>();
+
+        [HideInInspector]
+        public Transform trackingSpace;
 
         /// <summary>
         /// sets instance of Cognitive3D_Manager
@@ -212,12 +212,6 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
             CustomEvent startEvent = new CustomEvent("c3d.sessionStart");
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-#endif
-            {
-                if (SendBatteryLevelOnStartAndEnd) { startEvent.SetProperty("HMD Battery Level", SystemInfo.batteryLevel * 100); }
-            }
             startEvent.Send();
             playerSnapshotInverval = new WaitForSeconds(Cognitive3D_Preferences.SnapshotInterval);
             automaticSendInterval = new WaitForSeconds(Cognitive3D_Preferences.Instance.AutomaticSendTimer);
@@ -411,6 +405,30 @@ namespace Cognitive3D
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
         }
 
+        public bool TryGetTrackingSpace(out Transform space)
+        {
+            if (trackingSpace != null)
+            {
+                space = trackingSpace;
+                return true;
+            }
+            else
+            {
+                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
+                if (trackingSpaceInScene != null)
+                {
+                    trackingSpace = trackingSpaceInScene.transform;
+                    space = trackingSpaceInScene.transform;
+                    return true;
+                }
+                else
+                {
+                    space = null;
+                    return false;
+                }
+            }
+        }
+
         private void SceneManager_SceneUnloaded(Scene scene)
         {
             if (DoesSceneHaveID(scene))
@@ -529,12 +547,6 @@ namespace Cognitive3D
         {
             if (!IsInitialized) { return; }
             CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-#endif
-            {
-                if (SendBatteryLevelOnStartAndEnd) { pauseEvent.SetProperty("HMD Battery Level", SystemInfo.batteryLevel * 100); }
-            }
             pauseEvent.Send();
             FlushData();
         }

@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Controller Collision Event")]
     public class ControllerCollisionEvent : AnalyticsComponentBase
     {
@@ -27,41 +28,51 @@ namespace Cognitive3D.Components
         Transform tempInfo;
         private void Cognitive3D_Manager_OnTick()
         {
-            bool hit;
-
-            if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand))
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
             {
-                if (GameplayReferences.GetControllerTransform(false,out tempInfo))
+                bool hit;
+
+                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.LeftHand))
                 {
-                    hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
-                    if (hit && !LeftControllerColliding)
+                    if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
-                        LeftControllerColliding = true;
-                        new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "begin").Send();
+                        hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
+                        if (hit && !LeftControllerColliding)
+                        {
+                            LeftControllerColliding = true;
+                            new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "begin").Send();
+                        }
+                        else if (!hit && LeftControllerColliding)
+                        {
+                            new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "end").Send();
+                            LeftControllerColliding = false;
+                        }
                     }
-                    else if (!hit && LeftControllerColliding)
+                }
+                if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand))
+                {
+                    if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
-                        new CustomEvent("cvr.collision").SetProperty("device", "left controller").SetProperty("state", "end").Send();
-                        LeftControllerColliding = false;
+                        hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
+                        if (hit && !RightControllerColliding)
+                        {
+                            RightControllerColliding = true;
+                            new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
+                        }
+                        else if (!hit && RightControllerColliding)
+                        {
+                            new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
+                            RightControllerColliding = false;
+                        }
                     }
                 }
             }
-            if (GameplayReferences.IsInputDeviceValid(UnityEngine.XR.XRNode.RightHand))
+            else
             {
-                if (GameplayReferences.GetControllerTransform(true, out tempInfo))
-                {
-                    hit = Physics.CheckSphere(tempInfo.transform.position, 0.1f, CollisionLayerMask);
-                    if (hit && !RightControllerColliding)
-                    {
-                        RightControllerColliding = true;
-                        new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "begin").Send();
-                    }
-                    else if (!hit && RightControllerColliding)
-                    {
-                        new CustomEvent("cvr.collision").SetProperty("device", "right controller").SetProperty("state", "end").Send();
-                        RightControllerColliding = false;
-                    }
-                }
+                Debug.LogWarning("Controller Collision component is disabled. Please enable in inspector.");
             }
         }
 

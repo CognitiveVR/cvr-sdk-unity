@@ -147,6 +147,7 @@ namespace Cognitive3D
 
         ///x,y,z is width, height, depth
         ///return value is in meters
+        [System.Obsolete]
         public static bool GetRoomSize(ref Vector3 roomSize)
         {
 #if C3D_STEAMVR2
@@ -358,6 +359,20 @@ namespace Cognitive3D
                 controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
                 return controllerDevices[0].isValid;
             }
+        }
+
+        /// <summary>
+        /// Returns whether the left controller is currently tracked.
+        /// Uses InputDevice.TryGetFeatureUsage API
+        /// </summary>
+        /// <param name="hand"> The XRNode; either left hand or right hand</param>
+        /// <returns>True if left controller is tracking; false otherwise</returns>
+        public static bool IsControllerTracking(XRNode hand)
+        {
+            InputDevice controller = InputDevices.GetDeviceAtXRNode(hand);
+            bool isControllerTrackingRef;
+            controller.TryGetFeatureValue(CommonUsages.isTracked, out isControllerTrackingRef);
+            return isControllerTrackingRef;
         }
 
         public static IControllerPointer ControllerPointerLeft;

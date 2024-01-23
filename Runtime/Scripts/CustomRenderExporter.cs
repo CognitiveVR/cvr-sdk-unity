@@ -7,7 +7,7 @@ using UnityEditor;
 
 //TODO mesh combine?
 //TODO submeshes
-//TODO URP support
+//TODO automatic URP support
 
 #if UNITY_EDITOR
 namespace Cognitive3D
@@ -25,8 +25,38 @@ namespace Cognitive3D
             public GameObject tempGameObject;
         }
 
+        public bool LimitRenderVertically = true;
+        public static bool staticLimitVertically;
+        public bool UniversalPipeline;
+
         //return class with texture + material + instance mesh? swap uv2 with uv1
-        public CustomRender RenderMeshCustom()
+        public List<CustomRender> RenderMeshCustom()
+        {
+            staticLimitVertically = LimitRenderVertically;
+            var childMeshRenderers = transform.GetComponentsInChildren<MeshRenderer>();
+
+            List<CustomRender> customRenders = new List<CustomRender>();
+            
+            foreach(var v in childMeshRenderers)
+            {
+                //skip low lods
+                var lodGroup = v.GetComponentInParent<LODGroup>();
+                if (lodGroup != null)
+                {
+                    var lods = lodGroup.GetLODs();
+                    if (!UnityEditor.ArrayUtility.Contains<Renderer>(lods[0].renderers,v))
+                    {
+                        continue;
+                    }
+                }
+                var temp = RenderChild(v.gameObject);
+                if (temp != null)
+                    customRenders.Add(temp);
+            }
+            return customRenders;
+        }
+        
+        public CustomRender RenderChild(GameObject gameObject)
         {
             //should return a mesh and material. should not leave mesh/gameobjects in scene
 
@@ -58,7 +88,9 @@ namespace Cognitive3D
             cr.meshdata = mf.mesh;
             //unwrap uv2 for instance mesh
             if (cr.meshdata.triangles.Length > 0)
+            {
                 Unwrapping.GenerateSecondaryUVSet(cr.meshdata);
+            }
             //set instance mesh as collider
             var tempMeshCollider = uv2copy.AddComponent<MeshCollider>();
 
@@ -68,7 +100,14 @@ namespace Cognitive3D
             var textureOut = RenderCameraToTexture(uv2copy, PixelSamplesPerMeter, OutputResolution, GetInstanceID());
 
             //apply texture and material to meshrenderer
-            cr.material = new Material(Shader.Find("Standard"));
+            if (UniversalPipeline)
+            {
+                cr.material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            }
+            else
+            {
+                cr.material = new Material(Shader.Find("Standard"));
+            }
             cr.material.mainTexture = textureOut;
 
             //copy uv2 to uv
@@ -80,6 +119,9 @@ namespace Cognitive3D
 
             mr.material = cr.material;
             cr.tempGameObject = uv2copy;
+
+            //will be skipped by LOD group, so remove from the parent
+            uv2copy.transform.SetParent(null);
 
             return cr;
         }
@@ -137,6 +179,7 @@ namespace Cognitive3D
 
             generatedUV2Texture = new Texture2D(outputResolution, outputResolution);
             generatedUV2Texture.name = target.name + sourceInstanceId;
+            generatedUV2Texture.name = generatedUV2Texture.name.Replace(':', '_').Replace('#', '_'); //TODO replace this with a utility function to sanitize file names
             Color[] black = new Color[generatedUV2Texture.width * generatedUV2Texture.height];
             generatedUV2Texture.SetPixels(black);
 
@@ -147,12 +190,19 @@ namespace Cognitive3D
 
             float farClipDistance = bounds.size.magnitude;
 
-            SaveDynamicThumbnail(target, position + Vector3.back * zoffset, Quaternion.Euler(0, 0, 180), farClipDistance, ZOrthoScale, "z+", (int)ZcameraResolution, sampleDensity, generatedUV2Texture); //forward
-            SaveDynamicThumbnail(target, position + Vector3.forward * zoffset, Quaternion.Euler(0, 180, 0), farClipDistance, ZOrthoScale, "z-", (int)ZcameraResolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.right * xoffset, Quaternion.Euler(0, -90, 0), farClipDistance, XOrthoScale, "x+", (int)XcameraResolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.left * xoffset, Quaternion.Euler(0, 90, 0), farClipDistance, XOrthoScale, "x-", (int)XcameraResolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.up * yoffset, Quaternion.Euler(90, 0, 180), farClipDistance, YOrthoScale, "y+", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
-            SaveDynamicThumbnail(target, position + Vector3.down * yoffset, Quaternion.Euler(-90, 0, 180), farClipDistance, YOrthoScale, "y-", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
+            if (staticLimitVertically)
+            {
+                SaveDynamicThumbnail(target, position + Vector3.up * yoffset, Quaternion.Euler(90, 0, 180), farClipDistance, YOrthoScale, "y+", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
+            }
+            else
+            {
+                SaveDynamicThumbnail(target, position + Vector3.back * zoffset, Quaternion.Euler(0, 0, 180), farClipDistance, ZOrthoScale, "z+", (int)ZcameraResolution, sampleDensity, generatedUV2Texture); //forward
+                SaveDynamicThumbnail(target, position + Vector3.forward * zoffset, Quaternion.Euler(0, 180, 0), farClipDistance, ZOrthoScale, "z-", (int)ZcameraResolution, sampleDensity, generatedUV2Texture);
+                SaveDynamicThumbnail(target, position + Vector3.right * xoffset, Quaternion.Euler(0, -90, 0), farClipDistance, XOrthoScale, "x+", (int)XcameraResolution, sampleDensity, generatedUV2Texture);
+                SaveDynamicThumbnail(target, position + Vector3.left * xoffset, Quaternion.Euler(0, 90, 0), farClipDistance, XOrthoScale, "x-", (int)XcameraResolution, sampleDensity, generatedUV2Texture);
+                SaveDynamicThumbnail(target, position + Vector3.up * yoffset, Quaternion.Euler(90, 0, 180), farClipDistance, YOrthoScale, "y+", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
+                SaveDynamicThumbnail(target, position + Vector3.down * yoffset, Quaternion.Euler(-90, 0, 180), farClipDistance, YOrthoScale, "y-", (int)YcameraResolution, sampleDensity, generatedUV2Texture);
+            }
 
             Color[] pixels = generatedUV2Texture.GetPixels();
             for (int i = 0; i < pixels.Length; i++)
