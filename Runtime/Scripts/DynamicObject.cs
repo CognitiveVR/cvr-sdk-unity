@@ -183,7 +183,23 @@ namespace Cognitive3D
 
             //if a controller, delay registering the controller until the controller name has returned something valid
             if (IsController)
-            {
+            {            
+                // Special case for hand tracking (particularly when session begins with hand): 
+                    //  need this because InputDevice.isValid returns false
+                    //  and InputDevice.name gives us nothing
+                if (GameplayReferences.handTrackingEnabled)
+                {
+#if C3D_OCULUS
+                    // If starting with hands; use fallback controller
+                    if (GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.Hand)
+                    {
+                        // just quickly look up controller by type, isRight
+                        registerMeshName = SetupFallbackControllerAndReturnName();
+                        return;
+                    }
+#endif
+                }
+
                 GameplayReferences.SetController(this, IsRight);
                 if (IdentifyControllerAtRuntime)
                 {
@@ -204,16 +220,14 @@ namespace Cognitive3D
                             commonDynamicMesh == CommonDynamicMesh.Unknown)
                         {
                             //failed to identify the controller - use the fallback
-                            SetControllerFromFallback(FallbackControllerType, IsRight);
-                            registerMeshName = commonDynamicMesh.ToString();
+                            registerMeshName = SetupFallbackControllerAndReturnName();
                         }
                     }
                 }
                 else
                 {
                     //just quickly look up controller by type, isRight
-                    SetControllerFromFallback(FallbackControllerType, IsRight);
-                    registerMeshName = commonDynamicMesh.ToString();
+                    registerMeshName = SetupFallbackControllerAndReturnName();
                 }
             }
 
@@ -259,6 +273,12 @@ namespace Cognitive3D
             }
             mesh = commonDynamicMesh;
             display = controllerDisplayType;
+        }
+
+        private string SetupFallbackControllerAndReturnName()
+        {
+            SetControllerFromFallback(FallbackControllerType, IsRight);
+            return commonDynamicMesh.ToString();
         }
 
         //sets the class variables from the fallback controller type

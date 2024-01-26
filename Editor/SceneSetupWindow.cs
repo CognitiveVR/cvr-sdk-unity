@@ -796,6 +796,7 @@ namespace Cognitive3D
                 if (hand == null)
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<HandTracking>();
+                    GameplayReferences.handTrackingEnabled = true;
                 }
             }
             else

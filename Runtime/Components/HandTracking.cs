@@ -7,26 +7,17 @@ namespace Cognitive3D.Components
     public class HandTracking : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-        /// <summary>
-        /// Represents participant is using hands, controller, or neither
-        /// </summary>
-        private enum TrackingType
-        {
-            None = 0,
-            Controller = 1,
-            Hand = 2
-        }
 
         private readonly float HandTrackingSendInterval = 1;
         private float currentTime = 0;
 
-        private TrackingType lastTrackedDevice = TrackingType.None;
+        private GameplayReferences.TrackingType lastTrackedDevice = GameplayReferences.TrackingType.None;
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            lastTrackedDevice = GetCurrentTrackedDevice();
-            Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
+            lastTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+            Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", GameplayReferences.handTrackingEnabled);
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
         }
@@ -43,9 +34,8 @@ namespace Cognitive3D.Components
                 if (currentTime > HandTrackingSendInterval)
                 {
                     currentTime = 0;
-                    var currentTrackedDevice = GetCurrentTrackedDevice();
+                    var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
                     CaptureHandTrackingEvents(currentTrackedDevice);
-                    SensorRecorder.RecordDataPoint("c3d.input.tracking", (int)currentTrackedDevice);
                 }
             }
             else
@@ -55,32 +45,9 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Gets the current tracked device i.e. hand or controller
-        /// </summary>
-        /// <returns> Enum representing whether user is using hand or controller or neither </returns>
-        TrackingType GetCurrentTrackedDevice()
-        {
-            var currentTrackedDevice = OVRInput.GetActiveController();
-            if (currentTrackedDevice == OVRInput.Controller.None)
-            {
-                return TrackingType.None;
-            }
-            else if (currentTrackedDevice == OVRInput.Controller.Hands
-                || currentTrackedDevice == OVRInput.Controller.LHand
-                || currentTrackedDevice == OVRInput.Controller.RHand)
-            {
-                return TrackingType.Hand;
-            }
-            else
-            {
-                return TrackingType.Controller;
-            }
-        }
-
-        /// <summary>
         /// Captures any change in input device from hand to controller to none or vice versa
         /// </summary>
-        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
+        void CaptureHandTrackingEvents(GameplayReferences.TrackingType currentTrackedDevice)
         {
             if (lastTrackedDevice != currentTrackedDevice)
             {
