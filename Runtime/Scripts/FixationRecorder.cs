@@ -35,6 +35,7 @@ namespace Cognitive3D
         private static MagicLeapInputs mlInputs;
         private static MagicLeapInputs.EyesActions eyesActions;
         static bool DoneInit;
+        private static UnityEngine.XR.InputDevice eyesDevice;
 
         static void InitCheck()
         {
@@ -55,10 +56,30 @@ namespace Cognitive3D
             if (DoneInit == false)
                 InitCheck();
 
+            //when this is enabled, doesn't seem like any eye tracking happens. possibly some input isn't finding the device or the eye state correctly
+            //confidence
+            //if (!eyesDevice.isValid)
+            //{
+            //    eyesDevice = UnityEngine.XR.MagicLeap.InputSubsystem.Utils.FindMagicLeapDevice(UnityEngine.XR.InputDeviceCharacteristics.EyeTracking /|/ UnityEngine.XR.InputDeviceCharacteristics.TrackedDevice);
+            //    return false;
+            //}
+            //bool GetEyeTrackingState = UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.TryGetEyeTrackingState(eyesDevice, out var trackingState);
+            //
+            //if (GetEyeTrackingState == false)
+            //{
+            //    return false;
+            //}
+            //
+            //if (trackingState.FixationConfidence < 0.25f)
+            //{
+            //    //exit if really low eye tracking confidence
+            //    return false;
+            //}
+
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
 
             //World Gaze Ray
-            Vector3 worldPosition = Camera.main.transform.position;
+            Vector3 worldPosition = GameplayReferences.HMD.position;
             Vector3 worldDirection = (eyes.fixationPoint - worldPosition).normalized;
 
             ray.origin = worldPosition;
@@ -69,11 +90,15 @@ namespace Cognitive3D
 
         bool LeftEyeOpen()
         {
+            //hack. should debug these eye openness values
+            return true;
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
             return eyes.leftEyeOpenAmount > 0.5f;
         }
         bool RightEyeOpen()
         {
+            //hack. should debug these eye openness values
+            return true;
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
             return eyes.rightEyeOpenAmount > 0.5f;
         }

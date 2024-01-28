@@ -6,7 +6,6 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Hand Tracking")]
     public class HandTracking : AnalyticsComponentBase
     {
-#if C3D_OCULUS
         /// <summary>
         /// Represents participant is using hands, controller, or neither
         /// </summary>
@@ -16,9 +15,92 @@ namespace Cognitive3D.Components
             Controller = 1,
             Hand = 2
         }
-
         private TrackingType lastTrackedDevice = TrackingType.None;
 
+        /// <summary>
+        /// Captures any change in input device from hand to controller to none or vice versa
+        /// </summary>
+        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
+        {
+            if (lastTrackedDevice != currentTrackedDevice)
+            {
+                new CustomEvent("c3d.input.tracking.changed")
+                    .SetProperty("Previously Tracking", lastTrackedDevice)
+                    .SetProperty("Now Tracking", currentTrackedDevice)
+                    .Send();
+                lastTrackedDevice = currentTrackedDevice;
+            }
+        }
+
+#if C3D_MAGICLEAP2
+        protected override void OnSessionBegin()
+        {
+            base.OnSessionBegin();
+            // HAND_TRACKING is a normal permission, so we don't request it at runtime. It is auto-granted if included in the app manifest.
+            // If it's missing from the manifest, the permission is not available.
+            if (UnityEngine.XR.MagicLeap.MLPermissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking).IsOk)
+            {
+                //Start Hand Tracking
+                UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.MLHandTracking.StartTracking();
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
+                Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            }
+        }
+
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
+            {
+                var currentHandTrackingType = GetMagicLeapTrackingType();
+                CaptureHandTrackingEvents(currentHandTrackingType);
+            }
+            else
+            {
+                Debug.LogWarning("Hand Tracking component is disabled. Please enable in inspector.");
+            }
+        }
+
+        UnityEngine.XR.InputDevice leftHandDevice;
+        UnityEngine.XR.InputDevice rightHandDevice;
+        UnityEngine.XR.InputDevice controllerDevice;
+        TrackingType GetMagicLeapTrackingType()
+        {
+            if (UnityEngine.XR.MagicLeap.MLPermissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking).IsOk)
+            {
+                if (!leftHandDevice.isValid || !rightHandDevice.isValid)
+                {
+                    leftHandDevice = UnityEngine.XR.MagicLeap.InputSubsystem.Utils.FindMagicLeapDevice(UnityEngine.XR.InputDeviceCharacteristics.HandTracking | UnityEngine.XR.InputDeviceCharacteristics.Left);
+                    rightHandDevice = UnityEngine.XR.MagicLeap.InputSubsystem.Utils.FindMagicLeapDevice(UnityEngine.XR.InputDeviceCharacteristics.HandTracking | UnityEngine.XR.InputDeviceCharacteristics.Right);
+                }
+                if (leftHandDevice.isValid || rightHandDevice.isValid)
+                {
+                    return TrackingType.Hand;
+                }
+            }
+
+            if (!controllerDevice.isValid)
+            {
+                controllerDevice = UnityEngine.XR.MagicLeap.InputSubsystem.Utils.FindMagicLeapDevice(UnityEngine.XR.InputDeviceCharacteristics.Controller);
+            }
+            if (controllerDevice.isValid)
+            {
+                return TrackingType.Controller;
+            }
+            return TrackingType.None;
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+#endif
+
+#if C3D_OCULUS
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -34,7 +116,8 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                CaptureHandTrackingEvents();
+                var currentTrackedDevice = GetCurrentTrackedDevice();
+                CaptureHandTrackingEvents(currentTrackedDevice);
             }
             else
             {
@@ -65,22 +148,6 @@ namespace Cognitive3D.Components
             }
         }
 
-        /// <summary>
-        /// Captures any change in input device from hand to controller to none or vice versa
-        /// </summary>
-        void CaptureHandTrackingEvents()
-        {
-            var currentTrackedDevice = GetCurrentTrackedDevice();
-            if (lastTrackedDevice != currentTrackedDevice)
-            {
-                new CustomEvent("c3d.input.tracking.changed")
-                    .SetProperty("Previously Tracking", lastTrackedDevice)
-                    .SetProperty("Now Tracking", currentTrackedDevice)
-                    .Send();
-                lastTrackedDevice = currentTrackedDevice;
-            }
-        }
-
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
@@ -91,7 +158,7 @@ namespace Cognitive3D.Components
         #region Inspector Utils
         public override bool GetWarning()
         {
-#if C3D_OCULUS
+#if C3D_OCULUS || C3D_MAGICLEAP2
             return false;
 #else
             return true;
@@ -100,7 +167,7 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-#if C3D_OCULUS
+#if C3D_OCULUS || C3D_MAGICLEAP2
             return "Collects and sends data pertaining to Hand Tracking";
 #else
             return "This component can only be used on the Oculus platform";

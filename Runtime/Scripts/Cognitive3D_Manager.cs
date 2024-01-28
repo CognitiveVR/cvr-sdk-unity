@@ -311,7 +311,13 @@ namespace Cognitive3D
         SetSessionProperty("c3d.device.eyetracking.type","None");
         SetSessionProperty("c3d.app.sdktype", "Vive");
 #endif
+#if C3D_MAGICLEAP2
+            //other SDKs may use steamvr as a base or for controllers (ex, hp omnicept). this may be replaced below
+            bool hasEyeTrackingPermission = UnityEngine.XR.MagicLeap.MLPermissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking).IsOk;
 
+            SetSessionProperty("c3d.device.eyetracking.enabled", hasEyeTrackingPermission);
+            SetSessionProperty("c3d.app.sdktype", "Magic Leap ML SDK");
+#endif
 #if C3D_OCULUS
         SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
         SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
