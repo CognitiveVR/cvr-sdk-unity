@@ -128,6 +128,8 @@ namespace Cognitive3D
         /// <summary>
         /// get the raw gaze direction in world space. includes eye tracking. returns previous direction if currently invalid
         /// </summary>
+        
+        [System.Obsolete]
         protected Vector3 GetWorldGazeDirection()
         {
 #if C3D_SRANIPAL
@@ -187,6 +189,7 @@ namespace Cognitive3D
         /// <summary>
         /// get the position of the eye gaze in normalized viewport space
         /// </summary>
+        [System.Obsolete]
         protected Vector3 GetViewportGazePoint()
         {
             Vector2 screenGazePoint = new Vector2(0.5f, 0.5f);

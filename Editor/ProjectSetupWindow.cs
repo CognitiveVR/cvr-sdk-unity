@@ -394,6 +394,9 @@ namespace Cognitive3D
 #if C3D_MRTK
             selectedsdks.Add("C3D_MRTK");
 #endif
+#if C3D_MAGICLEAP2
+                selectedsdks.Add("C3D_MAGICLEAP2");
+#endif
             }
 
             //C3D_Default doesn't enable or change any behaviour - only used in scene setup window and written to define symbols for debugging purposes
@@ -430,6 +433,7 @@ namespace Cognitive3D
             new SDKDefine("Vive Wave 5.0.2","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
             new SDKDefine("Pico Unity XR Platform 2.1.3","C3D_PICOXR", "Adds Eye Tracking for Pico Neo 3 Eye" ),
             new SDKDefine("MRTK 2.5.4","C3D_MRTK", "Adds Eye Tracking for Hololens 2" ),
+            new SDKDefine("Magic Leap 2 ML SDK","C3D_MAGICLEAP", "Adds Eye Tracking for Magic Leap 2" ),
             new SDKDefine("Windows Mixed Reality XR","C3D_WINDOWSMR", "Deprecated. Select 'Default'" ), //legacy
             new SDKDefine("Varjo VR","C3D_VARJOVR", "Prefer to upgrade to Varjo XR instead" ), //legacy
             new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR", "Prefer to upgrade to Pico XR instead" ), //legacy
@@ -456,6 +460,12 @@ namespace Cognitive3D
                     DisplayRecommendationPopup("C3D_VIVEWAVE", "Vive Wave Package");
                     return;
                 }
+                if (package.name == "com.unity.xr.magicleap")
+                {
+                    DisplayRecommendationPopup("C3D_MAGICLEAP2", "Magic Leap Package");
+                    return;
+                }
+
             }
 
             //specific assets

@@ -29,7 +29,72 @@ namespace Cognitive3D
         }
 
         #region EyeTracker
-#if C3D_PICOVR
+#if C3D_MAGICLEAP2
+        const int CachedEyeCaptures = 120;
+        
+        private static MagicLeapInputs mlInputs;
+        private static MagicLeapInputs.EyesActions eyesActions;
+        static bool DoneInit;
+
+        static void InitCheck()
+        {
+            UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.MLEyes.StartTracking();
+            // Initialize Magic Leap inputs to capture input data
+            mlInputs = new MagicLeapInputs();
+            mlInputs.Enable();
+
+            // Initialize Eyes Actions using mlInputs
+            eyesActions = new MagicLeapInputs.EyesActions(mlInputs);
+            DoneInit = true;
+        }
+
+        bool CombinedWorldGazeRay(out Ray ray)
+        {
+            ray = new Ray();
+
+            if (DoneInit == false)
+                InitCheck();
+
+            var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
+
+            //World Gaze Ray
+            Vector3 worldPosition = Camera.main.transform.position;
+            Vector3 worldDirection = (eyes.fixationPoint - worldPosition).normalized;
+
+            ray.origin = worldPosition;
+            ray.direction = worldDirection;
+
+            return true;
+        }
+
+        bool LeftEyeOpen()
+        {
+            var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
+            return eyes.leftEyeOpenAmount > 0.5f;
+        }
+        bool RightEyeOpen()
+        {
+            var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
+            return eyes.rightEyeOpenAmount > 0.5f;
+        }
+
+        long EyeCaptureTimestamp()
+        {
+            return (long)(Cognitive3D.Util.Timestamp() * 1000);
+        }
+
+        int lastProcessedFrame;
+        //returns true if there is another data point to work on
+        bool GetNextData()
+        {
+            if (lastProcessedFrame != Time.frameCount)
+            {
+                lastProcessedFrame = Time.frameCount;
+                return true;
+            }
+            return false;
+        }
+#elif C3D_PICOVR
         const int CachedEyeCaptures = 120; //PICO
         Pvr_UnitySDKAPI.EyeTrackingData data = new Pvr_UnitySDKAPI.EyeTrackingData();
         bool CombinedWorldGazeRay(out Ray ray)

@@ -13,7 +13,39 @@ namespace Cognitive3D
         {
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
-#if C3D_SRANIPAL
+#if C3D_MAGICLEAP2
+        private static MagicLeapInputs mlInputs;
+        private static MagicLeapInputs.EyesActions eyesActions;
+        static bool DoneInit;
+
+        static void InitCheck()
+        {
+            UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.MLEyes.StartTracking();
+            // Initialize Magic Leap inputs to capture input data
+            mlInputs = new MagicLeapInputs();
+            mlInputs.Enable();
+
+            // Initialize Eyes Actions using mlInputs
+            eyesActions = new MagicLeapInputs.EyesActions(mlInputs);
+            DoneInit = true;
+        }
+
+        static Vector3 lastDir = Vector3.forward;
+        static Vector3 GetLookDirection()
+        {
+            if (DoneInit == false)
+                InitCheck();
+
+            var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
+
+            //World Gaze Ray
+            Vector3 worldPosition = Camera.main.transform.position;
+            Vector3 worldDirection = (eyes.fixationPoint - worldPosition).normalized;
+
+            lastDir = worldDirection;
+            return lastDir;
+        }
+#elif C3D_SRANIPAL
 
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework framework;
         static ViveSR.anipal.Eye.SRanipal_Eye_Framework.SupportedEyeVersion version;
