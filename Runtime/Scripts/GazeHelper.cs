@@ -39,7 +39,7 @@ namespace Cognitive3D
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
 
             //World Gaze Ray
-            Vector3 worldPosition = Camera.main.transform.position;
+            Vector3 worldPosition = GameplayReferences.HMD.position;
             Vector3 worldDirection = (eyes.fixationPoint - worldPosition).normalized;
 
             lastDir = worldDirection;

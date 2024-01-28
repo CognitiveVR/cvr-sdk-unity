@@ -58,23 +58,23 @@ namespace Cognitive3D
 
             //when this is enabled, doesn't seem like any eye tracking happens. possibly some input isn't finding the device or the eye state correctly
             //confidence
-            //if (!eyesDevice.isValid)
-            //{
-            //    eyesDevice = UnityEngine.XR.MagicLeap.InputSubsystem.Utils.FindMagicLeapDevice(UnityEngine.XR.InputDeviceCharacteristics.EyeTracking /|/ UnityEngine.XR.InputDeviceCharacteristics.TrackedDevice);
-            //    return false;
-            //}
-            //bool GetEyeTrackingState = UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.TryGetEyeTrackingState(eyesDevice, out var trackingState);
-            //
-            //if (GetEyeTrackingState == false)
-            //{
-            //    return false;
-            //}
-            //
-            //if (trackingState.FixationConfidence < 0.25f)
-            //{
-            //    //exit if really low eye tracking confidence
-            //    return false;
-            //}
+            if (!eyesDevice.isValid)
+            {
+                eyesDevice = UnityEngine.XR.MagicLeap.InputSubsystem.Utils.FindMagicLeapDevice(UnityEngine.XR.InputDeviceCharacteristics.EyeTracking | UnityEngine.XR.InputDeviceCharacteristics.TrackedDevice);
+                return false;
+            }
+            bool GetEyeTrackingState = UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.TryGetEyeTrackingState(eyesDevice, out var trackingState);
+            
+            if (GetEyeTrackingState == false)
+            {
+                return false;
+            }
+            
+            if (trackingState.FixationConfidence < 0.25f)
+            {
+                //exit if really low eye tracking confidence
+                return false;
+            }
 
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
 
@@ -84,23 +84,18 @@ namespace Cognitive3D
 
             ray.origin = worldPosition;
             ray.direction = worldDirection;
-
             return true;
         }
 
         bool LeftEyeOpen()
         {
-            //hack. should debug these eye openness values
-            return true;
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
-            return eyes.leftEyeOpenAmount > 0.5f;
+            return eyes.leftEyeOpenAmount > 0.4f;
         }
         bool RightEyeOpen()
         {
-            //hack. should debug these eye openness values
-            return true;
             var eyes = eyesActions.Data.ReadValue<UnityEngine.InputSystem.XR.Eyes>();
-            return eyes.rightEyeOpenAmount > 0.5f;
+            return eyes.rightEyeOpenAmount > 0.4f;
         }
 
         long EyeCaptureTimestamp()
@@ -1012,6 +1007,9 @@ namespace Cognitive3D
         //called by Cognitive3D_Manager when the session is started
         internal void Initialize()
         {
+#if C3D_MAGICLEAP2
+            InitCheck();
+#endif
             if (FocusSizeFromCenter == null) { Reset(); }
 
             IsFixating = false;
@@ -1083,7 +1081,6 @@ namespace Cognitive3D
         void RecordEyeCapture()
         {
             //this should just raycast + bring all the necessary eye data together and pass it into the CoreInterface
-            
 
             //reset all values
             EyeCaptures[index].Discard = false;
@@ -1199,7 +1196,12 @@ namespace Cognitive3D
             RaycastHit hit = new RaycastHit();
             Ray combinedWorldGaze;
             bool validRay = CombinedWorldGazeRay(out combinedWorldGaze);
-            if (!validRay) { hitDynamic = null; world = Vector3.zero; return GazeRaycastResult.Invalid; }
+            if (!validRay)
+            {
+                hitDynamic = null;
+                world = Vector3.zero;
+                return GazeRaycastResult.Invalid;
+            }
             if (Physics.Raycast(combinedWorldGaze, out hit, 1000f, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
             {
                 world = hit.point;
