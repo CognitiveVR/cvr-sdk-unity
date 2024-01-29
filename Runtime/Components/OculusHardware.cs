@@ -87,7 +87,14 @@ namespace Cognitive3D.Components
                 return activeDisplay;
 
             List<XRDisplaySubsystem> displays = new List<XRDisplaySubsystem>();
+
+            // GetSubsystems() doesn't exist for lower versions
+            // https://docs.unity3d.com/ScriptReference/SubsystemManager.GetSubsystems.html
+#if UNITY_2020_2_OR_NEWER
             SubsystemManager.GetSubsystems(displays);
+#else
+            SubsystemManager.GetInstances(displays);
+#endif
 
             foreach (XRDisplaySubsystem xrDisplaySubsystem in displays)
             {
