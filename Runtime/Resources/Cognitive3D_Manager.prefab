@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 921151381915925957}
   - component: {fileID: 921151381915925956}
   - component: {fileID: -3432593393478680526}
+  - component: {fileID: 7954181676180648156}
   m_Layer: 0
   m_Name: Cognitive3D_Manager
   m_TagString: Untagged
@@ -57,7 +58,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BeginSessionAutomatically: 1
   StartupDelayTime: 0
-  SendBatteryLevelOnStartAndEnd: 0
   trackingSpace: {fileID: 0}
 --- !u!114 &921151381915925953
 MonoBehaviour:
@@ -189,5 +189,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f1e98de308138c418e92535604eabe0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7954181676180648156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921151381915925960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5240c51c180d0c44881f9526ebdff87d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
