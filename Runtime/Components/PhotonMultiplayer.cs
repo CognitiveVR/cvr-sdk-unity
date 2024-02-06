@@ -1,6 +1,4 @@
 using Photon.Pun;
-using UnityEngine;
-using Cognitive3D.Components;
 using Photon.Realtime;
 
 namespace Cognitive3D
@@ -25,19 +23,19 @@ namespace Cognitive3D
 
         private void Update()
         {
+            // Currently at 10Hz maybe change it later
+            RecordSensorValues();
+        }
+
+        private void RecordSensorValues()
+        {
             // Time from my device to server and back
             // AKA latency
             int roundTripTimeInMilliseconds = PhotonNetwork.GetPing();
             SensorRecorder.RecordDataPoint("c3d.multiplayer.ping", roundTripTimeInMilliseconds);
-            
-            string punStats = PhotonNetwork.NetworkStatisticsToString();
-            var splitStats = punStats.Split('.');
 
-            foreach (var split in splitStats)
-            {
-                Debug.Log("@@ " + punStats);
-                Debug.Log("@@ Split " + split);
-            }
+            int roundTripTimeVariance = PhotonNetwork.NetworkingClient.LoadBalancingPeer.RoundTripTimeVariance;
+            SensorRecorder.RecordDataPoint("c3d.multiplayer.rttvariance", roundTripTimeVariance);
         }
 
         public override void OnCreatedRoom()
@@ -46,9 +44,10 @@ namespace Cognitive3D
             SetMultiplayerSessionProperties();
             if (PhotonNetwork.CurrentRoom != null && photonRoomName != null)
             {
-                new CustomEvent("Player created room")
+                new CustomEvent("c3d.multiplayer.This player created a new room")
                     .SetProperty("Room name", photonRoomName)
                     .SetProperty("Player ID", playerPhotonActorNumber)
+                    .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                     .Send();
                 GenerateAndSetLobbyIDForAllClients();
             }
@@ -60,9 +59,10 @@ namespace Cognitive3D
             SetMultiplayerSessionProperties();
             if (PhotonNetwork.CurrentRoom != null && photonRoomName != null)
             {
-                new CustomEvent("c3d.multiplayer.Player joined room")
+                new CustomEvent("c3d.multiplayer.This player joined a room")
                     .SetProperty("Room name", photonRoomName)
                     .SetProperty("Player ID", playerPhotonActorNumber)
+                    .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                     .Send();
                 this.photonView.RPC("SendCustomEventOnJoin", RpcTarget.All, playerPhotonActorNumber);
                 this.photonView.RPC("CalculateNumberConnections", RpcTarget.AllBuffered);
@@ -72,22 +72,23 @@ namespace Cognitive3D
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="cause"></param>
         public override void OnLeftRoom()
         {
             base.OnLeftRoom();
-            new CustomEvent("c3d.multiplayer.Player left room")
+            new CustomEvent("c3d.multiplayer.This player left the room")
                 .SetProperty("Room name", photonRoomName)
                 .SetProperty("Player ID", playerPhotonActorNumber)
-                .Send();
-            
+                .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
+                .Send();        
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.maxNumberConnection", maxPlayerPhotonActorConnected);
+            PhotonNetwork.NetworkStatisticsToString();
         }
 
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
-            new CustomEvent("c3d.Other Player left room")
+            new CustomEvent("c3d.multiplayer.A player left this room")
                 .SetProperty("Player actor number", otherPlayer.ActorNumber)
+                .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                 .Send();
         }
 
@@ -98,10 +99,11 @@ namespace Cognitive3D
         public override void OnDisconnected(DisconnectCause cause)
         {
             base.OnDisconnected(cause);
-            new CustomEvent("Player disconnected")
+            new CustomEvent("c3d.multiplayer.This player disconnected")
                 .SetProperty("Room name", photonRoomName)
                 .SetProperty("Player ID", playerPhotonActorNumber)
                 .SetProperty("Disconnect cause", cause)
+                .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                 .Send();
             this.photonView.RPC("SendCustomEventOnDisconnect", RpcTarget.All, playerPhotonActorNumber, cause);
         }
@@ -142,7 +144,6 @@ namespace Cognitive3D
         private void CalculateNumberConnections()
         {
             currentPlayerPhotonActorConnected = PhotonNetwork.CurrentRoom.PlayerCount;
-            
             if (currentPlayerPhotonActorConnected > maxPlayerPhotonActorConnected)
             {
                 maxPlayerPhotonActorConnected = currentPlayerPhotonActorConnected;
@@ -155,26 +156,29 @@ namespace Cognitive3D
         [PunRPC]
         private void SendCustomEventOnJoin(int actorNumber)
         {
-            new CustomEvent("c3d.New player joined room")
+            // Send events only for "other" players
+            if (actorNumber != playerPhotonActorNumber)
+            {
+                new CustomEvent("c3d.multiplayer.A new player joined this room")
                 .SetProperty("Player actor number", actorNumber)
+                .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                 .Send();
-        }
 
-        [PunRPC]
-        private void SendCustomEventOnLeave(int actorNumber)
-        {
-            new CustomEvent("c3d.Player left room")
-                .SetProperty("Player actor number", actorNumber)
-                .Send();
+            }
         }
 
         [PunRPC]
         private void SendCustomEventOnDisconnect(int actorNumber, DisconnectCause cause)
         {
-            new CustomEvent("c3d.Player disconnected")
-                .SetProperty("Player actor number", actorNumber)
-                .SetProperty("Disconnect cause", cause)
-                .Send();
+            // Send events only for "other" players
+            if (actorNumber != playerPhotonActorNumber)
+            {
+                new CustomEvent("c3d.multiplayer.A player got disconnected")
+                    .SetProperty("Player actor number", actorNumber)
+                    .SetProperty("Disconnect cause", cause)
+                    .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
+                    .Send();
+            }
         }
 #endregion
     }
