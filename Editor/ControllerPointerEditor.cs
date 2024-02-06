@@ -23,11 +23,13 @@ namespace Cognitive3D
             foldout = EditorGUILayout.Foldout(foldout, "Advanced");
             if (foldout)
             {
+                var pointerMaterial = serializedObject.FindProperty("DefaultPointerMat");
                 var displayRenderer = serializedObject.FindProperty("DisplayLineRenderer");
                 var lineOverride = serializedObject.FindProperty("LineRendererOverride");
 
                 EditorGUILayout.PropertyField(displayRenderer, new GUIContent("Display Line Renderer"));
                 EditorGUILayout.PropertyField(lineOverride, new GUIContent("Line Renderer Override"));
+                EditorGUILayout.PropertyField(pointerMaterial, new GUIContent("Default Pointer Material"));
 
                 serializedObject.ApplyModifiedProperties();
                 serializedObject.Update();
