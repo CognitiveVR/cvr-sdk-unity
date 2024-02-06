@@ -60,7 +60,7 @@ namespace Cognitive3D
             SetMultiplayerSessionProperties();
             if (PhotonNetwork.CurrentRoom != null && photonRoomName != null)
             {
-                new CustomEvent("Player joined room")
+                new CustomEvent("c3d.multiplayer.Player joined room")
                     .SetProperty("Room name", photonRoomName)
                     .SetProperty("Player ID", playerPhotonActorNumber)
                     .Send();
@@ -76,8 +76,7 @@ namespace Cognitive3D
         public override void OnLeftRoom()
         {
             base.OnLeftRoom();
-
-            new CustomEvent("Player left room")
+            new CustomEvent("c3d.multiplayer.Player left room")
                 .SetProperty("Room name", photonRoomName)
                 .SetProperty("Player ID", playerPhotonActorNumber)
                 .Send();
@@ -113,8 +112,8 @@ namespace Cognitive3D
             photonRoomName = PhotonNetwork.CurrentRoom.Name;
             serverAddress = PhotonNetwork.ServerAddress;
             port = PhotonNetwork.PhotonServerSettings.AppSettings.Port;
-            Cognitive3D_Manager.SetSessionProperty("c3d.Player Photon Actor Number", playerPhotonActorNumber);
-            Cognitive3D_Manager.SetSessionProperty("c3d.Photon Room Name", photonRoomName);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Player Photon Actor Number", playerPhotonActorNumber);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Photon Room Name", photonRoomName);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Photon Server Address", serverAddress);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.port", port);
         }
@@ -136,7 +135,7 @@ namespace Cognitive3D
         private void SetLobbyAndViewID(string lobbyID)
         {
             Cognitive3D_Manager.SetLobbyId(lobbyID);
-            Cognitive3D_Manager.SetSessionProperty("c3d.Photon View ID", this.photonView.ViewID);
+            Cognitive3D_Manager.SetSessionProperty("c3d.muliplayer.Photon View ID", this.photonView.ViewID);
         }
 
         [PunRPC]
