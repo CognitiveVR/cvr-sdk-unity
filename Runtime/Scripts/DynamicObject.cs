@@ -183,7 +183,22 @@ namespace Cognitive3D
 
             //if a controller, delay registering the controller until the controller name has returned something valid
             if (IsController)
-            {
+            {            
+                // Special case for hand tracking (particularly when session begins with hand): 
+                    //  need this because InputDevice.isValid returns false
+                    //  and InputDevice.name gives us nothing
+                if (GameplayReferences.handTrackingEnabled)
+                {
+                    // If starting with hands; use fallback controller
+                    if (GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.Hand)
+                    {
+                        // just quickly look up controller by type, isRight
+                        SetControllerFromFallback(FallbackControllerType, IsRight);
+                        registerMeshName = commonDynamicMesh.ToString();
+                        return;
+                    }
+                }
+
                 GameplayReferences.SetController(this, IsRight);
                 if (IdentifyControllerAtRuntime)
                 {
