@@ -12,8 +12,10 @@ namespace Cognitive3D
     {
         public static bool handTrackingEnabled;
 
+#if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
         static OVRFaceExpressions cachedOVRFaceExpressions;
+#endif
 
         /// <summary>
         /// Represents participant is using hands, controller, or neither
@@ -476,9 +478,9 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
-        #region Location
+#region Location
 
 #if C3D_LOCATION
         /// <summary>
@@ -538,6 +540,6 @@ namespace Cognitive3D
         }
 #endif
 
-        #endregion
+#endregion
     }
 }
