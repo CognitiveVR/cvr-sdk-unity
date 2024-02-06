@@ -21,12 +21,8 @@ GameObject:
   - component: {fileID: 921151381915925957}
   - component: {fileID: 921151381915925956}
   - component: {fileID: -3432593393478680526}
-<<<<<<< Updated upstream
   - component: {fileID: 7954181676180648156}
   - component: {fileID: 4825491094701280868}
-=======
-  - component: {fileID: 7757365397500755829}
->>>>>>> Stashed changes
   m_Layer: 0
   m_Name: Cognitive3D_Manager
   m_TagString: Untagged
@@ -196,11 +192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f1e98de308138c418e92535604eabe0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-<<<<<<< Updated upstream
 --- !u!114 &7954181676180648156
-=======
---- !u!114 &7757365397500755829
->>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -212,7 +204,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5240c51c180d0c44881f9526ebdff87d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-<<<<<<< Updated upstream
 --- !u!114 &4825491094701280868
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -235,5 +226,3 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
-=======
->>>>>>> Stashed changes
