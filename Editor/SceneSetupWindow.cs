@@ -1080,7 +1080,7 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail*", "normallabel");
             }
 
             //upload dynamics
@@ -1111,14 +1111,15 @@ namespace Cognitive3D
                     }
                 }
                 GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
+                GUI.Label(new Rect(200, heightOffset+340, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
             //scene thumbnail preview
-            var thumbnailRect = new Rect(175, heightOffset+130, 150, 150);
+            var thumbnailRect = new Rect(40, heightOffset+130, 420, 180);
             Texture2D savedThumbnail = null;
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(150, heightOffset+280, 200, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset+312, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");

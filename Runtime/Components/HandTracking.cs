@@ -7,7 +7,6 @@ namespace Cognitive3D.Components
     public class HandTracking : AnalyticsComponentBase
     {
 #if C3D_OCULUS
-
         private readonly float HandTrackingSendInterval = 1;
         private float currentTime = 0;
 
@@ -50,6 +49,7 @@ namespace Cognitive3D.Components
         /// </summary>
         void CaptureHandTrackingEvents(GameplayReferences.TrackingType currentTrackedDevice)
         {
+            var currentTrackedDevice = GetCurrentTrackedDevice();
             if (lastTrackedDevice != currentTrackedDevice)
             {
                 new CustomEvent("c3d.input.tracking.changed")
