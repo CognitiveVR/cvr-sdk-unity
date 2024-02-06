@@ -189,7 +189,6 @@ namespace Cognitive3D
                     //  and InputDevice.name gives us nothing
                 if (GameplayReferences.handTrackingEnabled)
                 {
-#if C3D_OCULUS
                     // If starting with hands; use fallback controller
                     if (GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.Hand)
                     {
@@ -197,7 +196,6 @@ namespace Cognitive3D
                         registerMeshName = SetupFallbackControllerAndReturnName();
                         return;
                     }
-#endif
                 }
 
                 GameplayReferences.SetController(this, IsRight);
