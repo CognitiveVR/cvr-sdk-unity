@@ -11,9 +11,10 @@ namespace Cognitive3D
     public static class GameplayReferences
     {
         public static bool handTrackingEnabled;
-
+#if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
         static OVRFaceExpressions cachedOVRFaceExpressions;
+#endif
 
         /// <summary>
         /// Represents participant is using hands, controller, or neither
@@ -31,6 +32,7 @@ namespace Cognitive3D
         /// <returns> Enum representing whether user is using hand or controller or neither </returns>
         public static TrackingType GetCurrentTrackedDevice()
         {
+#if C3D_OCULUS
             var currentTrackedDevice = OVRInput.GetActiveController();
             if (currentTrackedDevice == OVRInput.Controller.None)
             {
@@ -46,6 +48,9 @@ namespace Cognitive3D
             {
                 return TrackingType.Controller;
             }
+#else
+            return TrackingType.Controller;
+#endif
         }
 
         public static bool SDKSupportsEyeTracking
