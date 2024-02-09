@@ -43,13 +43,18 @@ namespace Cognitive3D
             // Get the current state of these components: are they already enabled?
             // This is so the checkbox can accurately display the status of the components instead of defaulting to false
             OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
-            var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            var requestingEyeTracking = fi.GetValue(ovrManager);
-            fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            var requestingFaceTracking = fi.GetValue(ovrManager);
-            var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
-
-            wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+            if (ovrManager != null )
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingEyeTracking = fi.GetValue(ovrManager);
+                fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingFaceTracking = fi.GetValue(ovrManager);
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions != null)
+                {
+                    wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+                }
+            }
             wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
             wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
             wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
