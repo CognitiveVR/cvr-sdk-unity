@@ -39,6 +39,10 @@ namespace Cognitive3D.Components
             {
                 Entitlements.IsUserEntitledToApplication().OnComplete(EntitlementCallback);
             }
+            else
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isUserEntitled", false);
+            }
 
             if (!string.IsNullOrEmpty(appID))
             {
@@ -70,10 +74,12 @@ namespace Cognitive3D.Components
         {
             if (message.IsError) // User failed entitlement check
             {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isUserEntitled", false);
                 Debug.LogError("You are NOT entitled to use this app.");
             }
             else // User passed entitlement check
             {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isUserEntitled", true);
                 // Log the succeeded entitlement check for debugging.
                 Debug.Log("You are entitled to use this app.");
                 Users.GetLoggedInUser().OnComplete(UserCallback);
