@@ -748,9 +748,8 @@ namespace Cognitive3D
             // This is used to create a consistent id from objects which are not in the scene
             // Instead of GUID we are using hash so the ids are always consistent given the object name
 #if C3D_USE_DETERMINISTIC_DYNAMIC_ID
-            string input = MeshName;
             SHA256 mySha256 = SHA256.Create();
-            byte[] myStringInBytes = mySha256.ComputeHash(Encoding.ASCII.GetBytes(input));
+            byte[] myStringInBytes = mySha256.ComputeHash(Encoding.ASCII.GetBytes(MeshName));
             string s = "";
             for (int i = 0; i < myStringInBytes.Length; i++)
             {
