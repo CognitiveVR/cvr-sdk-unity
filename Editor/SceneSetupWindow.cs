@@ -18,10 +18,10 @@ namespace Cognitive3D
     internal class SceneSetupWindow : EditorWindow
     {
 #if C3D_OCULUS
-        bool wantEyeTrackingEnabled;
-        bool wantPassthroughEnabled;
-        bool wantSocialEnabled;
-        bool wantHandTrackingEnabled;
+        static bool wantEyeTrackingEnabled;
+        static bool wantPassthroughEnabled;
+        static bool wantSocialEnabled;
+        static bool wantHandTrackingEnabled;
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
@@ -39,7 +39,28 @@ namespace Cognitive3D
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+#if C3D_OCULUS
+            // Get the current state of these components: are they already enabled?
+            // This is so the checkbox can accurately display the status of the components instead of defaulting to false
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+            if (ovrManager != null )
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingEyeTracking = fi.GetValue(ovrManager);
+                fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingFaceTracking = fi.GetValue(ovrManager);
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions != null)
+                {
+                    wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+                }
+            }
+            wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+            wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+            wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+#endif
         }
+
         internal static void Init(Rect position)
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -1080,7 +1101,7 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail*", "normallabel");
             }
 
             //upload dynamics
@@ -1111,14 +1132,15 @@ namespace Cognitive3D
                     }
                 }
                 GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
+                GUI.Label(new Rect(200, heightOffset+340, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
             //scene thumbnail preview
-            var thumbnailRect = new Rect(175, heightOffset+130, 150, 150);
+            var thumbnailRect = new Rect(40, heightOffset+130, 420, 180);
             Texture2D savedThumbnail = null;
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(150, heightOffset+280, 200, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset+312, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");

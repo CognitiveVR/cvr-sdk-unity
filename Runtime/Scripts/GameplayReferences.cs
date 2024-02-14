@@ -10,10 +10,48 @@ namespace Cognitive3D
 {
     public static class GameplayReferences
     {
+        public static bool handTrackingEnabled;
 #if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
         static OVRFaceExpressions cachedOVRFaceExpressions;
 #endif
+
+        /// <summary>
+        /// Represents participant is using hands, controller, or neither
+        /// </summary>
+        public enum TrackingType
+        {
+            None = 0,
+            Controller = 1,
+            Hand = 2
+        }
+
+        /// <summary>
+        /// Oculus SeGets the current tracked device i.e. hand or controller
+        /// </summary>
+        /// <returns> Enum representing whether user is using hand or controller or neither </returns>
+        public static TrackingType GetCurrentTrackedDevice()
+        {
+#if C3D_OCULUS
+            var currentTrackedDevice = OVRInput.GetActiveController();
+            if (currentTrackedDevice == OVRInput.Controller.None)
+            {
+                return TrackingType.None;
+            }
+            else if (currentTrackedDevice == OVRInput.Controller.Hands
+                || currentTrackedDevice == OVRInput.Controller.LHand
+                || currentTrackedDevice == OVRInput.Controller.RHand)
+            {
+                return TrackingType.Hand;
+            }
+            else
+            {
+                return TrackingType.Controller;
+            }
+#else
+            return TrackingType.Controller;
+#endif
+        }
 
         public static bool SDKSupportsEyeTracking
         {
@@ -359,6 +397,20 @@ namespace Cognitive3D
                 controllerDevices[0] = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
                 return controllerDevices[0].isValid;
             }
+        }
+
+        /// <summary>
+        /// Returns whether the left controller is currently tracked.
+        /// Uses InputDevice.TryGetFeatureUsage API
+        /// </summary>
+        /// <param name="hand"> The XRNode; either left hand or right hand</param>
+        /// <returns>True if left controller is tracking; false otherwise</returns>
+        public static bool IsControllerTracking(XRNode hand)
+        {
+            InputDevice controller = InputDevices.GetDeviceAtXRNode(hand);
+            bool isControllerTrackingRef;
+            controller.TryGetFeatureValue(CommonUsages.isTracked, out isControllerTrackingRef);
+            return isControllerTrackingRef;
         }
 
         public static IControllerPointer ControllerPointerLeft;

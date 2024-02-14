@@ -1275,7 +1275,7 @@ namespace Cognitive3D
         public static RenderTexture GetSceneRenderTexture()
         {
             if (sceneRT == null)
-                sceneRT = new RenderTexture(256, 256, 24);
+                sceneRT = new RenderTexture(1024, 432, 24);
 
             var cameras = SceneView.GetAllSceneCameras();
             if (cameras != null && cameras.Length > 0 && cameras[0] != null)
