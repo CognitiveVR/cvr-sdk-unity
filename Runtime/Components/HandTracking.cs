@@ -17,6 +17,9 @@ namespace Cognitive3D.Components
         }
         private TrackingType lastTrackedDevice = TrackingType.None;
 
+#if C3D_OCULUS
+        private GameplayReferences.TrackingType lastTrackedDevice = GameplayReferences.TrackingType.None;
+
         /// <summary>
         /// Captures any change in input device from hand to controller to none or vice versa
         /// </summary>
@@ -104,7 +107,9 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
+            lastTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+            GameplayReferences.handTrackingEnabled = true; // have to do it here because doing it from scene setup doesn't work
+            Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", GameplayReferences.handTrackingEnabled);
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
         }
@@ -145,6 +150,19 @@ namespace Cognitive3D.Components
             else
             {
                 return TrackingType.Controller;
+			}
+		}
+        /// Captures any change in input device from hand to controller to none or vice versa
+        /// </summary>
+        void CaptureHandTrackingEvents(GameplayReferences.TrackingType currentTrackedDevice)
+        {
+            if (lastTrackedDevice != currentTrackedDevice)
+            {
+                new CustomEvent("c3d.input.tracking.changed")
+                    .SetProperty("Previously Tracking", lastTrackedDevice)
+                    .SetProperty("Now Tracking", currentTrackedDevice)
+                    .Send();
+                lastTrackedDevice = currentTrackedDevice;
             }
         }
 
