@@ -6,34 +6,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Hand Tracking")]
     public class HandTracking : AnalyticsComponentBase
     {
-        /// <summary>
-        /// Represents participant is using hands, controller, or neither
-        /// </summary>
-        private enum TrackingType
-        {
-            None = 0,
-            Controller = 1,
-            Hand = 2
-        }
-        private TrackingType lastTrackedDevice = TrackingType.None;
-
-#if C3D_OCULUS
         private GameplayReferences.TrackingType lastTrackedDevice = GameplayReferences.TrackingType.None;
-
-        /// <summary>
-        /// Captures any change in input device from hand to controller to none or vice versa
-        /// </summary>
-        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
-        {
-            if (lastTrackedDevice != currentTrackedDevice)
-            {
-                new CustomEvent("c3d.input.tracking.changed")
-                    .SetProperty("Previously Tracking", lastTrackedDevice)
-                    .SetProperty("Now Tracking", currentTrackedDevice)
-                    .Send();
-                lastTrackedDevice = currentTrackedDevice;
-            }
-        }
 
 #if C3D_MAGICLEAP2
         protected override void OnSessionBegin()
@@ -104,6 +77,21 @@ namespace Cognitive3D.Components
 #endif
 
 #if C3D_OCULUS
+        /// <summary>
+        /// Captures any change in input device from hand to controller to none or vice versa
+        /// </summary>
+        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
+        {
+            if (lastTrackedDevice != currentTrackedDevice)
+            {
+                new CustomEvent("c3d.input.tracking.changed")
+                    .SetProperty("Previously Tracking", lastTrackedDevice)
+                    .SetProperty("Now Tracking", currentTrackedDevice)
+                    .Send();
+                lastTrackedDevice = currentTrackedDevice;
+            }
+        }
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();

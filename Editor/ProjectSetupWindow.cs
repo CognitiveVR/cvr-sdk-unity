@@ -433,7 +433,7 @@ namespace Cognitive3D
             new SDKDefine("Vive Wave 5.0.2","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
             new SDKDefine("Pico Unity XR Platform 2.1.3","C3D_PICOXR", "Adds Eye Tracking for Pico Neo 3 Eye" ),
             new SDKDefine("MRTK 2.5.4","C3D_MRTK", "Adds Eye Tracking for Hololens 2" ),
-            new SDKDefine("Magic Leap 2 ML SDK","C3D_MAGICLEAP", "Adds Eye Tracking for Magic Leap 2" ),
+            new SDKDefine("Magic Leap 2 ML SDK","C3D_MAGICLEAP2", "Adds Eye Tracking for Magic Leap 2" ),
             new SDKDefine("Windows Mixed Reality XR","C3D_WINDOWSMR", "Deprecated. Select 'Default'" ), //legacy
             new SDKDefine("Varjo VR","C3D_VARJOVR", "Prefer to upgrade to Varjo XR instead" ), //legacy
             new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR", "Prefer to upgrade to Pico XR instead" ), //legacy
@@ -567,7 +567,7 @@ namespace Cognitive3D
                 bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
                 GUIContent content = new GUIContent("  "+SDKNamesDefines[i].Name);
                 float separator = 0;
-                if (i > 8)
+                if (i > 9)
                 {
                     separator = 32;
                 }
@@ -596,7 +596,7 @@ namespace Cognitive3D
                     }
                 }
                 GUI.Label(new Rect(30, i * 32 + separator, 24, 30), selected ? EditorCore.BoxCheckmark : EditorCore.BoxEmpty, "image_centered");
-                if (i == 9)
+                if (i == 10)
                 {
                     int kerning = 4;
                     GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Legacy Support", "boldlabel");
