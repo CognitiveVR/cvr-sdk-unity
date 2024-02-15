@@ -27,6 +27,7 @@ namespace Cognitive3D
             SharedCore.InitializeSettings(sessionId,
                 Cognitive3D_Preferences.Instance.EventDataThreshold,
                 Cognitive3D_Preferences.Instance.GazeSnapshotCount,
+                Cognitive3D_Preferences.Instance.BoundarySnapshotCount,
                 Cognitive3D_Preferences.Instance.DynamicSnapshotCount,
                 Cognitive3D_Preferences.Instance.SensorSnapshotCount,
                 Cognitive3D_Preferences.Instance.FixationSnapshotCount,
@@ -158,6 +159,18 @@ namespace Cognitive3D
                 useFloor,
                 new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
                 useGeo);
+        }
+        #endregion
+
+        #region Boundary
+        internal static void RecordBoundaryPoint(Vector3[] points, double time)
+        {
+            SharedCore.RecordBoundaryPoints(
+                new float[] { points[0].x, points[0].y, points[0].z },
+                new float[] { points[1].x, points[1].y, points[1].z },
+                new float[] { points[2].x, points[2].y, points[2].z },
+                new float[] { points[3].x, points[3].y, points[3].z },
+                time);
         }
         #endregion
 

@@ -28,6 +28,7 @@ namespace Cognitive3D.Serialization
 
             SerializeEvents(copyToCache);
             SerializeGaze(copyToCache);
+            SerializeBoundary(copyToCache);
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
 
@@ -47,13 +48,14 @@ namespace Cognitive3D.Serialization
         static string ParticipantId;
         static int EventThreshold;
         static int GazeThreshold;
+        static int BoundaryThreshold;
         static int DynamicThreshold;
         static int SensorThreshold;
         static int FixationThreshold;
         static bool IsInitialized = false;
 
         //TODO replace with a struct
-        internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction, string hmdName)
+        internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int boundaryThreshold, int dynamicThreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction, string hmdName)
         {
             DeviceId = deviceId;
             SessionTimestamp = sessionTimestamp;
@@ -62,12 +64,14 @@ namespace Cognitive3D.Serialization
 
             EventThreshold = eventThreshold;
             GazeThreshold = gazeThreshold;
-            DynamicThreshold = dynamicTreshold;
+            BoundaryThreshold = boundaryThreshold;
+            DynamicThreshold = dynamicThreshold;
             SensorThreshold = sensorThreshold;
             FixationThreshold = fixationThreshold;
 
             InitializeDynamicSnapshotPool();
             InitializeGaze();
+            InitializeBoundary();
 
             WebPost = webPost;
             LogAction = logAction;
@@ -100,6 +104,7 @@ namespace Cognitive3D.Serialization
 
             ResetCustomEvents();
             ResetGaze();
+            ResetBoundary();
             ResetDynamics();
             ResetSensors();
             ResetFixations();
@@ -1225,6 +1230,7 @@ namespace Cognitive3D.Serialization
 
         static void InitializeGaze()
         {
+            // Approximately 70 characters per snapshot, 1200 characters extra room
             gazebuilder = new StringBuilder(70 * Cognitive3D_Preferences.Instance.GazeSnapshotCount + 1200);
             gazebuilder.Append("{\"data\":[");
         }
@@ -1489,6 +1495,88 @@ namespace Cognitive3D.Serialization
             gazebuilder.Length = 9;
         }
 
+        #endregion
+
+        #region Boundary
+        static StringBuilder boundarybuilder;
+        static int boundaryCount;
+        static int boundaryJsonPart;
+        /// <summary>
+        /// Initializes a json to hold the boundary points data
+        /// This will be added to the gaze stream
+        /// </summary>
+        static void InitializeBoundary()
+        {
+            // Approximately 70 characters per snapshot, 1200 characters extra room
+            boundarybuilder = new StringBuilder(70 * Cognitive3D_Preferences.S_BoundarySnapshotCount + 1200);
+            boundarybuilder.Append("{\"boundary\":[");
+        }
+
+        internal static void RecordBoundaryPoints(float[] point1, float[] point2, float[] point3, float[] point4, double timestamp)
+        {
+            if (!IsInitialized) { return; }
+            boundarybuilder.Append("{");
+            JsonUtil.SetDouble("time", timestamp, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetVector("p1", point1, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetVector("p2", point2, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetVector("p3", point3, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetVector("p4", point4, boundarybuilder);
+            boundarybuilder.Append(",");
+            boundarybuilder.Append("}");
+
+            boundaryCount++;
+            if (boundaryCount >= BoundaryThreshold)
+            {
+                SerializeBoundary(false);
+            }
+            else
+            {
+                gazebuilder.Append(",");
+            }
+        }
+
+        static void SerializeBoundary(bool writeToCache)
+        {
+            if (boundaryCount == 0) { return; }
+
+            //TODO allow option to send session properties but not gaze. Look at this for XRPF implementation
+
+            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+            {
+                boundarybuilder = boundarybuilder.Remove(boundarybuilder.Length - 1, 1);
+            }
+
+            boundarybuilder.Append("],");
+
+            boundaryCount = 0;
+
+            JsonUtil.SetDouble("timestamp", (int)SessionTimestamp, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetInt("part", boundaryJsonPart, boundarybuilder);
+            boundaryJsonPart++;
+            boundarybuilder.Append(",");
+
+            JsonUtil.SetFloat("interval", 0.1f, boundarybuilder);
+            boundarybuilder.Append(",");
+
+            JsonUtil.SetString("formatversion", "1.0", boundarybuilder);
+            boundarybuilder.Append("}");
+            WebPost("gaze", boundarybuilder.ToString(), writeToCache);
+            boundarybuilder.Length = 9; // what is the 9 for
+        }
+
+        static void ResetBoundary()
+        {
+            boundarybuilder = null;
+            boundaryJsonPart = 1;
+            boundaryCount = 0;
+        }
         #endregion
 
         #region Sensor
