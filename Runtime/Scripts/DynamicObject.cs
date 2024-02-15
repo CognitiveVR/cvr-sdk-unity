@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
-#if C3D_USE_DETERMINISTIC_DYNAMIC_ID
-    using System.Security.Cryptography;
-    using System.Text;
-#endif
-
 //container for data and simple instance implementations (enable,disable) for dynamic object
 //also includes fields for initialization
 //this would also include some nice functions for beginning/ending engagements
@@ -748,8 +743,8 @@ namespace Cognitive3D
             // This is used to create a consistent id from objects which are not in the scene
             // Instead of GUID we are using hash so the ids are always consistent given the object name
 #if C3D_USE_DETERMINISTIC_DYNAMIC_ID
-            SHA256 mySha256 = SHA256.Create();
-            byte[] myStringInBytes = mySha256.ComputeHash(Encoding.ASCII.GetBytes(MeshName));
+            System.Security.Cryptography.SHA256 mySha256 = System.Security.Cryptography.SHA256.Create();
+            byte[] myStringInBytes = mySha256.ComputeHash(System.Text.Encoding.ASCII.GetBytes(MeshName));
             string s = "";
             for (int i = 0; i < myStringInBytes.Length; i++)
             {
