@@ -382,14 +382,15 @@ namespace Cognitive3D
         // This is not called for first loaded scene
         private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            SendSceneLoadEvent(scene.name, true);
+            SendSceneLoadEvent(scene.name);
             bool replacingSceneId = TryGetTrackedScene(scene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
+
             if (mode == LoadSceneMode.Single)
             {
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
-
+               
             // If id exist for loaded scene, set new tracking scene
             if (replacingSceneId)
             {
@@ -409,7 +410,7 @@ namespace Cognitive3D
         // // This is not called for first loaded scene
         private void SceneManager_SceneUnloaded(Scene scene)
         {
-            SendSceneUnloadEvent(scene.name, true);
+            SendSceneUnloadEvent(scene.name);
 
             if (TryGetTrackedScene(scene.name, out Cognitive3D_Preferences.SceneSettings c3dscene))
             {
@@ -421,11 +422,11 @@ namespace Cognitive3D
         /// <summary>
         /// Sends load scene events when a new scene is loaded
         /// </summary>
-        private void SendSceneLoadEvent(string sceneName, bool writeEvent)
+        private void SendSceneLoadEvent(string sceneName)
         {
             if (IsInitialized)
             {
-                if (writeEvent && sceneName != null)
+                if (sceneName != null)
                 {
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
@@ -444,11 +445,11 @@ namespace Cognitive3D
         /// <summary>
         /// Sends unload scene events when a scene is unloaded
         /// </summary>
-        private void SendSceneUnloadEvent(string sceneName, bool writeEvent)
+        private void SendSceneUnloadEvent(string sceneName)
         {
             if (IsInitialized)
             {
-                if (writeEvent && sceneName != null)
+                if (sceneName != null)
                 {
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
@@ -465,7 +466,7 @@ namespace Cognitive3D
                 }
 
                 // Flush recorded data when scene unloads
-                if (writeEvent && TrackingScene != null)
+                if (TrackingScene != null)
                 {
                     FlushData();
                 }
