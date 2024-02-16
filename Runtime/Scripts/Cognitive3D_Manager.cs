@@ -389,10 +389,7 @@ namespace Cognitive3D
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
-            else if(mode == LoadSceneMode.Additive)
-            {
-                Debug.Log("@@@ " + scene.name + " loaded additively!");
-            }
+            
             // If id exist for loaded scene, set new tracking scene
             if (replacingSceneId)
             {
