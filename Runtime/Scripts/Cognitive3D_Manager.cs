@@ -205,7 +205,7 @@ namespace Cognitive3D
                     break;
                 }
             }
-
+            
             if (TrackingScene == null)
             {
                 Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
@@ -389,7 +389,7 @@ namespace Cognitive3D
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
-            
+
             // If id exist for loaded scene, set new tracking scene
             if (replacingSceneId)
             {
@@ -482,19 +482,6 @@ namespace Cognitive3D
             if (c3dscene != null && !string.IsNullOrEmpty(c3dscene.SceneId))
             {
                 return true;
-            }
-            return false;
-        }
-
-        private bool IsNextSceneValid()
-        {
-            if (sceneList.Count > 0)
-            {
-                Scene currentScene = sceneList[0];
-                if (TryGetTrackedScene(currentScene.name, out Cognitive3D_Preferences.SceneSettings c3dscene))
-                {
-                    return true;
-                }
             }
             return false;
         }
