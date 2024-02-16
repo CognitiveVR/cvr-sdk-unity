@@ -187,7 +187,8 @@ namespace Cognitive3D
             IsInitialized = true;
             //TODO support skipping spatial gaze data but still recording session properties for XRPF
 
-            //get all loaded scenes. if one has a sceneid, use that
+            // get all loaded scenes. if one has a sceneid, use that
+            // if more than one scene has ids (additive scenes), use the first scene in the scene manager list that has id
             var count = SceneManager.sceneCount;
             Scene scene = new Scene();
             for(int i = 0; i < count;i++)
@@ -200,15 +201,17 @@ namespace Cognitive3D
                     {
                         sceneList.Insert(0, scene);
                     } 
-                    SetTrackingScene(cogscene, false);
+                    SetTrackingScene(cogscene.SceneName);
                     break;
                 }
             }
+
             if (TrackingScene == null)
             {
                 Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
             }
 
+            // TODO: support for additive scenes? According to doc, it'll be somehow considered single mode
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
             CustomEvent startEvent = new CustomEvent("c3d.sessionStart");
@@ -376,33 +379,127 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="mode"></param>
+        // This is not called for first loaded scene
         private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            bool replacingSceneId = DoesSceneHaveID(scene);
+            SendSceneLoadEvent(scene.name, true);
+            bool replacingSceneId = TryGetTrackedScene(scene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
             if (mode == LoadSceneMode.Single)
             {
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
+            else if(mode == LoadSceneMode.Additive)
+            {
+                Debug.Log("@@@ " + scene.name + " loaded additively!");
+            }
+            // If id exist for loaded scene, set new tracking scene
             if (replacingSceneId)
             {
                 //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
                 FlushData();
                 sceneList.Insert(0, scene);
-                SetTrackingScene(scene.name, true);
+                SetTrackingScene(scene.name);
             }
-            else
-            {
-                if (IsNextSceneValid())
-                {
-                    SetTrackingScene(sceneList[0].name, true);
-                }
-                else
-                {
-                    SetTrackingScene("", true);
-                }
-            }
+
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
+        }
+
+        /// <summary>
+        /// registered to unity's OnSceneUnloaded callback. sends outstanding data, then removes current scene from scene list
+        /// </summary>
+        /// <param name="scene"></param>
+        // // This is not called for first loaded scene
+        private void SceneManager_SceneUnloaded(Scene scene)
+        {
+            SendSceneUnloadEvent(scene.name, true);
+
+            if (TryGetTrackedScene(scene.name, out Cognitive3D_Preferences.SceneSettings c3dscene))
+            {
+                int index = sceneList.IndexOf(scene);
+                sceneList.RemoveAt(index);
+            }
+        }
+
+        /// <summary>
+        /// Sends load scene events when a new scene is loaded
+        /// </summary>
+        private void SendSceneLoadEvent(string sceneName, bool writeEvent)
+        {
+            if (IsInitialized)
+            {
+                if (writeEvent && sceneName != null)
+                {
+                    if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
+                    {
+                        SceneStartTime = Time.time;
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
+                    }
+                    else
+                    {
+                        SceneStartTime = Time.time;
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Name", sceneName).Send();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sends unload scene events when a scene is unloaded
+        /// </summary>
+        private void SendSceneUnloadEvent(string sceneName, bool writeEvent)
+        {
+            if (IsInitialized)
+            {
+                if (writeEvent && sceneName != null)
+                {
+                    if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
+                    {
+                        float duration = Time.time - SceneStartTime;
+                        
+                        new CustomEvent("c3d.SceneUnload").SetProperty("Duration", duration).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
+                    }
+                    else
+                    {
+                        float duration = Time.time - SceneStartTime;
+
+                        new CustomEvent("c3d.SceneUnload").SetProperty("Duration", duration).SetProperty("Scene Name", sceneName).Send();
+                    }
+                }
+
+                // Flush recorded data when scene unloads
+                if (writeEvent && TrackingScene != null)
+                {
+                    FlushData();
+                }
+                ForceWriteSessionMetadata = true;
+            }
+        }
+
+        /// <summary>
+        /// Checks if scene exists in Cognitive3D scene settings and has an ID
+        /// </summary>
+        public static bool TryGetTrackedScene(string sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene)
+        {
+            c3dscene = Cognitive3D_Preferences.FindScene(sceneName);
+            if (c3dscene != null && !string.IsNullOrEmpty(c3dscene.SceneId))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool IsNextSceneValid()
+        {
+            if (sceneList.Count > 0)
+            {
+                Scene currentScene = sceneList[0];
+                if (TryGetTrackedScene(currentScene.name, out Cognitive3D_Preferences.SceneSettings c3dscene))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public bool TryGetTrackingSpace(out Transform space)
@@ -427,45 +524,6 @@ namespace Cognitive3D
                     return false;
                 }
             }
-        }
-
-        private void SceneManager_SceneUnloaded(Scene scene)
-        {
-            if (DoesSceneHaveID(scene))
-            {
-                int index = sceneList.IndexOf(scene);
-                sceneList.RemoveAt(index);
-            }
-            if (IsNextSceneValid())
-            {
-                SetTrackingScene(sceneList[0].name, true);
-            }
-            else
-            {
-                SetTrackingScene("", true);
-            }
-        }
-
-        private bool IsNextSceneValid()
-        {
-            if (sceneList.Count > 0)
-            {
-                Scene currentScene = sceneList[0];
-                if (DoesSceneHaveID(currentScene))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        private bool DoesSceneHaveID(Scene scene)
-        {
-            var unloadingScene = Cognitive3D_Preferences.FindScene(scene.name);
-            if (unloadingScene != null && !string.IsNullOrEmpty(unloadingScene.SceneId))
-            {
-                return true;
-            }
-            return false;
         }
 
 #region Updates and Loops
@@ -714,48 +772,22 @@ namespace Cognitive3D
         }
 
         public static Cognitive3D_Preferences.SceneSettings TrackingScene { get; private set; }
-
-        /// <summary>
-        /// Set the SceneId for recorded data by string
-        /// </summary>
-        public static void SetTrackingScene(string sceneName, bool writeSceneChangeEvent)
-        {
-            var scene = Cognitive3D_Preferences.FindScene(sceneName);
-            SetTrackingScene(scene, writeSceneChangeEvent);
-        }
-
         private static float SceneStartTime;
         internal static bool ForceWriteSessionMetadata = false;
 
         /// <summary>
-        /// Set the SceneId for recorded data by reference
+        /// Set the SceneId for recorded data by string
         /// </summary>
         /// <param name="scene"></param>
-        public static void SetTrackingScene(Cognitive3D_Preferences.SceneSettings scene, bool WriteSceneChangeEvent)
+        /// 
+        public static void SetTrackingScene(string sceneName)
         {
             if (IsInitialized)
             {
-                if (WriteSceneChangeEvent)
+                if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                 {
-                    if (scene == null || string.IsNullOrEmpty(scene.SceneId))
-                    {
-                        float duration = Time.time - SceneStartTime;
-                        SceneStartTime = Time.time;
-                        new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).Send();
-                    }
-                    else
-                    {
-                        float duration = Time.time - SceneStartTime;
-                        SceneStartTime = Time.time;
-                        new CustomEvent("c3d.SceneChange").SetProperty("Duration", duration).SetProperty("Scene Name", scene.SceneName).SetProperty("Scene Id", scene.SceneId).Send();
-                    }
+                    TrackingScene = c3dscene;
                 }
-                if (WriteSceneChangeEvent && TrackingScene != null)
-                {
-                    FlushData();
-                }
-                ForceWriteSessionMetadata = true;
-                TrackingScene = scene;
             }
             else
             {
@@ -763,6 +795,7 @@ namespace Cognitive3D
             }
         }
 
+        // Remove this when multiplayer support added
         public static void SetLobbyId(string lobbyId)
         {
             CoreInterface.SetLobbyId(lobbyId);
