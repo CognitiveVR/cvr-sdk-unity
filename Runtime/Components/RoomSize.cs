@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Cognitive3D.Serialization;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
+using TMPro;
 
 #if C3D_VIVEWAVE
     using Wave;
@@ -20,11 +22,41 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
+        // TESTING
+        public TextMeshPro numPoints;
+
         Vector3[] previousBoundaryPoints = new Vector3[0];
+        Vector3[] currentBoundaryPoints = new Vector3[0];
         readonly float BoundaryTrackingInterval = 1;
         Vector3 lastRoomSize = new Vector3();
         Vector3 roomSize = new Vector3();
         bool isHMDOutsideBoundary;
+        Transform trackingSpace = null;
+        Transform lastRecordedTrackingSpaceTransform = null;
+        private readonly float NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
+
+        Vector3[] test = new Vector3[]
+            { 
+                new Vector3(0, 1, 0), // 0
+                new Vector3(0, 1, 0), // 1
+                new Vector3(0, 1, 0), // 2
+                new Vector3(0, 1, 0), // 3
+                new Vector3(0, 1, 0), // 4
+                new Vector3(0, 2, 0), // 5
+                new Vector3(1, 1, 1), // 6
+                new Vector3(1, 1, 1), // 7
+                new Vector3(1, 1, 1), // 8
+                new Vector3(1, 1, 1), // 9
+                new Vector3(1, 1, 1), // 10
+                new Vector3(1, 1, 1), // 11
+                new Vector3(1, 1, 1), // 12
+                new Vector3(1, 1, 1), // 13
+                new Vector3(1, 1, 1), // 14
+                new Vector3(1, 1, 1), // 15
+                new Vector3(1, 1, 1), // 16
+                new Vector3(1, 1, 1), // 17
+                new Vector3(1, 1, 1)  // 18
+            };
 
         //counts up the deltatime to determine when the interval ends
         float currentTime;
@@ -36,9 +68,17 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            previousBoundaryPoints = GetCurrentBoundaryPoints();
+
+            // We want to intialize the string builder to a size appropriate for the number of points
+            // This number might change if the participant redraws boundary, so we are adding a grace extension
+            // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
+            // That is expensive, but low probability
+            CoreInterface.InitializeBoundary(previousBoundaryPoints.Length + (int) Mathf.Ceil(NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
+            
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-            previousBoundaryPoints = GetCurrentBoundaryPoints();
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref lastRoomSize);
             WriteRoomSizeAsSessionProperty(lastRoomSize);
@@ -46,6 +86,18 @@ namespace Cognitive3D.Components
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
 #endif
+        }
+
+        /// <summary>
+        /// Called every 0.1 seconds AKA 10Hz
+        /// </summary>
+        private void Cognitive3D_Manager_OnTick()
+        {
+            if (trackingSpace != lastRecordedTrackingSpaceTransform) // if moved enough 
+            {
+                CoreInterface.RecordBoundaryPoint(test, Util.Timestamp(Time.frameCount));
+                lastRecordedTrackingSpaceTransform = trackingSpace;
+            }
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -74,7 +126,8 @@ namespace Cognitive3D.Components
                         isHMDOutsideBoundary = false;
                     }
 #else
-                    var currentBoundaryPoints = GetCurrentBoundaryPoints();
+                    currentBoundaryPoints = GetCurrentBoundaryPoints();
+                    numPoints.text = currentBoundaryPoints.Length.ToString(); // TESTING
                     if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                     {
                         previousBoundaryPoints = currentBoundaryPoints;
@@ -130,7 +183,6 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            Transform trackingSpace = null;
             if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
             {
                 if (previousBoundaryPoints != null && previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
@@ -278,7 +330,6 @@ namespace Cognitive3D.Components
                 isHMDOutsideBoundary = true;
             }
         }
-
 
         /// <summary>
         /// Called at session beginning and when boundary changes.
@@ -485,6 +536,7 @@ namespace Cognitive3D.Components
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
 
 #if C3D_VIVEWAVE
             SystemEvent.Remove(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);

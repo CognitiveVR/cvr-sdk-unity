@@ -163,13 +163,20 @@ namespace Cognitive3D
         #endregion
 
         #region Boundary
+
+        /// <summary>
+        /// This is a wrapper for SharedCore.InitializeBoundary() <br/>
+        /// SharedCore.InitializeBoundary() should ideally be called in SharedCore.InitializeSettings() <br/>
+        /// But we are calling from here so we can pass in the number of boundary points from RoomSize.cs to appropriately size the string builder
+        /// </summary>
+        internal static void InitializeBoundary(int numBoundaryPoints)
+        {
+            SharedCore.InitializeBoundary(numBoundaryPoints);
+        }
         internal static void RecordBoundaryPoint(Vector3[] points, double time)
         {
             SharedCore.RecordBoundaryPoints(
-                new float[] { points[0].x, points[0].y, points[0].z },
-                new float[] { points[1].x, points[1].y, points[1].z },
-                new float[] { points[2].x, points[2].y, points[2].z },
-                new float[] { points[3].x, points[3].y, points[3].z },
+                points,
                 time);
         }
         #endregion
@@ -203,8 +210,6 @@ namespace Cognitive3D
         }
 
         #endregion
-
-        
 
         #region Sensors
         internal static void InitializeSensor(string name, float rate)
