@@ -173,7 +173,7 @@ namespace Cognitive3D
         {
             SharedCore.InitializeBoundary(numBoundaryPoints);
         }
-        internal static void RecordBoundaryPoint(Vector3[] points, double time)
+        internal static void RecordBoundaryPoints(Vector3[] points, double time)
         {
             SharedCore.RecordBoundaryPoints(
                 points,

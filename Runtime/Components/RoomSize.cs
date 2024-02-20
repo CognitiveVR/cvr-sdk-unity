@@ -33,30 +33,9 @@ namespace Cognitive3D.Components
         bool isHMDOutsideBoundary;
         Transform trackingSpace = null;
         Transform lastRecordedTrackingSpaceTransform = null;
-        private readonly float NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
 
-        Vector3[] test = new Vector3[]
-            { 
-                new Vector3(0, 1, 0), // 0
-                new Vector3(0, 1, 0), // 1
-                new Vector3(0, 1, 0), // 2
-                new Vector3(0, 1, 0), // 3
-                new Vector3(0, 1, 0), // 4
-                new Vector3(0, 2, 0), // 5
-                new Vector3(1, 1, 1), // 6
-                new Vector3(1, 1, 1), // 7
-                new Vector3(1, 1, 1), // 8
-                new Vector3(1, 1, 1), // 9
-                new Vector3(1, 1, 1), // 10
-                new Vector3(1, 1, 1), // 11
-                new Vector3(1, 1, 1), // 12
-                new Vector3(1, 1, 1), // 13
-                new Vector3(1, 1, 1), // 14
-                new Vector3(1, 1, 1), // 15
-                new Vector3(1, 1, 1), // 16
-                new Vector3(1, 1, 1), // 17
-                new Vector3(1, 1, 1)  // 18
-            };
+        // an n% overflow buffer added to string builder. 0.1 means 10% of num boundary points added as extra room
+        private readonly float NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
 
         //counts up the deltatime to determine when the interval ends
         float currentTime;
@@ -73,7 +52,7 @@ namespace Cognitive3D.Components
             // We want to intialize the string builder to a size appropriate for the number of points
             // This number might change if the participant redraws boundary, so we are adding a grace extension
             // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
-            // That is expensive, but low probability
+            // That is expensive, but there is a low probability of this happening
             CoreInterface.InitializeBoundary(previousBoundaryPoints.Length + (int) Mathf.Ceil(NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
             
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
@@ -95,7 +74,7 @@ namespace Cognitive3D.Components
         {
             if (trackingSpace != lastRecordedTrackingSpaceTransform) // if moved enough 
             {
-                CoreInterface.RecordBoundaryPoint(test, Util.Timestamp(Time.frameCount));
+                RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
                 lastRecordedTrackingSpaceTransform = trackingSpace;
             }
         }
@@ -132,6 +111,7 @@ namespace Cognitive3D.Components
                     {
                         previousBoundaryPoints = currentBoundaryPoints;
                         CalculateAndRecordRoomsize(true, true);
+                        RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
                     }
                     SendEventIfUserExitsBoundary();
 #endif
@@ -258,6 +238,22 @@ namespace Cognitive3D.Components
             Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
             return null;
 #endif
+        }
+
+        /// <summary>
+        /// Converts the boundary points into world space and then serializes them
+        /// </summary>
+        /// <param name="boundaryPoints">An array of Vector3 representing the boundary points</param>
+        private void RecordBoundaryPointsInWorldSpace(Vector3[] boundaryPoints)
+        {
+            if (trackingSpace != null)
+            {
+                for (int i = 0; i < boundaryPoints.Length; i++)
+                {
+                    boundaryPoints[i] = trackingSpace.TransformPoint(boundaryPoints[i]);
+                }
+            }
+            CoreInterface.RecordBoundaryPoints(boundaryPoints, Util.Timestamp(Time.frameCount));
         }
 
         /// <summary>
