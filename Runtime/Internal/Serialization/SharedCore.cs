@@ -1412,13 +1412,6 @@ namespace Cognitive3D.Serialization
 
             gazeCount = 0;
 
-            // Add the formatted boundary json array after the gaze data json array
-            if (boundaryCount > 0)
-            {
-                string points = SerializeBoundary(false);
-                gazebuilder.Append(points);
-            }
-
             //header
             JsonUtil.SetString("userid", DeviceId, gazebuilder);
             gazebuilder.Append(",");
