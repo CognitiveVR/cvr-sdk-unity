@@ -125,7 +125,7 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Function to execute when xrNodeState.nodeType loses tracking
+        /// Function to execute when xrNodeState.nodeType regains tracking
         /// </summary>
         /// <param name="xrNodeState">The state of the device</param>
         private void OnTrackingAcquired(XRNodeState xrNodeState)
