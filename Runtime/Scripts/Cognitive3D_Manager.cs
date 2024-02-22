@@ -438,11 +438,11 @@ namespace Cognitive3D
                     SceneStartTimeDic.Add(sceneName, Time.time);
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
-                        new CustomEvent("c3d.SceneLoad").SetProperty("Load Mode", mode).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Load Mode", mode).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
                     }
                     else
                     {                  
-                        new CustomEvent("c3d.SceneLoad").SetProperty("Load Mode", mode).SetProperty("Scene Name", sceneName).Send();
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Load Mode", mode).SetProperty("Scene Name", sceneName).Send();
                     }
                 }
             }
@@ -461,11 +461,11 @@ namespace Cognitive3D
                     float duration = Time.time - sceneTime;
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
-                        new CustomEvent("c3d.SceneUnload").SetProperty("Duration", duration).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
+                        new CustomEvent("c3d.SceneUnload").SetProperty("Scene Duration", duration).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
                     }
                     else
                     {
-                        new CustomEvent("c3d.SceneUnload").SetProperty("Duration", duration).SetProperty("Scene Name", sceneName).Send();
+                        new CustomEvent("c3d.SceneUnload").SetProperty("Scene Duration", duration).SetProperty("Scene Name", sceneName).Send();
                     }
                 }
 
