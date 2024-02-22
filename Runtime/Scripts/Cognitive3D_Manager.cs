@@ -388,6 +388,7 @@ namespace Cognitive3D
             if (mode == LoadSceneMode.Single)
             {
                 sceneList.Clear();
+                SceneStartTimeDic.Clear();
                 //DynamicObject.ClearObjectIds();
             }
                
@@ -407,10 +408,16 @@ namespace Cognitive3D
         /// registered to unity's OnSceneUnloaded callback. sends outstanding data, then removes current scene from scene list
         /// </summary>
         /// <param name="scene"></param>
-        // // This is not called for first loaded scene
+        // // This is not called for last unloaded scene
         private void SceneManager_SceneUnloaded(Scene scene)
         {
             SendSceneUnloadEvent(scene.name);
+
+            // If a scene unloads (useful in additive cases), the scene will be removed from dictionary
+            if (SceneStartTimeDic.ContainsKey(scene.name))
+            {
+                SceneStartTimeDic.Remove(scene.name);
+            }
 
             if (TryGetTrackedScene(scene.name, out Cognitive3D_Preferences.SceneSettings c3dscene))
             {
@@ -428,15 +435,14 @@ namespace Cognitive3D
             {
                 if (sceneName != null)
                 {
+                    SceneStartTimeDic.Add(sceneName, Time.time);
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
-                        SceneStartTime = Time.time;
-                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Event", "Load").SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
                     }
                     else
-                    {
-                        SceneStartTime = Time.time;
-                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Name", sceneName).Send();
+                    {                  
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Event", "Load").SetProperty("Scene Name", sceneName).Send();
                     }
                 }
             }
@@ -451,16 +457,14 @@ namespace Cognitive3D
             {
                 if (sceneName != null)
                 {
+                    SceneStartTimeDic.TryGetValue(sceneName, out float sceneTime);
+                    float duration = Time.time - sceneTime;
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
-                        float duration = Time.time - SceneStartTime;
-                        
                         new CustomEvent("c3d.SceneUnload").SetProperty("Duration", duration).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
                     }
                     else
                     {
-                        float duration = Time.time - SceneStartTime;
-
                         new CustomEvent("c3d.SceneUnload").SetProperty("Duration", duration).SetProperty("Scene Name", sceneName).Send();
                     }
                 }
@@ -757,7 +761,7 @@ namespace Cognitive3D
         }
 
         public static Cognitive3D_Preferences.SceneSettings TrackingScene { get; private set; }
-        private static float SceneStartTime;
+        private static Dictionary<string,float> SceneStartTimeDic = new Dictionary<string, float>();
         internal static bool ForceWriteSessionMetadata = false;
 
         /// <summary>
