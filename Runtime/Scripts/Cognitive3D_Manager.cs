@@ -382,7 +382,7 @@ namespace Cognitive3D
         // This is not called for first loaded scene
         private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            SendSceneLoadEvent(scene.name);
+            SendSceneLoadEvent(scene.name, mode);
             bool replacingSceneId = TryGetTrackedScene(scene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
 
             if (mode == LoadSceneMode.Single)
@@ -429,7 +429,7 @@ namespace Cognitive3D
         /// <summary>
         /// Sends load scene events when a new scene is loaded
         /// </summary>
-        private void SendSceneLoadEvent(string sceneName)
+        private void SendSceneLoadEvent(string sceneName, LoadSceneMode mode)
         {
             if (IsInitialized)
             {
@@ -438,11 +438,11 @@ namespace Cognitive3D
                     SceneStartTimeDic.Add(sceneName, Time.time);
                     if (TryGetTrackedScene(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
-                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Event", "Load").SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Load Mode", mode).SetProperty("Scene Name", c3dscene.SceneName).SetProperty("Scene Id", c3dscene.SceneId).Send();
                     }
                     else
                     {                  
-                        new CustomEvent("c3d.SceneLoad").SetProperty("Scene Event", "Load").SetProperty("Scene Name", sceneName).Send();
+                        new CustomEvent("c3d.SceneLoad").SetProperty("Load Mode", mode).SetProperty("Scene Name", sceneName).Send();
                     }
                 }
             }
