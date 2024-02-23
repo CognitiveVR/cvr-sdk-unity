@@ -15,6 +15,7 @@
         "SteamVR_Input_Editor",
         "SteamVR_Actions",
         "Oculus.VR.Editor",
+        "PhotonUnityNetworking",
         "Unity.TextMeshPro"
     ],
     "includePlatforms": [

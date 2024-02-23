@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using Cognitive3D;
 using Cognitive3D.Components;
+using Photon.Pun;
 
 #if C3D_STEAMVR2
 using Valve.VR;
@@ -165,6 +166,11 @@ namespace Cognitive3D
             {
                 GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
                 PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                if (GameplayReferences.punSupport)
+                {
+                    c3dManagerPrefab.AddComponent<PhotonMultiplayer>();
+                    c3dManagerPrefab.AddComponent<PhotonView>();
+                }
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
         }
