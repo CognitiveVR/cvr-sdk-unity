@@ -1,7 +1,7 @@
 using Photon.Pun;
 using Photon.Realtime;
 
-namespace Cognitive3D
+namespace Cognitive3D.Components
 {
     // Can't inherit multiple classes: https://forum.unity.com/threads/multiple-inheritance-implementation-alternative.367802/
     public class PhotonMultiplayer : MonoBehaviourPunCallbacks
