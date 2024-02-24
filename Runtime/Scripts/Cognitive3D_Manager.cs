@@ -226,6 +226,26 @@ namespace Cognitive3D
             }
             gazeBase.Initialize();
 
+#if C3D_OCULUS
+            //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled
+            //this is used for adding the fixation recorder
+            if (GameplayReferences.SDKSupportsEyeTracking)
+            {
+                var startEyeTrackingResult = OVRPlugin.StartEyeTracking();
+                var faceTrackingResult = OVRPlugin.StartFaceTracking();
+
+                if (startEyeTrackingResult && faceTrackingResult)
+                {
+                    //everything will be supported and enabled for the fixation recorder
+                    fixationRecorder = gameObject.GetComponent<FixationRecorder>();
+                    if (fixationRecorder == null)
+                    {
+                        fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                    }
+                    fixationRecorder.Initialize();
+                }
+            }
+#else
             if (GameplayReferences.SDKSupportsEyeTracking)
             {
                 fixationRecorder = gameObject.GetComponent<FixationRecorder>();
@@ -235,6 +255,7 @@ namespace Cognitive3D
                 }
                 fixationRecorder.Initialize();
             }
+#endif
 
             try
             {

@@ -14,6 +14,26 @@ namespace Cognitive3D
 #if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
         static OVRFaceExpressions cachedOVRFaceExpressions;
+
+        /// <summary>
+        /// finds or creates an OVRFaceExpressions component. Used for detecting blinking
+        /// </summary>
+        public static OVRFaceExpressions OVRFaceExpressions
+        {
+            get
+            {
+                if (cachedOVRFaceExpressions == null)
+                {
+                    cachedOVRFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
+                    if (cachedOVRFaceExpressions == null)
+                    {
+                        Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
+                    }
+                }
+                return cachedOVRFaceExpressions;
+            }
+        }
+
 #endif
 
         /// <summary>
@@ -67,25 +87,17 @@ namespace Cognitive3D
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
 #elif C3D_OCULUS
 
-                //attempt to exit early if features nor supported/enabled
-                bool eyeTrackingSupportedAndEnabled = OVRPlugin.eyeTrackingSupported && OVRPlugin.eyeTrackingEnabled;
-                if (!eyeTrackingSupportedAndEnabled)
+                //just check if eye tracking is supported
+                //Cognitive3D_Manager tries to enable Eye/Face tracking to create the fixation recorder component
+
+                bool eyeTrackingSupported = OVRPlugin.eyeTrackingSupported;
+                if (!eyeTrackingSupported)
                 {
                     return false;
                 }
 
-                if (cachedOVRFaceExpressions == null)
-                {
-                    cachedOVRFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
-                    if (cachedOVRFaceExpressions == null)
-                    {
-                        Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
-                    }
-                }
-
-                //this happen after creating the face expression component. seems to return false if this feature has no users
-                bool faceTrackingSupportedAndEnabled = OVRPlugin.faceTrackingSupported && OVRPlugin.faceTrackingEnabled;
-                if (!faceTrackingSupportedAndEnabled)
+                bool faceTrackingSupported = OVRPlugin.faceTrackingSupported;
+                if (!faceTrackingSupported)
                 {
                     return false;
                 }

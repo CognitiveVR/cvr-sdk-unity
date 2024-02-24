@@ -153,7 +153,6 @@ namespace Cognitive3D
             return lastDirection;
         }
 #elif C3D_OCULUS
-        static OVRFaceExpressions cachedFaceExpressions;
         static Vector3 lastDirection = Vector3.forward;
         private static OVRPlugin.EyeGazesState _currentEyeGazesState;
         private static float ConfidenceThreshold = 0.5f;
@@ -164,19 +163,10 @@ namespace Cognitive3D
                 if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                     return lastDirection;
 
-                if (cachedFaceExpressions == null)
-                {
-                    cachedFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
-                    if (cachedFaceExpressions == null)
-                    {
-                        return lastDirection;
-                    }
-                }
-
                 float lblinkweight;
                 float rblinkweight;
-                cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
-                cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+                GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+                GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
 
                 var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
                 var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
