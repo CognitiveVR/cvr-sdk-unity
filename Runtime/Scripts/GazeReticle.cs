@@ -14,7 +14,8 @@ namespace Cognitive3D
         public float Distance = 3;
 
 #if C3D_OCULUS
-        //Enables OVR eye tracking for testing without needing to begin a session. Cognitive3D_Manager also calls StartEyeTracking when a session begins
+        //Enables OVR eye tracking for testing without needing to begin a session
+        //Cognitive3D_Manager also calls StartEyeTracking when a session begins and also handle user permissions
         private void Start()
         {
             if (!OVRPlugin.StartEyeTracking())
