@@ -34,6 +34,15 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// returns if eye tracking and face tracking permissions have been allowed, and eye tracking has been started
+        /// </summary>
+        public static bool EyeTrackingEnabled
+        {
+            get;
+            internal set;
+        }
+
 #endif
 
         /// <summary>

@@ -229,20 +229,37 @@ namespace Cognitive3D
 #if C3D_OCULUS
             //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled
             //this is used for adding the fixation recorder
+            GameplayReferences.EyeTrackingEnabled = false;
             if (GameplayReferences.SDKSupportsEyeTracking)
             {
-                var startEyeTrackingResult = OVRPlugin.StartEyeTracking();
-                var faceTrackingResult = OVRPlugin.StartFaceTracking();
+                //check permissions
+                bool eyePermissionGranted = false;
+                bool facePermissionGranted = false;
 
-                if (startEyeTrackingResult && faceTrackingResult)
+                string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
+                string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+                eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
+                facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
+#endif
+                if (eyePermissionGranted && facePermissionGranted)
                 {
-                    //everything will be supported and enabled for the fixation recorder
-                    fixationRecorder = gameObject.GetComponent<FixationRecorder>();
-                    if (fixationRecorder == null)
+                    //these return true even if they're already started elsewhere
+                    var startEyeTrackingResult = OVRPlugin.StartEyeTracking();
+                    var faceTrackingResult = OVRPlugin.StartFaceTracking();
+
+                    if (startEyeTrackingResult && faceTrackingResult)
                     {
-                        fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                        GameplayReferences.EyeTrackingEnabled = true;
+                        //everything will be supported and enabled for the fixation recorder
+                        fixationRecorder = gameObject.GetComponent<FixationRecorder>();
+                        if (fixationRecorder == null)
+                        {
+                            fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                        }
+                        fixationRecorder.Initialize();
                     }
-                    fixationRecorder.Initialize();
                 }
             }
 #else

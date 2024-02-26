@@ -158,7 +158,7 @@ namespace Cognitive3D
         private static float ConfidenceThreshold = 0.5f;
         static Vector3 GetLookDirection()
         {
-            if (GameplayReferences.SDKSupportsEyeTracking)
+            if (GameplayReferences.SDKSupportsEyeTracking && GameplayReferences.EyeTrackingEnabled)
             {
                 if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                     return lastDirection;
