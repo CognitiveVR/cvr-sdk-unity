@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
-using Newtonsoft.Json;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -138,7 +137,7 @@ namespace Cognitive3D.Components
                 case UnityWebRequest.Result.Success:
                     // Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
                     var data = req.downloadHandler.text;
-                    SubscriptionContextResponseText response = JsonConvert.DeserializeObject<SubscriptionContextResponseText>(data);
+                    SubscriptionContextResponseText response = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
                     SetSubscriptionProperties(response);
                     break;
             }
@@ -257,10 +256,12 @@ namespace Cognitive3D.Components
     /// A class defining the structure of the json response for subscription <br/>
     /// Example of the json structure can be found here:https://developer.oculus.com/documentation/unity/ps-subscriptions-s2s/   
     /// </summary>
+    [System.Serializable]
     public class SubscriptionContextResponseText
     {
         public SubscriptionContextData[] data;
 
+        [System.Serializable]
         public class SubscriptionContextData
         {
             public string sku;
