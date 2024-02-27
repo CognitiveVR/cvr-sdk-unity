@@ -2,8 +2,6 @@
 using UnityEngine.Networking;
 using System.Collections;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -140,23 +138,8 @@ namespace Cognitive3D.Components
                 case UnityWebRequest.Result.Success:
                     // Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
                     var data = req.downloadHandler.text;
-                    SubscriptionContextResponseText response = null;
-
-                    try
-                    {
-                        response = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
-                        isResponseJsonValid = true;
-                    }
-                    catch
-                    {
-                        isResponseJsonValid = false;
-                        Debug.LogError("Invalid JSON response");
-                    }
-
-                    if (isResponseJsonValid)
-                    {
-                        SetSubscriptionProperties(response);
-                    }
+                    SubscriptionContextResponseText response = JsonConvert.DeserializeObject<SubscriptionContextResponseText>(data);
+                    SetSubscriptionProperties(response);
                     break;
             }
         }
@@ -167,29 +150,41 @@ namespace Cognitive3D.Components
         /// <param name="response">The subscription response returne by the API</param>
         private void SetSubscriptionProperties(SubscriptionContextResponseText response)
         {
-            if (!string.IsNullOrEmpty(response.data[0].sku))
+            int numActiveSubscriptions = 0;
+
+            // use string instead of bool so we can check if they are actually there with isNullOrEmpty
+            // bool would just default to false
+            for (int i = 0; i < response.data.Length; i++)
             {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.sku", response.data[0].sku);
-            }
-            if (!string.IsNullOrEmpty(response.data[0].isActive))
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isActive", response.data[0].isActive);
-            }
-            if (!string.IsNullOrEmpty(response.data[0].isTrial))
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isTrial", response.data[0].isTrial);
-            }
-            if (!string.IsNullOrEmpty(response.data[0].periodStartDate))
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.periodStartDate", response.data[0].periodStartDate);
-            }
-            if (!string.IsNullOrEmpty(response.data[0].periodEndDate))
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.periodEndDate", response.data[0].periodEndDate);
-            }
-            if (!string.IsNullOrEmpty(response.data[0].nextRenewalTime))
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.nextRenewalTime", response.data[0].nextRenewalTime);
+                if (!string.IsNullOrEmpty(response.data[i].is_trial))
+                {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", response.data[i].is_trial);
+                }
+                if (!string.IsNullOrEmpty(response.data[i].is_active))
+                {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_active", response.data[i].is_active);
+                    if (response.data[i].is_active == "true")
+                    {
+                        numActiveSubscriptions++;
+                    }
+                    Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
+                }
+                if (!string.IsNullOrEmpty(response.data[i + 1].sku))
+                {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.sku", response.data[i].sku);
+                }
+                if (!string.IsNullOrEmpty(response.data[i].period_start_date))
+                {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", response.data[i].period_start_date);
+                }
+                if (!string.IsNullOrEmpty(response.data[i].period_end_date))
+                {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", response.data[i].period_end_date);
+                }
+                if (!string.IsNullOrEmpty(response.data[i].next_renewal_time))
+                {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_time", response.data[i].next_renewal_time);
+                }
             }
         }
 
@@ -262,24 +257,18 @@ namespace Cognitive3D.Components
     /// A class defining the structure of the json response for subscription <br/>
     /// Example of the json structure can be found here:https://developer.oculus.com/documentation/unity/ps-subscriptions-s2s/   
     /// </summary>
-    class SubscriptionContextResponseText
+    public class SubscriptionContextResponseText
     {
-        internal SubscriptionContextData[] data;
+        public SubscriptionContextData[] data;
 
-        internal class SubscriptionContextData
+        public class SubscriptionContextData
         {
-            internal string sku;
-            internal Owner owner;
-            internal string isActive;
-            internal string isTrial;
-            internal string periodStartDate;
-            internal string periodEndDate;
-            internal string nextRenewalTime;
-
-            internal class Owner
-            {
-                internal string id;
-            }
+            public string sku;
+            public string is_active;
+            public string is_trial;
+            public string period_start_date;
+            public string period_end_date;
+            public string next_renewal_time;
         }
     }
 }
