@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -19,6 +20,8 @@ namespace Cognitive3D.Components
         [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
         private bool RecordOculusUserData = true;
+        private bool isResponseJsonValid;
+        private const string URL_FOR_SUBSCRIPTION = "https://graph.oculus.com/application/subscriptions";
 #endif
 
         protected override void OnSessionBegin()
@@ -53,6 +56,10 @@ namespace Cognitive3D.Components
 
 #if C3D_OCULUS
 
+        /// <summary>
+        /// Returns the oculus AppID from oculus platform settings
+        /// </summary>
+        /// <returns>A string representing the oculus AppID</returns>
         private static string GetAppIDFromConfig()
         {
             if (UnityEngine.Application.platform == RuntimePlatform.Android)
@@ -133,26 +140,70 @@ namespace Cognitive3D.Components
                 case UnityWebRequest.Result.Success:
                     // Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
                     var data = req.downloadHandler.text;
-                    SubscriptionContextResponseText response = JsonConvert.DeserializeObject<SubscriptionContextResponseText>(data);
+                    SubscriptionContextResponseText response = null;
 
-                    new CustomEvent("Success").Send();
-                    new CustomEvent("Response").SetProperty("Value", response);
-                    new CustomEvent("Response Data").SetProperty("Value", response.data);
+                    try
+                    {
+                        response = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
+                        isResponseJsonValid = true;
+                    }
+                    catch
+                    {
+                        isResponseJsonValid = false;
+                        Debug.LogError("Invalid JSON response");
+                    }
 
-                    Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.Subscription SKU", response.data[0]["sku"]);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.Is Trial", response.data[0]["is_trial"]);
+                    if (isResponseJsonValid)
+                    {
+                        SetSubscriptionProperties(response);
+                    }
                     break;
             }
         }
 
-        private void DoSubscriptionStuff(Message <string> message)
+        /// <summary>
+        /// Populates session properties with subscription context details
+        /// </summary>
+        /// <param name="response">The subscription response returne by the API</param>
+        private void SetSubscriptionProperties(SubscriptionContextResponseText response)
+        {
+            if (!string.IsNullOrEmpty(response.data[0].sku))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.sku", response.data[0].sku);
+            }
+            if (!string.IsNullOrEmpty(response.data[0].isActive))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isActive", response.data[0].isActive);
+            }
+            if (!string.IsNullOrEmpty(response.data[0].isTrial))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.isTrial", response.data[0].isTrial);
+            }
+            if (!string.IsNullOrEmpty(response.data[0].periodStartDate))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.periodStartDate", response.data[0].periodStartDate);
+            }
+            if (!string.IsNullOrEmpty(response.data[0].periodEndDate))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.periodEndDate", response.data[0].periodEndDate);
+            }
+            if (!string.IsNullOrEmpty(response.data[0].nextRenewalTime))
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.nextRenewalTime", response.data[0].nextRenewalTime);
+            }
+        }
+
+        /// <summary>
+        /// Callback to handle the user access token
+        /// </summary>
+        /// <param name="message">The response from GetAccessToken - message.Data.ToString to get the token</param>
+        private void DoSubscriptionStuff(Message<string> message)
         {
             string userAccessToken = message.Data.ToString();
             Cognitive3D_Manager.SetParticipantProperty("c3d.app.meta.accessToken", userAccessToken);
-            string url = "https://graph.oculus.com/application/subscriptions" +
+            string url = URL_FOR_SUBSCRIPTION +
                 "?access_token=" + userAccessToken +
-                "&fields=sku,period_start_time,period_end_time,is_trial";
-            // string url2 = "https://httpbin.org/get";
+                "&fields=sku,period_start_time,period_end_time,is_trial,is_active,next_renewal_time";
             StartCoroutine(Get(url));
         }
 
@@ -207,8 +258,28 @@ namespace Cognitive3D.Components
         }
     }
 
+    /// <summary>
+    /// A class defining the structure of the json response for subscription <br/>
+    /// Example of the json structure can be found here:https://developer.oculus.com/documentation/unity/ps-subscriptions-s2s/   
+    /// </summary>
     class SubscriptionContextResponseText
     {
-        public Dictionary<string, string>[] data; 
+        internal SubscriptionContextData[] data;
+
+        internal class SubscriptionContextData
+        {
+            internal string sku;
+            internal Owner owner;
+            internal string isActive;
+            internal string isTrial;
+            internal string periodStartDate;
+            internal string periodEndDate;
+            internal string nextRenewalTime;
+
+            internal class Owner
+            {
+                internal string id;
+            }
+        }
     }
 }
