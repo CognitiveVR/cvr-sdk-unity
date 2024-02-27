@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
+using System.Collections;
 
 
 //handles network requests at runtime
@@ -462,6 +463,30 @@ namespace Cognitive3D
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                 Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
+        }
+
+        internal delegate void GetRequestSuccessCallback(string content);
+        internal void Get(string url, GetRequestSuccessCallback successCallback)
+        {
+            StartCoroutine(SendGetRequest(url, successCallback));
+        }
+
+        IEnumerator SendGetRequest(string url,GetRequestSuccessCallback successCallback)
+        {
+            var req = UnityWebRequest.Get(url);
+            yield return req.SendWebRequest();
+            switch (req.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                case UnityWebRequest.Result.ProtocolError:
+                    Util.logError($"Error in GET request to get subscription. Error type: {req.result.ToString()}");
+                    break;
+                case UnityWebRequest.Result.Success:
+                    var data = req.downloadHandler.text;
+                    successCallback(data);
+                    break;
+            }
         }
 
         // Writing to cache

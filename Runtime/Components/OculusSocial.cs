@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Networking;
-using System.Collections;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -119,30 +117,7 @@ namespace Cognitive3D.Components
         }
 
 #endif
-        IEnumerator Get(string url)
-        {
-            var req = UnityWebRequest.Get(url);
-            yield return req.SendWebRequest();
-            switch (req.result)
-            {
-                case UnityWebRequest.Result.ConnectionError:
-                case UnityWebRequest.Result.DataProcessingError:
-                    // Debug.LogError(pages[page] + ": Error: " + webRequest.error);
-                    new CustomEvent("Connection or Data Error").Send();
-                    break;
-                case UnityWebRequest.Result.ProtocolError:
-                    // Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
-                    new CustomEvent("Protocol Error").Send();
-                    break;
-                case UnityWebRequest.Result.Success:
-                    // Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
-                    var data = req.downloadHandler.text;
-                    SubscriptionContextResponseText response = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
-                    SetSubscriptionProperties(response);
-                    break;
-            }
-        }
-
+        
         /// <summary>
         /// Populates session properties with subscription context details
         /// </summary>
@@ -198,9 +173,18 @@ namespace Cognitive3D.Components
             string url = URL_FOR_SUBSCRIPTION +
                 "?access_token=" + userAccessToken +
                 "&fields=sku,period_start_time,period_end_time,is_trial,is_active,next_renewal_time";
-            StartCoroutine(Get(url));
+            Cognitive3D_Manager.NetworkManager.Get(url, DeserializeAndSetSessionProperties);
         }
 
+        /// <summary>
+        /// Deserializes a json string into SubscriptionContextResponseText object and sets session properties
+        /// </summary>
+        /// <param name="data">The json string to be deserialized</param>
+        private void DeserializeAndSetSessionProperties(string data)
+        {
+            SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
+            SetSubscriptionProperties(subscriptionContextResponse);
+        }
 
 #if C3D_OCULUS
         /// <summary>
