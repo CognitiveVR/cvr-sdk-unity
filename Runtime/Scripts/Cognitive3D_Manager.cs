@@ -376,6 +376,8 @@ namespace Cognitive3D
             #endregion
         }
 
+        bool sendLastSceneEventComplete;
+
 
         /// <summary>
         /// registered to unity's OnSceneLoaded callback. sends outstanding data, then sets correct tracking scene id and refreshes dynamic object session manifest
@@ -439,16 +441,26 @@ namespace Cognitive3D
             //unloading the active scene
             if (TrackingScene != null && c3dscene == TrackingScene)
             {
-                //use the top scene from the scene list
-                if (sceneList.Count > 0)
-                {
-                    SetTrackingScene(sceneList[0].name);
-                }
-                else
-                {
-                    TrackingScene = null;
-                }
+                StartCoroutine(WaitForSceneEventComplete());
             }
+        }
+
+        // Waits for scene events to be fully processed before unloading the active scene
+        private IEnumerator WaitForSceneEventComplete()
+        {
+            yield return new WaitUntil(() => sendLastSceneEventComplete); // Wait until scene loaded completes
+
+            //use the top scene from the scene list
+            if (sceneList.Count > 0)
+            {
+                SetTrackingScene(sceneList[0].name);
+            }
+            else
+            {
+                TrackingScene = null;
+            }
+
+            sendLastSceneEventComplete = false;
         }
 
         /// <summary>
@@ -458,7 +470,7 @@ namespace Cognitive3D
         {
             if (IsInitialized)
             {
-                if (!string.IsNullOrEmpty(sceneName))
+                if (sceneName != null)
                 {
                     if (!SceneStartTimeDic.ContainsKey(sceneName))
                     {
@@ -481,6 +493,8 @@ namespace Cognitive3D
                     }
                 }
             }
+
+            sendLastSceneEventComplete = true;
         }
 
         /// <summary>
