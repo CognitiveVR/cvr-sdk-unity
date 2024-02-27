@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
-
+using UnityEngine.Networking;
+using System.Collections;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -11,6 +14,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Oculus Social")]
     public class OculusSocial : AnalyticsComponentBase
     {
+
 #if C3D_OCULUS
         [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
@@ -111,6 +115,47 @@ namespace Cognitive3D.Components
         }
 
 #endif
+        IEnumerator Get(string url)
+        {
+            var req = UnityWebRequest.Get(url);
+            yield return req.SendWebRequest();
+            switch (req.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    // Debug.LogError(pages[page] + ": Error: " + webRequest.error);
+                    new CustomEvent("Connection or Data Error").Send();
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    // Debug.LogError(pages[page] + ": HTTP Error: " + webRequest.error);
+                    new CustomEvent("Protocol Error").Send();
+                    break;
+                case UnityWebRequest.Result.Success:
+                    // Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
+                    var data = req.downloadHandler.text;
+                    SubscriptionContextResponseText response = JsonConvert.DeserializeObject<SubscriptionContextResponseText>(data);
+
+                    new CustomEvent("Success").Send();
+                    new CustomEvent("Response").SetProperty("Value", response);
+                    new CustomEvent("Response Data").SetProperty("Value", response.data);
+
+                    Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.Subscription SKU", response.data[0]["sku"]);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.Is Trial", response.data[0]["is_trial"]);
+                    break;
+            }
+        }
+
+        private void DoSubscriptionStuff(Message <string> message)
+        {
+            string userAccessToken = message.Data.ToString();
+            Cognitive3D_Manager.SetParticipantProperty("c3d.app.meta.accessToken", userAccessToken);
+            string url = "https://graph.oculus.com/application/subscriptions" +
+                "?access_token=" + userAccessToken +
+                "&fields=sku,period_start_time,period_end_time,is_trial";
+            // string url2 = "https://httpbin.org/get";
+            StartCoroutine(Get(url));
+        }
+
 
 #if C3D_OCULUS
         /// <summary>
@@ -126,6 +171,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
             {
+                Users.GetAccessToken().OnComplete(DoSubscriptionStuff);
                 Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
                 if (RecordOculusUserData)
                 {
@@ -159,5 +205,10 @@ namespace Cognitive3D.Components
             return true;
 #endif
         }
+    }
+
+    class SubscriptionContextResponseText
+    {
+        public Dictionary<string, string>[] data; 
     }
 }
