@@ -54,6 +54,33 @@ namespace Cognitive3D
 			}
 		}
 
+        private static HashSet<string> logs = new HashSet<string>();
+
+        internal static void LogOnce(string msg, LogType logType)
+        {
+            if (!logs.Contains(msg))
+            {
+                switch(logType)
+                {
+                    case LogType.Error:
+                        Debug.LogError(msg);
+                        break;
+                    case LogType.Warning:
+                        Debug.LogWarning(msg);
+                        break;
+                    default:
+                        Debug.Log(msg);
+                        break;
+                }
+                logs.Add(msg);
+            }
+        }
+
+        internal static void ResetLogs()
+        {
+            logs.Clear();
+        }
+
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         static double lastTime;
         static int lastFrame = -1;
