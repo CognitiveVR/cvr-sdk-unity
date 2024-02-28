@@ -130,33 +130,15 @@ namespace Cognitive3D.Components
             // bool would just default to false
             for (int i = 0; i < response.data.Length; i++)
             {
-                if (!string.IsNullOrEmpty(response.data[i].is_trial))
-                {
-                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", response.data[i].is_trial);
-                }
-                if (!string.IsNullOrEmpty(response.data[i].is_active))
+                if (response.data[i] != null)
                 {
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_active", response.data[i].is_active);
-                    if (response.data[i].is_active == "true")
-                    {
-                        numActiveSubscriptions++;
-                    }
+                    if (response.data[i].is_active == "true") { numActiveSubscriptions++; }
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", response.data[i].is_trial);
                     Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
-                }
-                if (!string.IsNullOrEmpty(response.data[i].sku))
-                {
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.sku", response.data[i].sku);
-                }
-                if (!string.IsNullOrEmpty(response.data[i].period_start_date))
-                {
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", response.data[i].period_start_date);
-                }
-                if (!string.IsNullOrEmpty(response.data[i].period_end_date))
-                {
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", response.data[i].period_end_date);
-                }
-                if (!string.IsNullOrEmpty(response.data[i].next_renewal_time))
-                {
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_time", response.data[i].next_renewal_time);
                 }
             }
@@ -183,7 +165,10 @@ namespace Cognitive3D.Components
         private void DeserializeAndSetSessionProperties(string data)
         {
             SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
-            SetSubscriptionProperties(subscriptionContextResponse);
+            if (subscriptionContextResponse != null)
+            {
+                SetSubscriptionProperties(subscriptionContextResponse);
+            }
         }
 
 #if C3D_OCULUS
