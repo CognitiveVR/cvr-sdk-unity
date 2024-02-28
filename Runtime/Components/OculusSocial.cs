@@ -143,7 +143,7 @@ namespace Cognitive3D.Components
                     }
                     Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
                 }
-                if (!string.IsNullOrEmpty(response.data[i + 1].sku))
+                if (!string.IsNullOrEmpty(response.data[i].sku))
                 {
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.sku", response.data[i].sku);
                 }
