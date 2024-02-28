@@ -133,6 +133,7 @@ namespace Cognitive3D
             SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
             Application.wantsToQuit += WantsToQuit;
+            RoomTrackingSpace.TrackingSpaceChanged += UpdateTrackingSpace;
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
@@ -429,6 +430,15 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Updates current tracking space to next valid tracking space if exists any
+        /// </summary>
+        /// <param name="newTrackingSpace"></param>
+        private void UpdateTrackingSpace(Transform newTrackingSpace)
+        {
+            trackingSpace = newTrackingSpace;
+        }
+
         private void SceneManager_SceneUnloaded(Scene scene)
         {
             if (DoesSceneHaveID(scene))
@@ -520,6 +530,7 @@ namespace Cognitive3D
         public void EndSession()
         {
             Application.wantsToQuit -= WantsToQuit;
+            RoomTrackingSpace.TrackingSpaceChanged -= UpdateTrackingSpace;
             if (IsInitialized)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;

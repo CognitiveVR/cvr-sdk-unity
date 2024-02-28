@@ -130,8 +130,8 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            Transform trackingSpace = null;
-            if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
+            Transform trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            if (trackingSpace)
             {
                 if (previousBoundaryPoints != null && previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
                 {
