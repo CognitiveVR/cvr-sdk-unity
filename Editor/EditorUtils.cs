@@ -3,14 +3,24 @@ using UnityEditor;
 using UnityEngine.XR;
 using System.Threading.Tasks;
 
-
 namespace Cognitive3D
 {
     public class EditorUtils : EditorWindow
     {
-        const float initialDelay = 2;
-        const float interval = 900;
-        const float waitTime = 1200;
+        /// <summary>
+        /// Interval between user activity checks
+        /// </summary>
+        // To ensure accurate user presence detection upon entering play mode
+        // User presence returns false within 1 second of entering play mode
+        const float INTERVAL_IN_SECONDS = 2;
+        /// <summary>
+        /// Max wait time for user inactivity before displaying popup
+        /// </summary>
+        const float MAX_USER_INACTIVITY_IN_SECONDS = 900;
+        /// <summary>
+        /// Max time to wait for user response
+        /// </summary>
+        const float WAIT_TIME_USER_RESPONSE_SECONDS = 1200;
 
         static bool buttonPressed;
         static EditorUtils window;
@@ -35,7 +45,7 @@ namespace Cognitive3D
         // 15 minute wait time starts when user becomes inactive (headset is unmounted)
         private static async void CheckUserActivity()
         {
-            await Task.Delay((int)initialDelay * 1000);
+            await Task.Delay((int)INTERVAL_IN_SECONDS * 1000);
             
             if (EditorApplication.isPlaying)
             {
@@ -98,7 +108,7 @@ namespace Cognitive3D
             float time = 0;
 
             // Waiting for 20 minutes
-            while(time < waitTime && !buttonPressed)
+            while(time < WAIT_TIME_USER_RESPONSE_SECONDS && !buttonPressed)
             {
                 await Task.Yield();
                 time += Time.deltaTime;
@@ -121,7 +131,7 @@ namespace Cognitive3D
 
             // Waiting for 15 minutes
             // If user is active again during wait time, breaks out of wait loop
-            while(time < interval && !IsUserPresent())
+            while(time < MAX_USER_INACTIVITY_IN_SECONDS && !IsUserPresent())
             {
                 await Task.Yield();
                 time += Time.deltaTime;
@@ -144,7 +154,8 @@ namespace Cognitive3D
 #if C3D_OCULUS
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
             currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isPresent);
-#else
+#elif C3D_DEFAULT
+            // Work with Vive focus?
             Vector3 velocity;
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
 
@@ -158,9 +169,9 @@ namespace Cognitive3D
             {
                 isPresent = false;
             }
-#endif
-
-            return isPresent;
+#else
+            return true;
+#endif       
         }
 
         private void OnGUI()
