@@ -1,3 +1,4 @@
+#if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
 using Photon.Realtime;
 
@@ -165,3 +166,4 @@ namespace Cognitive3D.Components
 #endregion
     }
 }
+#endif
