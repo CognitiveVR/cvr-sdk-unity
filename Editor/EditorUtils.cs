@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.XR;
@@ -15,10 +14,26 @@ namespace Cognitive3D
 
         static bool buttonPressed;
         static EditorUtils window;
+
+        public static void Init()
+        {
+            Cognitive3D_Manager.OnSessionBegin += CheckUserActivity;
+            Cognitive3D_Manager.OnPreSessionEnd += CleanUp;
+
+            EditorApplication.pauseStateChanged += OnPauseStateChanged;
+        }
+
+        private static void CleanUp()
+        {
+            EditorApplication.pauseStateChanged -= OnPauseStateChanged;
+
+            Cognitive3D_Manager.OnSessionBegin -= CheckUserActivity;
+            Cognitive3D_Manager.OnPreSessionEnd -= CleanUp;
+        }
         
 
         // 15 minute wait time starts when user becomes inactive (headset is unmounted)
-        public static async void CheckUserActivity()
+        private static async void CheckUserActivity()
         {
             await Task.Delay((int)initialDelay * 1000);
             
@@ -28,23 +43,39 @@ namespace Cognitive3D
                 {
                     await WaitForUser();
 
-                    // Check if still in play mode before initializing the window
+                    // Check if still in play or pause mode before initializing the window
                     if (EditorApplication.isPlaying && !IsUserPresent())
                     {
-                        Init();
-
+                        // EditorApplication.pauseStateChanged
+                        OpenWindow("Session Reminder");
                         await WaitingForUserResponse();
                     }
                 }
 
                 CheckUserActivity();
-            }
-            
+            }       
         }
 
-        internal static void Init()
+        /// <summary>
+        /// Handles pause state after not receiving user response
+        /// </summary>
+        /// <param name="pauseState"></param>
+        private static void OnPauseStateChanged(PauseState pauseState)
         {
-            window = (EditorUtils)EditorWindow.GetWindow(typeof(EditorUtils), true, "Session Reminder");
+            if (pauseState == PauseState.Paused)
+            {
+                Util.logDebug("Session Paused");
+                OpenWindow("Session Paused");
+            }
+            else
+            {
+                Util.logDebug("Session Continued");
+            }
+        }
+
+        private static void OpenWindow(string windowTitle)
+        {
+            window = (EditorUtils)EditorWindow.GetWindow(typeof(EditorUtils), true, windowTitle);
             window.minSize = new Vector2(400, 200);
             window.maxSize = new Vector2(400, 200);
 
@@ -53,7 +84,7 @@ namespace Cognitive3D
             buttonPressed = false;
         }
 
-        static void CloseWindow()
+        private static void CloseWindow()
         {
             if (window != null)
             {
@@ -63,7 +94,7 @@ namespace Cognitive3D
 
         // Waiting for user respond
         // If there is no response, the window will be closed after 20 mins and will exit editor's play mode
-        static async Task WaitingForUserResponse()
+        private static async Task WaitingForUserResponse()
         {
             float time = 0;
 
@@ -79,13 +110,14 @@ namespace Cognitive3D
             if (!buttonPressed)
             {
                 CloseWindow();
-                EditorApplication.ExitPlaymode();
+                // EditorApplication.ExitPlaymode();
+                EditorApplication.isPaused = true;
             }
         }
 
         // Waiting for user to become active
         // If user become active and put their headset back, wait time will stop
-        static async Task WaitForUser()
+        private static async Task WaitForUser()
         {
             float time = 0;
 
@@ -98,14 +130,16 @@ namespace Cognitive3D
             }
         }
 
-        static void OnButtonPressed()
+        private static void OnButtonPressed()
         {
             buttonPressed = true;
             CloseWindow();
         }
 
-        // Checks whether the headset is currently worn by the user
-        public static bool IsUserPresent()
+        /// <summary>
+        /// Checks whether the headset is currently worn by the user in Editor
+        /// </summary>
+        private static bool IsUserPresent()
         {
             bool isPresent;
 
@@ -131,22 +165,34 @@ namespace Cognitive3D
             return isPresent;
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
             GUI.DrawTexture(new Rect(0, 0, 400, 200), EditorGUIUtility.whiteTexture);
 
-            GUI.Label(new Rect(30, 20, 350, 300), "Do you want to continue recording this session?\n\n" + "Press 'Continue' to keep recording or 'Stop' to end the session.", "normallabel");
-
-            if (GUI.Button(new Rect(200, 150, 80, 30), new GUIContent("Continue")))
+            if (titleContent.text == "Session Reminder")
             {
-                OnButtonPressed();
+                GUI.Label(new Rect(30, 20, 350, 300), "Do you want to continue recording this session?\n\n" + "Press 'Continue' to keep recording or 'Stop' to end the session.", "normallabel");
+
+                if (GUI.Button(new Rect(200, 150, 80, 30), new GUIContent("Continue")))
+                {
+                    OnButtonPressed();
+                }
+
+                if (GUI.Button(new Rect(300, 150, 80, 30), new GUIContent("Stop")))
+                {
+                    OnButtonPressed();
+                    EditorApplication.ExitPlaymode();
+                }
             }
-
-            if (GUI.Button(new Rect(300, 150, 80, 30), new GUIContent("Stop")))
+            else
             {
-                OnButtonPressed();
-                EditorApplication.ExitPlaymode();
+                GUI.Label(new Rect(30, 20, 350, 300), "Editor (session) is paused due to inactivity!", "normallabel");
+
+                if (GUI.Button(new Rect(165, 150, 80, 30), new GUIContent("OK")))
+                {
+                    OnButtonPressed();
+                }
             }
         }
     }
