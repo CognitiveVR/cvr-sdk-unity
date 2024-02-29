@@ -530,7 +530,6 @@ namespace Cognitive3D
         public void EndSession()
         {
             Application.wantsToQuit -= WantsToQuit;
-            RoomTrackingSpace.TrackingSpaceChanged -= UpdateTrackingSpace;
             if (IsInitialized)
             {
                 double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
@@ -838,6 +837,7 @@ namespace Cognitive3D
 
             SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
+            RoomTrackingSpace.TrackingSpaceChanged -= UpdateTrackingSpace;
             CognitiveStatics.Reset();
         }
 
