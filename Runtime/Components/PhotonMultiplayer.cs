@@ -27,6 +27,9 @@ namespace Cognitive3D.Components
             RecordSensorValues();
         }
 
+        /// <summary>
+        /// Records sensor values for 
+        /// </summary>
         private void RecordSensorValues()
         {
             // Time from my device to server and back
@@ -39,6 +42,10 @@ namespace Cognitive3D.Components
             SensorRecorder.RecordDataPoint("c3d.multiplayer.rttvariance", roundTripTimeVariance);
         }
 
+        /// <summary>
+        /// Called when this player creates a room <br/>
+        /// Sends a custom event
+        /// </summary>
         public override void OnCreatedRoom()
         {
             base.OnCreatedRoom();
@@ -54,6 +61,10 @@ namespace Cognitive3D.Components
             }
         }
 
+        /// <summary>
+        /// Called when this player joins a room <br/>
+        /// Sends a custom event, RPC for other players, and calculates the max number of players
+        /// </summary>
         public override void OnJoinedRoom()
         {
             base.OnJoinedRoom();
@@ -71,7 +82,8 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// 
+        /// Called after this player leaves the room <br/>
+        /// Sends a custom event
         /// </summary>
         public override void OnLeftRoom()
         {
@@ -84,6 +96,11 @@ namespace Cognitive3D.Components
             PhotonNetwork.NetworkStatisticsToString();
         }
 
+        /// <summary>
+        /// Called after a player leaves the room <br/>
+        /// Sends a custom event
+        /// </summary>
+        /// <param name="otherPlayer"></param>
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
             new CustomEvent("c3d.multiplayer.A player left this room")
@@ -93,9 +110,10 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Session dies before this can get called; or so it seems
+        /// Called after the player disconnects <br/>
+        /// Sends a custom event
         /// </summary>
-        /// <param name="cause"></param>
+        /// <param name="cause">The cause behind the player disconnecting</param>
         public override void OnDisconnected(DisconnectCause cause)
         {
             base.OnDisconnected(cause);
@@ -106,6 +124,9 @@ namespace Cognitive3D.Components
                 .Send();
         }
 
+        /// <summary>
+        /// Sets session properties for multiplayer related details
+        /// </summary>
         private void SetMultiplayerSessionProperties()
         {
             playerPhotonActorNumber = PhotonNetwork.LocalPlayer.ActorNumber;
@@ -131,12 +152,19 @@ namespace Cognitive3D.Components
 
 
 #region RPC
+        /// <summary>
+        /// RPC to set lobbyID for all participants
+        /// </summary>
+        /// <param name="lobbyID">The lobbyID as a string</param>
         [PunRPC]
         private void SetLobbyAndViewID(string lobbyID)
         {
             Cognitive3D_Manager.SetLobbyId(lobbyID);
         }
 
+        /// <summary>
+        /// Calculates the maximum players in the room
+        /// </summary>
         [PunRPC]
         private void CalculateNumberConnections()
         {
@@ -148,6 +176,7 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
+        /// RPC when a player joins a room <br/>
         /// For other users: Participant A sends event when participant B joins
         /// </summary>
         [PunRPC]
