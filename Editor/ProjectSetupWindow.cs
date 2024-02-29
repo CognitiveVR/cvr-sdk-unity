@@ -1003,6 +1003,7 @@ namespace Cognitive3D
                     break;
                 case Page.PhotonMultiplayerSetup:
                     if (wantPhotonPunSupport) { GameplayReferences.punSupport = true; }
+                    else { GameplayReferences.punSupport = false; }
                     onclick += () => currentPage = Page.NextSteps;
                     break;
                 default:

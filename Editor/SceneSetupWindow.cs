@@ -170,8 +170,8 @@ namespace Cognitive3D
 #if PHOTON_UNITY_NETWORKING
                 if (GameplayReferences.punSupport)
                 {
-                    c3dManagerPrefab.AddComponent<PhotonMultiplayer>();
-                    c3dManagerPrefab.AddComponent<PhotonView>();
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonMultiplayer>();
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonView>();
                 }
 #endif
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
