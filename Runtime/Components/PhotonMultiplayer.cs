@@ -103,7 +103,6 @@ namespace Cognitive3D.Components
                 .SetProperty("Player ID", playerPhotonActorNumber)
                 .SetProperty("Disconnect cause", cause)
                 .Send();
-            this.photonView.RPC("SendCustomEventOnDisconnect", RpcTarget.All, playerPhotonActorNumber, cause);
         }
 
         private void SetMultiplayerSessionProperties()
@@ -161,20 +160,6 @@ namespace Cognitive3D.Components
                 .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                 .Send();
 
-            }
-        }
-
-        [PunRPC]
-        private void SendCustomEventOnDisconnect(int actorNumber, DisconnectCause cause)
-        {
-            // Send events only for "other" players
-            if (actorNumber != playerPhotonActorNumber)
-            {
-                new CustomEvent("c3d.multiplayer.A player got disconnected")
-                    .SetProperty("Player ID", actorNumber)
-                    .SetProperty("Disconnect cause", cause)
-                    .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
-                    .Send();
             }
         }
 #endregion
