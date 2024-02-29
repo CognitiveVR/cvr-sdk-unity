@@ -147,15 +147,15 @@ namespace Cognitive3D
         /// <summary>
         /// Checks whether the headset is currently worn by the user in Editor
         /// </summary>
+        /// TODO: Need support for other SDKs
         private static bool IsUserPresent()
         {
-            bool isPresent;
-
 #if C3D_OCULUS
+            bool isPresent;
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
             currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isPresent);
+            return isPresent;
 #elif C3D_DEFAULT
-            // Work with Vive focus?
             Vector3 velocity;
             InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
 
@@ -163,15 +163,14 @@ namespace Cognitive3D
 
             if (velocity != Vector3.zero)
             {
-                isPresent = true;
+                return true;
             }
             else
             {
-                isPresent = false;
+                return false;
             }
-#else
-            return true;
 #endif       
+            return true;
         }
 
         private void OnGUI()
