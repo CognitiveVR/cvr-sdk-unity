@@ -43,10 +43,9 @@ namespace Cognitive3D
                 {
                     await WaitForUser();
 
-                    // Check if still in play or pause mode before initializing the window
+                    // Check if still in play before initializing the window
                     if (EditorApplication.isPlaying && !IsUserPresent())
                     {
-                        // EditorApplication.pauseStateChanged
                         OpenWindow("Session Reminder");
                         await WaitingForUserResponse();
                     }
@@ -110,7 +109,6 @@ namespace Cognitive3D
             if (!buttonPressed)
             {
                 CloseWindow();
-                // EditorApplication.ExitPlaymode();
                 EditorApplication.isPaused = true;
             }
         }
