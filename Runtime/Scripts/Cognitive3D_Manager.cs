@@ -381,6 +381,7 @@ namespace Cognitive3D
             bool replacingSceneId = DoesSceneHaveID(scene);
             if (mode == LoadSceneMode.Single)
             {
+                Util.ResetLogs();
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
