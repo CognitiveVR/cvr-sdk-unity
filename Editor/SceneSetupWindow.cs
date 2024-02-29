@@ -1,10 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using Cognitive3D;
 using Cognitive3D.Components;
+#if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
+#endif
 
 #if C3D_STEAMVR2
 using Valve.VR;
@@ -166,11 +166,14 @@ namespace Cognitive3D
             {
                 GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
                 PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+
+#if PHOTON_UNITY_NETWORKING
                 if (GameplayReferences.punSupport)
                 {
                     c3dManagerPrefab.AddComponent<PhotonMultiplayer>();
                     c3dManagerPrefab.AddComponent<PhotonView>();
                 }
+#endif
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
         }
