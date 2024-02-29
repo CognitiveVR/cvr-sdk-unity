@@ -56,6 +56,11 @@ namespace Cognitive3D
 
         private static HashSet<string> logs = new HashSet<string>();
 
+        /// <summary>
+        /// Logs a message once, preventing duplicate logging of the same message
+        /// </summary>
+        /// <param name="message">The message to log</param>
+        /// <param name="logType">The type of log: Error, Warning, or Info</param>
         internal static void LogOnce(string msg, LogType logType)
         {
             if (!logs.Contains(msg))
@@ -76,6 +81,9 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Clears the logs, allowing messages to be logged again
+        /// </summary>
         internal static void ResetLogs()
         {
             logs.Clear();
