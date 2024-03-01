@@ -1008,9 +1008,12 @@ namespace Cognitive3D
                 case Page.Wave:
                     break;
                 case Page.PhotonMultiplayerSetup:
-                    if (wantPhotonPunSupport && !selectedsdks.Contains("C3D_PHOTON"))
+                    if (wantPhotonPunSupport)
                     { 
-                        selectedsdks.Add("C3D_PHOTON");
+                        if (!selectedsdks.Contains("C3D_PHOTON"))
+                        {
+                            selectedsdks.Add("C3D_PHOTON");
+                        }
                     }
                     else
                     { 
