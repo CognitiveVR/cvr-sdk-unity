@@ -12,18 +12,22 @@ namespace Cognitive3D
         /// </summary>
         // To ensure accurate user presence detection upon entering play mode
         // User presence returns false within 1 second of entering play mode
-        const float INTERVAL_IN_SECONDS = 2;
+        private const float INTERVAL_IN_SECONDS = 2;
+
         /// <summary>
         /// Max wait time for user inactivity before displaying popup
         /// </summary>
-        const float MAX_USER_INACTIVITY_IN_SECONDS = 900;
+        private const float MAX_USER_INACTIVITY_IN_SECONDS = 900;
+
         /// <summary>
         /// Max time to wait for user response
         /// </summary>
-        const float WAIT_TIME_USER_RESPONSE_SECONDS = 1200;
+        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 1200;
 
-        static bool buttonPressed;
-        static EditorUtils window;
+        private const string LOG_TAG = "[COGNITIVE3D] ";
+
+        private static bool buttonPressed;
+        private static EditorUtils window;
 
         public static void Init()
         {
@@ -56,7 +60,7 @@ namespace Cognitive3D
                     // Check if still in play before initializing the window
                     if (EditorApplication.isPlaying && !IsUserPresent())
                     {
-                        OpenWindow("Session Reminder");
+                        OpenWindow(LOG_TAG + "Session Reminder");
                         await WaitingForUserResponse();
                     }
                 }
@@ -74,7 +78,7 @@ namespace Cognitive3D
             if (pauseState == PauseState.Paused)
             {
                 Util.logDebug("Session Paused");
-                OpenWindow("Session Paused");
+                OpenWindow(LOG_TAG + "Session Paused");
             }
             else
             {
@@ -85,8 +89,8 @@ namespace Cognitive3D
         private static void OpenWindow(string windowTitle)
         {
             window = (EditorUtils)EditorWindow.GetWindow(typeof(EditorUtils), true, windowTitle);
-            window.minSize = new Vector2(400, 200);
-            window.maxSize = new Vector2(400, 200);
+            window.minSize = new Vector2(480, 210);
+            window.maxSize = new Vector2(480, 210);
 
             window.Show();
 
@@ -169,25 +173,35 @@ namespace Cognitive3D
             {
                 return false;
             }
-#endif       
+#else
             return true;
+#endif
         }
 
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
-            GUI.DrawTexture(new Rect(0, 0, 400, 200), EditorGUIUtility.whiteTexture);
+            GUI.DrawTexture(new Rect(0, 0, 480, 210), EditorGUIUtility.whiteTexture);
 
-            if (titleContent.text == "Session Reminder")
+            // Define the coordinates and dimensions of the cropping area
+            Rect cropArea = new Rect(20, 40, 110, 100);
+
+            // Begin a group with the cropping area
+            GUI.BeginGroup(cropArea);
+            // Draw the image within the cropping area
+            GUI.Label(new Rect(-50, 0, 400, 80), EditorCore.LogoTexture, "image_centered");
+            // End the group
+            GUI.EndGroup();
+
+            if (titleContent.text == LOG_TAG + "Session Reminder")
             {
-                GUI.Label(new Rect(30, 20, 350, 300), "Do you want to continue recording this session?\n\n" + "Press 'Continue' to keep recording or 'Stop' to end the session.", "normallabel");
-
-                if (GUI.Button(new Rect(200, 150, 80, 30), new GUIContent("Continue")))
+                GUI.Label(new Rect(150, 30, 300, 800), "Do you want to continue recording this session?\n\n" + "Press 'Continue' to keep recording or 'Stop' to end the session.", "normallabel");
+                if (GUI.Button(new Rect(230, 150, 100, 30), new GUIContent("Continue")))
                 {
                     OnButtonPressed();
                 }
 
-                if (GUI.Button(new Rect(300, 150, 80, 30), new GUIContent("Stop")))
+                if (GUI.Button(new Rect(350, 150, 100, 30), new GUIContent("Stop")))
                 {
                     OnButtonPressed();
                     EditorApplication.ExitPlaymode();
@@ -195,9 +209,9 @@ namespace Cognitive3D
             }
             else
             {
-                GUI.Label(new Rect(30, 20, 350, 300), "Editor (session) is paused due to inactivity!", "normallabel");
+                GUI.Label(new Rect(150, 60, 300, 800), "Unity Editor session has been paused due to inactivity.", "normallabel");
 
-                if (GUI.Button(new Rect(165, 150, 80, 30), new GUIContent("OK")))
+                if (GUI.Button(new Rect(200, 150, 100, 30), new GUIContent("OK")))
                 {
                     OnButtonPressed();
                 }
