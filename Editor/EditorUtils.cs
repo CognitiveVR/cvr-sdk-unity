@@ -17,12 +17,12 @@ namespace Cognitive3D
         /// <summary>
         /// Max wait time for user inactivity before displaying popup
         /// </summary>
-        private const float MAX_USER_INACTIVITY_IN_SECONDS = 5;
+        private const float MAX_USER_INACTIVITY_IN_SECONDS = 900;
 
         /// <summary>
         /// Max time to wait for user response
         /// </summary>
-        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 5;
+        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 1200;
 
         private const string LOG_TAG = "[COGNITIVE3D] ";
 
