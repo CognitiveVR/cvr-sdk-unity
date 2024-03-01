@@ -30,7 +30,7 @@ namespace Cognitive3D.Components
         {
             // PUN ID and Realtime ID is same: pun is unity specific implementation of realtime
             string photonAppID = PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime;
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonAppID", photonAppID);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonAppId", photonAppID);
             PhotonNetwork.NetworkStatisticsEnabled = true;
         }
 
@@ -162,7 +162,7 @@ namespace Cognitive3D.Components
             photonRoomName = PhotonNetwork.CurrentRoom.Name;
             serverAddress = PhotonNetwork.ServerAddress;
             port = PhotonNetwork.PhotonServerSettings.AppSettings.Port;
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonPlayerID", playerPhotonActorNumber);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonPlayerId", playerPhotonActorNumber);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonRoomName", photonRoomName);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonServerAddress", serverAddress);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.port", port);
@@ -234,6 +234,8 @@ namespace Cognitive3D.Components
 #endif
 
 #region Inspector
+#if PHOTON_UNITY_NETWORKING
+[CustomEditor(typeof(Cognitive3D.Components.PhotonMultiplayer))]
 [CanEditMultipleObjects]
 public class PhotonMultiplayerEditor : Editor
 {
@@ -253,4 +255,5 @@ public class PhotonMultiplayerEditor : Editor
         EditorGUILayout.HelpBox(this.GetDescription(), this.GetMessageType());
     }
 }
+#endif
 #endregion

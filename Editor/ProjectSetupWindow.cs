@@ -842,7 +842,11 @@ namespace Cognitive3D
             }
         }
 
-        bool wantPhotonPunSupport = GameplayReferences.punSupport;
+#if C3D_PHOTON
+        bool wantPhotonPunSupport = true;
+#else
+        bool wantPhotonPunSupport = false;
+#endif
         void PhotonMultiplayerSetup()
         {
             GUI.Label(steptitlerect, "MUTLIPLAYER SUPPORT", "steptitle");
@@ -1003,9 +1007,15 @@ namespace Cognitive3D
                 case Page.Wave:
                     break;
                 case Page.PhotonMultiplayerSetup:
-                    if (wantPhotonPunSupport) { GameplayReferences.punSupport = true; }
-                    else { GameplayReferences.punSupport = false; }
-                    onclick += () => currentPage = Page.NextSteps;
+                    if (wantPhotonPunSupport && !selectedsdks.Contains("C3D_PHOTON"))
+                    { 
+                        selectedsdks.Add("C3D_PHOTON");
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_PHOTON");
+                    }
+                    onclick += () => currentPage = Page.Recompile;
                     break;
                 default:
                     throw new System.NotSupportedException();

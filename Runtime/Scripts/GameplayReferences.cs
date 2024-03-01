@@ -158,7 +158,6 @@ namespace Cognitive3D
             }
         }
 
-        public static bool punSupport;
 #region Room
 
         //really simple function to a rect from a collection of points

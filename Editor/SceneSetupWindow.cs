@@ -56,9 +56,12 @@ namespace Cognitive3D
                     wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
                 }
             }
-            wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
-            wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-            wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            if (Cognitive3D_Manager.Instance != null)
+            {
+                wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+                wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            }
 #endif
         }
 
@@ -168,8 +171,7 @@ namespace Cognitive3D
                 PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
             }
 #if PHOTON_UNITY_NETWORKING
-            if (GameplayReferences.punSupport)
-            {
+    #if C3D_PHOTON
                 if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() == null)
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonMultiplayer>();
@@ -178,7 +180,16 @@ namespace Cognitive3D
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonView>();
                 }
-            }
+    #else
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() != null)
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>());
+                }
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() != null)
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>());
+                }
+    #endif
 #endif
         }
 

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using UnityEditor;
 #if C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -40,7 +41,8 @@ namespace Cognitive3D
                     if (instance == null)
                     {
                         Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
-                        instance = new GameObject("Cognitive3D_Manager").AddComponent<Cognitive3D_Manager>();
+                        GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                        PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
                     }
                 }
                 return instance;
