@@ -166,16 +166,20 @@ namespace Cognitive3D
             {
                 GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
                 PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
-
+            }
 #if PHOTON_UNITY_NETWORKING
-                if (GameplayReferences.punSupport)
+            if (GameplayReferences.punSupport)
+            {
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() == null)
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonMultiplayer>();
+                }
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() == null)
+                {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonView>();
                 }
-#endif
-                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
+#endif
         }
 
         void ProjectErrorUpdate()

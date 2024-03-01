@@ -1,9 +1,12 @@
+using UnityEditor;
+using UnityEngine;
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
 using Photon.Realtime;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     // Can't inherit multiple classes: https://forum.unity.com/threads/multiple-inheritance-implementation-alternative.367802/
     public class PhotonMultiplayer : MonoBehaviourPunCallbacks
     {
@@ -13,20 +16,45 @@ namespace Cognitive3D.Components
         private string photonRoomName;
         private string serverAddress;
         private int port;
+        private const float PHOTON_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
+        private float currentTime = 0;
+
         private void Start ()
+        {
+            Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
+        }
+
+        private void OnSessionBegin()
         {
             // PUN ID and Realtime ID is same: pun is unity specific implementation of realtime
             string photonAppID = PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime;
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Photon App ID", photonAppID);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonAppID", photonAppID);
             PhotonNetwork.NetworkStatisticsEnabled = true;
         }
 
-        private void Update()
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            // Currently at 10Hz maybe change it later
-            RecordSensorValues();
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
+            {
+                if (!Cognitive3D_Manager.IsInitialized) { return; }
+                currentTime += deltaTime;
+                if (currentTime > PHOTON_SENSOR_RECORDING_INTERVAL_IN_SECONDS)
+                {
+                    currentTime = 0;
+                    RecordSensorValues();
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Photon Multiplayer component is disabled. Please enable in inspector.");
+            }
         }
-
+   
         /// <summary>
         /// Records sensor values for 
         /// </summary>
@@ -39,7 +67,7 @@ namespace Cognitive3D.Components
 
             // How much the RTT changes - gives an idea of consistency of connection
             int roundTripTimeVariance = PhotonNetwork.NetworkingClient.LoadBalancingPeer.RoundTripTimeVariance;
-            SensorRecorder.RecordDataPoint("c3d.multiplayer.rttvariance", roundTripTimeVariance);
+            SensorRecorder.RecordDataPoint("c3d.multiplayer.rttVariance", roundTripTimeVariance);
         }
 
         /// <summary>
@@ -52,7 +80,7 @@ namespace Cognitive3D.Components
             SetMultiplayerSessionProperties();
             if (PhotonNetwork.CurrentRoom != null && photonRoomName != null)
             {
-                new CustomEvent("c3d.multiplayer.This player created a new room")
+                new CustomEvent("c3d.multiplayer.thisPlayerCreatedANewRoom")
                     .SetProperty("Room name", photonRoomName)
                     .SetProperty("Player ID", playerPhotonActorNumber)
                     .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
@@ -71,7 +99,7 @@ namespace Cognitive3D.Components
             SetMultiplayerSessionProperties();
             if (PhotonNetwork.CurrentRoom != null && photonRoomName != null)
             {
-                new CustomEvent("c3d.multiplayer.This player joined a room")
+                new CustomEvent("c3d.multiplayer.thisPlayerJoinedARoom")
                     .SetProperty("Room name", photonRoomName)
                     .SetProperty("Player ID", playerPhotonActorNumber)
                     .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
@@ -88,11 +116,11 @@ namespace Cognitive3D.Components
         public override void OnLeftRoom()
         {
             base.OnLeftRoom();
-            new CustomEvent("c3d.multiplayer.This player left the room")
+            new CustomEvent("c3d.multiplayer.thisPlayerLeftTheRoom")
                 .SetProperty("Room name", photonRoomName)
                 .SetProperty("Player ID", playerPhotonActorNumber)
                 .Send();        
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.maxNumberConnection", maxPlayerPhotonActorConnected);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.maxNumberConnections", maxPlayerPhotonActorConnected);
             PhotonNetwork.NetworkStatisticsToString();
         }
 
@@ -103,7 +131,8 @@ namespace Cognitive3D.Components
         /// <param name="otherPlayer"></param>
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
-            new CustomEvent("c3d.multiplayer.A player left this room")
+            base.OnPlayerLeftRoom(otherPlayer);
+            new CustomEvent("c3d.multiplayer.aPlayerLeftThisRoom")
                 .SetProperty("Player ID", otherPlayer.ActorNumber)
                 .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                 .Send();
@@ -117,7 +146,7 @@ namespace Cognitive3D.Components
         public override void OnDisconnected(DisconnectCause cause)
         {
             base.OnDisconnected(cause);
-            new CustomEvent("c3d.multiplayer.This player disconnected")
+            new CustomEvent("c3d.multiplayer.thisPlayerDisconnected")
                 .SetProperty("Room name", photonRoomName)
                 .SetProperty("Player ID", playerPhotonActorNumber)
                 .SetProperty("Disconnect cause", cause)
@@ -133,9 +162,9 @@ namespace Cognitive3D.Components
             photonRoomName = PhotonNetwork.CurrentRoom.Name;
             serverAddress = PhotonNetwork.ServerAddress;
             port = PhotonNetwork.PhotonServerSettings.AppSettings.Port;
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Photon Player ID", playerPhotonActorNumber);
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Photon Room Name", photonRoomName);
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.Photon Server Address", serverAddress);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonPlayerID", playerPhotonActorNumber);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonRoomName", photonRoomName);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonServerAddress", serverAddress);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.port", port);
         }
 
@@ -185,14 +214,43 @@ namespace Cognitive3D.Components
             // Send events only for "other" players
             if (actorNumber != playerPhotonActorNumber)
             {
-                new CustomEvent("c3d.multiplayer.A new player joined this room")
+                new CustomEvent("c3d.multiplayer.aNewPlayerJoinedThisRoom")
                 .SetProperty("Player ID", actorNumber)
                 .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                 .Send();
 
             }
         }
-#endregion
+        #endregion
+
+        private void OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnSessionBegin -= OnSessionBegin;
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
+        }
     }
 }
 #endif
+
+#region Inspector
+[CanEditMultipleObjects]
+public class PhotonMultiplayerEditor : Editor
+{
+    private string GetDescription()
+    {
+        return "Sends custom events for multiplayer actions like creating, joining, or leaving rooms and sensors for network stats.";
+    }
+
+    private MessageType GetMessageType()
+    {
+        return MessageType.Info;
+    }
+
+    public override void OnInspectorGUI()
+    {
+        base.OnInspectorGUI();
+        EditorGUILayout.HelpBox(this.GetDescription(), this.GetMessageType());
+    }
+}
+#endregion
