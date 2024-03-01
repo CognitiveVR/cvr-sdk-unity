@@ -853,8 +853,9 @@ namespace Cognitive3D
             GUI.Label(new Rect(30, 30, 440, 440), "You can enable multiplayer support here. Select the package or framework you are using below.", "normallabel");
 
             // PUN
-            GUI.Label(new Rect(140, 90, 440, 440), "Photon PUN 2", "normallabel");
-            GUI.Label(new Rect(30, 450, 440, 440), "If you require support for other multiplayer frameworks, please get in touch.", "normallabel");
+            GUI.Label(new Rect(140, 90, 440, 440), "Photon PUN 2*", "normallabel");
+            GUI.Label(new Rect(30, 420, 440, 440), "*Please ensure that there is only a single instance of Cognitive3D_Manager across your multiplayer scenes", "caption");
+            GUI.Label(new Rect(30, 475, 440, 440), "If you require support for other multiplayer frameworks, please get in touch.", "caption");
             Rect infoRect1 = new Rect(320, 85, 30, 30);
             GUI.Label(infoRect1, new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
 
