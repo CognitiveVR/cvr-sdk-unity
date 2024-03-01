@@ -246,28 +246,3 @@ namespace Cognitive3D.Components
     }
 }
 #endif
-
-#region Inspector
-#if PHOTON_UNITY_NETWORKING
-[CustomEditor(typeof(Cognitive3D.Components.PhotonMultiplayer))]
-[CanEditMultipleObjects]
-public class PhotonMultiplayerEditor : Editor
-{
-    private string GetDescription()
-    {
-        return "Sends custom events for multiplayer actions like creating, joining, or leaving rooms and sensors for network stats.";
-    }
-
-    private MessageType GetMessageType()
-    {
-        return MessageType.Info;
-    }
-
-    public override void OnInspectorGUI()
-    {
-        base.OnInspectorGUI();
-        EditorGUILayout.HelpBox(this.GetDescription(), this.GetMessageType());
-    }
-}
-#endif
-#endregion
