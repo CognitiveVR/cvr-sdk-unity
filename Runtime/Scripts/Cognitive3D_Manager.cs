@@ -807,6 +807,7 @@ namespace Cognitive3D
         /// </summary>
         private void ResetSessionData()
         {
+            Util.ResetLogs();
             InvokeEndSessionEvent();
             FlushData();
             CoreInterface.Reset();

@@ -63,21 +63,24 @@ namespace Cognitive3D
         /// <param name="logType">The type of log: Error, Warning, or Info</param>
         internal static void LogOnce(string msg, LogType logType)
         {
-            if (!logs.Contains(msg))
-            {
-                switch(logType)
+            if (Cognitive3D_Preferences.Instance.EnableLogging)
+			{
+                if (!logs.Contains(msg))
                 {
-                    case LogType.Error:
-                        Debug.LogError(msg);
-                        break;
-                    case LogType.Warning:
-                        Debug.LogWarning(msg);
-                        break;
-                    default:
-                        Debug.Log(msg);
-                        break;
+                    switch(logType)
+                    {
+                        case LogType.Error:
+                            Debug.LogError(LOG_TAG + msg);
+                            break;
+                        case LogType.Warning:
+                            Debug.LogWarning(LOG_TAG + msg);
+                            break;
+                        default:
+                            Debug.Log(LOG_TAG + msg);
+                            break;
+                    }
+                    logs.Add(msg);
                 }
-                logs.Add(msg);
             }
         }
 
