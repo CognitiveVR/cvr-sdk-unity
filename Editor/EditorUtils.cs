@@ -17,17 +17,18 @@ namespace Cognitive3D
         /// <summary>
         /// Max wait time for user inactivity before displaying popup
         /// </summary>
-        private const float MAX_USER_INACTIVITY_IN_SECONDS = 900;
+        private const float MAX_USER_INACTIVITY_IN_SECONDS = 5;
 
         /// <summary>
         /// Max time to wait for user response
         /// </summary>
-        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 1200;
+        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 5;
 
         private const string LOG_TAG = "[COGNITIVE3D] ";
 
         private static bool buttonPressed;
         private static EditorUtils window;
+        private static bool pause;
 
         public static void Init()
         {
@@ -78,12 +79,15 @@ namespace Cognitive3D
             if (pauseState == PauseState.Paused)
             {
                 Util.logDebug("Session Paused");
-                OpenWindow(LOG_TAG + "Session Paused");
+                if (pause)
+                {
+                    OpenWindow(LOG_TAG + "Session Paused");
+                }
+                return;
             }
-            else
-            {
-                Util.logDebug("Session Continued");
-            }
+
+            Util.logDebug("Session Continued");
+            pause = false;
         }
 
         private static void OpenWindow(string windowTitle)
@@ -123,6 +127,7 @@ namespace Cognitive3D
             if (!buttonPressed)
             {
                 CloseWindow();
+                pause = true;
                 EditorApplication.isPaused = true;
             }
         }
