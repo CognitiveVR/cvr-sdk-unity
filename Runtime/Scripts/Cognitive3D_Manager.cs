@@ -42,7 +42,7 @@ namespace Cognitive3D
                     {
                         Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
                         GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
-                        PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                        Instantiate(c3dManagerPrefab);
                     }
                 }
                 return instance;
