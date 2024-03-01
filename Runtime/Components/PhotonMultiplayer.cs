@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
