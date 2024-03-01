@@ -28,7 +28,7 @@ namespace Cognitive3D.Components
             {
                 if (GameplayReferences.HMD == null || trackingSpace == null)
                 {
-                    Debug.LogWarning("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.");
+                    Util.LogOnce("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.", LogType.Warning);
                     return;
                 }
                 RecordPitch();
