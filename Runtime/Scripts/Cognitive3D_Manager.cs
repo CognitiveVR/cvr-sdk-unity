@@ -458,7 +458,7 @@ namespace Cognitive3D
         {
             if (newTrackingSpace)
             {
-                // RAdds the tracking space into list when it becomes enabled
+                // Adds the tracking space into list when it becomes enabled
                 cachedTrackingSpaceList.Insert(index, newTrackingSpace);
                 ++trackingSpaceIndex;
             }
