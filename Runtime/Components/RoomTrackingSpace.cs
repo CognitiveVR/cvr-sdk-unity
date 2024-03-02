@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// This is meant to be an empty class so we can find it using FindObjectOfType<>
@@ -11,7 +12,8 @@ namespace Cognitive3D
     [AddComponentMenu("")]
     public class RoomTrackingSpace : MonoBehaviour
     {
-        public static event Action<Transform> TrackingSpaceChanged;
+        public static event Action<int, Transform> TrackingSpaceChanged;
+        private int trackingSpaceIndex;
         private Transform cachedTrackingSpace;
 
         /// <summary>
@@ -19,6 +21,7 @@ namespace Cognitive3D
         /// </summary>
         private void OnEnable()
         {
+            trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
             cachedTrackingSpace = transform;
 
             if (!Cognitive3D_Manager.IsInitialized)
@@ -42,7 +45,7 @@ namespace Cognitive3D
 
         private void InvokeTrackingSpaceChanged()
         {
-            TrackingSpaceChanged?.Invoke(cachedTrackingSpace);
+            TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
         }
     }
 }

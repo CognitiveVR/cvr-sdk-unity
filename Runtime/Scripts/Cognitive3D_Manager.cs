@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using System.Linq;
 #if C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -382,6 +383,7 @@ namespace Cognitive3D
             bool replacingSceneId = DoesSceneHaveID(scene);
             if (mode == LoadSceneMode.Single)
             {
+                ResetCachedTrackingSpace();
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
             }
@@ -404,39 +406,6 @@ namespace Cognitive3D
                 }
             }
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
-        }
-
-        public bool TryGetTrackingSpace(out Transform space)
-        {
-            if (trackingSpace != null)
-            {
-                space = trackingSpace;
-                return true;
-            }
-            else
-            {
-                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
-                if (trackingSpaceInScene != null)
-                {
-                    trackingSpace = trackingSpaceInScene.transform;
-                    space = trackingSpaceInScene.transform;
-                    return true;
-                }
-                else
-                {
-                    space = null;
-                    return false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates current tracking space to next valid tracking space if exists any
-        /// </summary>
-        /// <param name="newTrackingSpace"></param>
-        private void UpdateTrackingSpace(Transform newTrackingSpace)
-        {
-            trackingSpace = newTrackingSpace;
         }
 
         private void SceneManager_SceneUnloaded(Scene scene)
@@ -476,6 +445,53 @@ namespace Cognitive3D
                 return true;
             }
             return false;
+        }
+
+        public int trackingSpaceIndex;
+        public List<Transform> cachedTrackingSpaceList = new List<Transform>();
+
+        /// <summary>
+        /// Updates current tracking space to next valid tracking space if exists any
+        /// </summary>
+        /// <param name="newTrackingSpace"></param>
+        private void UpdateTrackingSpace(int index, Transform newTrackingSpace)
+        {
+            if (newTrackingSpace)
+            {
+                // RAdds the tracking space into list when it becomes enabled
+                cachedTrackingSpaceList.Insert(index, newTrackingSpace);
+                ++trackingSpaceIndex;
+            }
+            else
+            {
+                // Removes the tracking space from list when it becomes disabled
+                if (cachedTrackingSpaceList.ElementAt(index))
+                {
+                    cachedTrackingSpaceList.RemoveAt(index);
+                    --trackingSpaceIndex;
+                }
+
+                // Check to find any other active tracking space in list
+                if (cachedTrackingSpaceList.Count > 0)
+                {
+                    foreach (Transform cachedTrackingSpace in cachedTrackingSpaceList)
+                    {
+                        if (cachedTrackingSpace)
+                        {
+                            trackingSpace = cachedTrackingSpace;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            trackingSpace = newTrackingSpace;
+        }
+
+        private void ResetCachedTrackingSpace()
+        {
+            trackingSpaceIndex = 0;
+            cachedTrackingSpaceList.Clear();
         }
 
 #region Updates and Loops
@@ -816,6 +832,7 @@ namespace Cognitive3D
         /// </summary>
         private void ResetSessionData()
         {
+            ResetCachedTrackingSpace();
             InvokeEndSessionEvent();
             FlushData();
             CoreInterface.Reset();
