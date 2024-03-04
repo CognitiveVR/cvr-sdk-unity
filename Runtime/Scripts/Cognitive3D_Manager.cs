@@ -394,12 +394,13 @@ namespace Cognitive3D
                 sceneList.Clear();
                 SceneStartTimeDic.Clear();
             }
+
+            //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
+            FlushData();
                
             // If id exist for loaded scene, set new tracking scene
             if (loadingSceneHasSceneId)
             {
-                //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
-                FlushData();
                 sceneList.Insert(0, loadingScene);
                 SetTrackingScene(loadingScene.name);
             }
