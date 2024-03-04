@@ -55,6 +55,8 @@ namespace Cognitive3D
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 EditorApplication.playModeStateChanged += ModeChanged;
             }
+
+            EditorUtils.Init();
         }
 
         //there's some new bug in 2021.1.15ish. creating editor window in constructor gets BaseLiveReloadAssetTracker. delay to avoid that

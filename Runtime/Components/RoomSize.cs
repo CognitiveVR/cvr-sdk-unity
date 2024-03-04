@@ -203,7 +203,7 @@ namespace Cognitive3D.Components
             }
             // Unable to find boundary points - should we send an event?
             // Probably will return empty list; need to append with warning or somethings
-            Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
+            Util.LogOnce("Unable to find boundary points using XRInputSubsystem", LogType.Warning);
             return null;
 #endif
         }
