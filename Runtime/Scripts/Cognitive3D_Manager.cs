@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
-using System.Linq;
 #if C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -465,7 +464,7 @@ namespace Cognitive3D
             else
             {
                 // Removes the tracking space from list when it becomes disabled
-                if (cachedTrackingSpaceList.ElementAt(index))
+                if (cachedTrackingSpaceList[index] && index < cachedTrackingSpaceList.Count)
                 {
                     cachedTrackingSpaceList.RemoveAt(index);
                     --trackingSpaceIndex;
