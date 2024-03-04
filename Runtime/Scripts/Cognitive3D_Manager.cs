@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Cognitive3D;
 using System.Collections;
 using System.Collections.Generic;
@@ -133,6 +133,7 @@ namespace Cognitive3D
             SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
             Application.wantsToQuit += WantsToQuit;
+            RoomTrackingSpace.TrackingSpaceChanged += UpdateTrackingSpace;
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
@@ -419,6 +420,7 @@ namespace Cognitive3D
             bool replacingSceneId = DoesSceneHaveID(scene);
             if (mode == LoadSceneMode.Single)
             {
+                ResetCachedTrackingSpace();
                 Util.ResetLogs();
                 sceneList.Clear();
                 //DynamicObject.ClearObjectIds();
@@ -442,30 +444,6 @@ namespace Cognitive3D
                 }
             }
             InvokeLevelLoadedEvent(scene, mode, replacingSceneId);
-        }
-
-        public bool TryGetTrackingSpace(out Transform space)
-        {
-            if (trackingSpace != null)
-            {
-                space = trackingSpace;
-                return true;
-            }
-            else
-            {
-                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
-                if (trackingSpaceInScene != null)
-                {
-                    trackingSpace = trackingSpaceInScene.transform;
-                    space = trackingSpaceInScene.transform;
-                    return true;
-                }
-                else
-                {
-                    space = null;
-                    return false;
-                }
-            }
         }
 
         private void SceneManager_SceneUnloaded(Scene scene)
@@ -505,6 +483,53 @@ namespace Cognitive3D
                 return true;
             }
             return false;
+        }
+
+        public int trackingSpaceIndex;
+        public List<Transform> cachedTrackingSpaceList = new List<Transform>();
+
+        /// <summary>
+        /// Updates current tracking space to next valid tracking space if exists any
+        /// </summary>
+        /// <param name="newTrackingSpace"></param>
+        private void UpdateTrackingSpace(int index, Transform newTrackingSpace)
+        {
+            if (newTrackingSpace)
+            {
+                // Adds the tracking space into list when it becomes enabled
+                cachedTrackingSpaceList.Insert(index, newTrackingSpace);
+                ++trackingSpaceIndex;
+            }
+            else
+            {
+                // Removes the tracking space from list when it becomes disabled
+                if (cachedTrackingSpaceList[index] && index < cachedTrackingSpaceList.Count)
+                {
+                    cachedTrackingSpaceList.RemoveAt(index);
+                    --trackingSpaceIndex;
+                }
+
+                // Check to find any other active tracking space in list
+                if (cachedTrackingSpaceList.Count > 0)
+                {
+                    foreach (Transform cachedTrackingSpace in cachedTrackingSpaceList)
+                    {
+                        if (cachedTrackingSpace)
+                        {
+                            trackingSpace = cachedTrackingSpace;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            trackingSpace = newTrackingSpace;
+        }
+
+        private void ResetCachedTrackingSpace()
+        {
+            trackingSpaceIndex = 0;
+            cachedTrackingSpaceList.Clear();
         }
 
 #region Updates and Loops
@@ -845,6 +870,7 @@ namespace Cognitive3D
         /// </summary>
         private void ResetSessionData()
         {
+            ResetCachedTrackingSpace();
             Util.ResetLogs();
             InvokeEndSessionEvent();
             FlushData();
@@ -867,6 +893,7 @@ namespace Cognitive3D
 
             SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
+            RoomTrackingSpace.TrackingSpaceChanged -= UpdateTrackingSpace;
             CognitiveStatics.Reset();
         }
 
