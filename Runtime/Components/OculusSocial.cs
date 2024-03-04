@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections.Generic;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -16,11 +17,14 @@ namespace Cognitive3D.Components
         [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
         private bool RecordOculusUserData = true;
-        private bool isResponseJsonValid;
-        private const string URL_FOR_SUBSCRIPTION = "https://graph.oculus.com/application/subscriptions";
+
+        /// <summary>
+        /// A comma separated list of query parameters for meta API call
+        /// </summary>
+        List<string> subscriptionQueryParams = new List<string>() {"sku", "is_trial", "is_active", "period_start_time", "period_end_time", "next_renewal_time" };
 #endif
 
-        protected override void OnSessionBegin()
+    protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
 #if C3D_OCULUS
@@ -153,10 +157,10 @@ namespace Cognitive3D.Components
         {
             string userAccessToken = message.Data.ToString();
             Cognitive3D_Manager.SetParticipantProperty("c3d.app.meta.accessToken", userAccessToken);
-            string url = URL_FOR_SUBSCRIPTION +
-                "?access_token=" + userAccessToken +
-                "&fields=sku,period_start_time,period_end_time,is_trial,is_active,next_renewal_time";
-            Cognitive3D_Manager.NetworkManager.Get(url, DeserializeAndSetSessionProperties);
+            Cognitive3D_Manager.NetworkManager.Get
+                (CognitiveStatics.METASUBSCRPTIONCONTEXT
+                    (userAccessToken,subscriptionQueryParams),
+                DeserializeAndSetSessionProperties);
         }
 
         /// <summary>
