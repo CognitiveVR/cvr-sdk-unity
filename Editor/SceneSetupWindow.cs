@@ -1211,7 +1211,7 @@ namespace Cognitive3D
                     Debug.LogError("Cannot find scene settings for " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
                     return;
                 }
-                Application.OpenURL(CognitiveStatics.SCENELINK(sceneSettings.SceneId, sceneSettings.VersionNumber));
+                Application.OpenURL(CognitiveStatics.GetSceneUrl(sceneSettings.SceneId, sceneSettings.VersionNumber));
             }
             Rect onlineRect = buttonRect;
             onlineRect.x += 82;

@@ -324,7 +324,7 @@ namespace Cognitive3D
                 }
 
                 RefreshSceneVersionComplete = refreshSceneVersionComplete;
-                string url = CognitiveStatics.GETSCENEVERSIONS(currentSettings.SceneId);
+                string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add("Authorization", "APIKEY:DEVELOPER " + DeveloperKey);
                 EditorNetwork.Get(url, GetSceneVersionResponse, headers, true, "Get Scene Version");//AUTH
@@ -751,7 +751,7 @@ namespace Cognitive3D
                     Debug.Log("SendSceneVersionRequest no scene settings!");
                     return;
                 }
-                string url = CognitiveStatics.GETMEDIASOURCELIST();
+                string url = CognitiveStatics.GetMediaSourceList();
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
                 EditorNetwork.Get(url, GetMediaSourcesResponse, headers, true, "Get Scene Version");//AUTH
@@ -1298,7 +1298,7 @@ namespace Cognitive3D
                 return;
             }
 
-            string url = CognitiveStatics.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
+            string url = CognitiveStatics.PostScreenshot(settings.SceneId, settings.VersionNumber);
             var bytes = File.ReadAllBytes(path);
             WWWForm form = new WWWForm();
             form.AddBinaryData("screenshot", bytes, "screenshot.png");
@@ -1342,7 +1342,7 @@ namespace Cognitive3D
             //confirm popup and upload
             if (EditorUtility.DisplayDialog("Upload Screenshot", "Upload " + filename + " to " + currentScene.SceneName + " version " + currentScene.VersionNumber + "?", "Upload", "Cancel"))
             {
-                string url = CognitiveStatics.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
+                string url = CognitiveStatics.PostScreenshot(currentScene.SceneId, currentScene.VersionNumber);
                 var bytes = File.ReadAllBytes(path);
                 WWWForm form = new WWWForm();
                 form.AddBinaryData("screenshot", bytes, "screenshot.png");
@@ -1900,7 +1900,7 @@ namespace Cognitive3D
                 return;
             }
 
-            string url = CognitiveStatics.POSTDYNAMICMANIFEST(settings.SceneId, versionNumber);
+            string url = CognitiveStatics.PostDynamicManifest(settings.SceneId, versionNumber);
             Util.logDebug("Send Manifest Contents: " + json);
 
             //upload manifest
