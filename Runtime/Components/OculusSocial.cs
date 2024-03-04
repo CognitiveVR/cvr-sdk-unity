@@ -157,7 +157,7 @@ namespace Cognitive3D.Components
         {
             string userAccessToken = message.Data.ToString();
             Cognitive3D_Manager.NetworkManager.Get
-                (CognitiveStatics.METASUBSCRPTIONCONTEXT
+                (CognitiveStatics.MetaSubscriptionContextEndpoint
                     (userAccessToken,subscriptionQueryParams),
                 DeserializeAndSetSessionProperties);
         }

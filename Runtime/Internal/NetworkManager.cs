@@ -342,7 +342,7 @@ namespace Cognitive3D
         /// <param name="timeout"></param>
         public static void GetExitPollQuestions(string hookname, Response callback, float timeout = 3)
         {
-            string url = CognitiveStatics.GETEXITPOLLQUESTIONSET(hookname);
+            string url = CognitiveStatics.GetExitPollQuestionSet(hookname);
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
@@ -354,7 +354,7 @@ namespace Cognitive3D
 
         public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
         {
-            string url = CognitiveStatics.POSTEXITPOLLRESPONSES(questionSetName, questionSetVersion);
+            string url = CognitiveStatics.PostExitPollResponses(questionSetName, questionSetVersion);
 
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
