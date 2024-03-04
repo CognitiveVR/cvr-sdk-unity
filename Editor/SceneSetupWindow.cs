@@ -1,9 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using Cognitive3D;
 using Cognitive3D.Components;
+#if PHOTON_UNITY_NETWORKING
+using Photon.Pun;
+#endif
 
 #if C3D_STEAMVR2
 using Valve.VR;
@@ -55,9 +56,12 @@ namespace Cognitive3D
                     wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
                 }
             }
-            wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
-            wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-            wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            if (Cognitive3D_Manager.Instance != null)
+            {
+                wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+                wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            }
 #endif
         }
 
@@ -167,6 +171,27 @@ namespace Cognitive3D
                 PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
+#if PHOTON_UNITY_NETWORKING
+    #if C3D_PHOTON
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonMultiplayer>();
+                }
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonView>();
+                }
+    #else
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() != null)
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>());
+                }
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() != null)
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>());
+                }
+    #endif
+#endif
         }
 
         void ProjectErrorUpdate()
