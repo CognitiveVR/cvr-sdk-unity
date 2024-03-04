@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+#if C3D_DEFAULT
+using Unity.XR.CoreUtils;
+#endif
+
 /// <summary>
 /// samples height of a player's HMD. average is assumed to be roughly player's eye height
 /// </summary>
@@ -17,11 +21,13 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
+        private Transform trackingSpace;
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
             heights = new float[SampleCount];
+            Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace);
             StartCoroutine(Tick());
         }
 
@@ -34,12 +40,67 @@ namespace Cognitive3D.Components
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-                heights[i] = GameplayReferences.HMD.localPosition.y;
-                if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
+                if (TryGetHeight(out float currentheight))
                 {
-                    RecordAndSendMedian(heights, i);
+                    heights[i] = currentheight;
+                    if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
+                    {
+                        RecordAndSendMedian(heights, i);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if tracking space exist and calculates HMD height according to device type
+        /// </summary>
+        /// <returns>A float representing the height of the HMD</returns>
+        private bool TryGetHeight(out float height)
+        {
+            height = 0;
+
+            if (trackingSpace == null)
+            {
+                Debug.LogWarning("Tracking Space not found. Unable to record HMD height.");
+                return false;
+            }
+
+#if C3D_OCULUS
+            // Calculates height according to camera offset relative to Floor level and rig customization
+            height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
+#elif C3D_DEFAULT
+            XROrigin xrOrigin = FindObjectOfType<XROrigin>();  
+            if (xrOrigin != null)
+            {
+                if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
+                {
+                    // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
+                    // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
+                    height = xrOrigin.Camera.transform.position.y + xrOrigin.CameraYOffset - xrOrigin.CameraFloorOffsetObject.transform.position.y;
+                }
+                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                {
+                    // Calculates height based on the camera offset relative to Floor level and rig settings
+                    height = xrOrigin.Camera.transform.position.y - xrOrigin.CameraFloorOffsetObject.transform.position.y;
+                }
+                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                {
+                    // Unable to determine height accurately as the tracking origin mode is unspecified.
+                    // Using the camera Y offset, but results may vary and may not reflect the user's actual height reliably.
+                    height = xrOrigin.CameraYOffset;
+                }
+                
+            }
+            else
+            {
+                Debug.LogWarning("XROrigin not found. Unable to record HMD height.");
+                return false;
+            }   
+#else
+            height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+#endif
+
+            return true;
         }
 
         private void RecordAndSendMedian(float[] heights, int lastIndex)
