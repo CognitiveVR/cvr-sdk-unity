@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -132,16 +133,16 @@ namespace Cognitive3D.Components
             {
                 if (response.data[i] != null)
                 {
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.sku", response.data[i].sku);
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_active", response.data[i].is_active);
                     if (response.data[i].is_active == "true") { numActiveSubscriptions++; }
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", response.data[i].is_trial);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
-                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.sku", response.data[i].sku);
-                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", response.data[i].period_start_date);
-                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", response.data[i].period_end_date);
-                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_time", response.data[i].next_renewal_time);
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", DateTime.Parse(response.data[i].period_start_time).ToUniversalTime().ToString());
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", DateTime.Parse(response.data[i].period_end_time).ToUniversalTime().ToString());
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_time", DateTime.Parse(response.data[i].next_renewal_time).ToUniversalTime().ToString());
                 }
             }
+            Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
         }
 
         /// <summary>
@@ -233,11 +234,35 @@ namespace Cognitive3D.Components
         [System.Serializable]
         public class SubscriptionContextData
         {
+            /// <summary>
+            /// String representing the product stock keeping unit
+            /// </summary>
             public string sku;
+
+            /// <summary>
+            /// Set to true when a subscription is active
+            /// </summary>
             public string is_active;
+
+            /// <summary>
+            /// Set to true when the most recent subscription period is a free trial (7d, 14d, 30d). <br/>
+            /// Does not indicate that the subscription itself is active.
+            /// </summary>
             public string is_trial;
-            public string period_start_date;
-            public string period_end_date;
+
+            /// <summary>
+            /// Timestamp for when subscription started (format: ISO 8601/RFC 3339)
+            /// </summary>
+            public string period_start_time;
+
+            /// <summary>
+            /// Timestamp for when subscription will end (format: ISO 8601/RFC 3339)
+            /// </summary>
+            public string period_end_time;
+
+            /// <summary>
+            /// Timestamp for when subscription will next be billed (format: ISO 8601/RFC 3339)
+            /// </summary>
             public string next_renewal_time;
         }
     }
