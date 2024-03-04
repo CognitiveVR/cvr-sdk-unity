@@ -156,7 +156,6 @@ namespace Cognitive3D.Components
         private void DoSubscriptionStuff(Message<string> message)
         {
             string userAccessToken = message.Data.ToString();
-            Cognitive3D_Manager.SetParticipantProperty("c3d.app.meta.accessToken", userAccessToken);
             Cognitive3D_Manager.NetworkManager.Get
                 (CognitiveStatics.METASUBSCRPTIONCONTEXT
                     (userAccessToken,subscriptionQueryParams),
