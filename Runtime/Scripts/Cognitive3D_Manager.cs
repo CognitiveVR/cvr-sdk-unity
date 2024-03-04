@@ -376,8 +376,6 @@ namespace Cognitive3D
             #endregion
         }
 
-        bool sendLastSceneEventComplete;
-
 
         /// <summary>
         /// registered to unity's OnSceneLoaded callback. sends outstanding data, then sets correct tracking scene id and refreshes dynamic object session manifest
@@ -448,7 +446,7 @@ namespace Cognitive3D
         // Waits for scene events to be fully processed before unloading the active scene
         private IEnumerator WaitForSceneEventComplete()
         {
-            yield return new WaitUntil(() => sendLastSceneEventComplete); // Wait until scene loaded completes
+            yield return new WaitForEndOfFrame(); // Wait until the end of frame
 
             //use the top scene from the scene list
             if (sceneList.Count > 0)
@@ -459,8 +457,6 @@ namespace Cognitive3D
             {
                 TrackingScene = null;
             }
-
-            sendLastSceneEventComplete = false;
         }
 
         /// <summary>
@@ -493,8 +489,6 @@ namespace Cognitive3D
                     }
                 }
             }
-
-            sendLastSceneEventComplete = true;
         }
 
         /// <summary>
