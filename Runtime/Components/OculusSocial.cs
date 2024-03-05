@@ -125,7 +125,7 @@ namespace Cognitive3D.Components
         /// Populates session properties with subscription context details
         /// </summary>
         /// <param name="response">The subscription response returne by the API</param>
-        private void SetSubscriptionProperties(SubscriptionContextResponseText response)
+        private void SendSubscriptionDetailsAsSessionProperties(SubscriptionContextResponseText response)
         {
             int numActiveSubscriptions = 0;
 
@@ -141,7 +141,7 @@ namespace Cognitive3D.Components
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", response.data[i].is_trial);
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", DateTime.Parse(response.data[i].period_start_time).ToUniversalTime().ToString());
                     Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", DateTime.Parse(response.data[i].period_end_time).ToUniversalTime().ToString());
-                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_time", DateTime.Parse(response.data[i].next_renewal_time).ToUniversalTime().ToString());
+                    Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_date", DateTime.Parse(response.data[i].next_renewal_time).ToUniversalTime().ToString());
                 }
             }
             Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
@@ -151,25 +151,25 @@ namespace Cognitive3D.Components
         /// Callback to handle the user access token
         /// </summary>
         /// <param name="message">The response from GetAccessToken - message.Data.ToString to get the token</param>
-        private void DoSubscriptionStuff(Message<string> message)
+        private void GetSubscriptionContext(Message<string> message)
         {
             string userAccessToken = message.Data.ToString();
             Cognitive3D_Manager.NetworkManager.Get
                 (CognitiveStatics.MetaSubscriptionContextEndpoint
                     (userAccessToken,subscriptionQueryParams),
-                DeserializeAndSetSessionProperties);
+                DeserializeResponseAndSetSessionProperties);
         }
 
         /// <summary>
         /// Deserializes a json string into SubscriptionContextResponseText object and sets session properties
         /// </summary>
         /// <param name="data">The json string to be deserialized</param>
-        private void DeserializeAndSetSessionProperties(string data)
+        private void DeserializeResponseAndSetSessionProperties(string data)
         {
             SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
             if (subscriptionContextResponse != null)
             {
-                SetSubscriptionProperties(subscriptionContextResponse);
+                SendSubscriptionDetailsAsSessionProperties(subscriptionContextResponse);
             }
         }
 #endif
@@ -188,7 +188,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
             {
-                Users.GetAccessToken().OnComplete(DoSubscriptionStuff);
+                Users.GetAccessToken().OnComplete(GetSubscriptionContext);
                 Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
                 if (RecordOculusUserData)
                 {
