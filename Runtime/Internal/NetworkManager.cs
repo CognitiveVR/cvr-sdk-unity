@@ -475,19 +475,16 @@ namespace Cognitive3D
         {
             var req = UnityWebRequest.Get(url);
             yield return req.SendWebRequest();
-            switch (req.result)
+            if (req.responseCode == 200)
             {
-                case UnityWebRequest.Result.ConnectionError:
-                case UnityWebRequest.Result.DataProcessingError:
-                case UnityWebRequest.Result.ProtocolError:
-                    Util.logError($"Error in GET request to get subscription. Error type: {req.result.ToString()}");
-                    break;
-                case UnityWebRequest.Result.Success:
-                    var data = req.downloadHandler.text;
-                    successCallback(data);
-                    break;
+                var data = req.downloadHandler.text;
+                successCallback(data);
             }
-        }
+            else
+            {
+                Util.logError($"Error in GET request to get subscription. Error type: {req.responseCode.ToString()}");
+            }
+         }
 
         // Writing to cache
         private void WriteToCache(string url, string content)

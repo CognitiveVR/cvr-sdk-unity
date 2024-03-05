@@ -120,8 +120,6 @@ namespace Cognitive3D.Components
                 }
             }
         }
-
-#endif
         
         /// <summary>
         /// Populates session properties with subscription context details
@@ -174,6 +172,7 @@ namespace Cognitive3D.Components
                 SetSubscriptionProperties(subscriptionContextResponse);
             }
         }
+#endif
 
 #if C3D_OCULUS
         /// <summary>
@@ -229,12 +228,12 @@ namespace Cognitive3D.Components
     /// A class defining the structure of the json response for subscription <br/>
     /// Example of the json structure can be found here:https://developer.oculus.com/documentation/unity/ps-subscriptions-s2s/   
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public class SubscriptionContextResponseText
     {
         public SubscriptionContextData[] data;
 
-        [System.Serializable]
+        [Serializable]
         public class SubscriptionContextData
         {
             /// <summary>
