@@ -504,7 +504,7 @@ namespace Cognitive3D
             else
             {
                 // Removes the tracking space from list when it becomes disabled
-                if (cachedTrackingSpaceList[index] && index < cachedTrackingSpaceList.Count)
+                if (index < cachedTrackingSpaceList.Count && cachedTrackingSpaceList[index])
                 {
                     cachedTrackingSpaceList.RemoveAt(index);
                     --trackingSpaceIndex;
