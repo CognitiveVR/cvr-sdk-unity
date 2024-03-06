@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Cognitive3D;
 using System.Collections;
 using System.Collections.Generic;
@@ -40,7 +40,8 @@ namespace Cognitive3D
                     if (instance == null)
                     {
                         Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
-                        instance = new GameObject("Cognitive3D_Manager").AddComponent<Cognitive3D_Manager>();
+                        GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                        Instantiate(c3dManagerPrefab);
                     }
                 }
                 return instance;
@@ -136,6 +137,7 @@ namespace Cognitive3D
             SceneManager.sceneLoaded += SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
             Application.wantsToQuit += WantsToQuit;
+            RoomTrackingSpace.TrackingSpaceChanged += UpdateTrackingSpace;
 
             //sets session properties for system hardware
             //also constructs network and local cache files/readers
@@ -232,6 +234,43 @@ namespace Cognitive3D
             }
             gazeBase.Initialize();
 
+#if C3D_OCULUS
+            //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled
+            //this is used for adding the fixation recorder
+            GameplayReferences.EyeTrackingEnabled = false;
+            if (GameplayReferences.SDKSupportsEyeTracking)
+            {
+                //check permissions
+                bool eyePermissionGranted = false;
+                bool facePermissionGranted = false;
+
+                string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
+                string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+                eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
+                facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
+#endif
+                if (eyePermissionGranted && facePermissionGranted)
+                {
+                    //these return true even if they're already started elsewhere
+                    var startEyeTrackingResult = OVRPlugin.StartEyeTracking();
+                    var faceTrackingResult = OVRPlugin.StartFaceTracking();
+
+                    if (startEyeTrackingResult && faceTrackingResult)
+                    {
+                        GameplayReferences.EyeTrackingEnabled = true;
+                        //everything will be supported and enabled for the fixation recorder
+                        fixationRecorder = gameObject.GetComponent<FixationRecorder>();
+                        if (fixationRecorder == null)
+                        {
+                            fixationRecorder = gameObject.AddComponent<FixationRecorder>();
+                        }
+                        fixationRecorder.Initialize();
+                    }
+                }
+            }
+#else
             if (GameplayReferences.SDKSupportsEyeTracking)
             {
                 fixationRecorder = gameObject.GetComponent<FixationRecorder>();
@@ -241,6 +280,7 @@ namespace Cognitive3D
                 }
                 fixationRecorder.Initialize();
             }
+#endif
 
             try
             {
@@ -391,6 +431,8 @@ namespace Cognitive3D
             //SceneManager is clearing all scenes, also clear our stack of SceneIds
             if (mode == LoadSceneMode.Single)
             {
+                ResetCachedTrackingSpace();
+                Util.ResetLogs();
                 sceneList.Clear();
                 SceneStartTimeDic.Clear();
             }
@@ -535,28 +577,51 @@ namespace Cognitive3D
             return false;
         }
 
-        public bool TryGetTrackingSpace(out Transform space)
+        public int trackingSpaceIndex;
+        public List<Transform> cachedTrackingSpaceList = new List<Transform>();
+
+        /// <summary>
+        /// Updates current tracking space to next valid tracking space if exists any
+        /// </summary>
+        /// <param name="newTrackingSpace"></param>
+        private void UpdateTrackingSpace(int index, Transform newTrackingSpace)
         {
-            if (trackingSpace != null)
+            if (newTrackingSpace)
             {
-                space = trackingSpace;
-                return true;
+                // Adds the tracking space into list when it becomes enabled
+                cachedTrackingSpaceList.Insert(index, newTrackingSpace);
+                ++trackingSpaceIndex;
             }
             else
             {
-                var trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
-                if (trackingSpaceInScene != null)
+                // Removes the tracking space from list when it becomes disabled
+                if (index < cachedTrackingSpaceList.Count && cachedTrackingSpaceList[index])
                 {
-                    trackingSpace = trackingSpaceInScene.transform;
-                    space = trackingSpaceInScene.transform;
-                    return true;
+                    cachedTrackingSpaceList.RemoveAt(index);
+                    --trackingSpaceIndex;
                 }
-                else
+
+                // Check to find any other active tracking space in list
+                if (cachedTrackingSpaceList.Count > 0)
                 {
-                    space = null;
-                    return false;
+                    foreach (Transform cachedTrackingSpace in cachedTrackingSpaceList)
+                    {
+                        if (cachedTrackingSpace)
+                        {
+                            trackingSpace = cachedTrackingSpace;
+                            return;
+                        }
+                    }
                 }
             }
+
+            trackingSpace = newTrackingSpace;
+        }
+
+        private void ResetCachedTrackingSpace()
+        {
+            trackingSpaceIndex = 0;
+            cachedTrackingSpaceList.Clear();
         }
 
 #region Updates and Loops
@@ -877,6 +942,8 @@ namespace Cognitive3D
         /// </summary>
         private void ResetSessionData()
         {
+            ResetCachedTrackingSpace();
+            Util.ResetLogs();
             InvokeEndSessionEvent();
             FlushData();
             CoreInterface.Reset();
@@ -898,6 +965,7 @@ namespace Cognitive3D
 
             SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
             SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
+            RoomTrackingSpace.TrackingSpaceChanged -= UpdateTrackingSpace;
             CognitiveStatics.Reset();
         }
 
