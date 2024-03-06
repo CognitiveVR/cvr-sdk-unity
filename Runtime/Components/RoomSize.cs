@@ -130,8 +130,8 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            Transform trackingSpace = null;
-            if (Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace))
+            Transform trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            if (trackingSpace)
             {
                 if (previousBoundaryPoints != null && previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
                 {
@@ -203,7 +203,7 @@ namespace Cognitive3D.Components
             }
             // Unable to find boundary points - should we send an event?
             // Probably will return empty list; need to append with warning or somethings
-            Debug.LogWarning("Unable to find boundary points using XRInputSubsystem");
+            Util.LogOnce("Unable to find boundary points using XRInputSubsystem", LogType.Warning);
             return null;
 #endif
         }

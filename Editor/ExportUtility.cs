@@ -461,7 +461,7 @@ namespace Cognitive3D
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(CognitiveStatics.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
+                EditorNetwork.Post(CognitiveStatics.PostUpdateScene(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
             }
             else //upload as new scene
             {
@@ -474,7 +474,7 @@ namespace Cognitive3D
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(CognitiveStatics.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
+                EditorNetwork.Post(CognitiveStatics.PostNewScene(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
             }
 
             UploadComplete = uploadComplete;
@@ -1760,7 +1760,7 @@ namespace Cognitive3D
                 }
 
                 var dirname = new DirectoryInfo(subdir).Name;
-                string uploadUrl = CognitiveStatics.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
+                string uploadUrl = CognitiveStatics.PostDynamicObjectData(settings.SceneId, settings.VersionNumber, dirname);
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)

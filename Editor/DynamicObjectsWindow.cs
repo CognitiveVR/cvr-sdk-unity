@@ -703,7 +703,7 @@ namespace Cognitive3D
             {
                 return;
             }
-            string url = CognitiveStatics.GETDYNAMICMANIFEST(currentSceneSettings.VersionId);
+            string url = CognitiveStatics.GetDynamicManifest(currentSceneSettings.VersionId);
 
             Dictionary<string, string> headers = new Dictionary<string, string>();
             if (EditorCore.IsDeveloperKeyValid)

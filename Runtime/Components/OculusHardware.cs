@@ -14,6 +14,8 @@ namespace Cognitive3D.Components
     public class OculusHardware : AnalyticsComponentBase
     {
 #if C3D_OCULUS
+        XRDisplaySubsystem currentActiveSubsystem;
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -26,7 +28,8 @@ namespace Cognitive3D.Components
             var wait = new WaitForSeconds(1);
             yield return wait;
 
-            if (GetActiveDisplaySubsystem().SubsystemDescriptor.id.Contains("oculus"))
+            currentActiveSubsystem = GetActiveDisplaySubsystem();
+            if (currentActiveSubsystem != null && currentActiveSubsystem.SubsystemDescriptor.id.Contains("oculus"))
             {
                 while (Cognitive3D.Cognitive3D_Manager.IsInitialized)
                 {
@@ -34,7 +37,7 @@ namespace Cognitive3D.Components
                     RecordOculusStats();
                 }
             }
-            else if (GetActiveDisplaySubsystem().SubsystemDescriptor.id.Contains("OpenXR"))
+            else if (currentActiveSubsystem != null && currentActiveSubsystem.SubsystemDescriptor.id.Contains("OpenXR"))
             {
                 Debug.LogWarning("Oculus Hardware sensors cannot be accessed while using OpenXR plugin");
             }

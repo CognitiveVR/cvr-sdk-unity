@@ -740,7 +740,26 @@ namespace Cognitive3D
         //set custom id if not set otherwise
         if (string.IsNullOrEmpty(CustomId))
         {
+            // This is used to create a consistent id from objects which are not in the scene
+            // Instead of GUID we are using hash so the ids are always consistent given the object name
+#if C3D_USE_DETERMINISTIC_DYNAMIC_ID
+            System.Security.Cryptography.SHA256 mySha256 = System.Security.Cryptography.SHA256.Create();
+            byte[] myStringInBytes = mySha256.ComputeHash(System.Text.Encoding.ASCII.GetBytes(MeshName));
+            string s = "";
+            for (int i = 0; i < myStringInBytes.Length; i++)
+            {
+                s += myStringInBytes[i].ToString("x2"); // "x2" means format the byte as hexadecimal
+            }
+            s = s.Substring(0, 31); // take the first 32 characters
+
+            // format as abcdefgh-1234-5678-1234-abcdefghijkl
+            s = s.Insert(8, "-");
+            s = s.Insert(13, "-");
+            s = s.Insert(18, "-");
+            s = s.Insert(23, "-");
+#else
             string s = System.Guid.NewGuid().ToString();
+#endif
             CustomId = s;
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }
