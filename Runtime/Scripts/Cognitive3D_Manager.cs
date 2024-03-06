@@ -434,7 +434,7 @@ namespace Cognitive3D
                 ResetCachedTrackingSpace();
                 Util.ResetLogs();
                 sceneList.Clear();
-                SceneStartTimeDic.Clear();
+                SceneStartTimeDict.Clear();
             }
 
             //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
@@ -454,7 +454,7 @@ namespace Cognitive3D
         /// registered to unity's OnSceneUnloaded callback. sends outstanding data, then removes current scene from scene list
         /// </summary>
         /// <param name="unloadingScene"></param>
-        // // This is not called for last unloaded scene
+        // This is not called for last unloaded scene
         private void SceneManager_SceneUnloaded(Scene unloadingScene)
         {
             SendSceneUnloadEvent(unloadingScene.name);
@@ -467,9 +467,9 @@ namespace Cognitive3D
             ForceWriteSessionMetadata = true;
 
             // If a scene unloads (useful in additive cases), the scene will be removed from dictionary
-            if (SceneStartTimeDic.ContainsKey(unloadingScene.name))
+            if (SceneStartTimeDict.ContainsKey(unloadingScene.name))
             {
-                SceneStartTimeDic.Remove(unloadingScene.name);
+                SceneStartTimeDict.Remove(unloadingScene.name);
             }
 
             bool unloadingSceneHasSceneId = TryGetSceneData(unloadingScene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
@@ -511,9 +511,9 @@ namespace Cognitive3D
             {
                 if (sceneName != null)
                 {
-                    if (!SceneStartTimeDic.ContainsKey(sceneName))
+                    if (!SceneStartTimeDict.ContainsKey(sceneName))
                     {
-                        SceneStartTimeDic.Add(sceneName, Time.time);
+                        SceneStartTimeDict.Add(sceneName, Time.time);
                     }
                     if (TryGetSceneData(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
@@ -543,7 +543,7 @@ namespace Cognitive3D
             {
                 if (sceneName != null)
                 {
-                    SceneStartTimeDic.TryGetValue(sceneName, out float sceneTime);
+                    SceneStartTimeDict.TryGetValue(sceneName, out float sceneTime);
                     float duration = Time.time - sceneTime;
                     if (TryGetSceneData(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
@@ -875,8 +875,10 @@ namespace Cognitive3D
         public static Cognitive3D_Preferences.SceneSettings TrackingScene { get; private set; }
         /// <summary>
         /// Records the start time of every scene loaded, not just C3D scenes
+        /// key: scene name
+        /// value: timestamp when scene loaded
         /// </summary>
-        private static Dictionary<string,float> SceneStartTimeDic = new Dictionary<string, float>();
+        private static Dictionary<string,float> SceneStartTimeDict = new Dictionary<string, float>();
         internal static bool ForceWriteSessionMetadata = false;
 
         /// <summary>
