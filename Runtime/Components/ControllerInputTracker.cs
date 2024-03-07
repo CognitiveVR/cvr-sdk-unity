@@ -476,8 +476,7 @@ namespace Cognitive3D.Components
                         break;
                     case DynamicObject.ControllerDisplayType.vive_focus_controller_left:
                     case DynamicObject.ControllerDisplayType.quest_pro_touch_left:
-                    // for quest plus (3)
-                    // case DynamicObject.ControllerDisplayType.quest_pro_touch_left:
+                    case DynamicObject.ControllerDisplayType.quest_plus_touch_left:
                     case DynamicObject.ControllerDisplayType.oculus_quest_touch_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
@@ -573,6 +572,7 @@ namespace Cognitive3D.Components
                         break;
                     case DynamicObject.ControllerDisplayType.vive_focus_controller_right:
                     case DynamicObject.ControllerDisplayType.quest_pro_touch_right:
+                    case DynamicObject.ControllerDisplayType.quest_plus_touch_right:
                     case DynamicObject.ControllerDisplayType.oculus_quest_touch_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("joystick", 0, 0, 0, true));
