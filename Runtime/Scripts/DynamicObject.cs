@@ -554,7 +554,6 @@ namespace Cognitive3D
             hasInitialized = false;
         }
 
-        // TODO: Update for quest 2 controllers 
         private static CommonDynamicMesh GetControllerMeshName(string xrDeviceName, bool isRight)
         {
             if (xrDeviceName.Contains("Vive Wand")
@@ -566,13 +565,17 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
-                bool isQuestPro = false;
+                string oculusHeadsetType;
 #if C3D_OCULUS
-                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+                oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
-                if (isQuestPro)
+                if (oculusHeadsetType.Contains("Pro"))
                 {
                     return CommonDynamicMesh.QuestProTouchLeft;
+                }
+                else if (oculusHeadsetType.Contains("Quest_3"))
+                {
+                    return CommonDynamicMesh.QuestPlusTouchLeft;
                 }
                 else
                 {
@@ -582,13 +585,17 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Right")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
-                bool isQuestPro = false;
+                string oculusHeadsetType;
 #if C3D_OCULUS
-                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+                oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
-                if (isQuestPro)
+                if (oculusHeadsetType.Contains("Pro"))
                 {
                     return CommonDynamicMesh.QuestProTouchRight;
+                }
+                else if (oculusHeadsetType.Contains("Quest_3"))
+                {
+                    return CommonDynamicMesh.QuestPlusTouchRight;
                 }
                 else
                 {
@@ -660,13 +667,17 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
-                bool isQuestPro = false;
+                string oculusHeadsetType;
 #if C3D_OCULUS
-                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+                oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
-                if (isQuestPro)
+                if (oculusHeadsetType.Contains("Pro"))
                 {
                     return ControllerDisplayType.quest_pro_touch_left;
+                }
+                else if (oculusHeadsetType.Contains("Quest_3"))
+                {
+                    return ControllerDisplayType.quest_plus_touch_left;
                 }
                 else
                 {
@@ -676,13 +687,17 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Right")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
-                bool isQuestPro = false;
+                string oculusHeadsetType;
 #if C3D_OCULUS
-                isQuestPro = OVRPlugin.GetSystemHeadsetType().ToString().Contains("Pro");
+                oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
-                if (isQuestPro)
+                if (oculusHeadsetType.Contains("Pro"))
                 {
                     return ControllerDisplayType.quest_pro_touch_right;
+                }
+                else if (oculusHeadsetType.Contains("Quest_3"))
+                {
+                    return ControllerDisplayType.quest_plus_touch_right;
                 }
                 else
                 {
