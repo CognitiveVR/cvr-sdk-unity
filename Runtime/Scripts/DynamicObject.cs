@@ -310,6 +310,18 @@ namespace Cognitive3D
                         commonDynamicMesh = CommonDynamicMesh.QuestProTouchLeft;
                     }
                     break;
+                case ControllerType.Quest3:
+                    if (isRight)
+                    {
+                        controllerDisplayType = ControllerDisplayType.quest_plus_touch_right;
+                        commonDynamicMesh = CommonDynamicMesh.QuestPlusTouchRight;
+                    }
+                    else
+                    {
+                        controllerDisplayType = ControllerDisplayType.quest_plus_touch_left;
+                        commonDynamicMesh = CommonDynamicMesh.QuestPlusTouchLeft;
+                    }
+                    break;
                 case ControllerType.ViveWand:
                     controllerDisplayType = ControllerDisplayType.vive_controller;
                     commonDynamicMesh = CommonDynamicMesh.ViveController;
