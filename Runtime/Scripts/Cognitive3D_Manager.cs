@@ -577,8 +577,9 @@ namespace Cognitive3D
             return false;
         }
 
+        [HideInInspector]
         public int trackingSpaceIndex;
-        public List<Transform> cachedTrackingSpaceList = new List<Transform>();
+        private List<Transform> cachedTrackingSpaceList = new List<Transform>();
 
         /// <summary>
         /// Updates current tracking space to next valid tracking space if exists any
