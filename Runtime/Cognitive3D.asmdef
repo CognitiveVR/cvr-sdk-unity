@@ -18,7 +18,9 @@
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
         "MagicLeap.SDK",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "PhotonUnityNetworking",
+        "PhotonRealtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

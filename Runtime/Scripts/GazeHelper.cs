@@ -185,30 +185,20 @@ namespace Cognitive3D
             return lastDirection;
         }
 #elif C3D_OCULUS
-        static OVRFaceExpressions cachedFaceExpressions;
         static Vector3 lastDirection = Vector3.forward;
         private static OVRPlugin.EyeGazesState _currentEyeGazesState;
         private static float ConfidenceThreshold = 0.5f;
         static Vector3 GetLookDirection()
         {
-            if (GameplayReferences.SDKSupportsEyeTracking)
+            if (GameplayReferences.SDKSupportsEyeTracking && GameplayReferences.EyeTrackingEnabled)
             {
                 if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                     return lastDirection;
 
-                if (cachedFaceExpressions == null)
-                {
-                    cachedFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
-                    if (cachedFaceExpressions == null)
-                    {
-                        return lastDirection;
-                    }
-                }
-
                 float lblinkweight;
                 float rblinkweight;
-                cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
-                cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+                GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+                GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
 
                 var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
                 var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
@@ -243,36 +233,7 @@ namespace Cognitive3D
             }
             else
             {
-                //copy of the last, generic eyedata/hmd forward implementation. used for oculus devices that don't support eye tracking
-                UnityEngine.XR.Eyes eyes;
-                var centereye = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye);
-
-                if (centereye.TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
-                {
-                    Vector3 convergancePoint;
-                    if (eyes.TryGetFixationPoint(out convergancePoint))
-                    {
-                        Vector3 leftPos = Vector3.zero;
-                        eyes.TryGetLeftEyePosition(out leftPos);
-                        Vector3 rightPos = Vector3.zero;
-                        eyes.TryGetRightEyePosition(out rightPos);
-
-                        Vector3 centerPos = (rightPos + leftPos) / 2f;
-
-                        var worldGazeDirection = (convergancePoint - centerPos).normalized;
-                        //openxr implementation returns a direction adjusted by the HMD's transform, but not by the parent transformations
-                        if (GameplayReferences.HMD.parent != null)
-                            worldGazeDirection = GameplayReferences.HMD.parent.TransformDirection(worldGazeDirection);
-                        lastDirection = worldGazeDirection;
-                        return worldGazeDirection;
-                    }
-                }
-                else //hmd doesn't have eye data (ie, eye tracking)
-                {
-                    //use center point of hmd
-                    return Cognitive3D.GameplayReferences.HMD.forward;
-                }
-                return lastDirection;
+                return Cognitive3D.GameplayReferences.HMD.forward;
             }
         }
 #else
