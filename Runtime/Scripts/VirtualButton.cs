@@ -9,7 +9,7 @@ using UnityEngine.XR;
 
 namespace Cognitive3D
 {
-    enum ActivationType
+    public enum ActivationType
     {
         PointerFallbackGaze,
         TriggerButton
@@ -40,7 +40,7 @@ namespace Cognitive3D
         protected Color fillStartingColor;
         protected float triggerValue;
         protected bool isUsingRightHand;
-        private ActivationType activationType;
+        protected ActivationType activationType;
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
         private ExitPollHolder currentExitPollHolder;
 
