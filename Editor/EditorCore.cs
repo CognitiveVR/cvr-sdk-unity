@@ -371,6 +371,7 @@ namespace Cognitive3D
 #region GUI
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
         public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF);
+        public static Color CognitiveBlue = new Color32(98, 180, 243, 255);
 
         static GUIStyle headerStyle;
         public static GUIStyle HeaderStyle
