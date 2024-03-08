@@ -8,6 +8,21 @@ namespace Cognitive3D.Components
     {
         private GameplayReferences.TrackingType lastTrackedDevice = GameplayReferences.TrackingType.None;
 
+        /// <summary>
+        /// Captures any change in input device from hand to controller to none or vice versa
+        /// </summary>
+        void CaptureHandTrackingEvents(GameplayReferences.TrackingType currentTrackedDevice)
+        {
+            if (lastTrackedDevice != currentTrackedDevice)
+            {
+                new CustomEvent("c3d.input.tracking.changed")
+                    .SetProperty("Previously Tracking", lastTrackedDevice)
+                    .SetProperty("Now Tracking", currentTrackedDevice)
+                    .Send();
+                lastTrackedDevice = currentTrackedDevice;
+            }
+        }
+
 #if C3D_MAGICLEAP2
         protected override void OnSessionBegin()
         {
@@ -18,6 +33,7 @@ namespace Cognitive3D.Components
             {
                 //Start Hand Tracking
                 UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.MLHandTracking.StartTracking();
+                GameplayReferences.handTrackingEnabled = true;
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
                 Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
@@ -43,7 +59,7 @@ namespace Cognitive3D.Components
         UnityEngine.XR.InputDevice leftHandDevice;
         UnityEngine.XR.InputDevice rightHandDevice;
         UnityEngine.XR.InputDevice controllerDevice;
-        TrackingType GetMagicLeapTrackingType()
+        GameplayReferences.TrackingType GetMagicLeapTrackingType()
         {
             if (UnityEngine.XR.MagicLeap.MLPermissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking).IsOk)
             {
@@ -54,7 +70,7 @@ namespace Cognitive3D.Components
                 }
                 if (leftHandDevice.isValid || rightHandDevice.isValid)
                 {
-                    return TrackingType.Hand;
+                    return GameplayReferences.TrackingType.Hand;
                 }
             }
 
@@ -64,9 +80,9 @@ namespace Cognitive3D.Components
             }
             if (controllerDevice.isValid)
             {
-                return TrackingType.Controller;
+                return GameplayReferences.TrackingType.Controller;
             }
-            return TrackingType.None;
+            return GameplayReferences.TrackingType.None;
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
@@ -77,21 +93,6 @@ namespace Cognitive3D.Components
 #endif
 
 #if C3D_OCULUS
-        /// <summary>
-        /// Captures any change in input device from hand to controller to none or vice versa
-        /// </summary>
-        void CaptureHandTrackingEvents(TrackingType currentTrackedDevice)
-        {
-            if (lastTrackedDevice != currentTrackedDevice)
-            {
-                new CustomEvent("c3d.input.tracking.changed")
-                    .SetProperty("Previously Tracking", lastTrackedDevice)
-                    .SetProperty("Now Tracking", currentTrackedDevice)
-                    .Send();
-                lastTrackedDevice = currentTrackedDevice;
-            }
-        }
-
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -109,48 +110,12 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                var currentTrackedDevice = GetCurrentTrackedDevice();
+                var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
                 CaptureHandTrackingEvents(currentTrackedDevice);
             }
             else
             {
                 Debug.LogWarning("Hand Tracking component is disabled. Please enable in inspector.");
-            }
-        }
-
-        /// <summary>
-        /// Gets the current tracked device i.e. hand or controller
-        /// </summary>
-        /// <returns> Enum representing whether user is using hand or controller or neither </returns>
-        TrackingType GetCurrentTrackedDevice()
-        {
-            var currentOVRTrackedDevice = OVRInput.GetActiveController();
-            if (currentOVRTrackedDevice == OVRInput.Controller.None)
-            {
-                return TrackingType.None;
-            }
-            else if (currentOVRTrackedDevice == OVRInput.Controller.Hands
-                || currentOVRTrackedDevice == OVRInput.Controller.LHand
-                || currentOVRTrackedDevice == OVRInput.Controller.RHand)
-            {
-                return TrackingType.Hand;
-            }
-            else
-            {
-                return TrackingType.Controller;
-			}
-		}
-        /// Captures any change in input device from hand to controller to none or vice versa
-        /// </summary>
-        void CaptureHandTrackingEvents(GameplayReferences.TrackingType currentTrackedDevice)
-        {
-            if (lastTrackedDevice != currentTrackedDevice)
-            {
-                new CustomEvent("c3d.input.tracking.changed")
-                    .SetProperty("Previously Tracking", lastTrackedDevice)
-                    .SetProperty("Now Tracking", currentTrackedDevice)
-                    .Send();
-                lastTrackedDevice = currentTrackedDevice;
             }
         }
 
@@ -174,7 +139,7 @@ namespace Cognitive3D.Components
         public override string GetDescription()
         {
 #if C3D_OCULUS || C3D_MAGICLEAP2
-            return "Collects and sends data pertaining to Hand Tracking";
+            return "Records the type of input device (as Hand or Controller) and when this devices changes. Records that this app supports handtracking";
 #else
             return "This component can only be used on the Oculus platform";
 #endif
