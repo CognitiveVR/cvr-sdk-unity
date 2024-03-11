@@ -577,7 +577,7 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
-                string oculusHeadsetType;
+                string oculusHeadsetType = "";
 #if C3D_OCULUS
                 oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
@@ -597,7 +597,7 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Right")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
-                string oculusHeadsetType;
+                string oculusHeadsetType = "";
 #if C3D_OCULUS
                 oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
@@ -679,7 +679,7 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Left")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == false))
             {
-                string oculusHeadsetType;
+                string oculusHeadsetType = "";
 #if C3D_OCULUS
                 oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
@@ -699,7 +699,7 @@ namespace Cognitive3D
             if (xrDeviceName.Equals("Oculus Touch Controller - Right")
                 || (xrDeviceName.Equals("Oculus Touch Controller OpenXR") && isRight == true))
             {
-                string oculusHeadsetType;
+                string oculusHeadsetType = "";
 #if C3D_OCULUS
                 oculusHeadsetType = OVRPlugin.GetSystemHeadsetType().ToString();
 #endif
