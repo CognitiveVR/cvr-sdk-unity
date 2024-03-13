@@ -143,8 +143,6 @@ namespace Cognitive3D.Components
             SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
             if (subscriptionContextResponse != null)
             {
-                int numActiveSubscriptions = 0;
-
                 // use string instead of bool so we can check if they are actually there with isNullOrEmpty
                 // bool would just default to false
                 for (int i = 0; i < subscriptionContextResponse.data.Length; i++)
@@ -153,14 +151,12 @@ namespace Cognitive3D.Components
                     {
                         Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.sku", subscriptionContextResponse.data[i].sku);
                         Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_active", subscriptionContextResponse.data[i].is_active);
-                        if (subscriptionContextResponse.data[i].is_active == "true") { numActiveSubscriptions++; }
                         Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", subscriptionContextResponse.data[i].is_trial);
-                        Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", DateTime.Parse(subscriptionContextResponse.data[i].period_start_time).ToUniversalTime().ToString());
-                        Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", DateTime.Parse(subscriptionContextResponse.data[i].period_end_time).ToUniversalTime().ToString());
-                        Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_date", DateTime.Parse(subscriptionContextResponse.data[i].next_renewal_time).ToUniversalTime().ToString());
+                        Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date _ number", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time));
+                        Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date _ number", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time));
+                        Cognitive3D_Manager.SetSessionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_date _ number", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time));
                     }
                 }
-                Cognitive3D_Manager.SetSessionProperty("c3d.user.meta.numberOfActiveSubscriptions", numActiveSubscriptions);
             }
         }
 #endif
@@ -188,6 +184,15 @@ namespace Cognitive3D.Components
             }
         }
 #endif
+        /// <summary>
+        /// Converts ISO 8601 timestamp to unix timestamp in seconds
+        /// </summary>
+        /// <param name="timeString">A timestamp in a ISO 8601 format </param>
+        /// <returns> The unix timestamp in seconds</returns>
+        private long TimeStringToUnix(string timeString)
+        {
+            return ((DateTimeOffset) DateTime.Parse(timeString)).ToUnixTimeSeconds();
+        }
 
         /// <summary>
         /// Description to display in inspector
@@ -244,17 +249,17 @@ namespace Cognitive3D.Components
             public string is_trial;
 
             /// <summary>
-            /// Timestamp for when subscription started (format: ISO 8601/RFC 3339)
+            /// Timestamp for when subscription started
             /// </summary>
             public string period_start_time;
 
             /// <summary>
-            /// Timestamp for when subscription will end (format: ISO 8601/RFC 3339)
+            /// Timestamp for when subscription will end
             /// </summary>
             public string period_end_time;
 
             /// <summary>
-            /// Timestamp for when subscription will next be billed (format: ISO 8601/RFC 3339)
+            /// Timestamp for when subscription will next be billed
             /// </summary>
             public string next_renewal_time;
         }
