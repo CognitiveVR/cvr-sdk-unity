@@ -47,6 +47,11 @@ namespace Cognitive3D
             return items.Where(item => item.level == level);
         }
 
+        public IEnumerable<ProjectValidationItem> GetItems(ProjectValidation.ItemCategory category)
+        {
+            return items.Where(item => item.category == category);
+        }
+
         public List<ProjectValidationItem> GetAllItems()
         {
             return items;

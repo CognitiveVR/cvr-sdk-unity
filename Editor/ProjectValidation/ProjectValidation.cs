@@ -14,6 +14,11 @@ namespace Cognitive3D
             Required = 2
         }
 
+        public enum ItemCategory
+        {
+            All = 0,
+        }
+
         internal static ProjectValidationItemRegistry registry;
 
         /// <summary>
@@ -33,9 +38,9 @@ namespace Cognitive3D
         /// <param name="fixmessage">Description of the fix for the item</param>
         /// <param name="isFixed">Checks if item is fixed or not</param>
         /// <param name="fixAction">Delegate that validates the item</param>
-        public void AddItem(ItemLevel level, string message, string fixmessage, bool isFixed, Action fixAction = null)
+        public void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, bool isFixed, Action fixAction = null)
         {
-            var newItem = new ProjectValidationItem(level, message, fixmessage, isFixed, fixAction);
+            var newItem = new ProjectValidationItem(level, category, message, fixmessage, isFixed, fixAction);
             AddItem(newItem);
         }
     }

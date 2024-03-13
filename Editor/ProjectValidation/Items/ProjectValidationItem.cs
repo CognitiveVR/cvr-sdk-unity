@@ -9,14 +9,16 @@ namespace Cognitive3D
     {
         public Hash128 id;
         public ProjectValidation.ItemLevel level { get; }
+        public ProjectValidation.ItemCategory category { get; }
         public string message { get; }
         public string fixmessage { get; }
         public bool isFixed;
         public Action fixAction { get; }
 
-        public ProjectValidationItem(ProjectValidation.ItemLevel level, string message, string fixmessage, bool isFixed, Action fixAction)
+        public ProjectValidationItem(ProjectValidation.ItemLevel level, ProjectValidation.ItemCategory category, string message, string fixmessage, bool isFixed, Action fixAction)
         {
             this.level = level;
+            this.category = category;
             this.message = message;
             this.fixmessage = fixmessage;
             this.isFixed = isFixed;
