@@ -17,11 +17,20 @@ namespace Cognitive3D.Components
     {
         readonly float FramerateTrackingInterval = 1;
 
-        //counts up the deltatime to determine when the interval ends
+        /// <summary>
+        /// Counts up the deltatime to determine when the interval ends
+        /// </summary>
         private float currentTime;
 
-        //the number of frames in the interval
+        /// <summary>
+        /// The number of frames in the interval
+        /// </summary>
         private int intervalFrameCount;
+
+        /// <summary>
+        /// Used to detect changes for spacewarp enable/disable
+        /// </summary>
+        private bool wasSpaceWarpEnabledInLastFrame = false;
 
         /// <summary>
         /// ASW caps framerate to half of device refresh rate
@@ -95,12 +104,25 @@ namespace Cognitive3D.Components
             // We cannot do this once and cache since this can be enabled/disabled per frame
             if (OVRManager.GetSpaceWarp())
             {
-                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
+                if (!wasSpaceWarpEnabledInLastFrame)
+                {
+                    Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
+                    new CustomEvent("c3d.app.meta.Application Space Warp enabled").Send();
+                    wasSpaceWarpEnabledInLastFrame = true;
+                }
 
                 // If FPS is approximately half of device refresh rate (plus tolerance)
-                if (framesPerSecond <= (OVRPlugin.systemDisplayFrequency / 2) + 2)
+                if (framesPerSecond <= (OVRPlugin.systemDisplayFrequency / 2) + TOLERANCE_FOR_CAPPED_FPS)
                 {
                     fpsMultiplier = 2;
+                }
+            }
+            else
+            {
+                if (wasSpaceWarpEnabledInLastFrame)
+                {
+                    new CustomEvent("c3d.app.meta.Application Space Warp disabled").Send();
+                    wasSpaceWarpEnabledInLastFrame = false;
                 }
             }
 #endif
