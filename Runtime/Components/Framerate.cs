@@ -16,12 +16,21 @@ namespace Cognitive3D.Components
     public class Framerate : AnalyticsComponentBase
     {
         readonly float FramerateTrackingInterval = 1;
+
         //counts up the deltatime to determine when the interval ends
         private float currentTime;
+
         //the number of frames in the interval
         private int intervalFrameCount;
 
+        /// <summary>
+        /// ASW caps framerate to half of device refresh rate
+        /// We are defining a +- tolerance for the capepd framerate to allow for error etc.
+        /// </summary>
+        private readonly float TOLERANCE_FOR_CAPPED_FPS = 2;
+
         readonly List<float> deltaTimes = new List<float>(120);
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -81,10 +90,23 @@ namespace Cognitive3D.Components
             float finalLow5Percent = 1.0f / min5Percent;
             float finalLow1Percent = 1.0f / min1Percent;
 
-            SensorRecorder.RecordDataPoint("c3d.fps.avg", framesPerSecond);
-            SensorRecorder.RecordDataPoint("c3d.fps.5pl", finalLow5Percent);
-            SensorRecorder.RecordDataPoint("c3d.fps.1pl", finalLow1Percent);
+            float fpsMultiplier = 1;
+#if C3D_OCULUS
+            // We cannot do this once and cache since this can be enabled/disabled per frame
+            if (OVRManager.GetSpaceWarp())
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
 
+                // If FPS is approximately half of device refresh rate (plus tolerance)
+                if (framesPerSecond <= (OVRPlugin.systemDisplayFrequency / 2) + 2)
+                {
+                    fpsMultiplier = 2;
+                }
+            }
+#endif
+            SensorRecorder.RecordDataPoint("c3d.fps.avg", framesPerSecond * fpsMultiplier);
+            SensorRecorder.RecordDataPoint("c3d.fps.5pl", finalLow5Percent * fpsMultiplier);
+            SensorRecorder.RecordDataPoint("c3d.fps.1pl", finalLow1Percent * fpsMultiplier);
             intervalFrameCount = 0;
             currentTime = 0;
             deltaTimes.Clear();
