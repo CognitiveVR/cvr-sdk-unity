@@ -107,7 +107,9 @@ namespace Cognitive3D.Components
                 if (!wasSpaceWarpEnabledInLastFrame)
                 {
                     Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
-                    new CustomEvent("c3d.app.meta.Application Space Warp enabled").Send();
+                    new CustomEvent("c3d.app.meta.toggle async space warp")
+                        .SetProperty("Enbled", true)
+                        .Send();
                     wasSpaceWarpEnabledInLastFrame = true;
                 }
 
@@ -121,7 +123,9 @@ namespace Cognitive3D.Components
             {
                 if (wasSpaceWarpEnabledInLastFrame)
                 {
-                    new CustomEvent("c3d.app.meta.Application Space Warp disabled").Send();
+                    new CustomEvent("c3d.app.meta.toggle async space warp")
+                        .SetProperty("Enabled", false)
+                        .Send();
                     wasSpaceWarpEnabledInLastFrame = false;
                 }
                 fpsMultiplier = 1;
