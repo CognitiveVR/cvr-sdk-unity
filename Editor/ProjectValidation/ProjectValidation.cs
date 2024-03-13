@@ -2,30 +2,31 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Cognitive3D
 {
-    internal class ProjectValidation
+    internal static class ProjectValidation
     {
-        public enum ItemLevel
+        internal enum ItemLevel
         {
             Optional = 0,
             Recommended = 1,
             Required = 2
         }
 
-        public enum ItemCategory
+        internal enum ItemCategory
         {
             All = 0,
         }
 
-        internal static ProjectValidationItemRegistry registry;
+        internal static ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();
 
         /// <summary>
         /// Add an <see cref="ProjectValidationItem"/> to project validation checklist items
         /// </summary>
         /// <param name="item">The item that will be added to project validation checklist</param>
-        public void AddItem(ProjectValidationItem item)
+        internal static void AddItem(ProjectValidationItem item)
         {
             registry.AddItem(item);
         }
@@ -38,10 +39,60 @@ namespace Cognitive3D
         /// <param name="fixmessage">Description of the fix for the item</param>
         /// <param name="isFixed">Checks if item is fixed or not</param>
         /// <param name="fixAction">Delegate that validates the item</param>
-        public void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, bool isFixed, Action fixAction = null)
+        internal static void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, bool isFixed, Action fixAction = null)
         {
             var newItem = new ProjectValidationItem(level, category, message, fixmessage, isFixed, fixAction);
             AddItem(newItem);
+        }
+
+        /// <summary>
+        /// Searches through game objects in active scene to find a component
+        /// </summary>
+        /// <typeparam name="T">Type of target component</typeparam>
+        /// <returns></returns>
+        internal static bool FindComponentInActiveScene<T>() where T : Component
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            var foundComponents = new List<T>();
+
+            var rootObjects = activeScene.GetRootGameObjects();
+            foreach (var rootObject in rootObjects)
+            {
+                var components = rootObject.GetComponentsInChildren<T>(true);
+                foundComponents.AddRange(components);
+            }
+
+            if (foundComponents != null && foundComponents.Count != 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Searches through game objects in active scene to find a component
+        /// </summary>
+        /// <typeparam name="T">Type of target component</typeparam>
+        /// <param name="foundComponents">Founded components in active scene</param>
+        internal static bool FindComponentInActiveScene<T>(out List<T> foundComponents) where T : Component
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            foundComponents = new List<T>();
+
+            var rootObjects = activeScene.GetRootGameObjects();
+            foreach (var rootObject in rootObjects)
+            {
+                var components = rootObject.GetComponentsInChildren<T>(true);
+                foundComponents.AddRange(components);
+            }
+
+            if (foundComponents != null && foundComponents.Count != 0)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
