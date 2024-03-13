@@ -124,6 +124,7 @@ namespace Cognitive3D.Components
                     new CustomEvent("c3d.app.meta.Application Space Warp disabled").Send();
                     wasSpaceWarpEnabledInLastFrame = false;
                 }
+                fpsMultiplier = 1;
             }
 #endif
             SensorRecorder.RecordDataPoint("c3d.fps.avg", framesPerSecond * fpsMultiplier);
