@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -152,17 +153,53 @@ namespace Cognitive3D
             EditorGUILayout.Space();
 
             GUILayout.Label("Project Validation", styles.IssuesTitleLabel);
-            GUILayout.Label("This is a test for the descriptions but from the new script I created!", styles.SubtitleHelpText);
+            GUILayout.Label("The project validation simplifies Cognitive3D setup by providing a checklist of essential tasks and recommended best practices.", styles.SubtitleHelpText);
 
             EditorGUILayout.Space();
 
-            GenerateItemList();
+            GUILayout.Label("Checklist", styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
+
+            GenerateItemLevelList(ProjectValidation.ItemLevel.Required, "Required");
+            GUILayout.FlexibleSpace();
         }
 
-        private void GenerateItemList()
+        private void GenerateItemLevelList(ProjectValidation.ItemLevel level, string title)
         {
-            GUILayout.Label("Checklist", styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
-            GUILayout.FlexibleSpace();
+            var items = new List<ProjectValidationItem>(ProjectValidation.GetItems(level));
+
+            // Debug.Log("@@@ number of items in " + level.ToString() + " level is " + items.Count);
+
+            // GUILayout.Label("This is just to see if it's working!", styles.IssuesTitleLabel);
+
+            using (var scope = new EditorGUILayout.VerticalScope(styles.List))
+            {
+                var rect = scope.rect;
+
+                // Foldout
+                title = $"{title} ({items.Count})";
+
+                var foldout = FoldoutWithAdditionalAction(title, rect, () =>
+                {
+
+                });
+            }
+        }
+
+        private bool FoldoutWithAdditionalAction(string label, Rect rect, Action inlineAdditionalAction)
+        {
+            var previousLabelWidth = EditorGUIUtility.labelWidth;
+            EditorGUIUtility.labelWidth = rect.width - 8;
+
+            bool foldout;
+            using (new EditorGUILayout.HorizontalScope(styles.FoldoutHorizontal))
+            {
+                // foldout = Foldout(key, label);
+                foldout = true;
+                inlineAdditionalAction?.Invoke();
+            }
+
+            EditorGUIUtility.labelWidth = previousLabelWidth;
+            return foldout;
         }
     }
 }

@@ -46,6 +46,35 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Gets all existed <see cref="ProjectValidationItem"/>s
+        /// </summary>
+        /// <returns></returns>
+        internal static IEnumerable<ProjectValidationItem> GetAllItems()
+        {
+            return registry.GetAllItems();
+        }
+
+        /// <summary>
+        /// Gets all <see cref="ProjectValidationItem"/>s with a specific level
+        /// </summary>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        internal static IEnumerable<ProjectValidationItem> GetItems(ItemLevel level)
+        {
+            return registry.GetItems(level);
+        }
+
+        /// <summary>
+        /// Gets all <see cref="ProjectValidationItem"/>s with a specific category
+        /// </summary>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        internal static IEnumerable<ProjectValidationItem> GetItems(ItemCategory category)
+        {
+            return registry.GetItems(category);
+        }
+
+        /// <summary>
         /// Searches through game objects in active scene to find a component
         /// </summary>
         /// <typeparam name="T">Type of target component</typeparam>
