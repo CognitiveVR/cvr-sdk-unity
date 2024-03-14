@@ -499,10 +499,6 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("rift_xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("rift_ybtn"));
                         break;
-                    case DynamicObject.ControllerDisplayType.oculus_rift_controller_right:
-                        break;
-                    case DynamicObject.ControllerDisplayType.oculus_quest_touch_right:
-                        break;
                     case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
@@ -513,8 +509,6 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.grip.name, new ButtonState("wmr_grip"));
                         LeftLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("wmr_grip"));
                         LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("wmr_menubtn"));
-                        break;
-                    case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right:
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
@@ -527,8 +521,6 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
                         break;
-                    case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right:
-                        break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
                     case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
                         LeftLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
@@ -540,10 +532,6 @@ namespace Cognitive3D.Components
                         LeftLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
                         LeftLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
-                        break;
-                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
-                        break;
-                    case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
@@ -584,8 +572,6 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("abtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("bbtn"));
                         break;
-                    case DynamicObject.ControllerDisplayType.oculus_rift_controller_left:
-                        break;
                     case DynamicObject.ControllerDisplayType.oculus_rift_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("rift_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("rift_joystick", 0, 0, 0, true));
@@ -596,11 +582,6 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("rift_start"));
                         RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("rift_xbtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("rift_ybtn"));
-                        break;
-                    case DynamicObject.ControllerDisplayType.oculus_quest_touch_left:
-                        break;
-                    case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_left:
-
                         break;
                     case DynamicObject.ControllerDisplayType.windows_mixed_reality_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("wmr_joystick", 0, 0, 0, true));
@@ -613,9 +594,6 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.gripButton.name, new ButtonState("wmr_grip"));
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("wmr_menubtn"));
                         break;
-                    case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_left:
-
-                        break;
                     case DynamicObject.ControllerDisplayType.pico_neo_2_eye_controller_right:
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxis.name, new ButtonState("pico_joystick", 0, 0, 0, true));
                         RightLastFrameButtonStates.Add(CommonUsages.primary2DAxisClick.name, new ButtonState("pico_joystick", 0, 0, 0, true));
@@ -626,8 +604,6 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_xbtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_ybtn"));
-                        break;
-                    case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_left:
                         break;
                     case DynamicObject.ControllerDisplayType.pico_neo_3_eye_controller_right:
                     case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_right:
@@ -640,8 +616,6 @@ namespace Cognitive3D.Components
                         RightLastFrameButtonStates.Add(CommonUsages.menuButton.name, new ButtonState("pico_menubtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.primaryButton.name, new ButtonState("pico_abtn"));
                         RightLastFrameButtonStates.Add(CommonUsages.secondaryButton.name, new ButtonState("pico_bbtn"));
-                        break;
-                    case DynamicObject.ControllerDisplayType.pico_neo_4_eye_controller_left:
                         break;
                     case DynamicObject.ControllerDisplayType.unknown:
                         break;
