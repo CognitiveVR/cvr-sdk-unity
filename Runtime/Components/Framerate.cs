@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using Cognitive3D;
 
 /// <summary>
 /// Sends Frames Per Second (FPS) as a sensor
@@ -99,6 +97,7 @@ namespace Cognitive3D.Components
             // We cannot do this once and cache since this can be enabled/disabled per frame
             if (OVRManager.GetSpaceWarp())
             {
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
                 // If FPS is approximately half of device refresh rate (plus tolerance)
                 if (framesPerSecond <= (OVRPlugin.systemDisplayFrequency / 2) + TOLERANCE_FOR_CAPPED_FPS)
                 {
