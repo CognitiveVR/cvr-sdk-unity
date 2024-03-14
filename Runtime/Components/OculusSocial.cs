@@ -16,7 +16,8 @@ namespace Cognitive3D.Components
         [SerializeField]
         private bool RecordOculusUserData = true;
 
-        [Tooltip("Automatically completes entitlement check when a new session starts. If you disable this, please call Cognitive3D_BeginOculusEntitlementCheck within 10 seconds of launching your app.")]
+        [Tooltip("Automatically completes entitlement check when a new session starts. This will also use the AppID from your platform settings. " +
+            "If you disable this option, please call Cognitive3D_BeginOculusEntitlementCheck within 10 seconds of launching your app.")]
         [SerializeField]
         private bool completeEntitlementCheckAutomatically = true;
 #endif
