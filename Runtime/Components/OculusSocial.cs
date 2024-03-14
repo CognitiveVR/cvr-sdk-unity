@@ -16,7 +16,7 @@ namespace Cognitive3D.Components
         [SerializeField]
         private bool RecordOculusUserData = true;
 
-        [Tooltip("Automatically completes Entitlement Check when a new session starts")]
+        [Tooltip("Automatically completes entitlement check when a new session starts. If you disable this, please call Cognitive3D_BeginOculusEntitlementCheck within 10 seconds of launching your app.")]
         [SerializeField]
         private bool completeEntitlementCheckAutomatically = true;
 #endif
@@ -28,7 +28,7 @@ namespace Cognitive3D.Components
             if (completeEntitlementCheckAutomatically)
             {
                 string appID = GetAppIDFromConfig();
-                BeginEntitlementCheck(appID);
+                Cognitive3D_BeginOculusEntitlementCheck(appID);
             }
 #endif
         }
@@ -40,7 +40,7 @@ namespace Cognitive3D.Components
         /// Should be called within first 10 seconds of launching app
         /// </summary>
         /// <param name="appID"> The oculus appID found in your oculus dev dashboard </param>
-        public void BeginEntitlementCheck(string appID)
+        public void Cognitive3D_BeginOculusEntitlementCheck(string appID)
         {
             if (!Core.IsInitialized())
             {
