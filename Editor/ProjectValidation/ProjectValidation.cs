@@ -10,11 +10,14 @@ namespace Cognitive3D
     {
         internal enum ItemLevel
         {
-            Optional = 0,
+            Required = 0,
             Recommended = 1,
-            Required = 2
+            Optional = 2            
         }
 
+        /// <summary>
+        /// This can serve to categorize items into groups such as performance, participants, exit polls, and etc.
+        /// </summary>
         internal enum ItemCategory
         {
             All = 0,

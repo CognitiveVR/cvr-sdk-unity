@@ -141,65 +141,134 @@ namespace Cognitive3D
 
             internal readonly GUIStyle List = new GUIStyle(EditorStyles.helpBox)
             {
-                margin = new RectOffset(3, 3, 3, 3),
-                padding = new RectOffset(3, 3, 3, 3)
+                margin = new RectOffset(10, 10, 10, 10),
+                padding = new RectOffset(5, 5, 5, 5),
+            };
+
+            internal readonly GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout)
+            {
+                fontStyle = FontStyle.Bold
             };
         }
 
+        // Method to create a texture with a specified color
+        private static Texture2D MakeTex(int width, int height, Color color)
+        {
+            Color[] pix = new Color[width * height];
+            for (int i = 0; i < pix.Length; ++i)
+            {
+                pix[i] = color;
+            }
+            Texture2D result = new Texture2D(width, height);
+            result.SetPixels(pix);
+            result.Apply();
+            return result;
+        }
+
+        internal static Color HexToColor(string hex)
+        {
+            hex = hex.Replace("#", string.Empty);
+            byte r = (byte)(Convert.ToInt32(hex.Substring(0, 2), 16));
+            byte g = (byte)(Convert.ToInt32(hex.Substring(2, 2), 16));
+            byte b = (byte)(Convert.ToInt32(hex.Substring(4, 2), 16));
+            byte a = 255;
+
+            if (hex.Length == 8)
+            {
+                a = (byte)(Convert.ToInt32(hex.Substring(6, 2), 16));
+            }
+
+            return new Color32(r, g, b, a);
+        }
+
         private static Styles styles = new Styles();
+        public List<FoldableList> foldableLists = new List<FoldableList>();
 
         internal void OnGUI()
         {
-            EditorGUILayout.Space();
+            using (new EditorGUILayout.VerticalScope())
+            {
+                EditorGUILayout.Space();
 
-            GUILayout.Label("Project Validation", styles.IssuesTitleLabel);
-            GUILayout.Label("The project validation simplifies Cognitive3D setup by providing a checklist of essential tasks and recommended best practices.", styles.SubtitleHelpText);
+                GUILayout.Label("Project Validation", styles.IssuesTitleLabel);
+                GUILayout.Label("The project validation simplifies Cognitive3D setup by providing a checklist of essential tasks and recommended best practices.", styles.SubtitleHelpText);
 
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
 
-            GUILayout.Label("Checklist", styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
+                GUILayout.Label("Checklist", styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
+            }
 
-            GenerateItemLevelList(ProjectValidation.ItemLevel.Required, "Required");
+            // TODO: need to fix this! Generate items should not get called every frame!
+            if (foldableLists.Count == 0)
+            {
+                GenerateItemLevelList(ProjectValidation.ItemLevel.Required);
+                GenerateItemLevelList(ProjectValidation.ItemLevel.Recommended);
+            }
+
+            DrawItemLevelLists();
+
             GUILayout.FlexibleSpace();
         }
 
-        private void GenerateItemLevelList(ProjectValidation.ItemLevel level, string title)
+        private void DrawItemLevelLists()
         {
-            var items = new List<ProjectValidationItem>(ProjectValidation.GetItems(level));
-
-            // Debug.Log("@@@ number of items in " + level.ToString() + " level is " + items.Count);
-
-            // GUILayout.Label("This is just to see if it's working!", styles.IssuesTitleLabel);
-
-            using (var scope = new EditorGUILayout.VerticalScope(styles.List))
+            foreach (var list in foldableLists)
             {
-                var rect = scope.rect;
-
-                // Foldout
-                title = $"{title} ({items.Count})";
-
-                var foldout = FoldoutWithAdditionalAction(title, rect, () =>
+                using (var scope = new EditorGUILayout.VerticalScope(styles.List))
                 {
+                    list.showList = EditorGUILayout.Foldout(list.showList, list.listName, styles.foldoutStyle);
 
-                });
+                    // Display the list if showList is true
+                    if (list.showList)
+                    {
+                        GUILayout.BeginVertical();
+
+                        // Iterate through each item in the list
+                        foreach (var item in list.items)
+                        {
+                            DrawItem(item, true);
+                        }
+
+                        GUILayout.EndVertical();
+                    }
+                }
+
+                EditorGUILayout.Space();
             }
         }
 
-        private bool FoldoutWithAdditionalAction(string label, Rect rect, Action inlineAdditionalAction)
+        private void DrawItem(ProjectValidationItem item, bool buttonEnabled)
         {
-            var previousLabelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = rect.width - 8;
-
-            bool foldout;
-            using (new EditorGUILayout.HorizontalScope(styles.FoldoutHorizontal))
+            using (var scope = new EditorGUILayout.HorizontalScope(styles.ListLabel))
             {
-                // foldout = Foldout(key, label);
-                foldout = true;
-                inlineAdditionalAction?.Invoke();
-            }
+                GUILayout.Label(item.message);
 
-            EditorGUIUtility.labelWidth = previousLabelWidth;
-            return foldout;
+                if (buttonEnabled && GUILayout.Button("Fix", styles.FixAllButton))
+                {
+                }
+            }
+        }
+
+        private void GenerateItemLevelList(ProjectValidation.ItemLevel level)
+        {
+            var items = new List<ProjectValidationItem>(ProjectValidation.GetItems(level));
+            FoldableList newLevelItemList = new FoldableList(level.ToString(), items);
+
+            foldableLists.Add(newLevelItemList);
+        }
+    }
+
+    [Serializable]
+    internal class FoldableList
+    {
+        public string listName;
+        public bool showList = true;
+        public List<ProjectValidationItem> items;
+
+        public FoldableList(string name, List<ProjectValidationItem> items)
+        {
+            this.listName = name;
+            this.items = items;
         }
     }
 }
