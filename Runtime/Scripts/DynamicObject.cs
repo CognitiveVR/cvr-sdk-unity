@@ -40,13 +40,13 @@ namespace Cognitive3D
         {
             Quest2 = 1,
             QuestPro = 2,
+            Quest3 = 9,
             ViveWand = 3,
             WindowsMRController = 4,
             SteamIndex = 5,
             PicoNeo3 = 6,
             PicoNeo4 = 7,
             ViveFocus = 8,
-            Quest3 = 9
             //Generic = 0, //basically a non-branded oculus touch controller
             //Hand = 9, //might suggest that this includes skeletal hand tracking, which needs some more design
         }
