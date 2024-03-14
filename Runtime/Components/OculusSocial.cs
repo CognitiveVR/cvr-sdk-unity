@@ -15,13 +15,33 @@ namespace Cognitive3D.Components
         [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
         private bool RecordOculusUserData = true;
+
+        [Tooltip("Automatically completes Entitlement Check when a new session starts")]
+        [SerializeField]
+        private bool completeEntitlementCheckAutomatically = true;
 #endif
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
 #if C3D_OCULUS
-            string appID = GetAppIDFromConfig();
+            if (completeEntitlementCheckAutomatically)
+            {
+                string appID = GetAppIDFromConfig();
+                BeginEntitlementCheck(appID);
+            }
+#endif
+        }
+
+#if C3D_OCULUS
+
+        /// <summary>
+        /// Completes the entitlement check and callbacks if check is success ful <br/>
+        /// Should be called within first 10 seconds of launching app
+        /// </summary>
+        /// <param name="appID"> The oculus appID found in your oculus dev dashboard </param>
+        public void BeginEntitlementCheck(string appID)
+        {
             if (!Core.IsInitialized())
             {
                 // Initialize will throw error if appid is invalid/missing
@@ -44,10 +64,7 @@ namespace Cognitive3D.Components
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
             }
-#endif
         }
-
-#if C3D_OCULUS
 
         private static string GetAppIDFromConfig()
         {
