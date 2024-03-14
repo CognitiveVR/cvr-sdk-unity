@@ -28,11 +28,6 @@ namespace Cognitive3D.Components
         private int intervalFrameCount;
 
         /// <summary>
-        /// Used to detect changes for spacewarp enable/disable
-        /// </summary>
-        private bool wasSpaceWarpEnabledInLastFrame = false;
-
-        /// <summary>
         /// ASW caps framerate to half of device refresh rate
         /// We are defining a +- tolerance for the capepd framerate to allow for error etc.
         /// </summary>
@@ -104,15 +99,6 @@ namespace Cognitive3D.Components
             // We cannot do this once and cache since this can be enabled/disabled per frame
             if (OVRManager.GetSpaceWarp())
             {
-                if (!wasSpaceWarpEnabledInLastFrame)
-                {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
-                    new CustomEvent("c3d.app.meta.toggle async space warp")
-                        .SetProperty("Enbled", true)
-                        .Send();
-                    wasSpaceWarpEnabledInLastFrame = true;
-                }
-
                 // If FPS is approximately half of device refresh rate (plus tolerance)
                 if (framesPerSecond <= (OVRPlugin.systemDisplayFrequency / 2) + TOLERANCE_FOR_CAPPED_FPS)
                 {
@@ -121,13 +107,6 @@ namespace Cognitive3D.Components
             }
             else
             {
-                if (wasSpaceWarpEnabledInLastFrame)
-                {
-                    new CustomEvent("c3d.app.meta.toggle async space warp")
-                        .SetProperty("Enabled", false)
-                        .Send();
-                    wasSpaceWarpEnabledInLastFrame = false;
-                }
                 fpsMultiplier = 1;
             }
 #endif
