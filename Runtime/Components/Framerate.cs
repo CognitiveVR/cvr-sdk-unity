@@ -97,6 +97,7 @@ namespace Cognitive3D.Components
             // We cannot do this once and cache since this can be enabled/disabled per frame
             if (OVRManager.GetSpaceWarp())
             {
+                SensorRecorder.RecordDataPoint("c3d.app.meta.spaceWarp", 1);
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.meta.wasSpaceWarpUsed", true);
                 // If FPS is approximately half of device refresh rate (plus tolerance)
                 if (framesPerSecond <= (OVRPlugin.systemDisplayFrequency / 2) + TOLERANCE_FOR_CAPPED_FPS)
@@ -106,6 +107,7 @@ namespace Cognitive3D.Components
             }
             else
             {
+                SensorRecorder.RecordDataPoint("c3d.app.meta.spaceWarp", 0);
                 fpsMultiplier = 1;
             }
 #endif
