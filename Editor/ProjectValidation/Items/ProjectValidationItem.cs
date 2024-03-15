@@ -28,7 +28,7 @@ namespace Cognitive3D
             hash.Append(this.message);
             id = hash;
 
-            Debug.Log("@@@ id is " + id);
+            // Debug.Log("@@@ id is " + id);
         }
     }
 }
