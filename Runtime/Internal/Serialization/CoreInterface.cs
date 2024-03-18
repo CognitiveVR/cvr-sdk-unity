@@ -53,6 +53,11 @@ namespace Cognitive3D
             SharedCore.SetLobbyId(lobbyid);
         }
 
+        internal static void WriteMetaSubscriptionProperty(string key, object value)
+        {
+            SharedCore.WriteSubscriptionDetailToDict(key, value);
+        }
+
         #endregion
 
         #region CustomEvent

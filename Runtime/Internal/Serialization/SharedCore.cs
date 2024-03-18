@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine; //for fixation calculations - don't want to break this right now
 using System.Threading; //for dynamic objects
+using System;
 
 
 //this is on the far side of the interface - what actually serializes and returns data
@@ -51,6 +52,11 @@ namespace Cognitive3D.Serialization
         static int SensorThreshold;
         static int FixationThreshold;
         static bool IsInitialized = false;
+
+        /// <summary>
+        /// Storing meta subscription context details as dictionary so we can serialize
+        /// </summary>
+        static List <KeyValuePair<string, object>> metaSubscriptionDetails = new List <KeyValuePair<string, object>>();
 
         //TODO replace with a struct
         internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction, string hmdName)
@@ -243,6 +249,30 @@ namespace Cognitive3D.Serialization
 
             knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
             newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+        }
+
+        internal static void WriteSubscriptionDetailToDict(string key, object value)
+        {
+            bool foundSubscriptionPropKey = false;
+            int subscriptionPropIndex = 0;
+
+            for (int i = 0; i <= metaSubscriptionDetails.Count; i++)
+            {
+                if (metaSubscriptionDetails[i].Key.Equals(key))
+                {
+                    foundSubscriptionPropKey = true;
+                    subscriptionPropIndex = i;
+                }
+            }
+
+            if (foundSubscriptionPropKey)
+            {
+                metaSubscriptionDetails[subscriptionPropIndex] = new KeyValuePair<string, object>(key, value.ToString());
+            }
+            else
+            {
+                metaSubscriptionDetails.Add(new KeyValuePair<string, object>(key, value.ToString()));
+            }
         }
 
         internal static void SetLobbyId(string lobbyid)
@@ -1433,6 +1463,18 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
+
+            // Write meta subscription details
+            gazebuilder.Append("\"subscriptions\":{");
+            foreach (var kvp in metaSubscriptionDetails)
+            {
+                if ((!String.IsNullOrEmpty(kvp.Key)) && (kvp.Key != null))
+                {
+                    JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                }
+            }
+            gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+            gazebuilder.Append("}"); // closing bracket
 
             //TODO remove this reference to cognitive manager - this should be true when scene has changed - add a callback
             if (Cognitive3D_Manager.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently
