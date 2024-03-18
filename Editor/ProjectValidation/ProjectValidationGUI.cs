@@ -203,14 +203,15 @@ namespace Cognitive3D
             {
                 GenerateItemLevelList(ProjectValidation.ItemLevel.Required);
                 GenerateItemLevelList(ProjectValidation.ItemLevel.Recommended);
+                GenerateCompletedItemList();
             }
 
-            DrawItemLevelLists();
+            DrawItemLists();
 
             GUILayout.FlexibleSpace();
         }
 
-        private void DrawItemLevelLists()
+        private void DrawItemLists()
         {
             foreach (var list in foldableLists)
             {
@@ -226,7 +227,14 @@ namespace Cognitive3D
                         // Iterate through each item in the list
                         foreach (var item in list.items)
                         {
-                            DrawItem(item, true);
+                            if (!item.isFixed)
+                            {
+                                DrawItem(item, item.message, true);
+                            }
+                            else if (list.listName == "Completed")
+                            {
+                                DrawItem(item, item.fixmessage, false);
+                            }
                         }
 
                         GUILayout.EndVertical();
@@ -237,14 +245,18 @@ namespace Cognitive3D
             }
         }
 
-        private void DrawItem(ProjectValidationItem item, bool buttonEnabled)
+        private void DrawItem(ProjectValidationItem item, string message, bool buttonEnabled)
         {
             using (var scope = new EditorGUILayout.HorizontalScope(styles.ListLabel))
             {
-                GUILayout.Label(item.message);
+                GUILayout.Label(message);
 
-                if (buttonEnabled && GUILayout.Button("Fix", styles.FixAllButton))
+                if (item.fixAction != null)
                 {
+                    if (buttonEnabled && GUILayout.Button("Fix", styles.FixAllButton))
+                    {
+                        ProjectValidation.FixItem(item);
+                    }
                 }
             }
         }
@@ -252,8 +264,22 @@ namespace Cognitive3D
         private void GenerateItemLevelList(ProjectValidation.ItemLevel level)
         {
             var items = new List<ProjectValidationItem>(ProjectValidation.GetItems(level));
-            FoldableList newLevelItemList = new FoldableList(level.ToString(), items);
+            AddToFodableList(level.ToString(), items);
+        }
 
+        private void GenerateCompletedItemList()
+        {
+            var items = new List<ProjectValidationItem>(ProjectValidation.GetFixedItems());
+
+            if (items != null)
+            {
+                AddToFodableList("Completed", items);
+            }
+        }
+
+        private void AddToFodableList(string title, List<ProjectValidationItem> items)
+        {
+            FoldableList newLevelItemList = new FoldableList(title, items);
             foldableLists.Add(newLevelItemList);
         }
     }

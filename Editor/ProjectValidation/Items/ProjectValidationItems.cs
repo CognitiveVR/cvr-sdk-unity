@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
-using UnityEngine;
-
-
-#if C3D_OCULUS
-using Settings = UnityEngine.XR.XRSettings;
-#endif
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 namespace Cognitive3D
 {
@@ -19,12 +16,28 @@ namespace Cognitive3D
 
         static ProjectValidationItems()
         {
+            CheckProjectValidationItems();
+
+            EditorSceneManager.sceneOpened += OnSceneOpened;
+            EditorApplication.update += UpdateProjectValidationItemStatus;
+        }
+
+        private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
+        {
+            CheckProjectValidationItems();
+        }
+
+        private static void CheckProjectValidationItems()
+        {
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
                 message: "Tracking space is not configured",
                 fixmessage: "Tracking space is configured",
-                isFixed: ProjectValidation.FindComponentInActiveScene<RoomTrackingSpace>(),
+                checkAction: () =>
+                {
+                    return ProjectValidation.FindComponentInActiveScene<RoomTrackingSpace>();
+                },
                 fixAction: () =>
                 {
                     
@@ -37,7 +50,10 @@ namespace Cognitive3D
                 category: CATEGORY,
                 message: "Oculus social is not enabled",
                 fixmessage: "Oculus social is enabled",
-                isFixed: ProjectValidation.FindComponentInActiveScene<OculusSocial>(),
+                checkAction: () =>
+                {
+                    return ProjectValidation.FindComponentInActiveScene<OculusSocial>();
+                },
                 fixAction: () =>
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
@@ -50,9 +66,11 @@ namespace Cognitive3D
                 category: CATEGORY,
                 message: "Missing some Oculus target devices. Enable all?",
                 fixmessage: "Oculus target devices are enabled",
-                isFixed: !projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest2) ||
-                         !projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.QuestPro) ||
-                         !projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest3),
+                checkAction: () =>
+                {   return projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest2) &&
+                           projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.QuestPro) &&
+                           projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest3);
+                },
                 fixAction: () =>
                 {
                     if (!projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest2))
@@ -72,6 +90,19 @@ namespace Cognitive3D
                 }
             );
 #endif
+        }
+
+        private static void UpdateProjectValidationItemStatus()
+        {
+            var items = ProjectValidation.registry.GetAllItems();
+            foreach (var item in items)
+            {
+                bool isFixed = item.checkAction();
+                if (!isFixed)
+                {
+                    item.isFixed = false;
+                }
+            }
         }
     }
 }

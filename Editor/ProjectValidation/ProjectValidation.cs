@@ -42,16 +42,15 @@ namespace Cognitive3D
         /// <param name="fixmessage">Description of the fix for the item</param>
         /// <param name="isFixed">Checks if item is fixed or not</param>
         /// <param name="fixAction">Delegate that validates the item</param>
-        internal static void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, bool isFixed, Action fixAction = null)
+        internal static void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null)
         {
-            var newItem = new ProjectValidationItem(level, category, message, fixmessage, isFixed, fixAction);
+            var newItem = new ProjectValidationItem(level, category, message, fixmessage, checkAction, fixAction);
             AddItem(newItem);
         }
 
         /// <summary>
         /// Gets all existed <see cref="ProjectValidationItem"/>s
         /// </summary>
-        /// <returns></returns>
         internal static IEnumerable<ProjectValidationItem> GetAllItems()
         {
             return registry.GetAllItems();
@@ -61,7 +60,6 @@ namespace Cognitive3D
         /// Gets all <see cref="ProjectValidationItem"/>s with a specific level
         /// </summary>
         /// <param name="level"></param>
-        /// <returns></returns>
         internal static IEnumerable<ProjectValidationItem> GetItems(ItemLevel level)
         {
             return registry.GetItems(level);
@@ -70,11 +68,28 @@ namespace Cognitive3D
         /// <summary>
         /// Gets all <see cref="ProjectValidationItem"/>s with a specific category
         /// </summary>
-        /// <param name="level"></param>
-        /// <returns></returns>
+        /// <param name="category"></param>
         internal static IEnumerable<ProjectValidationItem> GetItems(ItemCategory category)
         {
             return registry.GetItems(category);
+        }
+
+        /// <summary>
+        /// Gets all <see cref="ProjectValidationItem"/>s are fixed
+        /// </summary>
+        internal static IEnumerable<ProjectValidationItem> GetFixedItems()
+        {
+            return registry.GetFixedItems();
+        }
+
+        /// <summary>
+        /// Fixes <see cref="ProjectValidationItem"/> item
+        /// </summary>
+        /// <param name="item"></param>
+        internal static void FixItem(ProjectValidationItem item)
+        {
+            item.fixAction.Invoke();
+            item.isFixed = true;
         }
 
         /// <summary>
