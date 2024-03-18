@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 
 namespace Cognitive3D
@@ -256,6 +257,7 @@ namespace Cognitive3D
                     if (buttonEnabled && GUILayout.Button("Fix", styles.FixAllButton))
                     {
                         ProjectValidation.FixItem(item);
+                        GenerateCompletedItemList();
                     }
                 }
             }
@@ -263,17 +265,22 @@ namespace Cognitive3D
 
         private void GenerateItemLevelList(ProjectValidation.ItemLevel level)
         {
-            var items = new List<ProjectValidationItem>(ProjectValidation.GetItems(level));
+            var items = ProjectValidation.GetItems(level).ToList();
             AddToFodableList(level.ToString(), items);
         }
 
         private void GenerateCompletedItemList()
         {
-            var items = new List<ProjectValidationItem>(ProjectValidation.GetFixedItems());
+            var foldableList = foldableLists.FirstOrDefault(list => list.listName == "Completed");
+            var items = ProjectValidation.GetFixedItems().ToList();
 
-            if (items != null)
+            if (foldableList == null)
             {
                 AddToFodableList("Completed", items);
+            }
+            else
+            {
+                foldableList.items = items;
             }
         }
 
