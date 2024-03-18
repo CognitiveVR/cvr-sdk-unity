@@ -1465,6 +1465,7 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
 
             // Write meta subscription details
+            gazebuilder.Append(",");
             gazebuilder.Append("\"subscriptions\":{");
             foreach (var kvp in metaSubscriptionDetails)
             {
