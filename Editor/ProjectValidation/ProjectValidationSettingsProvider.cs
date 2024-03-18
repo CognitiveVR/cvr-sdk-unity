@@ -21,8 +21,7 @@ namespace Cognitive3D
 
         public static void OpenSettingsWindow()
         {
-            var buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
-            EditorUserBuildSettings.selectedBuildTargetGroup = buildTargetGroup;
+            ProjectValidationItems.UpdateProjectValidationItemStatus();
             SettingsService.OpenProjectSettings(SettingsPath);
         }
 

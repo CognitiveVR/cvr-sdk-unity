@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
-using UnityEditor.SceneManagement;
-using UnityEngine.SceneManagement;
 
 namespace Cognitive3D
 {
@@ -16,18 +11,10 @@ namespace Cognitive3D
 
         static ProjectValidationItems()
         {
-            CheckProjectValidationItems();
-
-            EditorSceneManager.sceneOpened += OnSceneOpened;
-            EditorApplication.update += UpdateProjectValidationItemStatus;
+            AddProjectValidationItems();
         }
 
-        private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
-        {
-            CheckProjectValidationItems();
-        }
-
-        private static void CheckProjectValidationItems()
+        private static void AddProjectValidationItems()
         {
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -92,7 +79,7 @@ namespace Cognitive3D
 #endif
         }
 
-        private static void UpdateProjectValidationItemStatus()
+        public static void UpdateProjectValidationItemStatus()
         {
             var items = ProjectValidation.registry.GetAllItems();
             foreach (var item in items)
