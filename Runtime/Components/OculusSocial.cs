@@ -152,9 +152,9 @@ namespace Cognitive3D.Components
                         CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.sku", subscriptionContextResponse.data[i].sku);
                         CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.is_active", subscriptionContextResponse.data[i].is_active);
                         CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.is_trial", subscriptionContextResponse.data[i].is_trial);
-                        CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date _ number", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time));
-                        CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date _ number", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time));
-                        CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_date _ number", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time));
+                        CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time));
+                        CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time));
+                        CoreInterface.WriteMetaSubscriptionProperty($"c3d.user.meta.subscription{i + 1}.next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time));
                     }
                 }
             }

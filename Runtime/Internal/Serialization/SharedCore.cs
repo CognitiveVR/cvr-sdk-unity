@@ -256,7 +256,7 @@ namespace Cognitive3D.Serialization
             bool foundSubscriptionPropKey = false;
             int subscriptionPropIndex = 0;
 
-            for (int i = 0; i <= metaSubscriptionDetails.Count; i++)
+            for (int i = 0; i < metaSubscriptionDetails.Count; i++)
             {
                 if (metaSubscriptionDetails[i].Key.Equals(key))
                 {
@@ -267,11 +267,11 @@ namespace Cognitive3D.Serialization
 
             if (foundSubscriptionPropKey)
             {
-                metaSubscriptionDetails[subscriptionPropIndex] = new KeyValuePair<string, object>(key, value.ToString());
+                metaSubscriptionDetails[subscriptionPropIndex] = new KeyValuePair<string, object>(key, value);
             }
             else
             {
-                metaSubscriptionDetails.Add(new KeyValuePair<string, object>(key, value.ToString()));
+                metaSubscriptionDetails.Add(new KeyValuePair<string, object>(key, value));
             }
         }
 
@@ -1463,15 +1463,16 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
+            gazebuilder.Append(",");
 
             // Write meta subscription details
-            gazebuilder.Append(",");
             gazebuilder.Append("\"subscriptions\":{");
             foreach (var kvp in metaSubscriptionDetails)
             {
-                if ((!String.IsNullOrEmpty(kvp.Key)) && (kvp.Key != null))
+                if ((!String.IsNullOrEmpty(kvp.Key)) && (kvp.Value != null))
                 {
                     JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                    gazebuilder.Append(",");
                 }
             }
             gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
