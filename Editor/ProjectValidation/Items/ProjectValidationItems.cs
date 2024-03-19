@@ -38,6 +38,27 @@ namespace Cognitive3D
 
         private static void AddProjectValidationItems()
         {
+            // TODO: Is the fix action good?
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "No Cognitive3D player definition is found",
+                fixmessage: "Cognitive3D player definition is added",
+                checkAction: () =>
+                {
+                    var playerDefines = EditorCore.GetPlayerDefines();
+                    if (playerDefines != null && playerDefines[0].Contains("C3D"))
+                    {
+                        return true;
+                    }
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    EditorCore.AddDefine("C3D_DEFAULT");
+                }
+                );
+
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
