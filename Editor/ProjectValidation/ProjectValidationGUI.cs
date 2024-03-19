@@ -35,6 +35,22 @@ namespace Cognitive3D
                 padding = new RectOffset(10, 10, 0, 0)
             };
 
+            internal readonly GUIStyle InlinedIconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle IconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(5, 5, 4, 5),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
             internal readonly GUIStyle FixButton = new GUIStyle(EditorStyles.miniButton)
             {
                 margin = new RectOffset(0, 10, 2, 2),
@@ -110,8 +126,8 @@ namespace Cognitive3D
             // TODO: need to fix this! Generate items should not get called every frame!
             if (foldableLists.Count == 0)
             {
-                GenerateItemLevelList(ProjectValidation.ItemLevel.Required);
-                GenerateItemLevelList(ProjectValidation.ItemLevel.Recommended);
+                GenerateItemLevelList(EditorCore.Error, ProjectValidation.ItemLevel.Required);
+                GenerateItemLevelList(EditorCore.Alert, ProjectValidation.ItemLevel.Recommended);
                 GenerateCompletedItemList();
             }
 
@@ -139,12 +155,12 @@ namespace Cognitive3D
                             string buttonText = list.listName == "Required" ? "Fix" : "Apply";
                             if (!item.isFixed)
                             {
-                                DrawItem(item, item.message, true, buttonText);
+                                DrawItem(item, list.listItemIcon, item.message, true, buttonText);
                             }
                             
                             if (list.listName == "Completed")
                             {
-                                DrawItem(item, item.fixmessage, false, "");
+                                DrawItem(item, list.listItemIcon, item.fixmessage, false, "");
                             }
                         }
 
@@ -156,10 +172,11 @@ namespace Cognitive3D
             }
         }
 
-        private void DrawItem(ProjectValidationItem item, string message, bool buttonEnabled, string buttonText)
+        private void DrawItem(ProjectValidationItem item, Texture2D itemIcon, string message, bool buttonEnabled, string buttonText)
         {
             using (var scope = new EditorGUILayout.HorizontalScope(styles.ListLabel))
             {
+                GUILayout.Label(itemIcon, styles.InlinedIconStyle);
                 GUILayout.Label(message);
 
                 if (item.fixAction != null)
@@ -173,10 +190,10 @@ namespace Cognitive3D
             }
         }
 
-        private void GenerateItemLevelList(ProjectValidation.ItemLevel level)
+        private void GenerateItemLevelList(Texture2D icon, ProjectValidation.ItemLevel level)
         {
             var items = ProjectValidation.GetItems(level).ToList();
-            AddToFodableList(level.ToString(), items);
+            AddToFodableList(level.ToString(), icon, items);
         }
 
         private void GenerateCompletedItemList()
@@ -186,7 +203,7 @@ namespace Cognitive3D
 
             if (foldableList == null)
             {
-                AddToFodableList("Completed", items);
+                AddToFodableList("Completed", EditorCore.CircleCheckmark, items);
             }
             else
             {
@@ -194,9 +211,9 @@ namespace Cognitive3D
             }
         }
 
-        private void AddToFodableList(string title, List<ProjectValidationItem> items)
+        private void AddToFodableList(string title, Texture2D icon, List<ProjectValidationItem> items)
         {
-            FoldableList newLevelItemList = new FoldableList(title, items);
+            FoldableList newLevelItemList = new FoldableList(title, icon, items);
             foldableLists.Add(newLevelItemList);
         }
     }
@@ -206,11 +223,13 @@ namespace Cognitive3D
     {
         public string listName;
         public bool showList = true;
+        public Texture2D listItemIcon;
         public List<ProjectValidationItem> items;
 
-        public FoldableList(string name, List<ProjectValidationItem> items)
+        public FoldableList(string name, Texture2D icon, List<ProjectValidationItem> items)
         {
             this.listName = name;
+            this.listItemIcon = icon;
             this.items = items;
         }
     }
