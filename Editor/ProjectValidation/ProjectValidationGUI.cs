@@ -107,10 +107,31 @@ namespace Cognitive3D
         }
 
         private static Styles styles = new Styles();
-        public List<FoldableList> foldableLists = new List<FoldableList>();
+        public static List<FoldableList> foldableLists = new List<FoldableList>();
+        public static bool isInitialized;
+
+        internal static void Init()
+        {
+            GenerateItemLevelList(EditorCore.Error, ProjectValidation.ItemLevel.Required);
+            GenerateItemLevelList(EditorCore.Alert, ProjectValidation.ItemLevel.Recommended);
+            GenerateCompletedItemList();
+
+            isInitialized = true;
+        }
+
+        internal static void Reset()
+        {
+            foldableLists.Clear();
+            isInitialized = false;
+        }
 
         internal void OnGUI()
         {
+            if (!isInitialized)
+            {
+                Init();
+            }
+
             using (new EditorGUILayout.VerticalScope())
             {
                 EditorGUILayout.Space();
@@ -121,14 +142,6 @@ namespace Cognitive3D
                 EditorGUILayout.Space();
 
                 GUILayout.Label("Checklist", styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
-            }
-
-            // TODO: need to fix this! Generate items should not get called every frame!
-            if (foldableLists.Count == 0)
-            {
-                GenerateItemLevelList(EditorCore.Error, ProjectValidation.ItemLevel.Required);
-                GenerateItemLevelList(EditorCore.Alert, ProjectValidation.ItemLevel.Recommended);
-                GenerateCompletedItemList();
             }
 
             DrawItemLists();
@@ -190,13 +203,13 @@ namespace Cognitive3D
             }
         }
 
-        private void GenerateItemLevelList(Texture2D icon, ProjectValidation.ItemLevel level)
+        private static void GenerateItemLevelList(Texture2D icon, ProjectValidation.ItemLevel level)
         {
             var items = ProjectValidation.GetItems(level).ToList();
             AddToFodableList(level.ToString(), icon, items);
         }
 
-        private void GenerateCompletedItemList()
+        private static void GenerateCompletedItemList()
         {
             var foldableList = foldableLists.FirstOrDefault(list => list.listName == "Completed");
             var items = ProjectValidation.GetFixedItems().ToList();
@@ -211,7 +224,7 @@ namespace Cognitive3D
             }
         }
 
-        private void AddToFodableList(string title, Texture2D icon, List<ProjectValidationItem> items)
+        private static void AddToFodableList(string title, Texture2D icon, List<ProjectValidationItem> items)
         {
             FoldableList newLevelItemList = new FoldableList(title, icon, items);
             foldableLists.Add(newLevelItemList);

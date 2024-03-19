@@ -26,6 +26,7 @@ namespace Cognitive3D
 
             AddProjectValidationItems();
             UpdateProjectValidationItemStatus();
+            ProjectValidationGUI.Reset();
         }
 
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
