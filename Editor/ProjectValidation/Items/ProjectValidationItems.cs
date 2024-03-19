@@ -42,6 +42,22 @@ namespace Cognitive3D
                     SceneSetupWindow.Init();
                 }
                 );
+            
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "Application key is not valid",
+                fixmessage: "Valid application key is found",
+                checkAction: () =>
+                {
+                    return Cognitive3D_Preferences.Instance.IsApplicationKeyValid;
+                },
+                fixAction: () =>
+                {
+                    ProjectSetupWindow.currentPage = ProjectSetupWindow.Page.APIKeys;
+                    ProjectSetupWindow.Init();
+                }
+                );
 
 #if C3D_OCULUS
             ProjectValidation.AddItem(

@@ -36,7 +36,7 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        enum Page
+        internal enum Page
         {
             Welcome,
             APIKeys,
@@ -50,7 +50,7 @@ namespace Cognitive3D
             PhotonMultiplayerSetup,
             DynamicSetup,
         }
-        Page currentPage;
+        internal static Page currentPage;
 
         int lastDevKeyResponseCode;
         bool isResponseJsonValid = true;
