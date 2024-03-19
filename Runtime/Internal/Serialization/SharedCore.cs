@@ -58,6 +58,8 @@ namespace Cognitive3D.Serialization
         /// </summary>
         static List <KeyValuePair<string, object>> metaSubscriptionDetails = new List <KeyValuePair<string, object>>();
 
+        static bool readyToSerializeSubscriptionDetails = false;
+
         //TODO replace with a struct
         internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int dynamicTreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction, string hmdName)
         {
@@ -253,26 +255,13 @@ namespace Cognitive3D.Serialization
 
         internal static void WriteSubscriptionDetailToDict(string key, object value)
         {
-            bool foundSubscriptionPropKey = false;
-            int subscriptionPropIndex = 0;
+            // if (String.IsNullOrEmpty(key) || value == null) { return; }
+            metaSubscriptionDetails.Add(new KeyValuePair<string, object>(key, value));
+        }
 
-            for (int i = 0; i < metaSubscriptionDetails.Count; i++)
-            {
-                if (metaSubscriptionDetails[i].Key.Equals(key))
-                {
-                    foundSubscriptionPropKey = true;
-                    subscriptionPropIndex = i;
-                }
-            }
-
-            if (foundSubscriptionPropKey)
-            {
-                metaSubscriptionDetails[subscriptionPropIndex] = new KeyValuePair<string, object>(key, value);
-            }
-            else
-            {
-                metaSubscriptionDetails.Add(new KeyValuePair<string, object>(key, value));
-            }
+        internal static void SetSubscriptionDetailsReady(bool ready)
+        {
+            readyToSerializeSubscriptionDetails = ready;
         }
 
         internal static void SetLobbyId(string lobbyid)
@@ -1463,20 +1452,26 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
-            gazebuilder.Append(",");
 
-            // Write meta subscription details
-            gazebuilder.Append("\"subscriptions\":{");
-            foreach (var kvp in metaSubscriptionDetails)
+            Debug.Log("@@@ DONNA THIRD QUEST , READY " + readyToSerializeSubscriptionDetails.ToString());
+            if (readyToSerializeSubscriptionDetails)
             {
-                if ((!String.IsNullOrEmpty(kvp.Key)) && (kvp.Value != null))
+                // Write meta subscription details
+                gazebuilder.Append(",");
+                gazebuilder.Append("\"subscriptions\":{");
+                foreach (var kvp in metaSubscriptionDetails)
                 {
-                    JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
-                    gazebuilder.Append(",");
+                    if ((!String.IsNullOrEmpty(kvp.Key)) && (kvp.Value != null))
+                    {
+                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                        gazebuilder.Append(",");
+                    }
                 }
+                gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+                gazebuilder.Append("}"); // closing bracket
+
+                Debug.Log("@@@ DONNA THIRD QUEST SUBSCRIPTION " + gazebuilder.ToString());
             }
-            gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
-            gazebuilder.Append("}"); // closing bracket
 
             //TODO remove this reference to cognitive manager - this should be true when scene has changed - add a callback
             if (Cognitive3D_Manager.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently

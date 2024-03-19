@@ -58,6 +58,11 @@ namespace Cognitive3D
             SharedCore.WriteSubscriptionDetailToDict(key, value);
         }
 
+        internal static void SetSubscriptionDetailsReadyToSerialize(bool ready)
+        {
+            SharedCore.SetSubscriptionDetailsReady(ready);
+        }
+
         #endregion
 
         #region CustomEvent

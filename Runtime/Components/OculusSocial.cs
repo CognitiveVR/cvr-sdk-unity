@@ -158,6 +158,8 @@ namespace Cognitive3D.Components
                     }
                 }
             }
+
+            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
         }
 #endif
 
