@@ -106,9 +106,11 @@ namespace Cognitive3D
             return new Color32(r, g, b, a);
         }
 
-        private static Styles styles = new Styles();
-        public static List<FoldableList> foldableLists = new List<FoldableList>();
-        public static bool isInitialized;
+        private static Styles _styles;
+        // Delays instantiation of the Styles object until it is first accessed
+        private static Styles styles => _styles ??= new Styles();
+        private static List<FoldableList> foldableLists = new List<FoldableList>();
+        private static bool isInitialized;
 
         internal static void Init()
         {
@@ -151,37 +153,42 @@ namespace Cognitive3D
 
         private void DrawItemLists()
         {
-            foreach (var list in foldableLists)
+            var disableTasksList = EditorApplication.isPlaying;
+
+            using (new EditorGUI.DisabledGroupScope(disableTasksList))
             {
-                using (var scope = new EditorGUILayout.VerticalScope(styles.List))
+                foreach (var list in foldableLists)
                 {
-                    list.showList = EditorGUILayout.Foldout(list.showList, list.listName, styles.foldoutStyle);
-
-                    // Display the list if showList is true
-                    if (list.showList)
+                    using (var scope = new EditorGUILayout.VerticalScope(styles.List))
                     {
-                        GUILayout.BeginVertical();
+                        list.showList = EditorGUILayout.Foldout(list.showList, list.listName, styles.foldoutStyle);
 
-                        // Iterate through each item in the list
-                        foreach (var item in list.items)
+                        // Display the list if showList is true
+                        if (list.showList)
                         {
-                            string buttonText = list.listName == "Required" ? "Fix" : "Apply";
-                            if (!item.isFixed)
+                            GUILayout.BeginVertical();
+
+                            // Iterate through each item in the list
+                            foreach (var item in list.items)
                             {
-                                DrawItem(item, list.listItemIcon, item.message, true, buttonText);
+                                string buttonText = list.listName == "Required" ? "Fix" : "Apply";
+                                if (!item.isFixed)
+                                {
+                                    DrawItem(item, list.listItemIcon, item.message, true, buttonText);
+                                }
+                                
+                                if (list.listName == "Completed")
+                                {
+                                    DrawItem(item, list.listItemIcon, item.fixmessage, false, "");
+                                }
                             }
-                            
-                            if (list.listName == "Completed")
-                            {
-                                DrawItem(item, list.listItemIcon, item.fixmessage, false, "");
-                            }
+
+                            GUILayout.EndVertical();
                         }
-
-                        GUILayout.EndVertical();
                     }
-                }
 
-                EditorGUILayout.Space();
+                    EditorGUILayout.Space();
+                }
             }
         }
 
