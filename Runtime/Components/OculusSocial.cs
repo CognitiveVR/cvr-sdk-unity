@@ -150,12 +150,12 @@ namespace Cognitive3D.Components
                     if (subscriptionContextResponse.data[i] != null)
                     {
                         List<KeyValuePair<string, object>> subscription = new List<KeyValuePair<string, object>>();
-                        subscription.Add(new KeyValuePair<string, object>($"c3d.user.meta.subscription{i + 1}.sku", subscriptionContextResponse.data[i].sku));
-                        subscription.Add(new KeyValuePair<string, object>($"c3d.user.meta.subscription{i + 1}.is_active", subscriptionContextResponse.data[i].is_active));
-                        subscription.Add(new KeyValuePair<string, object>($"c3d.user.meta.subscription{i + 1}.is_trial", subscriptionContextResponse.data[i].is_trial));
-                        subscription.Add(new KeyValuePair<string, object>($"c3d.user.meta.subscription{i + 1}.period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
-                        subscription.Add(new KeyValuePair<string, object>($"c3d.user.meta.subscription{i + 1}.period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
-                        subscription.Add(new KeyValuePair<string, object>($"c3d.user.meta.subscription{i + 1}.next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
+                        subscription.Add(new KeyValuePair<string, object>("sku", subscriptionContextResponse.data[i].sku));
+                        subscription.Add(new KeyValuePair<string, object>("is_active", subscriptionContextResponse.data[i].is_active));
+                        subscription.Add(new KeyValuePair<string, object>("is_trial", subscriptionContextResponse.data[i].is_trial));
+                        subscription.Add(new KeyValuePair<string, object>("period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
+                        subscription.Add(new KeyValuePair<string, object>("period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
+                        subscription.Add(new KeyValuePair<string, object>("next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
                         CoreInterface.WriteMetaSubscriptionProperty(i, subscription);
                     }
                 }

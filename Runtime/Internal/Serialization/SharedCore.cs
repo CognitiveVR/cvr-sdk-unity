@@ -1459,7 +1459,7 @@ namespace Cognitive3D.Serialization
                 
                 for (int i = 0; i < metaSubscriptionDetails.Count; i++)
                 {
-                    gazebuilder.Append("\"subscription-" + i.ToString() + "\":{");
+                    gazebuilder.Append("\"" + metaSubscriptionDetails[i][0].Value + "\":{");
                     List<KeyValuePair <string, object>> thisSubscription = metaSubscriptionDetails[i];
                     foreach (var kvp in thisSubscription)
                     {
