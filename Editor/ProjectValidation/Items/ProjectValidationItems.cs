@@ -2,8 +2,6 @@ using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
 using System.Threading.Tasks;
-using UnityEngine.SceneManagement;
-using UnityEditor.SceneManagement;
 
 namespace Cognitive3D
 {

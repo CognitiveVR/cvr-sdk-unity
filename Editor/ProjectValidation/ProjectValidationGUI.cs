@@ -136,13 +136,15 @@ namespace Cognitive3D
                         // Iterate through each item in the list
                         foreach (var item in list.items)
                         {
+                            string buttonText = list.listName == "Required" ? "Fix" : "Apply";
                             if (!item.isFixed)
                             {
-                                DrawItem(item, item.message, true);
+                                DrawItem(item, item.message, true, buttonText);
                             }
-                            else if (list.listName == "Completed")
+                            
+                            if (list.listName == "Completed")
                             {
-                                DrawItem(item, item.fixmessage, false);
+                                DrawItem(item, item.fixmessage, false, "");
                             }
                         }
 
@@ -154,7 +156,7 @@ namespace Cognitive3D
             }
         }
 
-        private void DrawItem(ProjectValidationItem item, string message, bool buttonEnabled)
+        private void DrawItem(ProjectValidationItem item, string message, bool buttonEnabled, string buttonText)
         {
             using (var scope = new EditorGUILayout.HorizontalScope(styles.ListLabel))
             {
@@ -162,7 +164,7 @@ namespace Cognitive3D
 
                 if (item.fixAction != null)
                 {
-                    if (buttonEnabled && GUILayout.Button("Fix", styles.FixButton))
+                    if (buttonEnabled && GUILayout.Button(buttonText, styles.FixButton))
                     {
                         ProjectValidation.FixItem(item);
                         GenerateCompletedItemList();
