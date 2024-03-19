@@ -1472,6 +1472,7 @@ namespace Cognitive3D.Serialization
                 }
                 gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
                 gazebuilder.Append("}"); // closing bracket
+                readyToSerializeSubscriptionDetails = false; // so that subscriptions don't get serialized again
             }
 
             //TODO remove this reference to cognitive manager - this should be true when scene has changed - add a callback
