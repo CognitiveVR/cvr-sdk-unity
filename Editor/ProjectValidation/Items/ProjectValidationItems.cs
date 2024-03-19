@@ -1,6 +1,8 @@
 using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using System.Threading.Tasks;
 
 namespace Cognitive3D
@@ -14,6 +16,7 @@ namespace Cognitive3D
         static ProjectValidationItems()
         {
             WaitBeforeProjectValidation();
+            EditorSceneManager.sceneOpened += OnSceneOpened;
         }
 
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
@@ -23,6 +26,12 @@ namespace Cognitive3D
 
             AddProjectValidationItems();
             UpdateProjectValidationItemStatus();
+        }
+
+        private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
+        {
+            ProjectValidation.Reset();
+            WaitBeforeProjectValidation();
         }
 
         private static void AddProjectValidationItems()

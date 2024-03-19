@@ -102,6 +102,14 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Clears <see cref="ProjectValidationItem"/> list
+        /// </summary>
+        internal static void Reset()
+        {
+            registry.Clear();
+        }
+
+        /// <summary>
         /// Searches through game objects in active scene to find a component
         /// </summary>
         /// <typeparam name="T">Type of target component</typeparam>
