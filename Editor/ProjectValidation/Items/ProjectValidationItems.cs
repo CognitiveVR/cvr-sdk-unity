@@ -67,6 +67,21 @@ namespace Cognitive3D
                     ProjectSetupWindow.Init();
                 }
                 );
+            
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "No Cognitive3D manager is found in current scene",
+                fixmessage: "Cognitive3D manager exists in current scene",
+                checkAction: () =>
+                {
+                    return ProjectValidation.FindComponentInActiveScene<Cognitive3D_Manager>();
+                },
+                fixAction: () =>
+                {
+                    var instance = Cognitive3D_Manager.Instance;
+                }
+                );
 
 #if C3D_OCULUS
             ProjectValidation.AddItem(
