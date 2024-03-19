@@ -56,7 +56,7 @@ namespace Cognitive3D.Serialization
         /// <summary>
         /// Storing meta subscription context details as dictionary so we can serialize
         /// </summary>
-        static List <KeyValuePair<string, object>> metaSubscriptionDetails = new List <KeyValuePair<string, object>>();
+        static List <List <KeyValuePair<string, object>>> metaSubscriptionDetails = new List <List <KeyValuePair<string, object>>>();
 
         static bool readyToSerializeSubscriptionDetails = false;
 
@@ -253,10 +253,9 @@ namespace Cognitive3D.Serialization
             newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
         }
 
-        internal static void WriteSubscriptionDetailToDict(string key, object value)
+        internal static void WriteSubscriptionDetailToDict(int index, List<KeyValuePair<string, object>> list)
         {
-            // if (String.IsNullOrEmpty(key) || value == null) { return; }
-            metaSubscriptionDetails.Add(new KeyValuePair<string, object>(key, value));
+            metaSubscriptionDetails.Insert(index, list);
         }
 
         internal static void SetSubscriptionDetailsReady(bool ready)
@@ -1452,25 +1451,27 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
-
-            Debug.Log("@@@ DONNA THIRD QUEST , READY " + readyToSerializeSubscriptionDetails.ToString());
             if (readyToSerializeSubscriptionDetails)
             {
                 // Write meta subscription details
                 gazebuilder.Append(",");
                 gazebuilder.Append("\"subscriptions\":{");
-                foreach (var kvp in metaSubscriptionDetails)
+                
+                for (int i = 0; i < metaSubscriptionDetails.Count; i++)
                 {
-                    if ((!String.IsNullOrEmpty(kvp.Key)) && (kvp.Value != null))
+                    gazebuilder.Append("\"subscription-" + i.ToString() + "\":{");
+                    List<KeyValuePair <string, object>> thisSubscription = metaSubscriptionDetails[i];
+                    foreach (var kvp in thisSubscription)
                     {
-                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                        JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
                         gazebuilder.Append(",");
                     }
+                    gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+                    gazebuilder.Append("}"); // closing bracket
+                    gazebuilder.Append(",");
                 }
                 gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
                 gazebuilder.Append("}"); // closing bracket
-
-                Debug.Log("@@@ DONNA THIRD QUEST SUBSCRIPTION " + gazebuilder.ToString());
             }
 
             //TODO remove this reference to cognitive manager - this should be true when scene has changed - add a callback
