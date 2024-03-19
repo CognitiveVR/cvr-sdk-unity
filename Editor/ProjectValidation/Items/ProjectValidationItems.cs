@@ -38,7 +38,8 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    
+                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.PlayerSetup;
+                    SceneSetupWindow.Init();
                 }
                 );
 

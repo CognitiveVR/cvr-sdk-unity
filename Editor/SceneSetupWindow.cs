@@ -81,7 +81,7 @@ namespace Cognitive3D
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
         }
 
-        enum Page
+        internal enum Page
         {
             ProjectError,
             Welcome,
@@ -94,7 +94,7 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        Page currentPage;
+        internal static Page currentPage;
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
