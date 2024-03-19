@@ -29,6 +29,7 @@ namespace Cognitive3D
             ProjectValidationGUI.Reset();
         }
 
+        // Update project validation items when a new scene opens
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
             ProjectValidation.Reset();
@@ -81,6 +82,21 @@ namespace Cognitive3D
                 fixAction: () =>
                 {
                     var instance = Cognitive3D_Manager.Instance;
+                }
+                );
+            
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "No Cognitive3D preferences file is found in project folder",
+                fixmessage: "Cognitive3D preferences file created in project folder",
+                checkAction: () =>
+                {
+                    return Cognitive3D_Preferences.Instance ? true : false;
+                },
+                fixAction: () =>
+                {
+                    EditorCore.GetPreferences();
                 }
                 );
 
