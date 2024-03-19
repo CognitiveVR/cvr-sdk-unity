@@ -74,6 +74,8 @@ namespace Cognitive3D
                     {
                         projectConfig.targetDeviceTypes.Add(OVRProjectConfig.DeviceType.Quest3);
                     }
+
+                    OVRProjectConfig.CommitProjectConfig(projectConfig);
                 }
             );
 #endif

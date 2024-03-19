@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 
 namespace Cognitive3D
 {
@@ -94,8 +96,12 @@ namespace Cognitive3D
         /// <param name="item"></param>
         internal static void FixItem(ProjectValidationItem item)
         {
-            item.fixAction.Invoke();
+            item.fixAction();
             item.isFixed = true;
+
+            // Saving changes made in the current scene to reflect fixes
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.SaveScene(currentScene);
         }
 
         /// <summary>
