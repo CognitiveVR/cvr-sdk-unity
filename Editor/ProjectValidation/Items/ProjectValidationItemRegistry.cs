@@ -7,7 +7,7 @@ namespace Cognitive3D
 {
     internal class ProjectValidationItemRegistry
     {
-         private readonly Dictionary<Hash128, ProjectValidationItem> itemsPerID = new Dictionary<Hash128, ProjectValidationItem>();
+        private readonly Dictionary<Hash128, ProjectValidationItem> itemsPerID = new Dictionary<Hash128, ProjectValidationItem>();
 
         private readonly List<ProjectValidationItem> items = new List<ProjectValidationItem>();
 
@@ -50,6 +50,12 @@ namespace Cognitive3D
         public IEnumerable<ProjectValidationItem> GetItems(ProjectValidation.ItemCategory category)
         {
             return items.Where(item => item.category == category);
+        }
+
+        public bool AllItemsFixed()
+        {
+            var notFixedItems = items.Where(item => item.isFixed == false);
+            return notFixedItems.Count() == 0;
         }
 
         public IEnumerable<ProjectValidationItem> GetFixedItems()

@@ -13,16 +13,19 @@ namespace Cognitive3D
         public void OnPreprocessBuild(BuildReport report)
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
-            
-            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has identified unresolved issues that may result in inaccurate data recording", "Fix", "Ignore");
-            if (result)
+
+            if (!ProjectValidation.AllItemsFixed())
             {
-                ProjectValidationSettingsProvider.OpenSettingsWindow();
-                throw new BuildFailedException(LOG_TAG + "Build process stopped");
-            }
-            else
-            {
-                return;
+                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has identified unresolved issues that may result in inaccurate data recording", "Fix", "Ignore");
+                if (result)
+                {
+                    ProjectValidationSettingsProvider.OpenSettingsWindow();
+                    throw new BuildFailedException(LOG_TAG + "Build process stopped");
+                }
+                else
+                {
+                    return;
+                }
             }
         }
     }

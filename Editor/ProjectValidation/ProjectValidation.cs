@@ -82,6 +82,12 @@ namespace Cognitive3D
             return registry.GetFixedItems();
         }
 
+        internal static bool AllItemsFixed()
+        {
+            Debug.Log("@@@ " + registry.AllItemsFixed());
+            return registry.AllItemsFixed();
+        }
+
         /// <summary>
         /// Fixes <see cref="ProjectValidationItem"/> item
         /// </summary>
