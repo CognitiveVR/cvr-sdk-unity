@@ -38,6 +38,7 @@ namespace Cognitive3D
 
         private static void AddProjectValidationItems()
         {
+            // Required Items
             // TODO: Is the fix action good?
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -121,6 +122,7 @@ namespace Cognitive3D
                 }
                 );
 
+            // Recommended Items
 #if C3D_OCULUS
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
