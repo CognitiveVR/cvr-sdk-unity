@@ -1,6 +1,9 @@
 using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
+using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 
 namespace Cognitive3D
 {
@@ -8,10 +11,20 @@ namespace Cognitive3D
     internal class ProjectValidationItems
     {
         private const ProjectValidation.ItemCategory CATEGORY = ProjectValidation.ItemCategory.All;
+        private const int INITIAL_DELAY_IN_SECONDS = 1;
 
         static ProjectValidationItems()
         {
+            WaitBeforeProjectValidation();
+        }
+
+        // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
+        static async void WaitBeforeProjectValidation()
+        {
+            await Task.Delay(INITIAL_DELAY_IN_SECONDS * 1000);
+
             AddProjectValidationItems();
+            UpdateProjectValidationItemStatus();
         }
 
         private static void AddProjectValidationItems()
