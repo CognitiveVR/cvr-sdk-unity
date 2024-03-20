@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using TMPro;
 
 #if C3D_VIVEWAVE
     using Wave;
@@ -22,9 +21,6 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
-        // TESTING
-        public TextMeshPro numPoints;
-
         Vector3[] previousBoundaryPoints = new Vector3[0];
         Vector3[] currentBoundaryPoints = new Vector3[0];
         readonly float BoundaryTrackingInterval = 1;
@@ -72,8 +68,9 @@ namespace Cognitive3D.Components
         /// </summary>
         private void Cognitive3D_Manager_OnTick()
         {
-            if (trackingSpace != lastRecordedTrackingSpaceTransform) // if moved enough 
+            if (true) // if moved enough 
             {
+                currentBoundaryPoints = GetCurrentBoundaryPoints();
                 RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
                 lastRecordedTrackingSpaceTransform = trackingSpace;
             }
@@ -106,7 +103,6 @@ namespace Cognitive3D.Components
                     }
 #else
                     currentBoundaryPoints = GetCurrentBoundaryPoints();
-                    numPoints.text = currentBoundaryPoints.Length.ToString(); // TESTING
                     if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                     {
                         previousBoundaryPoints = currentBoundaryPoints;

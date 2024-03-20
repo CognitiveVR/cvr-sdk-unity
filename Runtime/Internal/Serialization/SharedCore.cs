@@ -1508,7 +1508,7 @@ namespace Cognitive3D.Serialization
         {
             // Approximately 70 characters per snapshot, 1200 characters extra room
             boundarybuilder = new StringBuilder(70 * numBoundaryPoints * Cognitive3D_Preferences.S_BoundarySnapshotCount + 1200);
-            boundarybuilder.Append("\"boundary\":[");
+            boundarybuilder.Append("\"data\":[");
         }
 
         internal static void RecordBoundaryPoints(Vector3[] points, double timestamp)
@@ -1524,32 +1524,30 @@ namespace Cognitive3D.Serialization
                 JsonUtil.SetVector("p" + i, 
                     new float[] { points[i].x, points[i].y, points[i].z }, // Construct a float array from a Vector3
                     boundarybuilder);
+                boundarybuilder.Append(',');
             }
+            boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
             boundarybuilder.Append("}");
             boundarybuilder.Append(",");
-
             boundaryCount++;
+            Debug.Log("@@@ DONNA TEST THIRD RECORD " + boundarybuilder.ToString());
         }
 
         static string SerializeBoundary(bool writeToCache)
         {
             if (boundaryCount == 0) { return string.Empty; }
-            //TODO allow option to send session properties but not gaze. Look at this for XRPF implementation
 
             if (boundarybuilder[boundarybuilder.Length - 1] == ',')
             {
                 boundarybuilder = boundarybuilder.Remove(boundarybuilder.Length - 1, 1);
             }
 
-            boundarybuilder.Append("],");
-
+            boundarybuilder.Append("]");
             boundaryCount = 0;
-
-            // JsonUtil.SetString("formatversion", "1.0", boundarybuilder);
-            // WebPost("gaze", boundarybuilder.ToString(), writeToCache);
             string temp = boundarybuilder.ToString();
             boundarybuilder.Clear();
-            boundarybuilder.Append("\"boundary\":[");
+            boundarybuilder.Append("\"data\":[");
+            Debug.Log("@@@ DONNA TEST THIRD SERIALIZE " + boundarybuilder.ToString());
             return temp;
         }
 
