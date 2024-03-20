@@ -16,7 +16,7 @@ namespace Cognitive3D
         //GET dynamic object manifest
         internal static string GetDynamicManifest(int versionid)
         {
-            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/versions/", versionid, "/objects"); //changed api to data
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/versions/", versionid, "/objects");
         }
 
         //POST dynamic object manifest
@@ -33,7 +33,7 @@ namespace Cognitive3D
         //GET scene settings and read scene version
         internal static string GetSceneVersions(string sceneid)
         {
-            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid); //changed api to data
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
 
         //POST scene screenshot
@@ -54,7 +54,7 @@ namespace Cognitive3D
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
 
-        internal static string SceneLink(string sceneid, int versionNumber)
+        internal static string GetSceneUrl(string sceneid, int versionNumber)
         {
             return "https://app.cognitive3d.com/scenes/" + sceneid + "/v/" + versionNumber + "/insights";
         }
@@ -126,12 +126,12 @@ namespace Cognitive3D
 
 
         //GET request question set
-        internal static string GetExitPollQuestionSet(string hookname)
+        internal static string GetExitpollQuestionSet(string hookname)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
         }
         //POST question set responses
-        internal static string PostExitPollResponses(string questionsetname, int questionsetversion)
+        internal static string PostExitpollResponses(string questionsetname, int questionsetversion)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }

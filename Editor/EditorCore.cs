@@ -55,6 +55,8 @@ namespace Cognitive3D
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 EditorApplication.playModeStateChanged += ModeChanged;
             }
+
+            EditorUtils.Init();
         }
 
         //there's some new bug in 2021.1.15ish. creating editor window in constructor gets BaseLiveReloadAssetTracker. delay to avoid that
@@ -369,6 +371,7 @@ namespace Cognitive3D
 #region GUI
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
         public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF);
+        public static Color CognitiveBlue = new Color32(98, 180, 243, 255);
 
         static GUIStyle headerStyle;
         public static GUIStyle HeaderStyle

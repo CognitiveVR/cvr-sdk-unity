@@ -266,7 +266,7 @@ namespace Cognitive3D.Serialization
         internal static void SetLobbyId(string lobbyid)
         {
             LobbyId = lobbyid;
-            SetSessionProperty("c3d.lobbyId", lobbyid);
+            SetSessionProperty("c3d.multiplayer.lobbyId", lobbyid);
         }
         internal static void SetParticipantId(string participantId)
         {
