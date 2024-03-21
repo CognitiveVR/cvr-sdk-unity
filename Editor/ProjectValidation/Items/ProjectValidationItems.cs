@@ -257,16 +257,10 @@ namespace Cognitive3D
 
         public static void UpdateProjectValidationItemStatus()
         {
-            // await CheckItemsWithDelay();
-
             var items = ProjectValidation.registry.GetFixedItems();
             foreach (var item in items)
             {
                 item.isFixed = item.checkAction();
-                // if (!isFixed)
-                // {
-                //     item.isFixed = false;
-                // }
             }
         }
 

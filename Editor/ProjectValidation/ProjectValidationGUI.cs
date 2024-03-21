@@ -172,12 +172,12 @@ namespace Cognitive3D
                             foreach (var item in list.items)
                             {
                                 string buttonText = list.listName == "Required" ? "Fix" : "Apply";
-                                if (!item.isFixed)
+                                if (list.listName != "Completed" && !item.isFixed)
                                 {
                                     DrawItem(item, list.listItemIcon, item.message, true, buttonText);
                                 }
                                 
-                                if (list.listName == "Completed")
+                                if (list.listName == "Completed" && item.isFixed)
                                 {
                                     DrawItem(item, list.listItemIcon, item.fixmessage, false, "");
                                 }
