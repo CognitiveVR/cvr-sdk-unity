@@ -15,6 +15,16 @@ namespace Cognitive3D.Components
         [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
         private bool RecordOculusUserData = true;
+
+        internal bool GetRecordOculusUserData()
+        {
+            return RecordOculusUserData;
+        }
+
+        internal void SetRecordOculusUserData(bool value)
+        {
+            RecordOculusUserData = value;
+        }
 #endif
 
         protected override void OnSessionBegin()

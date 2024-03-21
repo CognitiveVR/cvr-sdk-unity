@@ -51,7 +51,7 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    EditorCore.AddDefine("C3D_DEFAULT");
+                    ProjectSetupWindow.Init(ProjectSetupWindow.Page.SDKSelection);
                 }
                 );
 
@@ -66,8 +66,7 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.PlayerSetup;
-                    SceneSetupWindow.Init();
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
                 }
                 );
             
@@ -82,8 +81,7 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    ProjectSetupWindow.currentPage = ProjectSetupWindow.Page.APIKeys;
-                    ProjectSetupWindow.Init();
+                    ProjectSetupWindow.Init(ProjectSetupWindow.Page.APIKeys);
                 }
                 );
             
@@ -98,7 +96,8 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    var instance = Cognitive3D_Manager.Instance;
+                    GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                    PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
                 }
                 );
             
@@ -109,7 +108,7 @@ namespace Cognitive3D
                 fixmessage: "Cognitive3D preferences file created in project folder",
                 checkAction: () =>
                 {
-                    return Cognitive3D_Preferences.Instance ? true : false;
+                    return Cognitive3D_Preferences.GetPreferencesFile();
                 },
                 fixAction: () =>
                 {
@@ -129,8 +128,7 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.Welcome;
-                    SceneSetupWindow.Init();
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.Welcome);
                 }
                 );
 
@@ -147,8 +145,7 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.Welcome;
-                    SceneSetupWindow.Init();
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.Welcome);
                 }
                 );
 
@@ -200,6 +197,25 @@ namespace Cognitive3D
                     OVRProjectConfig.CommitProjectConfig(projectConfig);
                 }
             );
+
+            // ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocial);
+            // if (oculusSocial != null && oculusSocial.Count != 0)
+            // {
+            // ProjectValidation.AddItem(
+            //     level: ProjectValidation.ItemLevel.Recommended, 
+            //     category: CATEGORY,
+            //     message: "Recording Oculus user data like username, id, and display name is disabled",
+            //     fixmessage: "Recording Oculus user data like username, id, and display name is enabled",
+            //     checkAction: () =>
+            //     {
+            //         return oculusSocial[0].GetRecordOculusUserData();
+            //     },
+            //     fixAction: () =>
+            //     {
+            //         oculusSocial[0].SetRecordOculusUserData(true);
+            //     }
+            //     );
+            // }
 #endif
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
@@ -209,13 +225,13 @@ namespace Cognitive3D
                 checkAction: () =>
                 {
                     Transform tempTransform;
-                    // Not working?
+                    // Not working. This is initiated OnEnable()
+                    // SceneSetupWindow.
                     return GameplayReferences.GetControllerTransform(false,out tempTransform) && GameplayReferences.GetControllerTransform(false,out tempTransform);
                 },
                 fixAction: () =>
                 {
-                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.PlayerSetup;
-                    SceneSetupWindow.Init();
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
                 }
                 );
 
@@ -243,14 +259,14 @@ namespace Cognitive3D
         {
             // await CheckItemsWithDelay();
 
-            var items = ProjectValidation.registry.GetAllItems();
+            var items = ProjectValidation.registry.GetFixedItems();
             foreach (var item in items)
             {
-                bool isFixed = item.checkAction();
-                if (!isFixed)
-                {
-                    item.isFixed = false;
-                }
+                item.isFixed = item.checkAction();
+                // if (!isFixed)
+                // {
+                //     item.isFixed = false;
+                // }
             }
         }
 

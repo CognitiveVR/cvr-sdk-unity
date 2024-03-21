@@ -65,6 +65,45 @@ namespace Cognitive3D
 #endif
         }
 
+        internal static void Init(Page page)
+        {
+            currentPage = page;
+            SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+            window.initialPlayerSetup = false;
+
+            ExportUtility.ClearUploadSceneSettings();
+
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
+            Texture2D ignored = null;
+            EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+#if C3D_OCULUS
+            // Get the current state of these components: are they already enabled?
+            // This is so the checkbox can accurately display the status of the components instead of defaulting to false
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+            if (ovrManager != null )
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingEyeTracking = fi.GetValue(ovrManager);
+                fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingFaceTracking = fi.GetValue(ovrManager);
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions != null)
+                {
+                    wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+                }
+            }
+            if (Cognitive3D_Manager.Instance != null)
+            {
+                wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+                wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            }
+#endif
+        }
+
         internal static void Init(Rect position)
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");

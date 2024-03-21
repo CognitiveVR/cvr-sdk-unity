@@ -22,6 +22,20 @@ namespace Cognitive3D
             ExportUtility.ClearUploadSceneSettings();
         }
 
+        internal static void Init(Page page)
+        {
+            currentPage = page;
+            ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+
+            window.LoadKeys();
+            window.GetSelectedSDKs();
+
+            ExportUtility.ClearUploadSceneSettings();
+        }
+
         internal static void Init(Rect position)
         {
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
