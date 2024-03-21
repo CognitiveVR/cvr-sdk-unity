@@ -1,3 +1,4 @@
+using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
 using UnityEngine.SceneManagement;
@@ -200,6 +201,23 @@ namespace Cognitive3D
                 }
             );
 #endif
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                message: "No controllers/hands are added as dynamic objects",
+                fixmessage: "Controllers/hands are added as dynamic objects",
+                checkAction: () =>
+                {
+                    Transform tempTransform;
+                    // Not working?
+                    return GameplayReferences.GetControllerTransform(false,out tempTransform) && GameplayReferences.GetControllerTransform(false,out tempTransform);
+                },
+                fixAction: () =>
+                {
+                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.PlayerSetup;
+                    SceneSetupWindow.Init();
+                }
+                );
 
             // Items that should be added with delay
             // await CheckItemsWithDelay();
