@@ -11,7 +11,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Controller Pointer")]
     public class ControllerPointer : MonoBehaviour, IControllerPointer
     {
-        Material DefaultPointerMat;
+        public Material DefaultPointerMat;
         Material FocusPointerMat;
         private bool focused;
         public bool DisplayLineRenderer = true;

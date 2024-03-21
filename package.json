@@ -29,10 +29,15 @@
 			"description": "Introduction scene to ensure HMD is calibrated and users are adjusted to VR before starting your experience",
 			"path": "Samples~/Ready Room"
 		},
-				{
+		{
 			"displayName": "Demo Scene",
 			"description": "Scene with Custom Events, Dynamic Objects and Sensor examples",
 			"path": "Samples~/Demo Scene"
+		},
+		{
+			"displayName": "Exitpoll Customization",
+			"description": "Copy of Exitpoll Prefabs that can be configured for your project's own visual style",
+			"path": "Samples~/Exitpoll Customization"
 		}
 	]
 }

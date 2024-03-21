@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ExitPollPointerLine_Focus
+  m_Name: ExitPollPointerLine
   m_Shader: {fileID: 4800000, guid: 52bc1ac02793e0744a80d928bcd54f6e, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
@@ -73,7 +73,7 @@ Material:
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _Speed: 0
+    - _Speed: 0.03
     - _SpeedX: -0.5
     - _SrcBlend: 1
     - _UVSec: 0

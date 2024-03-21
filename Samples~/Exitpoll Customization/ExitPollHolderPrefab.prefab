@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1646705450373899609
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1578913761495854881}
+  - component: {fileID: 1755871760038798575}
+  m_Layer: 0
+  m_Name: ExitPollHolderPrefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1578913761495854881
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1646705450373899609}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 21.747274, y: -2.4415894, z: 4.3483925}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1755871760038798575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1646705450373899609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dff3c6fe9380fb4691996ca51d03697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Parameters:
+    Hook: 
+    ExitpollSpawnType: 1
+    PointerParentOverride: {fileID: 0}
+    PointerType: 0
+    PointerOverride: {fileID: 0}
+    BoolPanelOverride: {fileID: 8155311442945591058, guid: b75be6c0da1c4494cb2c35d3c839f48d,
+      type: 3}
+    HappyPanelOverride: {fileID: 4283561230937508966, guid: 6faf55dc64447614b8023042894e8196,
+      type: 3}
+    ThumbsPanelOverride: {fileID: 7015749132107248154, guid: 86fd823ff5dcc6f4e8284cc09c05ade2,
+      type: 3}
+    MultiplePanelOverride: {fileID: 3595951147999294787, guid: 4569ef2e4f1e24043b2f1abcb6c1f379,
+      type: 3}
+    ScalePanelOverride: {fileID: 2560340190076736175, guid: cd12eefb6376c824ba2d5e1377c983a7,
+      type: 3}
+    VoicePanelOverride: {fileID: 2245823323629699921, guid: 9403946311e91b143a34eeefd1e90c4d,
+      type: 3}
+    OnBegin:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnClose:
+      m_PersistentCalls:
+        m_Calls: []
+    RotateToStayOnScreen: 1
+    UseOverridePosition: 0
+    OverridePosition: {x: 0, y: 0, z: 0}
+    UseOverrideRotation: 0
+    OverrideRotation: {x: 0, y: 0, z: 0, w: 1}
+    UseAttachTransform: 0
+    AttachTransform: {fileID: 0}
+    StickWindow: 0
+    UseTimeout: 0
+    Timeout: 3
+    PanelLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    DisplayDistance: 3
+    LockYPosition: 1
+    MinimumDisplayDistance: 0.2
+  ActivateOnEnable: 0
