@@ -4,6 +4,7 @@ using UnityEngine;
 
 //goes on a mesh collider. found during gaze
 //either on a visible surface or hidden to record the uvs for a skybox
+//uses Unity's VideoPlayer component by default. if using a different video player, you will also need to modify MediaComponentInspector.cs
 
 namespace Cognitive3D
 {
@@ -26,6 +27,10 @@ namespace Cognitive3D
         [System.Obsolete("Use MediaId instead")]
         public string MediaSource { get { return MediaId; } set { MediaId = value; } }
 
+        public UnityEngine.Video.VideoPlayer VideoPlayer;
+
+        #region Video Player Properties
+        //if implementing an alternate video player, you should modify these properties to get the state of that video player component
         public bool IsVideo
         {
             get
@@ -33,7 +38,55 @@ namespace Cognitive3D
                 return VideoPlayer != null;
             }
         }
-        public UnityEngine.Video.VideoPlayer VideoPlayer;
+
+        public bool VideoPlayerIsPlaying
+        {
+            get
+            {
+                if (IsVideo)
+                {
+                    return VideoPlayer.isPlaying;
+                }
+                return false;
+            }
+        }
+
+        public bool VideoPlayerIsBuffered
+        {
+            get
+            {
+                if (IsVideo)
+                {
+                    return VideoPlayer.isPrepared;
+                }
+                return false;
+            }
+        }
+
+        public long VideoPlayerFrame
+        {
+            get
+            {
+                if (IsVideo)
+                {
+                    return VideoPlayer.frame;
+                }
+                return 0;
+            }
+        }
+
+        public float VideoPlayerFrameRate
+        {
+            get
+            {
+                if (IsVideo)
+                {
+                    return VideoPlayer.frameRate;
+                }
+                return 0;
+            }
+        }
+        #endregion
 
         private void Start()
         {
@@ -51,9 +104,9 @@ namespace Cognitive3D
             if (!IsVideo) { return; }
             if (WasPlaying)
             {
-                if (!VideoPlayer.isPlaying)
+                if (!VideoPlayerIsPlaying)
                 {
-                    if (VideoPlayer.frame == 0)
+                    if (VideoPlayerFrame == 0)
                     {
                         //stopped event
                         CustomEvent.SendCustomEvent("cvr.media.stop", new List<KeyValuePair<string, object>> {new KeyValuePair<string, object>( "videoTime", lastFrame ), new KeyValuePair<string, object>("mediaId", MediaId) },transform.position);
@@ -61,18 +114,18 @@ namespace Cognitive3D
                     else
                     {
                         //paused event
-                        CustomEvent.SendCustomEvent("cvr.media.pause", new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
+                        CustomEvent.SendCustomEvent("cvr.media.pause", new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("videoTime", VideoPlayerFrame), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
                     }
                     WasPlaying = false;
                 }
-                lastFrame = VideoPlayer.frame;
+                lastFrame = VideoPlayerFrame;
             }
             else
             {
-                if (VideoPlayer.isPlaying)
+                if (VideoPlayerIsPlaying)
                 {
                     //play event
-                    CustomEvent.SendCustomEvent("cvr.media.play", new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
+                    CustomEvent.SendCustomEvent("cvr.media.play", new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("videoTime", VideoPlayerFrame), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
                     WasPlaying = true;
                 }
             }
@@ -81,15 +134,15 @@ namespace Cognitive3D
 
             if (wasPrepared)
             {
-                if (!VideoPlayer.isPrepared) //started buffering. possibly stopped
+                if (!VideoPlayerIsBuffered) //started buffering. possibly stopped
                 {
                     wasPrepared = false;
-                    CustomEvent.SendCustomEvent("cvr.media.videoBuffer", new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("videoTime", VideoPlayer.frame ), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
+                    CustomEvent.SendCustomEvent("cvr.media.videoBuffer", new List<KeyValuePair<string, object>> { new KeyValuePair<string, object>("videoTime", VideoPlayerFrame), new KeyValuePair<string, object>("mediaId", MediaId) }, transform.position);
                 }
             }
             else
             {
-                if (VideoPlayer.isPrepared) //finishing buffering
+                if (VideoPlayerIsBuffered) //finishing buffering
                 {
                     wasPrepared = true;
                 }
