@@ -1,4 +1,3 @@
-using UnityEngine;
 using Cognitive3D.Components;
 using UnityEditor;
 using UnityEngine.SceneManagement;
@@ -47,12 +46,7 @@ namespace Cognitive3D
                 fixmessage: "Cognitive3D player definition is added",
                 checkAction: () =>
                 {
-                    var playerDefines = EditorCore.GetPlayerDefines();
-                    if (playerDefines != null && playerDefines[0].Contains("C3D"))
-                    {
-                        return true;
-                    }
-                    return false;
+                    return EditorCore.HasC3DDefine();
                 },
                 fixAction: () =>
                 {
@@ -122,6 +116,41 @@ namespace Cognitive3D
                 }
                 );
 
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "Current scene is not found in Cognitive3D preferences",
+                fixmessage: "Current scene is found in Cognitive3D preferences",
+                checkAction: () =>
+                {
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
+                    return c3dScene != null ? true : false;
+                },
+                fixAction: () =>
+                {
+                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.Welcome;
+                    SceneSetupWindow.Init();
+                }
+                );
+
+            // Fix action?
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "Current scene has no scene ID",
+                fixmessage: "Current scene has scene ID",
+                checkAction: () =>
+                {
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
+                    return (c3dScene != null  && !string.IsNullOrEmpty(c3dScene.SceneId)) ? true : false;
+                },
+                fixAction: () =>
+                {
+                    SceneSetupWindow.currentPage = SceneSetupWindow.Page.Welcome;
+                    SceneSetupWindow.Init();
+                }
+                );
+
             // Recommended Items
 #if C3D_OCULUS
             ProjectValidation.AddItem(
@@ -171,10 +200,31 @@ namespace Cognitive3D
                 }
             );
 #endif
+
+            // Items that should be added with delay
+            // await CheckItemsWithDelay();
+
+            // ProjectValidation.AddItem(
+            //     level: ProjectValidation.ItemLevel.Required, 
+            //     category: CATEGORY,
+            //     message: "No scene associated with this SceneID on the dashboard",
+            //     fixmessage: "Scene associated with this SceneID exists on the dashboard",
+            //     checkAction: () => 
+            //     {
+            //         Debug.Log("@@@ 2: " + successful);
+            //         return successful;
+            //     },
+            //     fixAction: () =>
+            //     {
+            //         EditorCore.GetPreferences();
+            //     }
+            //     );
         }
 
         public static void UpdateProjectValidationItemStatus()
         {
+            // await CheckItemsWithDelay();
+
             var items = ProjectValidation.registry.GetAllItems();
             foreach (var item in items)
             {
@@ -185,5 +235,37 @@ namespace Cognitive3D
                 }
             }
         }
+
+        // private static bool successful;
+
+        // private static void GetResponse(int responseCode, string error, string text)
+        // {
+        //     if (responseCode == 200)
+        //     {
+        //         successful = true;
+        //         Debug.Log("@@@ 1: " + successful);
+        //         return;
+        //     }
+
+        //     successful = false;
+        // }
+
+        // private static async Task CheckItemsWithDelay()
+        // {
+        //     if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
+        //     {
+        //         string name = SceneManager.GetActiveScene().name;
+        //         Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(name);
+
+        //         if (c3dScene != null)
+        //         {
+        //             Dictionary<string, string> headers = new Dictionary<string, string>();
+        //             headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+        //             EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/scenes/" + c3dScene.SceneId, GetResponse, headers, true);
+        //         }
+                
+        //     }
+        //     await Task.Delay(500);
+        // }
     }
 }
