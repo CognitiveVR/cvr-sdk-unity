@@ -198,24 +198,24 @@ namespace Cognitive3D
                 }
             );
 
-            // ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocial);
-            // if (oculusSocial != null && oculusSocial.Count != 0)
-            // {
-            // ProjectValidation.AddItem(
-            //     level: ProjectValidation.ItemLevel.Recommended, 
-            //     category: CATEGORY,
-            //     message: "Recording Oculus user data like username, id, and display name is disabled",
-            //     fixmessage: "Recording Oculus user data like username, id, and display name is enabled",
-            //     checkAction: () =>
-            //     {
-            //         return oculusSocial[0].GetRecordOculusUserData();
-            //     },
-            //     fixAction: () =>
-            //     {
-            //         oculusSocial[0].SetRecordOculusUserData(true);
-            //     }
-            //     );
-            // }
+            ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocial);
+            if (oculusSocial != null && oculusSocial.Count != 0)
+            {
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                message: "Recording Oculus user data like username, id, and display name is disabled",
+                fixmessage: "Recording Oculus user data like username, id, and display name is enabled",
+                checkAction: () =>
+                {
+                    return oculusSocial[0].GetRecordOculusUserData();
+                },
+                fixAction: () =>
+                {
+                    oculusSocial[0].SetRecordOculusUserData(true);
+                }
+                );
+            }
 #endif
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
