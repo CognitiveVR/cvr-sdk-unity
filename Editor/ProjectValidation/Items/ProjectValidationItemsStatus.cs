@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using System.Collections.Generic;
 using UnityEditor.Build;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Cognitive3D
 {
@@ -14,12 +15,18 @@ namespace Cognitive3D
         private const string LOG_TAG = "[COGNITIVE3D] ";
         internal static Dictionary<string, bool> sceneVaidationStatusDic = new Dictionary<string, bool>();
         static Dictionary<string, string> scenesNeedFix = new Dictionary<string, string>();
+        internal static bool throwExecption;
 
         static ProjectValidationItemsStatus()
         {
             EditorSceneManager.sceneOpened += OnSceneOpened;
             EditorSceneManager.sceneSaved += OnSceneSaved;
             EditorSceneManager.sceneClosed += OnSceneClosed;
+        }
+
+        internal static string GetCurrentSceneName()
+        {
+            return EditorSceneManager.GetActiveScene().name;
         }
 
         // Adding scenes that has unfixed items 
@@ -42,14 +49,7 @@ namespace Cognitive3D
 
         static void AddOrUpdateSceneValidationStatus(Scene scene)
         {
-            if (!sceneVaidationStatusDic.ContainsKey(scene.path))
-            {
-                sceneVaidationStatusDic.Add(scene.path, ProjectValidation.hasNotFixedItems());
-            }
-            else
-            {
-                sceneVaidationStatusDic[scene.path] = ProjectValidation.hasNotFixedItems();
-            }
+            AddOrUpdateDictionary(sceneVaidationStatusDic, scene.path, ProjectValidation.hasNotFixedItems());
         }
 
         internal static bool VerifyCurrentSceneValidationItems()
@@ -71,14 +71,14 @@ namespace Cognitive3D
             return true;
         }
 
-        internal static bool VerifyBuildScenesValidationItems()
+        internal static void VerifyBuildScenesValidationItems()
         {
             foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
             {
                 // Check if the scene path exists in the dictionary
                 if (sceneVaidationStatusDic.ContainsKey(scene.path) && sceneVaidationStatusDic[scene.path] == true)
                 {
-                    scenesNeedFix.Add(GetSceneName(scene.path), scene.path);
+                    AddOrUpdateDictionary(scenesNeedFix, GetSceneName(scene.path), scene.path);
                 }
             }
 
@@ -87,24 +87,54 @@ namespace Cognitive3D
                 // Concatenate scene names into a single string
                 string sceneList = string.Join(", ", scenesNeedFix.Keys);
 
-                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has identified unresolved issues in the follwing scenes: \n" + sceneList, "Fix", "Ignore");
+                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has found unresolved issues in the following scenes: \n" + sceneList, "Fix", "Ignore");
                 if (result)
                 {
                     // Opens up the first scene in the list that needs fix
                     EditorSceneManager.OpenScene(scenesNeedFix.Values.First().ToString());
                     ProjectValidationSettingsProvider.OpenSettingsWindow();
-                    return false;
+                    throwExecption = true;
+                    return;
                 }
                 else
                 {
-                    return true;
+                    throwExecption = false;
+                    return;
                 }
             }
 
-            return true;
+            throwExecption = false;
         }
 
-        // Method to extract scene name from the full scene path
+        internal static async void VerifyAllBuildScenes()
+        {
+            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to verify all build scenes for Cognitive3D project validation?", "Yes", "No");
+            if (result)
+            {
+                throwExecption = true;
+
+                foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+                {
+                    EditorSceneManager.OpenScene(scene.path);
+
+                    await Task.Delay(2000);
+
+                    if (ProjectValidation.hasNotFixedItems())
+                    {
+                        AddOrUpdateDictionary(sceneVaidationStatusDic, scene.path, ProjectValidation.hasNotFixedItems());
+                    }
+                }
+
+                VerifyBuildScenesValidationItems();
+            }
+            else
+            {
+                throwExecption = false;
+                return;
+            }
+        }
+
+        // Extracts scene name from the full scene path
         private static string GetSceneName(string scenePath)
         {
             // Use Unity's AssetDatabase to extract the file name from the path
@@ -112,6 +142,20 @@ namespace Cognitive3D
 
             // The scene name is the file name without the extension
             return sceneNameWithExtension;
+        }
+
+        private static void AddOrUpdateDictionary<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                // Update the value for the existing key
+                dictionary[key] = value;
+            }
+            else
+            {
+                // Add a new key-value pair to the dictionary
+                dictionary.Add(key, value);
+            }
         }
     }
 }

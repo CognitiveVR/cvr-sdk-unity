@@ -26,12 +26,20 @@ namespace Cognitive3D
                 margin = new RectOffset(4, 4, 4, 5)
             };
 
-            internal readonly GUIStyle IssuesTitleLabel = new GUIStyle(EditorStyles.label)
+            internal readonly GUIStyle IssuesTitleBoldLabel = new GUIStyle(EditorStyles.label)
             {
                 fontSize = 14,
                 wordWrap = false,
                 stretchWidth = false,
                 fontStyle = FontStyle.Bold,
+                padding = new RectOffset(10, 10, 0, 0)
+            };
+
+            internal readonly GUIStyle IssuesTitleLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
                 padding = new RectOffset(10, 10, 0, 0)
             };
 
@@ -138,12 +146,12 @@ namespace Cognitive3D
             {
                 EditorGUILayout.Space();
 
-                GUILayout.Label("Project Validation", styles.IssuesTitleLabel);
+                GUILayout.Label("Project Validation", styles.IssuesTitleBoldLabel);
                 GUILayout.Label("The project validation simplifies Cognitive3D setup by providing a checklist of essential tasks and recommended best practices.", styles.SubtitleHelpText);
 
-                EditorGUILayout.Space();
+                EditorGUILayout.Space(20);
 
-                GUILayout.Label("Checklist", styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
+                GUILayout.Label("Checklist for " + ProjectValidationItemsStatus.GetCurrentSceneName(), styles.IssuesTitleBoldLabel);
             }
 
             DrawItemLists();

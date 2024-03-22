@@ -17,7 +17,9 @@ namespace Cognitive3D
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
 
-            if (!ProjectValidationItemsStatus.VerifyCurrentSceneValidationItems() || !ProjectValidationItemsStatus.VerifyBuildScenesValidationItems())
+            ProjectValidationItemsStatus.VerifyAllBuildScenes();
+
+            if (ProjectValidationItemsStatus.throwExecption)
             {
                 throw new BuildFailedException(LOG_TAG + "Build process stopped");
             }
