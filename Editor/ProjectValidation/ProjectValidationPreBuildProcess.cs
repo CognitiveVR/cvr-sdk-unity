@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEngine.SceneManagement;
 
 namespace Cognitive3D
 {
@@ -14,18 +17,9 @@ namespace Cognitive3D
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
 
-            if (ProjectValidation.hasNotFixedItems())
+            if (!ProjectValidationItemsStatus.VerifyCurrentSceneValidationItems() || !ProjectValidationItemsStatus.VerifyBuildScenesValidationItems())
             {
-                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has identified unresolved issues that may result in inaccurate data recording", "Fix", "Ignore");
-                if (result)
-                {
-                    ProjectValidationSettingsProvider.OpenSettingsWindow();
-                    throw new BuildFailedException(LOG_TAG + "Build process stopped");
-                }
-                else
-                {
-                    return;
-                }
+                throw new BuildFailedException(LOG_TAG + "Build process stopped");
             }
         }
     }
