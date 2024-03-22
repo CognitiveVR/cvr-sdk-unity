@@ -224,10 +224,7 @@ namespace Cognitive3D
                 fixmessage: "Controllers/hands are added as dynamic objects",
                 checkAction: () =>
                 {
-                    Transform tempTransform;
-                    // Not working. This is initiated OnEnable()
-                    // SceneSetupWindow.
-                    return GameplayReferences.GetControllerTransform(false,out tempTransform) && GameplayReferences.GetControllerTransform(false,out tempTransform);
+                    return EditorCore.IsLeftControllerValid() && EditorCore.IsRightControllerValid();
                 },
                 fixAction: () =>
                 {

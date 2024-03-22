@@ -284,6 +284,10 @@ namespace Cognitive3D
                 }
             }
 
+            // Setting left and right controllers for checking controller setup item in Project Validation
+            EditorCore.SetControllers(true, rightcontroller);
+            EditorCore.SetControllers(false, leftcontroller);
+
             RoomTrackingSpace trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
             if (trackingSpaceInScene != null)
             {

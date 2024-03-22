@@ -842,7 +842,44 @@ namespace Cognitive3D
             }
             return "unknown";
         }
-        #endregion
+
+        internal static GameObject leftController;
+        internal static GameObject rightController;
+
+        /// <summary>
+        /// Sets controllers from Scene Setup window
+        /// </summary>
+        /// <param name="isRight"></param>
+        /// <param name="controller"></param>
+        internal static void SetControllers(bool isRight, GameObject controller)
+        {
+            if (isRight)
+            {
+                rightController = controller;
+            }
+            else
+            {
+                leftController = controller;
+            }
+        }
+
+        /// <summary>
+        /// Checks if left controller is valid and properly setup in Scene Setup window
+        /// </summary>
+        /// This is used in project validation to check if controllers are setup properly
+        internal static bool IsLeftControllerValid()
+        {
+            return leftController ? true : false;
+        }
+
+        /// <summary>
+        /// Checks if right controller is valid and properly setup in Scene Setup window
+        /// </summary>
+        internal static bool IsRightControllerValid()
+        {
+            return rightController ? true : false;
+        }
+#endregion
 
         #region Packages
 
