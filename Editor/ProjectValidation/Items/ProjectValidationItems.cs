@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Cognitive3D
 {
@@ -12,11 +13,37 @@ namespace Cognitive3D
     {
         private const ProjectValidation.ItemCategory CATEGORY = ProjectValidation.ItemCategory.All;
         private const int INITIAL_DELAY_IN_SECONDS = 1;
+        internal static Dictionary<string, bool> sceneVaidationStatusDic = new Dictionary<string, bool>();
 
         static ProjectValidationItems()
         {
             WaitBeforeProjectValidation();
             EditorSceneManager.sceneOpened += OnSceneOpened;
+
+            EditorSceneManager.sceneSaved += OnSceneSaved;
+            EditorSceneManager.sceneClosed += OnSceneClosed;
+        }
+
+        private static void OnSceneClosed(Scene scene)
+        {
+            AddOrUpdateSceneValidationStatus(scene);
+        }
+
+        private static void OnSceneSaved(Scene scene)
+        {
+            AddOrUpdateSceneValidationStatus(scene);
+        }
+
+        static void AddOrUpdateSceneValidationStatus(Scene scene)
+        {
+            if (!sceneVaidationStatusDic.ContainsKey(scene.name))
+            {
+                sceneVaidationStatusDic.Add(scene.name, ProjectValidation.hasNotFixedItems());
+            }
+            else
+            {
+                sceneVaidationStatusDic[scene.name] = ProjectValidation.hasNotFixedItems();
+            }
         }
 
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
@@ -32,6 +59,7 @@ namespace Cognitive3D
         // Update project validation items when a new scene opens
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
+            Debug.Log("@@@ Scene is opened!");
             ProjectValidation.Reset();
             WaitBeforeProjectValidation();
         }
@@ -217,20 +245,20 @@ namespace Cognitive3D
                 );
             }
 #endif
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Recommended, 
-                category: CATEGORY,
-                message: "No controllers/hands are added as dynamic objects",
-                fixmessage: "Controllers/hands are added as dynamic objects",
-                checkAction: () =>
-                {
-                    return EditorCore.IsLeftControllerValid() && EditorCore.IsRightControllerValid();
-                },
-                fixAction: () =>
-                {
-                    SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
-                }
-                );
+            // ProjectValidation.AddItem(
+            //     level: ProjectValidation.ItemLevel.Recommended, 
+            //     category: CATEGORY,
+            //     message: "No controllers/hands are added as dynamic objects",
+            //     fixmessage: "Controllers/hands are added as dynamic objects",
+            //     checkAction: () =>
+            //     {
+            //         return EditorCore.IsLeftControllerValid() && EditorCore.IsRightControllerValid();
+            //     },
+            //     fixAction: () =>
+            //     {
+            //         SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
+            //     }
+            //     );
 
             // Items that should be added with delay
             // await CheckItemsWithDelay();

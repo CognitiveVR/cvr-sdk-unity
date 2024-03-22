@@ -52,15 +52,14 @@ namespace Cognitive3D
             return items.Where(item => item.category == category);
         }
 
-        public bool AllItemsFixed()
-        {
-            var notFixedItems = items.Where(item => item.isFixed == false);
-            return notFixedItems.Count() == 0;
-        }
-
         public IEnumerable<ProjectValidationItem> GetFixedItems()
         {
             return items.Where(item => item.isFixed == true);
+        }
+
+        public bool hasNotFixedItems()
+        {
+            return items.Where(item => item.isFixed == false).Count() != 0 ? true : false;
         }
 
         public List<ProjectValidationItem> GetAllItems()

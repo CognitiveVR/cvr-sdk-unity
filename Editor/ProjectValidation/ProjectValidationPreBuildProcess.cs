@@ -14,7 +14,7 @@ namespace Cognitive3D
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
 
-            if (!ProjectValidation.AllItemsFixed())
+            if (ProjectValidation.hasNotFixedItems())
             {
                 bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has identified unresolved issues that may result in inaccurate data recording", "Fix", "Ignore");
                 if (result)

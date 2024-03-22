@@ -82,9 +82,13 @@ namespace Cognitive3D
             return registry.GetFixedItems();
         }
 
-        internal static bool AllItemsFixed()
+        /// <summary>
+        /// Checks if current scene has <see cref="ProjectValidationItem"/>s to be fixed
+        /// </summary>
+        /// <returns></returns>
+        internal static bool hasNotFixedItems()
         {
-            return registry.AllItemsFixed();
+            return registry.hasNotFixedItems();
         }
 
         /// <summary>
