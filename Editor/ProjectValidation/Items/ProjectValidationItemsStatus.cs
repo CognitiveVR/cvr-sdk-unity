@@ -13,7 +13,6 @@ namespace Cognitive3D
     internal class ProjectValidationItemsStatus
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
-        internal static Dictionary<string, bool> sceneVaidationStatusDic = new Dictionary<string, bool>();
         static Dictionary<string, string> scenesNeedFix = new Dictionary<string, string>();
         internal static bool throwExecption;
 
@@ -49,7 +48,10 @@ namespace Cognitive3D
 
         static void AddOrUpdateSceneValidationStatus(Scene scene)
         {
-            AddOrUpdateDictionary(sceneVaidationStatusDic, scene.path, ProjectValidation.hasNotFixedItems());
+            if (ProjectValidation.hasNotFixedItems())
+            {
+                AddOrUpdateDictionary(scenesNeedFix, GetSceneName(scene.path), scene.path);
+            }
         }
 
         internal static bool VerifyCurrentSceneValidationItems()
@@ -71,17 +73,11 @@ namespace Cognitive3D
             return true;
         }
 
+        /// <summary>
+        /// iterates through all build scenes in the project to identify outstanding project validation items
+        /// </summary>
         internal static void VerifyBuildScenesValidationItems()
         {
-            foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
-            {
-                // Check if the scene path exists in the dictionary
-                if (sceneVaidationStatusDic.ContainsKey(scene.path) && sceneVaidationStatusDic[scene.path] == true)
-                {
-                    AddOrUpdateDictionary(scenesNeedFix, GetSceneName(scene.path), scene.path);
-                }
-            }
-
             if (scenesNeedFix != null && scenesNeedFix.Count != 0)
             {
                 // Concatenate scene names into a single string
@@ -110,6 +106,9 @@ namespace Cognitive3D
             Clear();
         }
 
+        /// <summary>
+        /// iterates through all build scenes in the project to identify outstanding project validation items
+        /// </summary>
         internal static async void VerifyAllBuildScenes()
         {
             bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes?", "Yes", "No");
@@ -132,11 +131,11 @@ namespace Cognitive3D
                     // float nextProgress = (float)(i + 1) / EditorBuildSettings.scenes.Length;
                     // EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", nextProgress);
 
-                    // // Check if project has not fixed items
-                    // if (ProjectValidation.hasNotFixedItems())
-                    // {
-                    //     AddOrUpdateDictionary(sceneVaidationStatusDic, EditorBuildSettings.scenes[i].path, ProjectValidation.hasNotFixedItems());
-                    // }
+                    // Check if project has not fixed items
+                    if (ProjectValidation.hasNotFixedItems())
+                    {
+                        AddOrUpdateDictionary(scenesNeedFix, GetSceneName(EditorBuildSettings.scenes[i].path), EditorBuildSettings.scenes[i].path);
+                    }
                 }
 
                 // Clear progress bar
@@ -164,7 +163,6 @@ namespace Cognitive3D
         private static void Clear()
         {
             scenesNeedFix.Clear();
-            sceneVaidationStatusDic.Clear();
         }
 
         private static void AddOrUpdateDictionary<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, TValue value)
