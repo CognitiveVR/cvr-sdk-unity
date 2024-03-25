@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.4.4";
+        public static readonly string SDK_VERSION = "1.4.5";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -577,8 +577,9 @@ namespace Cognitive3D
             return false;
         }
 
+        [HideInInspector]
         public int trackingSpaceIndex;
-        public List<Transform> cachedTrackingSpaceList = new List<Transform>();
+        private List<Transform> cachedTrackingSpaceList = new List<Transform>();
 
         /// <summary>
         /// Updates current tracking space to next valid tracking space if exists any
