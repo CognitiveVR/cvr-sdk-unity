@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using System;
+using System.Collections.Generic;
 using System.Collections;
-
 #if C3D_OCULUS
 using Oculus.Platform;
 using Oculus.Platform.Models;
@@ -12,10 +13,17 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Oculus Social")]
     public class OculusSocial : AnalyticsComponentBase
     {
+
 #if C3D_OCULUS
         [Tooltip("Used to record user data like username, id, and display name. Sessions will be named as users' display name in the session list. Allows tracking users across different sessions.")]
         [SerializeField]
         private bool RecordOculusUserData = true;
+
+        /// <summary>
+        /// A comma separated list of query parameters for meta API call
+        /// </summary>
+        List<string> subscriptionQueryParams = new List<string>() {"sku", "is_trial", "is_active", "period_start_time", "period_end_time", "next_renewal_time" };
+#endif
 
         public enum InitializeType
         {
@@ -26,7 +34,8 @@ namespace Cognitive3D.Components
         [Tooltip("The behaviour to handle getting user data from the Oculus Platform.\n- Automatic will Initialize the platform with the current Platform.AppID.\n- Delayed will wait until you've checked Entitlement yourself.\n- Manual requires calling the code to record these session properties.")]
         public InitializeType initializeType = InitializeType.Automatic;
 
-        protected override void OnSessionBegin()
+
+    protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
 
@@ -86,6 +95,13 @@ namespace Cognitive3D.Components
             }
         }
 
+
+#if C3D_OCULUS
+
+        /// <summary>
+        /// Returns the oculus AppID from oculus platform settings
+        /// </summary>
+        /// <returns>A string representing the oculus AppID</returns>
         private static string GetAppIDFromConfig()
         {
             if (UnityEngine.Application.platform == RuntimePlatform.Android)
@@ -146,6 +162,50 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
+        /// Callback to handle the user access token
+        /// </summary>
+        /// <param name="message">The response from GetAccessToken - message.Data.ToString to get the token</param>
+        private void GetSubscriptionContext(Message<string> message)
+        {
+            string userAccessToken = message.Data.ToString();
+            Cognitive3D_Manager.NetworkManager.Get
+                (CognitiveStatics.MetaSubscriptionContextEndpoint
+                    (userAccessToken,subscriptionQueryParams),
+                DeserializeResponseAndSetSessionProperties);
+        }
+
+        /// <summary>
+        /// Deserializes a json string into SubscriptionContextResponseText object and sets session properties
+        /// </summary>
+        /// <param name="data">The json string to be deserialized</param>
+        private void DeserializeResponseAndSetSessionProperties(string data)
+        {
+            SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
+            if (subscriptionContextResponse != null)
+            {
+                // use string instead of bool so we can check if they are actually there with isNullOrEmpty
+                // bool would just default to false
+                for (int i = 0; i < subscriptionContextResponse.data.Length; i++)
+                {
+                    if (subscriptionContextResponse.data[i] != null)
+                    {
+                        List<KeyValuePair<string, object>> subscription = new List<KeyValuePair<string, object>>();
+                        subscription.Add(new KeyValuePair<string, object>("sku", subscriptionContextResponse.data[i].sku));
+                        subscription.Add(new KeyValuePair<string, object>("is_active", subscriptionContextResponse.data[i].is_active));
+                        subscription.Add(new KeyValuePair<string, object>("is_trial", subscriptionContextResponse.data[i].is_trial));
+                        subscription.Add(new KeyValuePair<string, object>("period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
+                        subscription.Add(new KeyValuePair<string, object>("period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
+                        subscription.Add(new KeyValuePair<string, object>("next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
+                        CoreInterface.WriteMetaSubscriptionProperty(i, subscription);
+                    }
+                }
+            }
+            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
+        }
+#endif
+
+#if C3D_OCULUS
+        /// <summary>
         /// Callback to get the display name
         /// apparently a second request is required
         /// https://stackoverflow.com/questions/76038469/oculus-users-getloggedinuser-return-empty-string-for-displayname-field)
@@ -158,6 +218,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
             {
+                Users.GetAccessToken().OnComplete(GetSubscriptionContext);
                 Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
                 if (RecordOculusUserData)
                 {
@@ -165,6 +226,18 @@ namespace Cognitive3D.Components
                 }
             }
         }
+
+#endif
+        /// <summary>
+        /// Converts ISO 8601 timestamp to unix timestamp in seconds
+        /// </summary>
+        /// <param name="timeString">A timestamp in a ISO 8601 format </param>
+        /// <returns> The unix timestamp in seconds</returns>
+        private long TimeStringToUnix(string timeString)
+        {
+            return ((DateTimeOffset) DateTime.Parse(timeString)).ToUnixTimeSeconds();
+        }
+
 
         public override string GetDescription()
         {
@@ -198,5 +271,50 @@ namespace Cognitive3D.Components
             return true;
         }
 #endif
+    }
+
+    /// <summary>
+    /// A class defining the structure of the json response for subscription <br/>
+    /// Example of the json structure can be found here:https://developer.oculus.com/documentation/unity/ps-subscriptions-s2s/   
+    /// </summary>
+    [Serializable]
+    public class SubscriptionContextResponseText
+    {
+        public SubscriptionContextData[] data;
+
+        [Serializable]
+        public class SubscriptionContextData
+        {
+            /// <summary>
+            /// String representing the product stock keeping unit
+            /// </summary>
+            public string sku;
+
+            /// <summary>
+            /// Set to true when a subscription is active
+            /// </summary>
+            public string is_active;
+
+            /// <summary>
+            /// Set to true when the most recent subscription period is a free trial (7d, 14d, 30d). <br/>
+            /// Does not indicate that the subscription itself is active.
+            /// </summary>
+            public string is_trial;
+
+            /// <summary>
+            /// Timestamp for when subscription started
+            /// </summary>
+            public string period_start_time;
+
+            /// <summary>
+            /// Timestamp for when subscription will end
+            /// </summary>
+            public string period_end_time;
+
+            /// <summary>
+            /// Timestamp for when subscription will next be billed
+            /// </summary>
+            public string next_renewal_time;
+        }
     }
 }

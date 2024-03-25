@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using Cognitive3D.Serialization;
 #if C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -425,6 +426,7 @@ namespace Cognitive3D
         // This is not called for first loaded scene
         private void SceneManager_SceneLoaded(Scene loadingScene, LoadSceneMode mode)
         {
+            SharedCore.SetSubscriptionDetailsReady(true);
             SendSceneLoadEvent(loadingScene.name, mode);
             bool loadingSceneHasSceneId = TryGetSceneData(loadingScene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
 
