@@ -3,7 +3,6 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections.Generic;
-using UnityEditor.Build;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -54,7 +53,11 @@ namespace Cognitive3D
             }
         }
 
-        internal static bool VerifyCurrentSceneValidationItems()
+        /// <summary>
+        /// Displays a pop indicating current scene that require fixes
+        /// </summary>
+        /// <returns></returns>
+        internal static void VerifyCurrentSceneValidationItems()
         {
             if (ProjectValidation.hasNotFixedItems())
             {
@@ -62,21 +65,24 @@ namespace Cognitive3D
                 if (result)
                 {
                     ProjectValidationSettingsProvider.OpenSettingsWindow();
-                    return false;
+                    throwExecption = true;
+                    return;
                 }
                 else
                 {
-                    return true;
+                    throwExecption = false;
+                    return;
                 }
             }
 
-            return true;
+            throwExecption = false;
+            return;
         }
 
         /// <summary>
-        /// iterates through all build scenes in the project to identify outstanding project validation items
+        /// Displays a popup indicating scenes that require fixes
         /// </summary>
-        internal static void VerifyBuildScenesValidationItems()
+        internal static void DisplayScenesWithValidationItems()
         {
             if (scenesNeedFix != null && scenesNeedFix.Count != 0)
             {
@@ -96,7 +102,6 @@ namespace Cognitive3D
                 }
                 else
                 {
-                    throwExecption = false;
                     Clear();
                     return;
                 }
@@ -111,7 +116,7 @@ namespace Cognitive3D
         /// </summary>
         internal static async void VerifyAllBuildScenes()
         {
-            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes?", "Yes", "No");
+            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nPress \"Yes\" to verify scenes or \"No\" to continue build process", "Yes", "No");
             if (result && EditorBuildSettings.scenes.Length != 0)
             {
                 throwExecption = true;
@@ -127,10 +132,6 @@ namespace Cognitive3D
                     // Time needed for updating project validation items in a scene
                     await Task.Delay(2000);
 
-                    // // Update progress bar one more time after the delay
-                    // float nextProgress = (float)(i + 1) / EditorBuildSettings.scenes.Length;
-                    // EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", nextProgress);
-
                     // Check if project has not fixed items
                     if (ProjectValidation.hasNotFixedItems())
                     {
@@ -141,7 +142,7 @@ namespace Cognitive3D
                 // Clear progress bar
                 EditorUtility.ClearProgressBar();
 
-                VerifyBuildScenesValidationItems();
+                DisplayScenesWithValidationItems();
             }
             else
             {
