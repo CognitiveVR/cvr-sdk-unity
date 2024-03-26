@@ -1,8 +1,6 @@
-﻿using Cognitive3D.Serialization;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.XR;
-
+using System;
 #if C3D_VIVEWAVE
     using Wave;
     using Wave.Native;
@@ -31,7 +29,17 @@ namespace Cognitive3D.Components
         Transform lastRecordedTrackingSpaceTransform = null;
 
         // an n% overflow buffer added to string builder. 0.1 means 10% of num boundary points added as extra room
-        private readonly float NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
+        private readonly float NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
+
+        /// <summary>
+        /// The threshold for minimum position (in metres) change to re-record boundary points
+        /// </summary>
+        private readonly float TRACKING_SPACE_POSITION_THRESHOLD = 0.05f;
+
+        /// <summary>
+        /// The threshold for minimum rotation (in degrees) change to re-record boundary points
+        /// </summary>
+        private readonly float TRACKING_SPACE_ROTATION_THRESHOLD = 5f;
 
         //counts up the deltatime to determine when the interval ends
         float currentTime;
@@ -43,14 +51,16 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             previousBoundaryPoints = GetCurrentBoundaryPoints();
-
             // We want to intialize the string builder to a size appropriate for the number of points
             // This number might change if the participant redraws boundary, so we are adding a grace extension
             // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
             // That is expensive, but there is a low probability of this happening
-            CoreInterface.InitializeBoundary(previousBoundaryPoints.Length + (int) Mathf.Ceil(NNUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
-            
+            if (previousBoundaryPoints != null)
+            {
+                CoreInterface.InitializeBoundary(previousBoundaryPoints.Length + (int) Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
+            }
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
@@ -68,7 +78,8 @@ namespace Cognitive3D.Components
         /// </summary>
         private void Cognitive3D_Manager_OnTick()
         {
-            if (true) // if moved enough 
+            if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpaceTransform.position) > TRACKING_SPACE_POSITION_THRESHOLD
+                || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceTransform.rotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD)
             {
                 currentBoundaryPoints = GetCurrentBoundaryPoints();
                 RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
@@ -129,7 +140,6 @@ namespace Cognitive3D.Components
         {
             if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
             if (previousBoundary == null && currentBoundary == null) { return false; }
-
 
             // OCULUS SPECIFIC HACK 
             // Going far beyond boundary sometimes causes a pause
@@ -243,14 +253,14 @@ namespace Cognitive3D.Components
         /// <param name="boundaryPoints">An array of Vector3 representing the boundary points</param>
         private void RecordBoundaryPointsInWorldSpace(Vector3[] boundaryPoints)
         {
-            if (trackingSpace != null)
+            if (trackingSpace != null && boundaryPoints != null)
             {
                 for (int i = 0; i < boundaryPoints.Length; i++)
                 {
                     boundaryPoints[i] = trackingSpace.TransformPoint(boundaryPoints[i]);
                 }
+                CoreInterface.RecordBoundaryPoints(boundaryPoints, Util.Timestamp(Time.frameCount));
             }
-            CoreInterface.RecordBoundaryPoints(boundaryPoints, Util.Timestamp(Time.frameCount));
         }
 
         /// <summary>

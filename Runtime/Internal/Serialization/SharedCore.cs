@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine; //for fixation calculations - don't want to break this right now
 using System.Threading; //for dynamic objects
+using System.Linq;
 
 
 //this is on the far side of the interface - what actually serializes and returns data
@@ -28,9 +29,9 @@ namespace Cognitive3D.Serialization
 
             SerializeEvents(copyToCache);
             SerializeGaze(copyToCache);
-            SerializeBoundary(copyToCache);
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
+            // SerializeBoundary();
 
             InterruptThread = true;
             while (queuedSnapshots.Count > 0 || queuedManifest.Count > 0)
@@ -118,6 +119,12 @@ namespace Cognitive3D.Serialization
 
         //all session properties, including new properties not yet sent
         static List<KeyValuePair<string, object>> knownSessionProperties = new List<KeyValuePair<string, object>>(32);
+
+        /// <summary>
+        /// Store the boundary points in an array until ready to serialize
+        /// That will prevent us writing to the file too often
+        /// </summary>
+        static Vector3[] boundaryPointsToSerialize;
 
         static void SetPreSessionProperty(string key, object value)
         {
@@ -1499,7 +1506,7 @@ namespace Cognitive3D.Serialization
         #region Boundary
         static StringBuilder boundarybuilder;
         static int boundaryCount;
-        static int boundaryJsonPart;
+        static int boundaryJsonPart = 0;
         /// <summary>
         /// Initializes a json to hold the boundary points data
         /// This will be added to the gaze stream
@@ -1508,12 +1515,13 @@ namespace Cognitive3D.Serialization
         {
             // Approximately 70 characters per snapshot, 1200 characters extra room
             boundarybuilder = new StringBuilder(70 * numBoundaryPoints * Cognitive3D_Preferences.S_BoundarySnapshotCount + 1200);
-            boundarybuilder.Append("\"data\":[");
+            boundarybuilder.Append("{\"data\":[");
         }
 
         internal static void RecordBoundaryPoints(Vector3[] points, double timestamp)
         {
             if (!IsInitialized) { return; }
+
             boundarybuilder.Append("{");
             JsonUtil.SetDouble("time", timestamp, boundarybuilder);
             boundarybuilder.Append(",");
@@ -1526,29 +1534,31 @@ namespace Cognitive3D.Serialization
                     boundarybuilder);
                 boundarybuilder.Append(',');
             }
+
             boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-            boundarybuilder.Append("}");
-            boundarybuilder.Append(",");
+            boundarybuilder.Append("},");
             boundaryCount++;
-            Debug.Log("@@@ DONNA TEST THIRD RECORD " + boundarybuilder.ToString());
+            if (boundaryCount >= BoundaryThreshold)
+            {
+                SerializeBoundary();
+            }
         }
 
-        static string SerializeBoundary(bool writeToCache)
+        static void SerializeBoundary()
         {
-            if (boundaryCount == 0) { return string.Empty; }
-
-            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
-            {
-                boundarybuilder = boundarybuilder.Remove(boundarybuilder.Length - 1, 1);
-            }
-
-            boundarybuilder.Append("]");
+            boundaryJsonPart++;
             boundaryCount = 0;
-            string temp = boundarybuilder.ToString();
-            boundarybuilder.Clear();
-            boundarybuilder.Append("\"data\":[");
-            Debug.Log("@@@ DONNA TEST THIRD SERIALIZE " + boundarybuilder.ToString());
-            return temp;
+            if (boundarybuilder != null)
+            {
+                if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+                {
+                    boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
+                }
+                boundarybuilder.Append("]");
+                boundarybuilder.Append("}");
+                boundarybuilder.Clear();
+                boundarybuilder.Append("{\"data\":["); // prepare the json for next batch
+            }
         }
 
         static void ResetBoundary()
