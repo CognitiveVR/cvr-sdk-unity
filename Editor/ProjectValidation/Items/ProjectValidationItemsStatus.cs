@@ -90,6 +90,8 @@ namespace Cognitive3D
                 string sceneList = string.Join(", ", scenesNeedFix.Keys);
 
                 Debug.LogError(LOG_TAG + "Found unresolved issues in the following scenes: "  + sceneList);
+
+                // Popup
                 bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has found unresolved issues in the following scenes: \n" + sceneList, "Fix", "Ignore");
                 if (result)
                 {
@@ -116,6 +118,7 @@ namespace Cognitive3D
         /// </summary>
         internal static async void VerifyAllBuildScenes()
         {
+            // Popup
             bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nPress \"Yes\" to verify scenes or \"No\" to continue build process", "Yes", "No");
             if (result && EditorBuildSettings.scenes.Length != 0)
             {
