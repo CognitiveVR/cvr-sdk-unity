@@ -4,6 +4,12 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
 
+
+#if C3D_DEFAULT
+// using Unity.XR.CoreUtils;
+// using UnityEngine.XR;
+#endif
+
 namespace Cognitive3D
 {
     [InitializeOnLoad]
@@ -206,6 +212,28 @@ namespace Cognitive3D
                 );
             }
 #endif
+#if C3D_DEFAULT
+            // ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
+            // ProjectValidation.AddItem(
+            //     level: ProjectValidation.ItemLevel.Recommended, 
+            //     category: CATEGORY,
+            //     message: "Tracking origin is set to . This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
+            //     fixmessage: "Tracking origin is set to floor",
+            //     checkAction: () =>
+            //     {
+            //         if (xrorigins != null && xrorigins.Count != 0)
+            //         {
+            //             Debug.Log(xrorigins[0].CurrentTrackingOriginMode);
+            //             // return xrorigins[0].CurrentTrackingOriginMode
+            //         }
+            //         return true;
+            //     },
+            //     fixAction: () =>
+            //     {
+                    
+            //     }
+            //     );
+#endif
             // ProjectValidation.AddItem(
             //     level: ProjectValidation.ItemLevel.Recommended, 
             //     category: CATEGORY,
@@ -243,7 +271,7 @@ namespace Cognitive3D
 
         public static void UpdateProjectValidationItemStatus()
         {
-            var items = ProjectValidation.registry.GetFixedItems();
+            var items = ProjectValidation.registry.GetAllItems();
             foreach (var item in items)
             {
                 item.isFixed = item.checkAction();
