@@ -133,7 +133,7 @@ namespace Cognitive3D
                     EditorSceneManager.OpenScene(EditorBuildSettings.scenes[i].path);
 
                     // Time needed for updating project validation items in a scene
-                    await Task.Delay(2000);
+                    await Task.Delay(500);
 
                     // Check if project has not fixed items
                     if (ProjectValidation.hasNotFixedItems())

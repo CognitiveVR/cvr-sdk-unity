@@ -26,7 +26,7 @@ namespace Cognitive3D
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
         internal static async void WaitBeforeProjectValidation()
         {
-            await Task.Delay(INITIAL_DELAY_IN_SECONDS * 1000);
+            await Task.Delay(INITIAL_DELAY_IN_SECONDS * 200);
 
             AddProjectValidationItems();
             UpdateProjectValidationItemStatus();
