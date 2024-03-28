@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
 
-
 #if C3D_DEFAULT
 // using Unity.XR.CoreUtils;
 // using UnityEngine.XR;
@@ -16,7 +15,7 @@ namespace Cognitive3D
     internal class ProjectValidationItems
     {
         private const ProjectValidation.ItemCategory CATEGORY = ProjectValidation.ItemCategory.All;
-        private const int INITIAL_DELAY_IN_SECONDS = 1;
+        private const float INITIAL_DELAY_IN_SECONDS = 0.2f;
 
         static ProjectValidationItems()
         {
@@ -26,7 +25,7 @@ namespace Cognitive3D
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
         internal static async void WaitBeforeProjectValidation()
         {
-            await Task.Delay(INITIAL_DELAY_IN_SECONDS * 200);
+            await Task.Delay((int)(INITIAL_DELAY_IN_SECONDS * 1000));
 
             AddProjectValidationItems();
             UpdateProjectValidationItemStatus();
@@ -249,9 +248,6 @@ namespace Cognitive3D
             //     }
             //     );
 
-            // Items that should be added with delay
-            // await CheckItemsWithDelay();
-
             // ProjectValidation.AddItem(
             //     level: ProjectValidation.ItemLevel.Required, 
             //     category: CATEGORY,
@@ -259,6 +255,20 @@ namespace Cognitive3D
             //     fixmessage: "Scene associated with this SceneID exists on the dashboard",
             //     checkAction: () => 
             //     {
+            //         callbackComplete = false;
+            //         if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
+            //         {
+            //             string name = SceneManager.GetActiveScene().name;
+            //             Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(name);
+
+            //             if (c3dScene != null)
+            //             {
+            //                 Dictionary<string, string> headers = new Dictionary<string, string>();
+            //                 headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            //                 EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/scenes/" + c3dScene.SceneId, GetResponse, headers, true);
+            //             }
+            //         }
+
             //         Debug.Log("@@@ 2: " + successful);
             //         return successful;
             //     },
