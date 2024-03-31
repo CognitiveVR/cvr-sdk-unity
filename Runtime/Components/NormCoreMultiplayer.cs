@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Normal.Realtime;
 
@@ -8,8 +6,7 @@ namespace Cognitive3D
     public class NormCoreMultiplayer : MonoBehaviour
     {
         RealtimeAvatarManager normcoreAvatarManagerComponent;
-        public string lobbyId;
-        private float currentTime;
+        Realtime realtimeComponent;
 
         // Start is called before the first frame update
         void Start()
@@ -24,6 +21,16 @@ namespace Cognitive3D
             {
                 Util.logWarning("No Normcore RealtimeAvatarManager component found in scene.");
             }
+            realtimeComponent = FindObjectOfType<Realtime>();
+            if (realtimeComponent == null)
+            {
+                Util.logWarning("No Normcore Realtime component found in scene.");
+            }
+        }
+
+        private void Update()
+        {
+            SensorRecorder.RecordDataPoint("c3d.multiplayer.ping", realtimeComponent.ping);
         }
 
         private void OnAvatarCreated(RealtimeAvatarManager avatarManager, RealtimeAvatar avatar, bool isLocalAvatar)
@@ -47,6 +54,7 @@ namespace Cognitive3D
             new CustomEvent("c3d.multiplayer.An avatar was destroyed")
                 .SetProperty("Number of players", avatarManager.avatars.Count)
                 .Send();
+            
         }
     }
 }
