@@ -55,15 +55,14 @@ namespace Cognitive3D
                         EditorSceneManager.OpenScene(scenesNeedFix.Values.First().ToString());
                         ProjectValidationSettingsProvider.OpenSettingsWindow();
                         throwExecption = true;
-                        Clear();
-                        return;
                     }
                     else
                     {
                         isProjectVerified = false;
-                        Clear();
-                        return;
                     }
+
+                    Clear();
+                    return;
                 }
                 else
                 {
