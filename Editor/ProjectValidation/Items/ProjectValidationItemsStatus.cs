@@ -14,6 +14,7 @@ namespace Cognitive3D
         private const string LOG_TAG = "[COGNITIVE3D] ";
         static Dictionary<string, string> scenesNeedFix = new Dictionary<string, string>();
         internal static bool throwExecption;
+        internal static bool isProjectVerified;
 
         static ProjectValidationItemsStatus()
         {
@@ -27,7 +28,6 @@ namespace Cognitive3D
             return EditorSceneManager.GetActiveScene().name;
         }
 
-        // Adding scenes that has unfixed items 
         private static void OnSceneClosed(Scene scene)
         {
             AddOrUpdateSceneValidationStatus(scene);
@@ -45,9 +45,10 @@ namespace Cognitive3D
             ProjectValidationItems.WaitBeforeProjectValidation();
         }
 
+        // This function adds or updates scenes in a dictionary if they exist in the build settings and require items to be fixed
         static void AddOrUpdateSceneValidationStatus(Scene scene)
         {
-            if (ProjectValidation.hasNotFixedItems())
+            if (ProjectValidation.hasNotFixedItems() && TryGetSceneInBuildSettings(scene))
             {
                 AddOrUpdateDictionary(scenesNeedFix, GetSceneName(scene.path), scene.path);
             }
@@ -84,28 +85,37 @@ namespace Cognitive3D
         /// </summary>
         internal static void DisplayScenesWithValidationItems()
         {
-            if (scenesNeedFix != null && scenesNeedFix.Count != 0)
+            if (scenesNeedFix != null)
             {
-                // Concatenate scene names into a single string
-                string sceneList = string.Join(", ", scenesNeedFix.Keys);
-
-                Debug.LogError(LOG_TAG + "Found unresolved issues in the following scenes: "  + sceneList);
-
-                // Popup
-                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has found unresolved issues in the following scenes: \n" + sceneList, "Fix", "Ignore");
-                if (result)
+                if (scenesNeedFix.Count != 0)
                 {
-                    // Opens up the first scene in the list that needs fix
-                    EditorSceneManager.OpenScene(scenesNeedFix.Values.First().ToString());
-                    ProjectValidationSettingsProvider.OpenSettingsWindow();
-                    throwExecption = true;
-                    Clear();
-                    return;
+                    // Concatenate scene names into a single string
+                    string sceneList = string.Join(", ", scenesNeedFix.Keys);
+
+                    Util.logError("Found unresolved issues in the following scenes: "  + sceneList);
+
+                    // Popup
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has found unresolved issues in the following scenes: \n" + sceneList, "Fix", "Ignore");
+                    if (result)
+                    {
+                        // Opens up the first scene in the list that needs fix
+                        EditorSceneManager.OpenScene(scenesNeedFix.Values.First().ToString());
+                        ProjectValidationSettingsProvider.OpenSettingsWindow();
+                        throwExecption = true;
+                        Clear();
+                        return;
+                    }
+                    else
+                    {
+                        isProjectVerified = false;
+                        Clear();
+                        return;
+                    }
                 }
                 else
                 {
-                    Clear();
-                    return;
+                    Util.logDebug("No issues were found in project");
+                    isProjectVerified = true;
                 }
             }
 
@@ -133,7 +143,7 @@ namespace Cognitive3D
                     EditorSceneManager.OpenScene(EditorBuildSettings.scenes[i].path);
 
                     // Time needed for updating project validation items in a scene
-                    await Task.Delay(500);
+                    await Task.Delay(1000);
 
                     // Check if project has not fixed items
                     if (ProjectValidation.hasNotFixedItems())
@@ -181,6 +191,23 @@ namespace Cognitive3D
                 // Add a new key-value pair to the dictionary
                 dictionary.Add(key, value);
             }
+        }
+
+        /// <summary>
+        /// Iterate through all scenes in build settings to check if target scene exists
+        /// </summary>
+        /// <param name="targetScene"></param>
+        /// <returns></returns>
+        internal static bool TryGetSceneInBuildSettings(Scene targetScene)
+        {
+            foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+            {
+                if (scene.path.Contains(targetScene.name))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

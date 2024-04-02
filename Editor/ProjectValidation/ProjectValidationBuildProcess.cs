@@ -22,7 +22,7 @@ namespace Cognitive3D
             CheckCachedAppVersion();
             currentAppVer = Application.version;
 
-            if (currentAppVer != cachedAppVer)
+            if (currentAppVer != cachedAppVer && !ProjectValidationItemsStatus.isProjectVerified)
             {
                 ProjectValidationItemsStatus.VerifyAllBuildScenes();
             }
@@ -60,6 +60,7 @@ namespace Cognitive3D
         public void OnPostprocessBuild(BuildReport report)
         {
             ProjectValidationLog.UpdateLog();
+            ProjectValidationItemsStatus.isProjectVerified = false;
         }
     }
 }
