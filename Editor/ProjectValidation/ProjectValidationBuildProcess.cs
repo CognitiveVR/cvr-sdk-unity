@@ -19,7 +19,7 @@ namespace Cognitive3D
         public void OnPreprocessBuild(BuildReport report)
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
-            CheckAppVersion();
+            CheckCachedAppVersion();
             currentAppVer = Application.version;
 
             if (currentAppVer != cachedAppVer)
@@ -33,7 +33,10 @@ namespace Cognitive3D
             }
         }
 
-        public void CheckAppVersion()
+        /// <summary>
+        /// Checks and retrieves the app version stored in project validation JSON file
+        /// </summary>
+        internal void CheckCachedAppVersion()
         {
             cachedAppVer = "";
             string filePath = EditorCore.GetBaseDirectoryPath() + "/projectvalidation.json";
