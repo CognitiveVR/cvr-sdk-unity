@@ -19,8 +19,6 @@ namespace Cognitive3D
         static ProjectValidationItemsStatus()
         {
             EditorSceneManager.sceneOpened += OnSceneOpened;
-            EditorSceneManager.sceneSaved += OnSceneSaved;
-            EditorSceneManager.sceneClosed += OnSceneClosed;
         }
 
         internal static string GetCurrentSceneName()
@@ -28,56 +26,11 @@ namespace Cognitive3D
             return EditorSceneManager.GetActiveScene().name;
         }
 
-        private static void OnSceneClosed(Scene scene)
-        {
-            AddOrUpdateSceneValidationStatus(scene);
-        }
-
-        private static void OnSceneSaved(Scene scene)
-        {
-            AddOrUpdateSceneValidationStatus(scene);
-        }
-
         // Update project validation items when a new scene opens
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
             ProjectValidation.Reset();
             ProjectValidationItems.WaitBeforeProjectValidation();
-        }
-
-        // This function adds or updates scenes in a dictionary if they exist in the build settings and require items to be fixed
-        static void AddOrUpdateSceneValidationStatus(Scene scene)
-        {
-            if (ProjectValidation.hasNotFixedItems() && TryGetSceneInBuildSettings(scene))
-            {
-                AddOrUpdateDictionary(scenesNeedFix, GetSceneName(scene.path), scene.path);
-            }
-        }
-
-        /// <summary>
-        /// Displays a pop indicating current scene that require fixes
-        /// </summary>
-        /// <returns></returns>
-        internal static void VerifyCurrentSceneValidationItems()
-        {
-            if (ProjectValidation.hasNotFixedItems())
-            {
-                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has identified unresolved issues that may result in inaccurate data recording", "Fix", "Ignore");
-                if (result)
-                {
-                    ProjectValidationSettingsProvider.OpenSettingsWindow();
-                    throwExecption = true;
-                    return;
-                }
-                else
-                {
-                    throwExecption = false;
-                    return;
-                }
-            }
-
-            throwExecption = false;
-            return;
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ namespace Cognitive3D
         private string currentAppVer;
         private string cachedAppVer;
 
-        // Prompt project validation popup if app version changed
+        // Prompts a project validation popup if the project is not verified and the app version has changed
         public void OnPreprocessBuild(BuildReport report)
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
@@ -56,7 +56,7 @@ namespace Cognitive3D
     {
         public int callbackOrder { get { return 0; } }
 
-        // Update app version
+        // Updates app version and resets project verification
         public void OnPostprocessBuild(BuildReport report)
         {
             ProjectValidationLog.UpdateLog();
