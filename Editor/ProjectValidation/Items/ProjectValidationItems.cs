@@ -275,50 +275,6 @@ namespace Cognitive3D
 #endif
 
 #endif
-            // ProjectValidation.AddItem(
-            //     level: ProjectValidation.ItemLevel.Recommended, 
-            //     category: CATEGORY,
-            //     message: "No controllers/hands are added as dynamic objects",
-            //     fixmessage: "Controllers/hands are added as dynamic objects",
-            //     checkAction: () =>
-            //     {
-            //         return EditorCore.IsLeftControllerValid() && EditorCore.IsRightControllerValid();
-            //     },
-            //     fixAction: () =>
-            //     {
-            //         SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
-            //     }
-            //     );
-
-            // ProjectValidation.AddItem(
-            //     level: ProjectValidation.ItemLevel.Required, 
-            //     category: CATEGORY,
-            //     message: "No scene associated with this SceneID on the dashboard",
-            //     fixmessage: "Scene associated with this SceneID exists on the dashboard",
-            //     checkAction: () => 
-            //     {
-            //         callbackComplete = false;
-            //         if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
-            //         {
-            //             string name = SceneManager.GetActiveScene().name;
-            //             Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(name);
-
-            //             if (c3dScene != null)
-            //             {
-            //                 Dictionary<string, string> headers = new Dictionary<string, string>();
-            //                 headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-            //                 EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/scenes/" + c3dScene.SceneId, GetResponse, headers, true);
-            //             }
-            //         }
-
-            //         Debug.Log("@@@ 2: " + successful);
-            //         return successful;
-            //     },
-            //     fixAction: () =>
-            //     {
-            //         EditorCore.GetPreferences();
-            //     }
-            //     );
         }
 
         public static void UpdateProjectValidationItemStatus()
@@ -329,37 +285,5 @@ namespace Cognitive3D
                 item.isFixed = item.checkAction();
             }
         }
-
-        // private static bool successful;
-
-        // private static void GetResponse(int responseCode, string error, string text)
-        // {
-        //     if (responseCode == 200)
-        //     {
-        //         successful = true;
-        //         Debug.Log("@@@ 1: " + successful);
-        //         return;
-        //     }
-
-        //     successful = false;
-        // }
-
-        // private static async Task CheckItemsWithDelay()
-        // {
-        //     if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
-        //     {
-        //         string name = SceneManager.GetActiveScene().name;
-        //         Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(name);
-
-        //         if (c3dScene != null)
-        //         {
-        //             Dictionary<string, string> headers = new Dictionary<string, string>();
-        //             headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-        //             EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/scenes/" + c3dScene.SceneId, GetResponse, headers, true);
-        //         }
-                
-        //     }
-        //     await Task.Delay(500);
-        // }
     }
 }

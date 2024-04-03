@@ -1,6 +1,5 @@
 using UnityEditor;
 
-
 namespace Cognitive3D
 {
     internal class ProjectValidationSettingsProvider : SettingsProvider
