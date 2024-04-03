@@ -183,16 +183,14 @@ namespace Cognitive3D.Components
             SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
             if (subscriptionContextResponse != null)
             {
-                // use string instead of bool so we can check if they are actually there with isNullOrEmpty
-                // bool would just default to false
                 for (int i = 0; i < subscriptionContextResponse.data.Length; i++)
                 {
                     if (subscriptionContextResponse.data[i] != null)
                     {
                         List<KeyValuePair<string, object>> subscription = new List<KeyValuePair<string, object>>();
                         subscription.Add(new KeyValuePair<string, object>("sku", subscriptionContextResponse.data[i].sku));
-                        subscription.Add(new KeyValuePair<string, object>("is_active", StringToBool(subscriptionContextResponse.data[i].is_active)));
-                        subscription.Add(new KeyValuePair<string, object>("is_trial", StringToBool(subscriptionContextResponse.data[i].is_trial)));
+                        subscription.Add(new KeyValuePair<string, object>("is_active", subscriptionContextResponse.data[i].is_active));
+                        subscription.Add(new KeyValuePair<string, object>("is_trial", subscriptionContextResponse.data[i].is_trial));
                         subscription.Add(new KeyValuePair<string, object>("period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
                         subscription.Add(new KeyValuePair<string, object>("period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
                         subscription.Add(new KeyValuePair<string, object>("next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
@@ -236,12 +234,6 @@ namespace Cognitive3D.Components
         private long TimeStringToUnix(string timeString)
         {
             return ((DateTimeOffset) DateTime.Parse(timeString)).ToUnixTimeSeconds();
-        }
-
-        private bool StringToBool(string value)
-        {
-            if (value.ToLower() == "false") { return false; }
-            else { return true; }
         }
 
 #if C3D_OCULUS
@@ -299,13 +291,13 @@ namespace Cognitive3D.Components
             /// <summary>
             /// Set to true when a subscription is active
             /// </summary>
-            public string is_active;
+            public bool is_active;
 
             /// <summary>
             /// Set to true when the most recent subscription period is a free trial (7d, 14d, 30d). <br/>
             /// Does not indicate that the subscription itself is active.
             /// </summary>
-            public string is_trial;
+            public bool is_trial;
 
             /// <summary>
             /// Timestamp for when subscription started
