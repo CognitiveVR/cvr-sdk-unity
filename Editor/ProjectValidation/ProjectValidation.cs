@@ -82,6 +82,11 @@ namespace Cognitive3D
             return registry.GetFixedItems();
         }
 
+        internal static IEnumerable<ItemLevel> GetLevelsOfItemsNotFixed()
+        {
+            return registry.GetLevelsOfItemsNotFixed();
+        }
+
         /// <summary>
         /// Checks if current scene has <see cref="ProjectValidationItem"/>s to be fixed
         /// </summary>

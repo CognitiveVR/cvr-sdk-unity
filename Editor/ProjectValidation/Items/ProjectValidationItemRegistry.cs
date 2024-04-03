@@ -57,6 +57,11 @@ namespace Cognitive3D
             return items.Where(item => item.isFixed == true);
         }
 
+        public IEnumerable<ProjectValidation.ItemLevel> GetLevelsOfItemsNotFixed()
+        {
+            return items.Where(item => !item.isFixed).Select(item => item.level).Distinct();
+        }
+
         public bool hasNotFixedItems()
         {
             return items.Where(item => item.isFixed == false).Count() != 0 ? true : false;

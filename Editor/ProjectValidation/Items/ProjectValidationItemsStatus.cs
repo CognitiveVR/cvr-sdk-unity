@@ -12,7 +12,7 @@ namespace Cognitive3D
     internal class ProjectValidationItemsStatus
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
-        static Dictionary<string, string> scenesNeedFix = new Dictionary<string, string>();
+        static Dictionary<string, List<ProjectValidation.ItemLevel>> scenesNeedFix = new Dictionary<string, List<ProjectValidation.ItemLevel>>();
         internal static bool throwExecption;
         internal static bool isProjectVerified;
 
@@ -42,17 +42,42 @@ namespace Cognitive3D
             {
                 if (scenesNeedFix.Count != 0)
                 {
-                    // Concatenate scene names into a single string
-                    string sceneList = string.Join(", ", scenesNeedFix.Keys);
+                    // Extract just the scene names from the dictionary keys
+                    List<string> sceneNames = new List<string>();
+                    foreach (string scenePath in scenesNeedFix.Keys)
+                    {
+                        string sceneName = GetSceneName(scenePath);
+                        sceneNames.Add(sceneName);
+                    }
 
-                    Util.logError("Found unresolved issues in the following scenes: "  + sceneList);
+                    // Join the scene names with commas
+                    string allSceneNames = string.Join(", ", sceneNames);
+
+                    Util.logError("Found unresolved issues in the following scenes: "  + allSceneNames);
+
+                    List<string> sceneRequiredNames = new List<string>();
+                    List<string> sceneRecommendedNames = new List<string>();
+                    foreach (var scene in scenesNeedFix)
+                    {
+                        if (scene.Value.Contains(ProjectValidation.ItemLevel.Required))
+                        {
+                            sceneRequiredNames.Add(GetSceneName(scene.Key));
+                        }
+
+                        if (scene.Value.Contains(ProjectValidation.ItemLevel.Recommended))
+                        {
+                            sceneRecommendedNames.Add(GetSceneName(scene.Key));
+                        }
+                    }
+
+                    string sceneList = "Required tasks: \n" + string.Join(", ", sceneRequiredNames) + "\n\nRecommended tasks: \n" + string.Join(", ", sceneRecommendedNames);
 
                     // Popup
-                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Cognitive3D project validation has found unresolved issues in the following scenes: \n" + sceneList, "Fix", "Ignore");
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has detected unresolved issues! \n\n" + sceneList, "More Details", "Ignore");
                     if (result)
                     {
                         // Opens up the first scene in the list that needs fix
-                        EditorSceneManager.OpenScene(scenesNeedFix.Values.First().ToString());
+                        EditorSceneManager.OpenScene(scenesNeedFix.Keys.First().ToString());
                         ProjectValidationSettingsProvider.OpenSettingsWindow();
                         throwExecption = true;
                     }
@@ -100,7 +125,8 @@ namespace Cognitive3D
                     // Check if project has not fixed items
                     if (ProjectValidation.hasNotFixedItems())
                     {
-                        AddOrUpdateDictionary(scenesNeedFix, GetSceneName(EditorBuildSettings.scenes[i].path), EditorBuildSettings.scenes[i].path);
+                        var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
+                        AddOrUpdateDictionary(scenesNeedFix, EditorBuildSettings.scenes[i].path, sceneLevelItems);
                     }
                 }
 
