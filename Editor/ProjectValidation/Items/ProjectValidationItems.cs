@@ -4,9 +4,12 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
 
-#if C3D_DEFAULT
-// using Unity.XR.CoreUtils;
-// using UnityEngine.XR;
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+using Unity.XR.CoreUtils;
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+using UnityEditor.XR.LegacyInputHelpers;
 #endif
 
 namespace Cognitive3D
@@ -212,26 +215,65 @@ namespace Cognitive3D
             }
 #endif
 #if C3D_DEFAULT
-            // ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
-            // ProjectValidation.AddItem(
-            //     level: ProjectValidation.ItemLevel.Recommended, 
-            //     category: CATEGORY,
-            //     message: "Tracking origin is set to . This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
-            //     fixmessage: "Tracking origin is set to floor",
-            //     checkAction: () =>
-            //     {
-            //         if (xrorigins != null && xrorigins.Count != 0)
-            //         {
-            //             Debug.Log(xrorigins[0].CurrentTrackingOriginMode);
-            //             // return xrorigins[0].CurrentTrackingOriginMode
-            //         }
-            //         return true;
-            //     },
-            //     fixAction: () =>
-            //     {
-                    
-            //     }
-            //     );
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+            ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
+
+            if (xrorigins != null && xrorigins.Count != 0)
+            {
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended, 
+                    category: CATEGORY,
+                    message: "Tracking origin is set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
+                    fixmessage: "Tracking origin is set to floor",
+                    checkAction: () =>
+                    {
+                        if (xrorigins != null && xrorigins.Count != 0)
+                        {
+                            if (xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor || xrorigins[0].CurrentTrackingOriginMode != UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                            {
+                                return false;
+                            }
+                            return true;
+                        }
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                    }
+                );
+            } 
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+            ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
+
+            if (cameraOffset != null && cameraOffset.Count != 0)
+            {
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended, 
+                    category: CATEGORY,
+                    message: "Tracking origin is set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
+                    fixmessage: "Tracking origin is set to floor",
+                    checkAction: () =>
+                    {
+                        if (cameraOffset[0].TrackingOriginMode != UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
+                        {
+                            return false;
+                        }
+
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        cameraOffset[0].TrackingOriginMode = UnityEngine.XR.TrackingOriginModeFlags.Floor;
+                        cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                    }
+                );
+            }
+#endif
+
 #endif
             // ProjectValidation.AddItem(
             //     level: ProjectValidation.ItemLevel.Recommended, 
