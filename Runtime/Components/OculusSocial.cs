@@ -191,8 +191,8 @@ namespace Cognitive3D.Components
                     {
                         List<KeyValuePair<string, object>> subscription = new List<KeyValuePair<string, object>>();
                         subscription.Add(new KeyValuePair<string, object>("sku", subscriptionContextResponse.data[i].sku));
-                        subscription.Add(new KeyValuePair<string, object>("is_active", subscriptionContextResponse.data[i].is_active));
-                        subscription.Add(new KeyValuePair<string, object>("is_trial", subscriptionContextResponse.data[i].is_trial));
+                        subscription.Add(new KeyValuePair<string, object>("is_active", StringToBool(subscriptionContextResponse.data[i].is_active)));
+                        subscription.Add(new KeyValuePair<string, object>("is_trial", StringToBool(subscriptionContextResponse.data[i].is_trial)));
                         subscription.Add(new KeyValuePair<string, object>("period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
                         subscription.Add(new KeyValuePair<string, object>("period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
                         subscription.Add(new KeyValuePair<string, object>("next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
@@ -238,7 +238,13 @@ namespace Cognitive3D.Components
             return ((DateTimeOffset) DateTime.Parse(timeString)).ToUnixTimeSeconds();
         }
 
+        private bool StringToBool(string value)
+        {
+            if (value.ToLower() == "false") { return false; }
+            else { return true; }
+        }
 
+#if C3D_OCULUS
         public override string GetDescription()
         {
             return "Set a property for the user's Oculus ID and display name";

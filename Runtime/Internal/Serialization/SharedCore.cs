@@ -1463,7 +1463,18 @@ namespace Cognitive3D.Serialization
                     List<KeyValuePair <string, object>> thisSubscription = metaSubscriptionDetails[i];
                     foreach (var kvp in thisSubscription)
                     {
-                        JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
+                        if (kvp.Value.GetType() == typeof(string))
+                        {
+                            JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
+                        }
+                        else if (kvp.Value.GetType() == typeof(long))
+                        {
+                            JsonUtil.SetLong(kvp.Key, (long)kvp.Value, gazebuilder);
+                        }
+                        else
+                        {
+                            JsonUtil.SetObject(kvp.Key, kvp.Value, gazebuilder);
+                        }
                         gazebuilder.Append(",");
                     }
                     gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
