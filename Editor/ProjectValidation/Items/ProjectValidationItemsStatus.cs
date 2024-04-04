@@ -69,10 +69,13 @@ namespace Cognitive3D
                         }
                     }
 
-                    string sceneList = "Required tasks: \n" + string.Join(", ", sceneRequiredNames) + "\n\nRecommended tasks: \n" + string.Join(", ", sceneRecommendedNames);
+                    string sceneList = "";
+
+                    sceneList += sceneRequiredNames?.Count > 0 ? $"\nRequired tasks:\n{string.Join(", ", sceneRequiredNames)}\n" : "";
+                    sceneList += sceneRecommendedNames?.Count > 0 ? $"\nRecommended tasks:\n{string.Join(", ", sceneRecommendedNames)}\n" : "";
 
                     // Popup
-                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has detected unresolved issues! \n\n" + sceneList, "More Details", "Ignore");
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has detected unresolved issues! \n" + sceneList, "More Details", "Ignore");
                     if (result)
                     {
                         // Opens up the first scene in the list that needs fix
