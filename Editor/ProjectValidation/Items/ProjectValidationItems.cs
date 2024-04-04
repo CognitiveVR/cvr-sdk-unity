@@ -219,10 +219,10 @@ namespace Cognitive3D
                     }
 
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
-                    ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocialAdded);
-                    if (oculusSocialAdded != null && oculusSocialAdded.Count != 0)
+                    ProjectValidation.FindComponentInActiveScene<OculusSocial>(out oculusSocial);
+                    if (oculusSocial != null && oculusSocial.Count != 0)
                     {
-                        oculusSocialAdded[0].SetRecordOculusUserData(true);
+                        oculusSocial[0].SetRecordOculusUserData(true);
                     }
                 }
             );
