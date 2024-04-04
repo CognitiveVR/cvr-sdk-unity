@@ -161,7 +161,7 @@ namespace Cognitive3D
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
                 }
-                );
+            );
 
             OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
             ProjectValidation.AddItem(
@@ -195,9 +195,6 @@ namespace Cognitive3D
                 }
             );
 
-            ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocial);
-            if (oculusSocial != null && oculusSocial.Count != 0)
-            {
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
@@ -205,14 +202,30 @@ namespace Cognitive3D
                 fixmessage: "Recording Oculus user data like username, id, and display name is enabled",
                 checkAction: () =>
                 {
-                    return oculusSocial[0].GetRecordOculusUserData();
+                    ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocial);
+                    if (oculusSocial != null && oculusSocial.Count != 0)
+                    {
+                        return oculusSocial[0].GetRecordOculusUserData();
+                    }
+                    return false;
                 },
                 fixAction: () =>
                 {
-                    oculusSocial[0].SetRecordOculusUserData(true);
+                    ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocial);
+                    if (oculusSocial != null && oculusSocial.Count != 0)
+                    {
+                        oculusSocial[0].SetRecordOculusUserData(true);
+                        return;
+                    }
+
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
+                    ProjectValidation.FindComponentInActiveScene<OculusSocial>(out var oculusSocialAdded);
+                    if (oculusSocialAdded != null && oculusSocialAdded.Count != 0)
+                    {
+                        oculusSocialAdded[0].SetRecordOculusUserData(true);
+                    }
                 }
-                );
-            }
+            );
 #endif
 #if C3D_DEFAULT
 

@@ -108,6 +108,8 @@ namespace Cognitive3D
             // Saving changes made in the current scene to reflect fixes
             Scene currentScene = SceneManager.GetActiveScene();
             EditorSceneManager.SaveScene(currentScene);
+
+            ProjectValidationItems.UpdateProjectValidationItemStatus();
         }
 
         /// <summary>
