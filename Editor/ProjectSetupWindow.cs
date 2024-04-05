@@ -64,15 +64,7 @@ namespace Cognitive3D
             PhotonMultiplayerSetup,
             DynamicSetup,
         }
-        internal static Page _currentPage;
-        public static Page currentPage {
-            get {
-                return _currentPage;
-            }
-            internal set {
-                _currentPage = value;
-            }
-        }
+        internal static Page currentPage;
 
         int lastDevKeyResponseCode;
         bool isResponseJsonValid = true;

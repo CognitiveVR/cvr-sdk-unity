@@ -15,7 +15,7 @@ using UnityEditor.XR.LegacyInputHelpers;
 namespace Cognitive3D
 {
     [InitializeOnLoad]
-    internal class ProjectValidationItems
+    internal static class ProjectValidationItems
     {
         private const ProjectValidation.ItemCategory CATEGORY = ProjectValidation.ItemCategory.All;
         private const float INITIAL_DELAY_IN_SECONDS = 0.2f;

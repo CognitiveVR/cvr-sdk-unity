@@ -2,11 +2,11 @@ using UnityEditor;
 
 namespace Cognitive3D
 {
-    internal class ProjectValidationSettingsProvider : SettingsProvider
+    public class ProjectValidationSettingsProvider : SettingsProvider
     {
         private const string title = "Cognitive3D";
         public static readonly string SettingsPath = $"Project/{title}";
-        private ProjectValidationGUI projectValidationGUI = new ProjectValidationGUI();
+        private readonly ProjectValidationGUI projectValidationGUI = new ProjectValidationGUI();
 
         private ProjectValidationSettingsProvider(string path, SettingsScope scopes) : base(path, scopes)
         {

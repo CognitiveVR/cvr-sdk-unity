@@ -843,24 +843,8 @@ namespace Cognitive3D
             return "unknown";
         }
 
-        internal static GameObject _leftController;
-        public static GameObject leftController {
-            get {
-                return _leftController;
-            }
-            internal set {
-                _leftController = value;
-            }
-        }
-        internal static GameObject _rightController;
-        public static GameObject rightController {
-            get {
-                return _rightController;
-            }
-            internal set {
-                _rightController = value;
-            }
-        }
+        internal static GameObject leftController;
+        internal static GameObject rightController;
 
         /// <summary>
         /// Sets controllers from Scene Setup window
