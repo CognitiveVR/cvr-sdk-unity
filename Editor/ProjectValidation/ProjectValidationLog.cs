@@ -5,7 +5,7 @@ namespace Cognitive3D
 {
     internal class ProjectValidationLog : MonoBehaviour
     {
-        internal static string filePath = System.IO.Path.GetDirectoryName(Application.dataPath) + "/Cognitive3D_ProjectValidation.json";
+        internal static readonly string FILEPATH = System.IO.Path.GetDirectoryName(Application.dataPath) + "/Cognitive3D_ProjectValidation.json";
 
         /// <summary>
         /// Stores and writes essential data for project validation into JSON file
@@ -17,7 +17,7 @@ namespace Cognitive3D
 
             string json = JsonUtility.ToJson(pvj);
 
-            File.WriteAllText(filePath, json);
+            File.WriteAllText(FILEPATH, json);
         }
     }
 

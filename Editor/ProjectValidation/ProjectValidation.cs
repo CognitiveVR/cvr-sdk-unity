@@ -23,7 +23,7 @@ namespace Cognitive3D
             All = 0,
         }
 
-        internal static ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();
+        internal static readonly ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();
 
         /// <summary>
         /// Add an <see cref="ProjectValidationItem"/> to project validation checklist items

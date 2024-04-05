@@ -11,16 +11,15 @@ namespace Cognitive3D
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
         public int callbackOrder { get { return 0; } }
-
-        private string currentAppVer;
-        private string cachedAppVer;
+        
+        string cachedAppVer;
 
         // Prompts a project validation popup if the project is not verified and the app version has changed
         public void OnPreprocessBuild(BuildReport report)
         {
             ProjectValidationItems.UpdateProjectValidationItemStatus();
             CheckCachedAppVersion();
-            currentAppVer = Application.version;
+            string currentAppVer = Application.version;
 
             if (currentAppVer != cachedAppVer && !ProjectValidationItemsStatus.isProjectVerified)
             {
@@ -39,7 +38,7 @@ namespace Cognitive3D
         internal void CheckCachedAppVersion()
         {
             cachedAppVer = "";
-            string filePath = ProjectValidationLog.filePath;
+            string filePath = ProjectValidationLog.FILEPATH;
 
             if (File.Exists(filePath))
             {
