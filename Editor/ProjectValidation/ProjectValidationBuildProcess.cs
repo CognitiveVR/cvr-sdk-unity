@@ -39,7 +39,7 @@ namespace Cognitive3D
         internal void CheckCachedAppVersion()
         {
             cachedAppVer = "";
-            string filePath = EditorCore.GetBaseDirectoryPath() + "/projectvalidation.json";
+            string filePath = ProjectValidationLog.filePath;
 
             if (File.Exists(filePath))
             {
