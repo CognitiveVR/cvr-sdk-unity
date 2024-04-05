@@ -133,7 +133,16 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        internal static Page currentPage;
+        private static Page _currentPage;
+        public static Page currentPage {
+            get {
+                return _currentPage;
+            }
+            internal set {
+                _currentPage = value;
+            }
+        }
+        
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;

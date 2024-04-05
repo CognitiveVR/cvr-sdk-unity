@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Cognitive3D
 {
     [InitializeOnLoad]
-    internal class ProjectValidationItemsStatus
+    internal static class ProjectValidationItemsStatus
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
         static Dictionary<string, List<ProjectValidation.ItemLevel>> scenesNeedFix = new Dictionary<string, List<ProjectValidation.ItemLevel>>();
