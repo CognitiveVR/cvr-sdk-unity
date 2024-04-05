@@ -41,7 +41,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "No Cognitive3D player definition is found",
+                message: "No Cognitive3D player definition is found. Select an SDK to support specific features.",
                 fixmessage: "Cognitive3D player definition is added",
                 checkAction: () =>
                 {
@@ -56,7 +56,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Tracking space is not configured",
+                message: "Tracking space is not configured. Set up tracking space?",
                 fixmessage: "Tracking space is configured",
                 checkAction: () =>
                 {
@@ -71,7 +71,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Application key is not valid",
+                message: "Application key is not valid. Re-enter application key.",
                 fixmessage: "Valid application key is found",
                 checkAction: () =>
                 {
@@ -86,7 +86,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "No Cognitive3D manager is found in current scene",
+                message: "No Cognitive3D manager is found. Add Cognitive3D_Manager prefab to current scene?",
                 fixmessage: "Cognitive3D manager exists in current scene",
                 checkAction: () =>
                 {
@@ -102,7 +102,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "No Cognitive3D preferences file is found in project folder",
+                message: "No Cognitive3D preferences file is found in project folder. Create an instance in Assets/Resources?",
                 fixmessage: "Cognitive3D preferences file created in project folder",
                 checkAction: () =>
                 {
@@ -117,7 +117,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Current scene is not found in Cognitive3D preferences",
+                message: "Current scene is not found in Cognitive3D preferences. Please upload current scene.",
                 fixmessage: "Current scene is found in Cognitive3D preferences",
                 checkAction: () =>
                 {
@@ -133,7 +133,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Current scene has no scene ID",
+                message: "Current scene has no ID. Please re-upload current scene if has not been uploaded.",
                 fixmessage: "Current scene has scene ID",
                 checkAction: () =>
                 {
@@ -151,7 +151,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
-                message: "Oculus social is not enabled",
+                message: "Oculus social is not enabled. Add Oculus social component?",
                 fixmessage: "Oculus social is enabled",
                 checkAction: () =>
                 {
@@ -198,7 +198,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
-                message: "Recording Oculus user data like username, id, and display name is disabled",
+                message: "Recording Oculus user data like username, id, and display name is disabled. Enable recording Oculus User Data?",
                 fixmessage: "Recording Oculus user data like username, id, and display name is enabled",
                 checkAction: () =>
                 {
@@ -237,7 +237,7 @@ namespace Cognitive3D
                 ProjectValidation.AddItem(
                     level: ProjectValidation.ItemLevel.Recommended, 
                     category: CATEGORY,
-                    message: "Tracking origin is set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
+                    message: "Tracking origin is not set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
