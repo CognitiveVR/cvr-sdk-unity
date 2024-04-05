@@ -13,7 +13,16 @@ namespace Cognitive3D
         private const string LOG_TAG = "[COGNITIVE3D] ";
         static Dictionary<string, List<ProjectValidation.ItemLevel>> scenesNeedFix = new Dictionary<string, List<ProjectValidation.ItemLevel>>();
         internal static bool throwExecption;
-        internal static bool isProjectVerified;
+
+        private static bool _isProjectVerified;
+        public static bool isProjectVerified {
+            get {
+                return _isProjectVerified;
+            }
+            internal set {
+                _isProjectVerified = value;
+            }
+        }
 
         static ProjectValidationItemsStatus()
         {
