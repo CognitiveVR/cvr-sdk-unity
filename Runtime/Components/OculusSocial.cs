@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 #if C3D_OCULUS
 using Oculus.Platform;
@@ -26,12 +27,51 @@ namespace Cognitive3D.Components
             RecordOculusUserData = value;
         }
 #endif
+        public enum InitializeType
+        {
+            Automatic,
+            Delayed,
+            Manual
+        }
+        [Tooltip("The behaviour to handle getting user data from the Oculus Platform.\n- Automatic will Initialize the platform with the current Platform.AppID.\n- Delayed will wait until you've checked Entitlement yourself.\n- Manual requires calling the code to record these session properties.")]
+        public InitializeType initializeType = InitializeType.Automatic;
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-#if C3D_OCULUS
+
+            if (initializeType == InitializeType.Automatic)
+            {
+                string appID = GetAppIDFromConfig();
+                BeginOculusEntitlementCheck(appID);
+            }
+            else if (initializeType == InitializeType.Delayed)
+            {
+                //the developer is doing their own entitlement elsewhere, wait until that completes
+                StartCoroutine(WaitForInitialize());
+            }
+            else if (initializeType == InitializeType.Manual)
+            {
+                //call this code when you've initialized everything:
+                //var oculusSocial = FindObjectOfType<Cognitive3D.Components.OculusSocial>();
+                //if (oculusSocial != null) {oculusSocial.BeginOculusEntitlementCheck(Cognitive3D.Components.OculusSocial.GetAppIDFromConfig());}
+            }
+        }
+
+        IEnumerator WaitForInitialize()
+        {
+            yield return new WaitUntil(Core.IsInitialized);
             string appID = GetAppIDFromConfig();
+            BeginOculusEntitlementCheck(appID);
+        }
+
+        /// <summary>
+        /// Completes the entitlement check and callbacks if check is successful
+        /// Should be called within first 10 seconds of launching app
+        /// </summary>
+        /// <param name="appID"> The Oculus AppID found in your Oculus dev dashboard </param>
+        public void BeginOculusEntitlementCheck(string appID)
+        {
             if (!Core.IsInitialized())
             {
                 // Initialize will throw error if appid is invalid/missing
@@ -54,10 +94,7 @@ namespace Cognitive3D.Components
             {
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
             }
-#endif
         }
-
-#if C3D_OCULUS
 
         private static string GetAppIDFromConfig()
         {
@@ -89,9 +126,7 @@ namespace Cognitive3D.Components
                 Users.GetLoggedInUser().OnComplete(UserCallback);
             }
         }
-#endif
 
-#if C3D_OCULUS
         /// <summary>
         /// Callback for getting details on the logged in user
         /// </summary>
@@ -120,9 +155,6 @@ namespace Cognitive3D.Components
             }
         }
 
-#endif
-
-#if C3D_OCULUS
         /// <summary>
         /// Callback to get the display name
         /// apparently a second request is required
@@ -143,19 +175,10 @@ namespace Cognitive3D.Components
                 }
             }
         }
-#endif
 
-        /// <summary>
-        /// Description to display in inspector
-        /// </summary>
-        /// <returns> A string representing the description </returns>
         public override string GetDescription()
         {
-#if C3D_OCULUS
-            return "Set a property for the user's oculus id and display name";
-#else
-            return "Oculus Social properties can only be accessed when using the Oculus Platform";
-#endif
+            return "Set a property for the user's Oculus ID and display name";
         }
 
         /// <summary>
@@ -163,11 +186,27 @@ namespace Cognitive3D.Components
         /// </summary>
         public override bool GetWarning()
         {
-#if C3D_OCULUS
             return false;
-#else
-            return true;
-#endif
         }
+
+#else //not C3D_OCULUS
+
+        /// <summary>
+        /// Description to display in inspector
+        /// </summary>
+        /// <returns> A string representing the description </returns>
+        public override string GetDescription()
+        {
+            return "Oculus Social properties can only be accessed when using the Oculus Platform";
+        }
+
+        /// <summary>
+        /// Warning for incompatible platform to display on inspector
+        /// </summary>
+        public override bool GetWarning()
+        {
+            return true;
+        }
+#endif
     }
 }
