@@ -12,7 +12,7 @@ namespace Cognitive3D
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
         static Dictionary<string, List<ProjectValidation.ItemLevel>> scenesNeedFix = new Dictionary<string, List<ProjectValidation.ItemLevel>>();
-        internal static bool _throwExecption;
+        private static bool _throwExecption;
         public static bool throwExecption {
             get {
                 return _throwExecption;
