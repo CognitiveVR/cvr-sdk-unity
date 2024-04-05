@@ -26,7 +26,7 @@ namespace Cognitive3D.Components
         {
             RecordOculusUserData = value;
         }
-#endif
+        
         public enum InitializeType
         {
             Automatic,
