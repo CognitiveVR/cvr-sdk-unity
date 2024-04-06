@@ -205,8 +205,8 @@ namespace Cognitive3D
                     if (!sceneList.Contains(scene))
                     {
                         sceneList.Insert(0, scene);
-                    } 
-                    SetTrackingScene(cogscene.SceneName);
+                    }
+                    SetTrackingSceneByPath(cogscene.ScenePath);
                     break;
                 }
             }
@@ -425,8 +425,8 @@ namespace Cognitive3D
         // This is not called for first loaded scene
         private void SceneManager_SceneLoaded(Scene loadingScene, LoadSceneMode mode)
         {
-            SendSceneLoadEvent(loadingScene.name, mode);
-            bool loadingSceneHasSceneId = TryGetSceneData(loadingScene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
+            SendSceneLoadEvent(loadingScene.path, loadingScene.path, mode);
+            bool loadingSceneHasSceneId = TryGetSceneDataByPath(loadingScene.path, out Cognitive3D_Preferences.SceneSettings c3dscene);
 
             //SceneManager is clearing all scenes, also clear our stack of SceneIds
             if (mode == LoadSceneMode.Single)
@@ -444,7 +444,7 @@ namespace Cognitive3D
             if (loadingSceneHasSceneId)
             {
                 sceneList.Insert(0, loadingScene);
-                SetTrackingScene(loadingScene.name);
+                SetTrackingSceneByPath(loadingScene.path);
             }
 
             InvokeLevelLoadedEvent(loadingScene, mode, loadingSceneHasSceneId);
@@ -457,7 +457,7 @@ namespace Cognitive3D
         // This is not called for last unloaded scene
         private void SceneManager_SceneUnloaded(Scene unloadingScene)
         {
-            SendSceneUnloadEvent(unloadingScene.name);
+            SendSceneUnloadEvent(unloadingScene.name, unloadingScene.path);
 
             // Flush recorded data when scene unloads
             if (TrackingScene != null)
@@ -467,12 +467,12 @@ namespace Cognitive3D
             ForceWriteSessionMetadata = true;
 
             // If a scene unloads (useful in additive cases), the scene will be removed from dictionary
-            if (SceneStartTimeDict.ContainsKey(unloadingScene.name))
+            if (SceneStartTimeDict.ContainsKey(unloadingScene.path))
             {
-                SceneStartTimeDict.Remove(unloadingScene.name);
+                SceneStartTimeDict.Remove(unloadingScene.path);
             }
 
-            bool unloadingSceneHasSceneId = TryGetSceneData(unloadingScene.name, out Cognitive3D_Preferences.SceneSettings c3dscene);
+            bool unloadingSceneHasSceneId = TryGetSceneDataByPath(unloadingScene.path, out Cognitive3D_Preferences.SceneSettings c3dscene);
             if (unloadingSceneHasSceneId)
             {
                 int index = sceneList.IndexOf(unloadingScene);
@@ -494,7 +494,7 @@ namespace Cognitive3D
             //use the top scene from the scene list
             if (sceneList.Count > 0)
             {
-                SetTrackingScene(sceneList[0].name);
+                SetTrackingSceneByPath(sceneList[0].path);
             }
             else
             {
@@ -505,17 +505,17 @@ namespace Cognitive3D
         /// <summary>
         /// Sends load scene events when a new scene is loaded
         /// </summary>
-        private void SendSceneLoadEvent(string sceneName, LoadSceneMode mode)
+        private void SendSceneLoadEvent(string sceneName, string scenePath, LoadSceneMode mode)
         {
             if (IsInitialized)
             {
-                if (sceneName != null)
+                if (!string.IsNullOrEmpty(scenePath))
                 {
-                    if (!SceneStartTimeDict.ContainsKey(sceneName))
+                    if (!SceneStartTimeDict.ContainsKey(scenePath))
                     {
-                        SceneStartTimeDict.Add(sceneName, Time.time);
+                        SceneStartTimeDict.Add(scenePath, Time.time);
                     }
-                    if (TryGetSceneData(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
+                    if (TryGetSceneDataByPath(scenePath, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
                         new CustomEvent("c3d.SceneLoad")
                             .SetProperty("Scene Load Mode", mode)
@@ -537,15 +537,15 @@ namespace Cognitive3D
         /// <summary>
         /// Sends unload scene events when a scene is unloaded
         /// </summary>
-        private void SendSceneUnloadEvent(string sceneName)
+        private void SendSceneUnloadEvent(string sceneName, string scenePath)
         {
             if (IsInitialized)
             {
-                if (sceneName != null)
+                if (!string.IsNullOrEmpty(scenePath))
                 {
-                    SceneStartTimeDict.TryGetValue(sceneName, out float sceneTime);
+                    SceneStartTimeDict.TryGetValue(scenePath, out float sceneTime);
                     float duration = Time.time - sceneTime;
-                    if (TryGetSceneData(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
+                    if (TryGetSceneDataByPath(scenePath, out Cognitive3D_Preferences.SceneSettings c3dscene))
                     {
                         new CustomEvent("c3d.SceneUnload")
                             .SetProperty("Scene Duration", duration)
@@ -567,9 +567,20 @@ namespace Cognitive3D
         /// <summary>
         /// Checks if scene exists in Cognitive3D scene settings and has an ID
         /// </summary>
+        [Obsolete]
         public static bool TryGetSceneData(string sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene)
         {
             c3dscene = Cognitive3D_Preferences.FindScene(sceneName);
+            if (c3dscene != null && !string.IsNullOrEmpty(c3dscene.SceneId))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static bool TryGetSceneDataByPath(string scenePath, out Cognitive3D_Preferences.SceneSettings c3dscene)
+        {
+            c3dscene = Cognitive3D_Preferences.FindSceneByPath(scenePath);
             if (c3dscene != null && !string.IsNullOrEmpty(c3dscene.SceneId))
             {
                 return true;
@@ -876,7 +887,7 @@ namespace Cognitive3D
         public static Cognitive3D_Preferences.SceneSettings TrackingScene { get; private set; }
         /// <summary>
         /// Records the start time of every scene loaded, not just C3D scenes
-        /// key: scene name
+        /// key: scene path
         /// value: timestamp when scene loaded
         /// </summary>
         private static Dictionary<string,float> SceneStartTimeDict = new Dictionary<string, float>();
@@ -886,11 +897,27 @@ namespace Cognitive3D
         /// Sets the C3D scene to record session data to, searched by scene name string
         /// </summary>
         /// <param name="scene"></param>
+        [Obsolete]
         public static void SetTrackingScene(string sceneName)
         {
             if (IsInitialized)
             {
                 if (TryGetSceneData(sceneName, out Cognitive3D_Preferences.SceneSettings c3dscene))
+                {
+                    TrackingScene = c3dscene;
+                }
+            }
+            else
+            {
+                Util.logWarning("Trying to set scene without a session!");
+            }
+        }
+
+        public static void SetTrackingSceneByPath(string scenePath)
+        {
+            if (IsInitialized)
+            {
+                if (TryGetSceneDataByPath(scenePath, out Cognitive3D_Preferences.SceneSettings c3dscene))
                 {
                     TrackingScene = c3dscene;
                 }
