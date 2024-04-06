@@ -23,6 +23,7 @@ namespace Cognitive3D
         static bool wantPassthroughEnabled;
         static bool wantSocialEnabled;
         static bool wantHandTrackingEnabled;
+        static bool wantHandSceneApiEnabled;
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
@@ -61,6 +62,7 @@ namespace Cognitive3D
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
                 wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+                wantHandSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<SceneAPI>();
             }
 #endif
         }
@@ -767,7 +769,7 @@ namespace Cognitive3D
             // Hand Tracking
             GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
             Rect infoRect4 = new Rect(320, 280, 30, 30);
-            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings ."), "image_centered");
+            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings."), "image_centered");
 
             Rect checkboxRect4 = new Rect(105, 280, 30, 30);
             if (wantHandTrackingEnabled)
@@ -782,6 +784,27 @@ namespace Cognitive3D
                 if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
                 {
                     wantHandTrackingEnabled = true;
+                }
+            }
+
+            // Scene API
+            GUI.Label(new Rect(140, 335, 440, 440), "Quest 3 Scene API", "normallabel");
+            Rect infoRect5 = new Rect(320, 330, 30, 30);
+            GUI.Label(infoRect5, new GUIContent(EditorCore.Info, "Collects dimensions of the room the participant is in."), "image_centered");
+
+            Rect checkboxRect5 = new Rect(105, 330, 30, 30);
+            if (wantHandSceneApiEnabled)
+            {
+                if (GUI.Button(checkboxRect5, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantHandSceneApiEnabled = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect5, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantHandSceneApiEnabled = true;
                 }
             }
 
@@ -850,6 +873,42 @@ namespace Cognitive3D
                 if (hand != null)
                 {
                     DestroyImmediate(hand);
+                }
+            }
+            if (wantHandSceneApiEnabled)
+            {
+                var sceneApi = FindObjectOfType<SceneAPI>();
+                if (sceneApi == null)
+                {
+                    var sceneManagerFound = FindObjectOfType<OVRSceneManager>();
+                    if (sceneManagerFound == null)
+                    {
+                        GameObject sceneManager = new GameObject("Cognitive3D_OVRSceneManager");
+                        sceneManager.AddComponent<OVRSceneModelLoader>();
+                        var sceneManagerComponent = sceneManager.AddComponent<OVRSceneManager>();
+                        if (sceneManagerComponent.PlanePrefab == null)
+                        {
+                            GameObject planePrefab = new GameObject("Cognitive3D_PlanePrefab");
+                            planePrefab.AddComponent<OVRSceneAnchor>();
+                            sceneManagerComponent.PlanePrefab = planePrefab.GetComponent<OVRSceneAnchor>();
+                        }
+                        if (sceneManagerComponent.VolumePrefab == null)
+                        {
+                            GameObject volumePrefab = new GameObject("Cognitive3D_VolumePrefab");
+                            volumePrefab.AddComponent<OVRSceneAnchor>();
+                            sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
+                        }
+
+                    }
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<SceneAPI>();
+                }
+            }
+            else
+            {
+                var sceneApi = FindObjectOfType<SceneAPI>();
+                if (sceneApi != null)
+                {
+                    DestroyImmediate(sceneApi);
                 }
             }
 
