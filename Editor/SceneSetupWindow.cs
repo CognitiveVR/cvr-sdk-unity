@@ -679,6 +679,7 @@ namespace Cognitive3D
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
+                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
             if (right != null)
             {
@@ -687,6 +688,7 @@ namespace Cognitive3D
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
+                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
         }
 
