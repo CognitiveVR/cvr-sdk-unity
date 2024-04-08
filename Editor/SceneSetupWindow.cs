@@ -886,13 +886,20 @@ namespace Cognitive3D
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<SceneAPI>();
                 }
-                GameObject sceneManager = FindObjectOfType<OVRSceneManager>().gameObject;
+                GameObject sceneManager = FindObjectOfType<OVRSceneManager>()?.gameObject;
                 if (sceneManager == null)
                 {
                     sceneManager = new GameObject(SCENE_MANAGER_NAME);
                     sceneManager.AddComponent<OVRSceneModelLoader>();
                 }
-                var sceneManagerComponent = sceneManager.AddComponent<OVRSceneManager>();
+                
+                // OVRSceneModelLoader requires OVRSceneManager so that will automatically add it
+                // We have this to future prrof this in case that changes
+                var sceneManagerComponent = sceneManager.GetComponent<OVRSceneManager>();
+                if (sceneManagerComponent == null) 
+                {
+                    sceneManager.AddComponent<OVRSceneManager>();
+                }
                 if (sceneManagerComponent.PlanePrefab == null)
                 {
                     GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);

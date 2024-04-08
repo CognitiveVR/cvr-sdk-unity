@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [DisallowMultipleComponent]
     public class SceneAPI : AnalyticsComponentBase
     {
 #if C3D_OCULUS
