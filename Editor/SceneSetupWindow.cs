@@ -24,6 +24,10 @@ namespace Cognitive3D
         static bool wantSocialEnabled;
         static bool wantHandTrackingEnabled;
         static bool wantHandSceneApiEnabled;
+
+        const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
+        const string SCENE_PLANE_PREFAB_NAME = "Cognitive3D_PlanePrefab";
+        const string SCENE_VOLUME_PREFAB_NAME = "Cognitive3D_VolumePrefab";
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
@@ -883,22 +887,31 @@ namespace Cognitive3D
                     var sceneManagerFound = FindObjectOfType<OVRSceneManager>();
                     if (sceneManagerFound == null)
                     {
-                        GameObject sceneManager = new GameObject("Cognitive3D_OVRSceneManager");
+                        GameObject sceneManager = new GameObject(SCENE_MANAGER_NAME);
                         sceneManager.AddComponent<OVRSceneModelLoader>();
                         var sceneManagerComponent = sceneManager.AddComponent<OVRSceneManager>();
                         if (sceneManagerComponent.PlanePrefab == null)
                         {
-                            GameObject planePrefab = new GameObject("Cognitive3D_PlanePrefab");
+                            GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                            if (planePrefab == null)
+                            {
+                                planePrefab = new GameObject(SCENE_PLANE_PREFAB_NAME);
+                            }
+                            // OVRSceneAnchor already has [DisallowMultipleComponent]
                             planePrefab.AddComponent<OVRSceneAnchor>();
                             sceneManagerComponent.PlanePrefab = planePrefab.GetComponent<OVRSceneAnchor>();
                         }
                         if (sceneManagerComponent.VolumePrefab == null)
                         {
-                            GameObject volumePrefab = new GameObject("Cognitive3D_VolumePrefab");
+                            GameObject volumePrefab = GameObject.Find (SCENE_VOLUME_PREFAB_NAME);
+                            if (volumePrefab == null)
+                            {
+                                volumePrefab = new GameObject(SCENE_VOLUME_PREFAB_NAME);
+                            }
+                            // OVRSceneAnchor already has [DisallowMultipleComponent]
                             volumePrefab.AddComponent<OVRSceneAnchor>();
                             sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
                         }
-
                     }
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<SceneAPI>();
                 }
