@@ -23,7 +23,7 @@ namespace Cognitive3D
         static bool wantPassthroughEnabled;
         static bool wantSocialEnabled;
         static bool wantHandTrackingEnabled;
-        static bool wantHandSceneApiEnabled;
+        static bool wantSceneApiEnabled;
 
         const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
         const string SCENE_PLANE_PREFAB_NAME = "Cognitive3D_PlanePrefab";
@@ -66,7 +66,7 @@ namespace Cognitive3D
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
                 wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
-                wantHandSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<SceneAPI>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<SceneAPI>();
             }
 #endif
         }
@@ -797,18 +797,18 @@ namespace Cognitive3D
             GUI.Label(infoRect5, new GUIContent(EditorCore.Info, "Collects dimensions of the room the participant is in."), "image_centered");
 
             Rect checkboxRect5 = new Rect(105, 330, 30, 30);
-            if (wantHandSceneApiEnabled)
+            if (wantSceneApiEnabled)
             {
                 if (GUI.Button(checkboxRect5, EditorCore.BoxCheckmark, "image_centered"))
                 {
-                    wantHandSceneApiEnabled = false;
+                    wantSceneApiEnabled = false;
                 }
             }
             else
             {
                 if (GUI.Button(checkboxRect5, EditorCore.BoxEmpty, "image_centered"))
                 {
-                    wantHandSceneApiEnabled = true;
+                    wantSceneApiEnabled = true;
                 }
             }
 
@@ -879,41 +879,41 @@ namespace Cognitive3D
                     DestroyImmediate(hand);
                 }
             }
-            if (wantHandSceneApiEnabled)
+            if (wantSceneApiEnabled)
             {
                 var sceneApi = FindObjectOfType<SceneAPI>();
                 if (sceneApi == null)
                 {
-                    var sceneManagerFound = FindObjectOfType<OVRSceneManager>();
-                    if (sceneManagerFound == null)
-                    {
-                        GameObject sceneManager = new GameObject(SCENE_MANAGER_NAME);
-                        sceneManager.AddComponent<OVRSceneModelLoader>();
-                        var sceneManagerComponent = sceneManager.AddComponent<OVRSceneManager>();
-                        if (sceneManagerComponent.PlanePrefab == null)
-                        {
-                            GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
-                            if (planePrefab == null)
-                            {
-                                planePrefab = new GameObject(SCENE_PLANE_PREFAB_NAME);
-                            }
-                            // OVRSceneAnchor already has [DisallowMultipleComponent]
-                            planePrefab.AddComponent<OVRSceneAnchor>();
-                            sceneManagerComponent.PlanePrefab = planePrefab.GetComponent<OVRSceneAnchor>();
-                        }
-                        if (sceneManagerComponent.VolumePrefab == null)
-                        {
-                            GameObject volumePrefab = GameObject.Find (SCENE_VOLUME_PREFAB_NAME);
-                            if (volumePrefab == null)
-                            {
-                                volumePrefab = new GameObject(SCENE_VOLUME_PREFAB_NAME);
-                            }
-                            // OVRSceneAnchor already has [DisallowMultipleComponent]
-                            volumePrefab.AddComponent<OVRSceneAnchor>();
-                            sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
-                        }
-                    }
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<SceneAPI>();
+                }
+                GameObject sceneManager = FindObjectOfType<OVRSceneManager>().gameObject;
+                if (sceneManager == null)
+                {
+                    sceneManager = new GameObject(SCENE_MANAGER_NAME);
+                    sceneManager.AddComponent<OVRSceneModelLoader>();
+                }
+                var sceneManagerComponent = sceneManager.AddComponent<OVRSceneManager>();
+                if (sceneManagerComponent.PlanePrefab == null)
+                {
+                    GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                    if (planePrefab == null)
+                    {
+                        planePrefab = new GameObject(SCENE_PLANE_PREFAB_NAME);
+                    }
+                    // OVRSceneAnchor already has [DisallowMultipleComponent]
+                    planePrefab.AddComponent<OVRSceneAnchor>();
+                    sceneManagerComponent.PlanePrefab = planePrefab.GetComponent<OVRSceneAnchor>();
+                }
+                if (sceneManagerComponent.VolumePrefab == null)
+                {
+                    GameObject volumePrefab = GameObject.Find(SCENE_VOLUME_PREFAB_NAME);
+                    if (volumePrefab == null)
+                    {
+                        volumePrefab = new GameObject(SCENE_VOLUME_PREFAB_NAME);
+                    }
+                    // OVRSceneAnchor already has [DisallowMultipleComponent]
+                    volumePrefab.AddComponent<OVRSceneAnchor>();
+                    sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
                 }
             }
             else
