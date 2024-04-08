@@ -146,6 +146,29 @@ namespace Cognitive3D
                 }
                 );
 
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "Current scene path is invalid, which may result in data miscollection. Please update the path in Cognitive3D's preference scene settings",
+                fixmessage: "Current scene path is valid",
+                checkAction: () =>
+                {
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindCurrentScene();
+                    if (c3dScene != null)
+                    {
+                        // Load the asset at the C3D scene path
+                        UnityEngine.Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
+                        return scene != null;
+                    }
+                    
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    Selection.activeObject = EditorCore.GetPreferences();
+                }
+            );
+
             // Recommended Items
 #if C3D_OCULUS
             ProjectValidation.AddItem(

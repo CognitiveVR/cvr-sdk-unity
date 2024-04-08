@@ -13,10 +13,11 @@ namespace Cognitive3D
         {
             private const float SmallIconSize = 16.0f;
             private const float FixButtonWidth = 64.0f;
-            private const float FixAllButtonWidth = 80.0f;
+            private const float RefreshButtonWidth = 80.0f;
             internal const float GroupSelectionWidth = 244.0f;
             internal const float LabelWidth = 96f;
             internal const float TitleLabelWidth = 196f;
+            private const float IconSize = 16f;
 
             internal readonly GUIStyle ListLabel = new GUIStyle("TV Selection")
             {
@@ -63,6 +64,13 @@ namespace Cognitive3D
                 margin = new RectOffset(0, 10, 2, 2),
                 stretchWidth = false,
                 fixedWidth = FixButtonWidth,
+            };
+
+            internal readonly GUIStyle RefreshButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 0, 0),
+                fixedWidth = RefreshButtonWidth,
+                fixedHeight = 25
             };
 
             internal readonly GUIStyle SubtitleHelpText = new GUIStyle(EditorStyles.miniLabel)
@@ -150,7 +158,14 @@ namespace Cognitive3D
 
                 EditorGUILayout.Space(20);
 
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Checklist for " + ProjectValidationItemsStatus.GetCurrentSceneName(), styles.IssuesTitleBoldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(new GUIContent(" Refresh", EditorCore.RefreshIcon), styles.RefreshButton))
+                {
+                    ProjectValidationItems.UpdateProjectValidationItemStatus();
+                }
+                GUILayout.EndHorizontal();
             }
 
             DrawItemLists();

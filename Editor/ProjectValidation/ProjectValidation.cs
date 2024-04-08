@@ -8,6 +8,9 @@ namespace Cognitive3D
 {
     internal static class ProjectValidation
     {
+        /// <summary>
+        /// Represents the priority level of an item that needs to be addressed
+        /// </summary>
         internal enum ItemLevel
         {
             Required = 0,
