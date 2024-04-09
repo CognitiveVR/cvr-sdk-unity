@@ -37,6 +37,14 @@ namespace Cognitive3D
 
             ExportUtility.ClearUploadSceneSettings();
 
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
@@ -75,6 +83,14 @@ namespace Cognitive3D
             window.initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
+
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
