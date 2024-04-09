@@ -24,9 +24,14 @@ namespace Cognitive3D
             this.isFixed = checkAction.Invoke();
             this.fixAction = fixAction;
 
+#if UNITY_2020_3_OR_NEWER
             var hash = new Hash128();
             hash.Append(this.message);
             id = hash;
+#else
+            var hash = Hash128.Compute(this.message);
+            id = hash;
+#endif
         }
     }
 }

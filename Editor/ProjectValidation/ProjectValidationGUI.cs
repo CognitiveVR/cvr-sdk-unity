@@ -128,7 +128,15 @@ namespace Cognitive3D
 
         private static Styles _styles;
         // Delays instantiation of the Styles object until it is first accessed
-        private static Styles styles => _styles ??= new Styles();
+        private static Styles styles
+        {
+            get
+            {
+                if (_styles == null)
+                    _styles = new Styles();
+                return _styles;
+            }
+        }
         private static List<FoldableList> foldableLists = new List<FoldableList>();
         private static bool isInitialized;
 
