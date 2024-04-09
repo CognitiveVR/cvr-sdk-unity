@@ -32,7 +32,7 @@ namespace Cognitive3D
                 wordWrap = false,
                 stretchWidth = false,
                 fontStyle = FontStyle.Bold,
-                padding = new RectOffset(10, 10, 0, 0)
+                padding = new RectOffset(10, 2, 0, 0)
             };
 
             internal readonly GUIStyle IssuesTitleLabel = new GUIStyle(EditorStyles.label)
@@ -71,6 +71,11 @@ namespace Cognitive3D
                 margin = new RectOffset(0, 10, 0, 0),
                 fixedWidth = RefreshButtonWidth,
                 fixedHeight = 25
+            };
+
+            internal readonly GUIStyle InfoButton = new GUIStyle
+            {
+                padding = new RectOffset(0, 0, 5, 0)
             };
 
             internal readonly GUIStyle SubtitleHelpText = new GUIStyle(EditorStyles.miniLabel)
@@ -153,7 +158,20 @@ namespace Cognitive3D
             {
                 EditorGUILayout.Space();
 
+                GUILayout.BeginHorizontal();
+
                 GUILayout.Label("Project Validation", styles.IssuesTitleBoldLabel);
+
+                float iconSize = EditorGUIUtility.singleLineHeight;
+                Rect buttonRect = GUILayoutUtility.GetRect(iconSize, iconSize);
+                if (GUI.Button(buttonRect, EditorCore.InfoGrey, styles.InfoButton))
+                {
+                    Application.OpenURL("https://docs.cognitive3d.com/unity/project-validation/");
+                }
+                GUILayout.EndHorizontal();
+
+                EditorGUILayout.Space();
+
                 GUILayout.Label("The project validation simplifies Cognitive3D setup by providing a checklist of essential tasks and recommended best practices.", styles.SubtitleHelpText);
 
                 EditorGUILayout.Space(20);

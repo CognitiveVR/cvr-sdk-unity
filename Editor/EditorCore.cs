@@ -524,6 +524,19 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _infoGrey;
+        public static Texture2D InfoGrey
+        {
+            get
+            {
+                if (_infoGrey == null)
+                {
+                    _infoGrey = Resources.Load<Texture2D>("Icons/info grey");
+                }
+                return _infoGrey;
+            }
+        }
+
         private static Texture2D _searchIcon;
         public static Texture2D SearchIcon
         {
