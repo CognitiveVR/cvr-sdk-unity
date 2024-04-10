@@ -126,17 +126,17 @@ namespace Cognitive3D
         {
             // Popup
             bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nPress \"Yes\" to verify scenes or \"No\" to continue build process", "Yes", "No");
-            if (result && EditorBuildSettings.scenes.Length != 0)
+            if (result && TryGetScenesInBuildSettings(out var activeBuildScenes))
             {
                 throwExecption = true;
 
-                for (int i = 0; i < EditorBuildSettings.scenes.Length; i += 1)
+                for (int i = 0; i < activeBuildScenes.Count; i += 1)
                 {
-                    float progress = (float)i / EditorBuildSettings.scenes.Length;
+                    float progress = (float)i / activeBuildScenes.Count;
                     EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
 
                     // Open scene
-                    EditorSceneManager.OpenScene(EditorBuildSettings.scenes[i].path);
+                    EditorSceneManager.OpenScene(activeBuildScenes[i].path);
 
                     // Time needed for updating project validation items in a scene
                     await Task.Delay(1000);
@@ -145,7 +145,7 @@ namespace Cognitive3D
                     if (ProjectValidation.hasNotFixedItems())
                     {
                         var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
-                        AddOrUpdateDictionary(scenesNeedFix, EditorBuildSettings.scenes[i].path, sceneLevelItems);
+                        AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
                     }
                 }
 
@@ -191,20 +191,30 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Iterate through all scenes in build settings to check if target scene exists
+        /// Iterate through all scenes in build settings to check if scene is active and enabled in build settings
         /// </summary>
-        /// <param name="targetScene"></param>
+        /// <param name="scenes">returns enabled scenes</param>
         /// <returns></returns>
-        internal static bool TryGetSceneInBuildSettings(Scene targetScene)
+        internal static bool TryGetScenesInBuildSettings(out List<EditorBuildSettingsScene> scenes)
         {
-            foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+            scenes = new List<EditorBuildSettingsScene>();
+            if (EditorBuildSettings.scenes.Length != 0)
             {
-                if (scene.path.Contains(targetScene.name))
+                foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
                 {
-                    return true;
+                    // Checks if scene is enabled in build settings
+                    if (scene.enabled)
+                    {
+                        scenes.Add(scene);
+                    }
                 }
+
+                return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
     }
 }
