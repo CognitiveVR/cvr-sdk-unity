@@ -60,6 +60,9 @@ namespace Cognitive3D
         {
             ProjectValidationLog.UpdateLog();
             ProjectValidationItemsStatus.isProjectVerified = false;
+
+            ProjectValidationItems.WaitBeforeProjectValidation();
+            ProjectValidationGUI.Reset();
         }
     }
 }
