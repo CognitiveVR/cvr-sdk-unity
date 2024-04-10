@@ -189,6 +189,7 @@ namespace Cognitive3D
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(" Refresh", EditorCore.RefreshIcon), styles.RefreshButton))
                 {
+                    Reset();
                     ProjectValidationItems.UpdateProjectValidationItemStatus();
                 }
                 GUILayout.EndHorizontal();
