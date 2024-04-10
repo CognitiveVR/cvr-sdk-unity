@@ -110,37 +110,15 @@ namespace Cognitive3D
         /// <summary>
         /// iterates through all build scenes in the project to identify outstanding project validation items
         /// </summary>
-        internal static async void VerifyAllBuildScenes()
+        internal static void VerifyAllBuildScenes()
         {
             // Popup
             bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nPress \"Yes\" to verify scenes or \"No\" to continue build process", "Yes", "No");
-            if (result && TryGetScenesInBuildSettings(out var activeBuildScenes))
+            if (result)
             {
                 throwExecption = true;
-
-                for (int i = 0; i < activeBuildScenes.Count; i += 1)
-                {
-                    float progress = (float)i / activeBuildScenes.Count;
-                    EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
-
-                    // Open scene
-                    EditorSceneManager.OpenScene(activeBuildScenes[i].path);
-
-                    // Time needed for updating project validation items in a scene
-                    await Task.Delay(1000);
-
-                    // Check if project has not fixed items
-                    if (ProjectValidation.hasNotFixedItems())
-                    {
-                        var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
-                        AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
-                    }
-                }
-
-                // Clear progress bar
-                EditorUtility.ClearProgressBar();
-
-                DisplayScenesWithValidationItems();
+                StartSceneVerificationProcess();
+                return;
             }
             else
             {
@@ -175,6 +153,39 @@ namespace Cognitive3D
             {
                 // Add a new key-value pair to the dictionary
                 dictionary.Add(key, value);
+            }
+        }
+
+        /// <summary>
+        /// Starts process for verifying project validation items in each scene (in build settings)
+        /// </summary>
+        internal static async void StartSceneVerificationProcess()
+        {
+            if (TryGetScenesInBuildSettings(out var activeBuildScenes))
+            {
+                for (int i = 0; i < activeBuildScenes.Count; i += 1)
+                {
+                    float progress = (float)i / activeBuildScenes.Count;
+                    EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
+
+                    // Open scene
+                    EditorSceneManager.OpenScene(activeBuildScenes[i].path);
+
+                    // Time needed for updating project validation items in a scene
+                    await Task.Delay(1000);
+
+                    // Check if project has not fixed items
+                    if (ProjectValidation.hasNotFixedItems())
+                    {
+                        var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
+                        AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                    }
+                }
+
+                // Clear progress bar
+                EditorUtility.ClearProgressBar();
+
+                DisplayScenesWithValidationItems();
             }
         }
 
