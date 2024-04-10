@@ -666,6 +666,20 @@ namespace Cognitive3D
                 return _settingsIcon;
             }
         }
+
+        private static Texture2D _settingsIconWhite;
+        public static Texture2D SettingsIconWhite
+        {
+            get
+            {
+                if (_settingsIconWhite == null)
+                {
+                    _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                }
+                return _settingsIconWhite;
+            }
+        }
+
         private static Texture2D _filterIcon;
         public static Texture2D FilterIcon
         {

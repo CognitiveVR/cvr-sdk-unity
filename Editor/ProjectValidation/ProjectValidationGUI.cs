@@ -13,7 +13,7 @@ namespace Cognitive3D
         {
             private const float SmallIconSize = 16.0f;
             private const float FixButtonWidth = 64.0f;
-            private const float RefreshButtonWidth = 80.0f;
+            private const float IconButtonWidth = 30.0f;
             internal const float GroupSelectionWidth = 244.0f;
             internal const float LabelWidth = 96f;
             internal const float TitleLabelWidth = 196f;
@@ -66,10 +66,10 @@ namespace Cognitive3D
                 fixedWidth = FixButtonWidth,
             };
 
-            internal readonly GUIStyle RefreshButton = new GUIStyle(EditorStyles.miniButton)
+            internal readonly GUIStyle IconButton = new GUIStyle(EditorStyles.miniButton)
             {
                 margin = new RectOffset(0, 10, 0, 0),
-                fixedWidth = RefreshButtonWidth,
+                fixedWidth = IconButtonWidth,
                 fixedHeight = 25
             };
 
@@ -187,10 +187,16 @@ namespace Cognitive3D
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Checklist for " + ProjectValidationItemsStatus.GetCurrentSceneName(), styles.IssuesTitleBoldLabel);
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button(new GUIContent(" Refresh", EditorCore.RefreshIcon), styles.RefreshButton))
+                if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Checklists"), styles.IconButton))
                 {
                     ProjectValidationItems.UpdateProjectValidationItemStatus();
                     Reset();
+                }
+                if (GUILayout.Button(new GUIContent(EditorCore.SettingsIconWhite, "Additional Actions"), styles.IconButton))
+                {
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Verify all build scenes"), false, ProjectValidationItemsStatus.StartSceneVerificationProcess);
+                    menu.ShowAsContext();
                 }
                 GUILayout.EndHorizontal();
             }

@@ -82,7 +82,7 @@ namespace Cognitive3D
                     sceneList += sceneRecommendedNames?.Count > 0 ? $"\nRecommended tasks:\n{string.Join(", ", sceneRecommendedNames)}\n" : "";
 
                     // Popup
-                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation is complete. Unresolved issues detected! \n" + sceneList, "More Details", "Ignore");
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has been completed. Unresolved issues have been detected. \n" + sceneList, "More Details", "Ignore");
                     if (result)
                     {
                         // Opens up the first scene in the list that needs fix
@@ -99,7 +99,7 @@ namespace Cognitive3D
                     Util.logDebug("No issues were found in project");
                     OnProjectVerified();
 
-                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation is complete. No issues detected! Please re-build your app.", "OK");
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has been successfully completed. No issues were detected! You are now clear to rebuild your app.", "OK");
                 }
             }
 
