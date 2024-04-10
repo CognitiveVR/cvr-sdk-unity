@@ -99,7 +99,7 @@ namespace Cognitive3D
                     Util.logDebug("No issues were found in project");
                     OnProjectVerified();
 
-                    EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has been successfully completed. No issues were detected! You are now clear to build your app.", "OK");
+                    EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has been successfully completed. \n \nNo issues were detected! You are now clear to build your app.", "OK");
                 }
             }
 
