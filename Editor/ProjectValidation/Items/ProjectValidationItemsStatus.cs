@@ -113,7 +113,7 @@ namespace Cognitive3D
         internal static void VerifyAllBuildScenes()
         {
             // Popup
-            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nPress \"Yes\" to verify scenes or \"No\" to continue build process", "Yes", "No");
+            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nSelect \"Yes\" to verify scenes or \"No\" to continue with the build process. \n \n**Please note that if you choose to verify scenes, the build process will be stopped and will need to be restarted**", "Yes", "No");
             if (result)
             {
                 throwExecption = true;
