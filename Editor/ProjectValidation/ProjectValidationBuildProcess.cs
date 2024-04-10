@@ -55,10 +55,13 @@ namespace Cognitive3D
     {
         public int callbackOrder { get { return 0; } }
 
-        // Updates app version and resets project verification
+        // Updates app version if all items are verified (no issues) and resets project verification
         public void OnPostprocessBuild(BuildReport report)
         {
-            ProjectValidationLog.UpdateLog();
+            if (ProjectValidationItemsStatus.isProjectVerified)
+            {
+                ProjectValidationLog.UpdateLog();
+            }
             ProjectValidationItemsStatus.isProjectVerified = false;
 
             ProjectValidationItems.WaitBeforeProjectValidation();
