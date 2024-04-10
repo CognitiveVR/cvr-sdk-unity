@@ -21,7 +21,7 @@ namespace Cognitive3D
             CheckCachedAppVersion();
             string currentAppVer = Application.version;
 
-            if (currentAppVer != cachedAppVer && !ProjectValidationItemsStatus.isProjectVerified)
+            if (currentAppVer != cachedAppVer)
             {
                 ProjectValidationItemsStatus.VerifyAllBuildScenes();
             }
@@ -55,15 +55,9 @@ namespace Cognitive3D
     {
         public int callbackOrder { get { return 0; } }
 
-        // Updates app version if all items are verified (no issues) and resets project verification
+        // Updates and refreshes project verification items after build
         public void OnPostprocessBuild(BuildReport report)
         {
-            if (ProjectValidationItemsStatus.isProjectVerified)
-            {
-                ProjectValidationLog.UpdateLog();
-            }
-            ProjectValidationItemsStatus.isProjectVerified = false;
-
             ProjectValidationItems.WaitBeforeProjectValidation();
             ProjectValidationGUI.Reset();
         }

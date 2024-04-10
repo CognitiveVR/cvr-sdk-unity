@@ -22,16 +22,6 @@ namespace Cognitive3D
             }
         }
 
-        private static bool _isProjectVerified;
-        public static bool isProjectVerified {
-            get {
-                return _isProjectVerified;
-            }
-            internal set {
-                _isProjectVerified = value;
-            }
-        }
-
         static ProjectValidationItemsStatus()
         {
             EditorSceneManager.sceneOpened += OnSceneOpened;
@@ -92,17 +82,13 @@ namespace Cognitive3D
                     sceneList += sceneRecommendedNames?.Count > 0 ? $"\nRecommended tasks:\n{string.Join(", ", sceneRecommendedNames)}\n" : "";
 
                     // Popup
-                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation has detected unresolved issues! \n" + sceneList, "More Details", "Ignore");
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation is complete. Unresolved issues detected! \n" + sceneList, "More Details", "Ignore");
                     if (result)
                     {
                         // Opens up the first scene in the list that needs fix
                         EditorSceneManager.OpenScene(scenesNeedFix.Keys.First().ToString());
                         ProjectValidationSettingsProvider.OpenSettingsWindow();
                         throwExecption = true;
-                    }
-                    else
-                    {
-                        isProjectVerified = false;
                     }
 
                     Clear();
@@ -111,7 +97,9 @@ namespace Cognitive3D
                 else
                 {
                     Util.logDebug("No issues were found in project");
-                    isProjectVerified = true;
+                    OnProjectVerified();
+
+                    bool result = EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "Cognitive3D project validation is complete. No issues detected! Please re-build your app.", "OK");
                 }
             }
 
@@ -188,6 +176,14 @@ namespace Cognitive3D
                 // Add a new key-value pair to the dictionary
                 dictionary.Add(key, value);
             }
+        }
+
+        /// <summary>
+        /// Writes into JSON if all items are verified (no issues)
+        /// </summary>
+        internal static void OnProjectVerified()
+        {
+            ProjectValidationLog.UpdateLog();
         }
 
         /// <summary>
