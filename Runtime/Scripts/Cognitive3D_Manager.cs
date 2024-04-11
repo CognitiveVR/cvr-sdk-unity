@@ -244,10 +244,10 @@ namespace Cognitive3D
                 bool eyePermissionGranted = false;
                 bool facePermissionGranted = false;
 
+#if UNITY_ANDROID && !UNITY_EDITOR
                 string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
                 string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
-
-#if UNITY_ANDROID && !UNITY_EDITOR
+                
                 eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
                 facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
 #endif
