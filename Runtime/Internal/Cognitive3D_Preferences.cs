@@ -106,7 +106,7 @@ namespace Cognitive3D
         public bool UploadCacheOnEndPlay = true;
 
         public bool IncludeDisabledDynamicObjects = true;
-        public int TextureResize = 1;
+        public int TextureResize = 2;
         public bool ExportSceneLODLowest = true;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
