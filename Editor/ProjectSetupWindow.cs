@@ -18,6 +18,21 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
+            currentPage = Page.Welcome;
+
+            ExportUtility.ClearUploadSceneSettings();
+        }
+
+        internal static void Init(Page page)
+        {
+            currentPage = page;
+            ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+
+            window.LoadKeys();
+            window.GetSelectedSDKs();
 
             ExportUtility.ClearUploadSceneSettings();
         }
@@ -32,11 +47,12 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
+            currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        enum Page
+        internal enum Page
         {
             Welcome,
             APIKeys,
@@ -50,7 +66,15 @@ namespace Cognitive3D
             PhotonMultiplayerSetup,
             DynamicSetup,
         }
-        Page currentPage;
+        private static Page _currentPage;
+        public static Page currentPage {
+            get {
+                return _currentPage;
+            }
+            internal set {
+                _currentPage = value;
+            }
+        }
 
         int lastDevKeyResponseCode;
         bool isResponseJsonValid = true;

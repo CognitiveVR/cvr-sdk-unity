@@ -42,6 +42,12 @@ namespace Cognitive3D
             }
         }
 
+        // 
+        internal static bool GetPreferencesFile()
+        {
+            return Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences") ? true : false;
+        }
+
         //static for faster access
         public const float SnapshotInterval = 0.1f;
         public static int S_GazeSnapshotCount;
