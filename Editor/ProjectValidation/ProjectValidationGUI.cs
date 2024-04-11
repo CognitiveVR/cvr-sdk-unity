@@ -176,8 +176,7 @@ namespace Cognitive3D
                 GUILayout.Label("Project Validation", styles.IssuesTitleBoldLabel);
 
                 float iconSize = EditorGUIUtility.singleLineHeight;
-                Rect buttonRect = GUILayoutUtility.GetRect(iconSize, iconSize);
-                if (GUI.Button(buttonRect, EditorCore.InfoGrey, styles.InfoButton))
+                if (GUILayout.Button(EditorCore.InfoGrey, styles.InfoButton, GUILayout.Width(iconSize),GUILayout.Height(iconSize)))
                 {
                     Application.OpenURL("https://docs.cognitive3d.com/unity/project-validation/");
                 }

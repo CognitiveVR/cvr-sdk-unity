@@ -18,6 +18,7 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
+            currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
@@ -46,6 +47,7 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
+            currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
