@@ -94,6 +94,11 @@ namespace Cognitive3D
             {
                 fontStyle = FontStyle.Bold
             };
+
+            internal readonly GUIStyle ItemDescription = new GUIStyle(GUI.skin.label)
+            {
+                wordWrap = true,
+            };
         }
 
         // Method to create a texture with a specified color
@@ -252,7 +257,7 @@ namespace Cognitive3D
             using (var scope = new EditorGUILayout.HorizontalScope(styles.ListLabel))
             {
                 GUILayout.Label(itemIcon, styles.InlinedIconStyle);
-                GUILayout.Label(message);
+                GUILayout.Label(message, styles.ItemDescription);
 
                 if (item.fixAction != null)
                 {
