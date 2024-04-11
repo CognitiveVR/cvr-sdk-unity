@@ -41,7 +41,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "No Cognitive3D player definition is found. Select an SDK to support specific features.",
+                message: "No Cognitive3D player definition is found. Select an SDK in the Project Setup window to support specific features.",
                 fixmessage: "Cognitive3D player definition is added",
                 checkAction: () =>
                 {
@@ -56,7 +56,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Tracking space is not configured. Set up tracking space?",
+                message: "Tracking space is not configured. Select the tracking space of the player prefab in the Scene Setup window",
                 fixmessage: "Tracking space is configured",
                 checkAction: () =>
                 {
@@ -71,7 +71,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Application key is not valid. Re-enter application key.",
+                message: "Application key is not valid. Re-enter application key in the Project Setup window.",
                 fixmessage: "Valid application key is found",
                 checkAction: () =>
                 {
@@ -117,7 +117,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Current scene is not found in Cognitive3D preferences. Please upload current scene.",
+                message: "Current scene is not found in Cognitive3D preferences. Please upload the current scene from the Scene Setup window.",
                 fixmessage: "Current scene is found in Cognitive3D preferences",
                 checkAction: () =>
                 {
@@ -133,8 +133,8 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Current scene has no ID. Please re-upload current scene if has not been uploaded.",
-                fixmessage: "Current scene has scene ID",
+                message: "Current scene has no SceneId. Please upload the current scene from the Scene Setup window.",
+                fixmessage: "Current scene has SceneId",
                 checkAction: () =>
                 {
                     Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
@@ -149,7 +149,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                message: "Current scene path is invalid, which may result in data miscollection. Please update the path in Cognitive3D's preference scene settings",
+                message: "Current scene path is invalid. Please verify the path in Cognitive3D's preference scene settings",
                 fixmessage: "Current scene path is valid",
                 checkAction: () =>
                 {
@@ -171,27 +171,12 @@ namespace Cognitive3D
 
             // Recommended Items
 #if C3D_OCULUS
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Recommended, 
-                category: CATEGORY,
-                message: "Oculus social is not enabled. Add Oculus social component?",
-                fixmessage: "Oculus social is enabled",
-                checkAction: () =>
-                {
-                    return ProjectValidation.FindComponentInActiveScene<OculusSocial>();
-                },
-                fixAction: () =>
-                {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<OculusSocial>();
-                }
-            );
-
             OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
                 message: "Missing some Oculus target devices. Enable all?",
-                fixmessage: "Oculus target devices are enabled",
+                fixmessage: "All Oculus target devices are enabled",
                 checkAction: () =>
                 {   return projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest2) &&
                            projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.QuestPro) &&
