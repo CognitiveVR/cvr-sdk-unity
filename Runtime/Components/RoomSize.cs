@@ -26,7 +26,7 @@ namespace Cognitive3D.Components
         Vector3 roomSize = new Vector3();
         bool isHMDOutsideBoundary;
         Transform trackingSpace = null;
-        Transform lastRecordedTrackingSpaceTransform = null;
+        Transform lastRecordedTrackingSpaceTransform;
 
         // an n% overflow buffer added to string builder. 0.1 means 10% of num boundary points added as extra room
         private readonly float NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
@@ -51,7 +51,6 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             previousBoundaryPoints = GetCurrentBoundaryPoints();
             // We want to intialize the string builder to a size appropriate for the number of points
             // This number might change if the participant redraws boundary, so we are adding a grace extension
@@ -67,6 +66,7 @@ namespace Cognitive3D.Components
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref lastRoomSize);
             WriteRoomSizeAsSessionProperty(lastRoomSize);
+            lastRecordedTrackingSpaceTransform = GameplayReferences.HMD.transform;
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -78,12 +78,19 @@ namespace Cognitive3D.Components
         /// </summary>
         private void Cognitive3D_Manager_OnTick()
         {
-            if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpaceTransform.position) > TRACKING_SPACE_POSITION_THRESHOLD
-                || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceTransform.rotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD)
+            if (trackingSpace == null)
             {
-                currentBoundaryPoints = GetCurrentBoundaryPoints();
-                RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
-                lastRecordedTrackingSpaceTransform = trackingSpace;
+                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            }
+            else
+            {
+                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpaceTransform.position) > TRACKING_SPACE_POSITION_THRESHOLD
+                        || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceTransform.rotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD)
+                {
+                    currentBoundaryPoints = GetCurrentBoundaryPoints();
+                    RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
+                    lastRecordedTrackingSpaceTransform = trackingSpace;
+                }
             }
         }
 

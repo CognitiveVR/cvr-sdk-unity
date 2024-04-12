@@ -79,6 +79,7 @@ namespace Cognitive3D
             eventUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/events/");
             sensorUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/sensors/");
             fixationUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/fixations/");
+            boundaryUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/boundary/");
             ApplicationKey = "APIKEY:DATA " + Cognitive3D_Preferences.Instance.ApplicationKey;
         }
         private static string dynamicUrl;
@@ -86,6 +87,7 @@ namespace Cognitive3D
         private static string eventUrl;
         private static string sensorUrl;
         private static string fixationUrl;
+        private static string boundaryUrl;
         internal static string ApplicationKey;
         //POST dynamics json data to scene explorer
         
@@ -123,6 +125,11 @@ namespace Cognitive3D
             return string.Concat(fixationUrl, sceneid, "?version=", versionnumber.ToString());
         }
 
+        //POST boundary json data to scene explorer
+        internal static string PostBoundaryData(string sceneid, int versionnumber)
+        {
+            return string.Concat(boundaryUrl, sceneid, "?version=", versionnumber.ToString());
+        }
 
         //GET request question set
         internal static string GetExitpollQuestionSet(string hookname)

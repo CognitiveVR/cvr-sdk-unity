@@ -31,7 +31,7 @@ namespace Cognitive3D.Serialization
             SerializeGaze(copyToCache);
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
-            // SerializeBoundary();
+            SerializeBoundary();
 
             InterruptThread = true;
             while (queuedSnapshots.Count > 0 || queuedManifest.Count > 0)
@@ -1536,7 +1536,7 @@ namespace Cognitive3D.Serialization
             }
 
             boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-            boundarybuilder.Append("},");
+            boundarybuilder.Append("}");
             boundaryCount++;
             if (boundaryCount >= BoundaryThreshold)
             {
@@ -1546,6 +1546,15 @@ namespace Cognitive3D.Serialization
 
         static void SerializeBoundary()
         {
+            if (boundarybuilder == null) { return; }
+            boundarybuilder.Append("],");
+            JsonUtil.SetString("userid", DeviceId, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetDouble("timestamp", (int)SessionTimestamp, boundarybuilder);
+            boundarybuilder.Append(",");
+            JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
+            boundarybuilder.Append(",");
+
             boundaryJsonPart++;
             boundaryCount = 0;
             if (boundarybuilder != null)
@@ -1554,8 +1563,8 @@ namespace Cognitive3D.Serialization
                 {
                     boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
                 }
-                boundarybuilder.Append("]");
                 boundarybuilder.Append("}");
+                WebPost("boundary", boundarybuilder.ToString(), true);
                 boundarybuilder.Clear();
                 boundarybuilder.Append("{\"data\":["); // prepare the json for next batch
             }

@@ -277,6 +277,9 @@ namespace Cognitive3D
                     url = CognitiveStatics.PostFixationData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     FixationRecorder.FixationSendEvent();
                     break;
+                case "boundary":
+                    url = CognitiveStatics.PostBoundaryData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    break;
                 default: Util.logDevelopment("Invalid Web Post type"); return;
             }
 
