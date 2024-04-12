@@ -27,7 +27,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.4.5";
+        public static readonly string SDK_VERSION = "1.4.6";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -244,10 +244,10 @@ namespace Cognitive3D
                 bool eyePermissionGranted = false;
                 bool facePermissionGranted = false;
 
+#if UNITY_ANDROID && !UNITY_EDITOR
                 string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
                 string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
-
-#if UNITY_ANDROID && !UNITY_EDITOR
+                
                 eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
                 facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
 #endif

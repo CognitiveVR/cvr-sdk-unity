@@ -524,6 +524,19 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _infoGrey;
+        public static Texture2D InfoGrey
+        {
+            get
+            {
+                if (_infoGrey == null)
+                {
+                    _infoGrey = Resources.Load<Texture2D>("Icons/info grey");
+                }
+                return _infoGrey;
+            }
+        }
+
         private static Texture2D _searchIcon;
         public static Texture2D SearchIcon
         {
@@ -653,6 +666,20 @@ namespace Cognitive3D
                 return _settingsIcon;
             }
         }
+
+        private static Texture2D _settingsIconWhite;
+        public static Texture2D SettingsIconWhite
+        {
+            get
+            {
+                if (_settingsIconWhite == null)
+                {
+                    _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                }
+                return _settingsIconWhite;
+            }
+        }
+
         private static Texture2D _filterIcon;
         public static Texture2D FilterIcon
         {
@@ -842,7 +869,60 @@ namespace Cognitive3D
             }
             return "unknown";
         }
-        #endregion
+
+        private static GameObject _leftController;
+        public static GameObject leftController {
+            get {
+                return _leftController;
+            }
+            internal set {
+                _leftController = value;
+            }
+        }
+        private static GameObject _rightController;
+        public static GameObject rightController {
+            get {
+                return _rightController;
+            }
+            internal set {
+                _rightController = value;
+            }
+        }
+
+        /// <summary>
+        /// Sets controllers from Scene Setup window
+        /// </summary>
+        /// <param name="isRight"></param>
+        /// <param name="controller"></param>
+        internal static void SetControllers(bool isRight, GameObject controller)
+        {
+            if (isRight)
+            {
+                rightController = controller;
+            }
+            else
+            {
+                leftController = controller;
+            }
+        }
+
+        /// <summary>
+        /// Checks if left controller is valid and properly setup in Scene Setup window
+        /// </summary>
+        /// This is used in project validation to check if controllers are setup properly
+        internal static bool IsLeftControllerValid()
+        {
+            return leftController ? true : false;
+        }
+
+        /// <summary>
+        /// Checks if right controller is valid and properly setup in Scene Setup window
+        /// </summary>
+        internal static bool IsRightControllerValid()
+        {
+            return rightController ? true : false;
+        }
+#endregion
 
         #region Packages
 
