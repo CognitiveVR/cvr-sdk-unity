@@ -12,11 +12,14 @@ namespace Cognitive3D.Components
         private void Start()
         {
             sceneManager = FindObjectOfType<OVRSceneManager>();
-            sceneManager.SceneModelLoadedSuccessfully += SetRoomDimensionsAsSessionProperty;
+            if (sceneManager != null )
+            {
+                sceneManager.SceneModelLoadedSuccessfully += SetRoomDimensionsAsSessionProperty;
+            }
         }
 
         private void SetRoomDimensionsAsSessionProperty()
-        {   
+        {
             OVRSceneRoom room = FindObjectOfType<OVRSceneRoom>();
             if (room != null)
             {
