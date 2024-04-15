@@ -958,6 +958,7 @@ namespace Cognitive3D
                 }
             }
 
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }   
 #endif
 
