@@ -881,6 +881,7 @@ namespace Cognitive3D
             }
             if (wantSceneApiEnabled)
             {
+                // Do not modify OVRManager permissions
                 var sceneApi = FindObjectOfType<SceneAPI>();
                 if (sceneApi == null)
                 {
@@ -894,7 +895,7 @@ namespace Cognitive3D
                 }
                 
                 // OVRSceneModelLoader requires OVRSceneManager so that will automatically add it
-                // We have this to future prrof this in case that changes
+                // We have this to future proof this in case that changes
                 var sceneManagerComponent = sceneManager.GetComponent<OVRSceneManager>();
                 if (sceneManagerComponent == null) 
                 {
@@ -925,10 +926,35 @@ namespace Cognitive3D
             }
             else
             {
+                // Only destory objects and components we created
+                // Do not modify OVRManager permissions
+                
+                // Component in C3D_Manager prefab
                 var sceneApi = FindObjectOfType<SceneAPI>();
                 if (sceneApi != null)
                 {
                     DestroyImmediate(sceneApi);
+                }
+
+                // Scene manager that we created
+                GameObject sceneManager = GameObject.Find(SCENE_MANAGER_NAME);
+                if (sceneManager != null)
+                {
+                    DestroyImmediate(sceneManager);
+                }
+
+                // Plane prefab
+                GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                if (planePrefab != null)
+                {
+                    DestroyImmediate(planePrefab);
+                }
+
+                // Volume prefab
+                GameObject volumePrefab = GameObject.Find(SCENE_VOLUME_PREFAB_NAME);
+                if (volumePrefab != null)
+                {
+                    DestroyImmediate(volumePrefab);
                 }
             }
 
