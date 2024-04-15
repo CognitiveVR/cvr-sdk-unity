@@ -24,10 +24,13 @@ namespace Cognitive3D.Components
             if (room != null)
             {
                 OVRScenePlane floor = room.Floor;
-                Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.width", floor.Width);
-                Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.height", floor.Height);
-                Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.area", floor.Width * floor.Height);
-                Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.dimensions", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", floor.Width, floor.Height));
+                if (floor != null)
+                {
+                    Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.width", floor.Width);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.height", floor.Height);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.area", floor.Width * floor.Height);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.meta.room.dimensions", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", floor.Width, floor.Height));
+                }
             }
         }
 
