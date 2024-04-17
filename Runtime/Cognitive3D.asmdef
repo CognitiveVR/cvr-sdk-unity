@@ -18,7 +18,7 @@
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
         "Unity.XR.CoreUtils",
-        "UnityEngine.XR.LegacyInputHelpers"
+        "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.PicoXR",
         "PhotonUnityNetworking",
         "PhotonRealtime"
