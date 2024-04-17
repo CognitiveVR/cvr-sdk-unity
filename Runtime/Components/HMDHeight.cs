@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-#if C3D_DEFAULT
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
+#endif
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+using UnityEditor.XR.LegacyInputHelpers;
 #endif
 
 /// <summary>
@@ -69,36 +73,54 @@ namespace Cognitive3D.Components
             // Calculates height according to camera offset relative to Floor level and rig customization
             height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
 #elif C3D_DEFAULT
-            XROrigin xrOrigin = FindObjectOfType<XROrigin>();  
-            if (xrOrigin != null)
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+            XROrigin xrOrigin = null;
+            if (xrOrigin == null)
+            {
+                xrOrigin = FindObjectOfType<XROrigin>(); 
+            }  
+
+            if (xrOrigin != null && trackingSpace != null)
             {
                 if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
                 {
                     // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
                     // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
-                    height = xrOrigin.Camera.transform.position.y + xrOrigin.CameraYOffset - xrOrigin.CameraFloorOffsetObject.transform.position.y;
+                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpace.position.y;
                 }
-                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
                 {
                     // Calculates height based on the camera offset relative to Floor level and rig settings
-                    height = xrOrigin.Camera.transform.position.y - xrOrigin.CameraFloorOffsetObject.transform.position.y;
+                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
                 }
-                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
-                {
-                    // Unable to determine height accurately as the tracking origin mode is unspecified.
-                    // Using the camera Y offset, but results may vary and may not reflect the user's actual height reliably.
-                    height = xrOrigin.CameraYOffset;
-                }
-                
-            }
-            else
+            } 
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+            CameraOffset cameraOffset = null;
+            if (cameraOffset == null)
             {
-                Debug.LogWarning("XROrigin not found. Unable to record HMD height.");
-                return false;
-            }   
+                cameraOffset = FindObjectOfType<CameraOffset>();
+            }
+            
+            if (cameraOffset != null)
+            {
+                if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
+                {
+                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpace.position.y;
+                }
+                else if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                {
+                    Debug.Log("Do we get here?");
+                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                }
+            }
+#endif
 #else
             height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
 #endif
+            Debug.Log("Height is: " + height);
 
             return true;
         }
