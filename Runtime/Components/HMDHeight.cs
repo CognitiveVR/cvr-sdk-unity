@@ -31,7 +31,7 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             heights = new float[SampleCount];
-            Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace);
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             StartCoroutine(Tick());
         }
 
@@ -81,7 +81,7 @@ namespace Cognitive3D.Components
                 xrOrigin = FindObjectOfType<XROrigin>(); 
             }  
 
-            if (xrOrigin != null && trackingSpace != null)
+            if (xrOrigin != null)
             {
                 if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
                 {
