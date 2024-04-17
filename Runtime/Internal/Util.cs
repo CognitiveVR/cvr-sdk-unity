@@ -54,6 +54,44 @@ namespace Cognitive3D
 			}
 		}
 
+        private static HashSet<string> logs = new HashSet<string>();
+
+        /// <summary>
+        /// Logs a message once, preventing duplicate logging of the same message
+        /// </summary>
+        /// <param name="message">The message to log</param>
+        /// <param name="logType">The type of log: Error, Warning, or Info</param>
+        internal static void LogOnce(string msg, LogType logType)
+        {
+            if (Cognitive3D_Preferences.Instance.EnableLogging)
+			{
+                if (!logs.Contains(msg))
+                {
+                    switch(logType)
+                    {
+                        case LogType.Error:
+                            Debug.LogError(LOG_TAG + msg);
+                            break;
+                        case LogType.Warning:
+                            Debug.LogWarning(LOG_TAG + msg);
+                            break;
+                        default:
+                            Debug.Log(LOG_TAG + msg);
+                            break;
+                    }
+                    logs.Add(msg);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the logs, allowing messages to be logged again
+        /// </summary>
+        internal static void ResetLogs()
+        {
+            logs.Clear();
+        }
+
         static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         static double lastTime;
         static int lastFrame = -1;
