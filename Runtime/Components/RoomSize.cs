@@ -26,7 +26,8 @@ namespace Cognitive3D.Components
         Vector3 roomSize = new Vector3();
         bool isHMDOutsideBoundary;
         Transform trackingSpace = null;
-        Transform lastRecordedTrackingSpaceTransform;
+        Vector3 lastRecordedTrackingSpacePosition = new Vector3();
+        Quaternion lastRecordedTrackingSpaceRotation = Quaternion.identity;
 
         // an n% overflow buffer added to string builder. 0.1 means 10% of num boundary points added as extra room
         private readonly float NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
@@ -66,16 +67,12 @@ namespace Cognitive3D.Components
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref lastRoomSize);
             WriteRoomSizeAsSessionProperty(lastRoomSize);
-            lastRecordedTrackingSpaceTransform = GameplayReferences.HMD.transform;
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
 #endif
         }
 
-        /// <summary>
-        /// Called every 0.1 seconds AKA 10Hz
-        /// </summary>
         private void Cognitive3D_Manager_OnTick()
         {
             if (trackingSpace == null)
@@ -84,12 +81,13 @@ namespace Cognitive3D.Components
             }
             else
             {
-                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpaceTransform.position) > TRACKING_SPACE_POSITION_THRESHOLD
-                        || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceTransform.rotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD)
+                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
+                        || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if moved enough
                 {
                     currentBoundaryPoints = GetCurrentBoundaryPoints();
                     RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
-                    lastRecordedTrackingSpaceTransform = trackingSpace;
+                    lastRecordedTrackingSpacePosition = trackingSpace.position;
+                    lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
                 }
             }
         }

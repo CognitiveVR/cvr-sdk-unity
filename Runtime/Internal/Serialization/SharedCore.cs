@@ -1521,24 +1521,27 @@ namespace Cognitive3D.Serialization
         internal static void RecordBoundaryPoints(Vector3[] points, double timestamp)
         {
             if (!IsInitialized) { return; }
-
-            boundarybuilder.Append("{");
-            JsonUtil.SetDouble("time", timestamp, boundarybuilder);
-            boundarybuilder.Append(",");
-
-            // Format as "p1": [x,y,z], "p2": [x,y,z] and so on
-            for (int i = 0; i < points.Length; i++)
+            if (points.Length > 0)
             {
-                JsonUtil.SetVector("p" + i, 
-                    new float[] { points[i].x, points[i].y, points[i].z }, // Construct a float array from a Vector3
-                    boundarybuilder);
-                boundarybuilder.Append(',');
+                boundarybuilder.Append("{");
+                JsonUtil.SetDouble("time", timestamp, boundarybuilder);
+                boundarybuilder.Append(",");
+                // Format as "p1": [x,y,z], "p2": [x,y,z] and so on
+                for (int i = 0; i < points.Length; i++)
+                {
+                    JsonUtil.SetVector("p" + i,
+                        new float[] { points[i].x, points[i].y, points[i].z }, // Construct a float array from a Vector3
+                        boundarybuilder);
+                    boundarybuilder.Append(',');
+                }
+
+                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
+                boundarybuilder.Append("}");
+                boundarybuilder.Append(",");
+                boundaryCount++;
             }
 
-            boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-            boundarybuilder.Append("}");
-            boundaryCount++;
-            if (boundaryCount >= BoundaryThreshold)
+            if (boundaryCount >= 5)
             {
                 SerializeBoundary();
             }
@@ -1547,6 +1550,10 @@ namespace Cognitive3D.Serialization
         static void SerializeBoundary()
         {
             if (boundarybuilder == null) { return; }
+            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+            {
+                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
+            }
             boundarybuilder.Append("],");
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
