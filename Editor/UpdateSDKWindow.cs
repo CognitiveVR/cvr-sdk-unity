@@ -13,6 +13,8 @@ namespace Cognitive3D
         bool reminderSet = false;
         string sdkSummary;
 
+        private const string URL_FOR_SDK_UPDATE = "https://docs.cognitive3d.com/unity/updates/";
+
         //display window with changelog. changelog is provivded by github web response body
         public static void Init(string latestVersion, string changelog)
         {
@@ -76,13 +78,24 @@ namespace Cognitive3D
             //centered download button
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUI.color = EditorCore.GreenButton;
 #if USE_ATTRIBUTION
             if (GUILayout.Button("Update to Latest Version", GUILayout.Height(40), GUILayout.MaxWidth(300)))
             {
                 UnityEditor.PackageManager.UI.Window.Open("com.cognitive3d.c3d-sdk");
             }
 #else
+            GUI.color = EditorCore.CognitiveBlue;
+
+            if (GUILayout.Button(new GUIContent("Open Online Documentation       ", URL_FOR_SDK_UPDATE), GUILayout.Height(30), GUILayout.Width(220)))
+            {
+                Application.OpenURL(URL_FOR_SDK_UPDATE);
+            }
+            Rect onlineRectIcon = GUILayoutUtility.GetLastRect();
+            onlineRectIcon.x += 180;
+            GUI.Label(onlineRectIcon, EditorCore.ExternalIcon);
+
+            GUI.color = EditorCore.GreenButton;
+
             if (GUILayout.Button(new GUIContent("Update to Latest Version     ", "https://github.com/CognitiveVR/cvr-sdk-unity/releases"), GUILayout.Height(30), GUILayout.Width(200)))
             {
                 Application.OpenURL(CognitiveStatics.GITHUB_RELEASES);

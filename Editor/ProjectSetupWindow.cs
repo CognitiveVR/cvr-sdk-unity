@@ -18,6 +18,21 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
+            currentPage = Page.Welcome;
+
+            ExportUtility.ClearUploadSceneSettings();
+        }
+
+        internal static void Init(Page page)
+        {
+            currentPage = page;
+            ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+
+            window.LoadKeys();
+            window.GetSelectedSDKs();
 
             ExportUtility.ClearUploadSceneSettings();
         }
@@ -32,11 +47,12 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
+            currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        enum Page
+        internal enum Page
         {
             Welcome,
             APIKeys,
@@ -47,9 +63,18 @@ namespace Cognitive3D
             Recompile,
             Wave,
             NextSteps,
-            DynamicSetup
+            PhotonMultiplayerSetup,
+            DynamicSetup,
         }
-        Page currentPage;
+        private static Page _currentPage;
+        public static Page currentPage {
+            get {
+                return _currentPage;
+            }
+            internal set {
+                _currentPage = value;
+            }
+        }
 
         int lastDevKeyResponseCode;
         bool isResponseJsonValid = true;
@@ -89,6 +114,9 @@ namespace Cognitive3D
                     break;
                 case Page.DynamicSetup:
                     DynamicUpdate();
+                    break;
+                case Page.PhotonMultiplayerSetup:
+                    PhotonMultiplayerSetup();
                     break;
                 default:
                     throw new System.NotSupportedException();
@@ -838,6 +866,40 @@ namespace Cognitive3D
             }
         }
 
+#if C3D_PHOTON
+        bool wantPhotonPunSupport = true;
+#else
+        bool wantPhotonPunSupport = false;
+#endif
+        void PhotonMultiplayerSetup()
+        {
+            GUI.Label(steptitlerect, "MUTLIPLAYER SUPPORT", "steptitle");
+            GUI.Label(new Rect(30, 30, 440, 440), "You can enable multiplayer support here. Select the package or framework you are using below.", "normallabel");
+
+            // PUN
+            GUI.Label(new Rect(140, 90, 440, 440), "Photon PUN 2*", "normallabel");
+            GUI.Label(new Rect(30, 420, 440, 440), "*Please ensure that there is only a single instance of Cognitive3D_Manager across your multiplayer scenes", "caption");
+            GUI.Label(new Rect(30, 475, 440, 440), "If you require support for other multiplayer frameworks, please get in touch.", "caption");
+            Rect infoRect1 = new Rect(320, 85, 30, 30);
+            GUI.Label(infoRect1, new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
+
+            Rect checkboxRect1 = new Rect(105, 85, 30, 30);
+            if (wantPhotonPunSupport)
+            {
+                if (GUI.Button(checkboxRect1, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantPhotonPunSupport = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect1, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantPhotonPunSupport = true;
+                }
+            }
+        }
+
         void DynamicUpdate()
         {
             GUI.Label(steptitlerect, "DYNAMIC OBJECTS", "steptitle");
@@ -934,6 +996,7 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.SDKSelection:
+                    onclick = () => currentPage = Page.PhotonMultiplayerSetup;
                     break;
                 case Page.Recompile:
                     onclick = null;
@@ -967,6 +1030,20 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.Wave:
+                    break;
+                case Page.PhotonMultiplayerSetup:
+                    if (wantPhotonPunSupport)
+                    { 
+                        if (!selectedsdks.Contains("C3D_PHOTON"))
+                        {
+                            selectedsdks.Add("C3D_PHOTON");
+                        }
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_PHOTON");
+                    }
+                    onclick += () => currentPage = Page.Recompile;
                     break;
                 default:
                     throw new System.NotSupportedException();
@@ -1010,7 +1087,8 @@ namespace Cognitive3D
                 case Page.SRAnipal:
                 case Page.Wave:
                 case Page.NextSteps:
-                    onclick = () => currentPage = Page.SDKSelection;
+                    if (wantPhotonPunSupport) { onclick = () => currentPage = Page.PhotonMultiplayerSetup; }
+                    else { onclick = () => currentPage = Page.SDKSelection; }
                     break;
                 case Page.DynamicSetup:
                     onclick = () => currentPage = Page.NextSteps;
@@ -1020,6 +1098,9 @@ namespace Cognitive3D
                     break;
                 case Page.Recompile:
                     buttonDisabled = true;
+                    break;
+                case Page.PhotonMultiplayerSetup:
+                    onclick += () => currentPage = Page.SDKSelection;
                     break;
                 default:
                     throw new System.NotSupportedException();

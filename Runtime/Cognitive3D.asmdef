@@ -19,6 +19,9 @@
         "Unity.XR.Oculus",
         "Unity.XR.CoreUtils",
         "UnityEngine.XR.LegacyInputHelpers"
+        "Unity.XR.PicoXR",
+        "PhotonUnityNetworking",
+        "PhotonRealtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

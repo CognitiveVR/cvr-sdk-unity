@@ -42,6 +42,12 @@ namespace Cognitive3D
             }
         }
 
+        // 
+        internal static bool GetPreferencesFile()
+        {
+            return Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences") ? true : false;
+        }
+
         //static for faster access
         public const float SnapshotInterval = 0.1f;
         public static int S_GazeSnapshotCount;
@@ -106,7 +112,7 @@ namespace Cognitive3D
         public bool UploadCacheOnEndPlay = true;
 
         public bool IncludeDisabledDynamicObjects = true;
-        public int TextureResize = 1;
+        public int TextureResize = 2;
         public bool ExportSceneLODLowest = true;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();

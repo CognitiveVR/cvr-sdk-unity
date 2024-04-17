@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    /// <summary>
+    /// Sends events when controller loses tracking and events when controller regains tracking <br/>
+    /// Each lost event should have a corresponding regained event <br/>
+    /// Also sends sensors representing controller height from HMD
+    /// </summary>
     [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
@@ -64,6 +69,16 @@ namespace Cognitive3D.Components
         /// </summary>
         float rightCooldownTimer;
 
+        /// <summary>
+        /// If left controller sent a lost tracking event and hasn't yet sent a regained tracking event
+        /// </summary>
+        bool leftControllerLostTracking;
+
+        /// <summary>
+        /// If right controller sent a lost tracking event and hasn't yet sent a regained tracking event
+        /// </summary>
+        bool rightControllerLostTracking;
+
         protected override void OnSessionBegin()
         {
 #if XRPF
@@ -71,6 +86,7 @@ namespace Cognitive3D.Components
 #endif
             {
                 InputTracking.trackingLost += OnTrackingLost;
+                InputTracking.trackingAcquired += OnTrackingAcquired;
             }
 
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
@@ -79,7 +95,7 @@ namespace Cognitive3D.Components
         }
         
         /// <summary>
-        /// Fucntion to execute when xrNodeState.nodeType loses tracking
+        /// Function to execute when xrNodeState.nodeType loses tracking
         /// We have a cooldown timer to prevent multiple back-to-back events from being sent
         /// </summary>
         /// <param name="xrNodeState">The state of the device</param>
@@ -92,6 +108,7 @@ namespace Cognitive3D.Components
                     .SetProperty("Height from HMD", leftControllerToHMD.y)
                     .Send();
                 inLeftCooldown = true;
+                leftControllerLostTracking = true;
                 leftCooldownTimer = 0;
             }
 
@@ -102,7 +119,29 @@ namespace Cognitive3D.Components
                     .SetProperty("Height from HMD", rightControllerToHMD.y)
                     .Send();
                 inRightCooldown = true;
+                rightControllerLostTracking = true;
                 rightCooldownTimer = 0;
+            }
+        }
+
+        /// <summary>
+        /// Function to execute when xrNodeState.nodeType regains tracking
+        /// </summary>
+        /// <param name="xrNodeState">The state of the device</param>
+        private void OnTrackingAcquired(XRNodeState xrNodeState)
+        {
+            if (xrNodeState.nodeType == XRNode.LeftHand && leftControllerLostTracking)
+            {
+                new CustomEvent("c3d.Left Controller regained tracking")
+                    .Send();
+                leftControllerLostTracking = false;
+            }
+
+            if (xrNodeState.nodeType == XRNode.RightHand && rightControllerLostTracking)
+            {
+                new CustomEvent("c3d.Right Controller regained tracking")
+                    .Send();
+                rightControllerLostTracking = false;
             }
         }
 
@@ -167,6 +206,7 @@ namespace Cognitive3D.Components
         private void Cleanup()
         {
             InputTracking.trackingLost -= OnTrackingLost;
+            InputTracking.trackingAcquired -= OnTrackingAcquired;
             Cognitive3D_Manager.OnPreSessionEnd -= Cleanup;
         }
 
