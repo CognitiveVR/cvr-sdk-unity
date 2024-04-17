@@ -4,6 +4,8 @@ using System.Collections;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
+using UnityEngine.XR;
+
 #endif
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
 using UnityEditor.XR.LegacyInputHelpers;
@@ -31,7 +33,6 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             heights = new float[SampleCount];
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             StartCoroutine(Tick());
         }
 
@@ -39,6 +40,8 @@ namespace Cognitive3D.Components
         {
             yield return new WaitForSeconds(StartDelay);
             YieldInstruction wait = new WaitForSeconds(Interval);
+
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
 
             //median
             for (int i = 0; i < SampleCount; i++)
@@ -112,7 +115,6 @@ namespace Cognitive3D.Components
                 }
                 else if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
                 {
-                    Debug.Log("Do we get here?");
                     height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
                 }
             }
@@ -120,7 +122,6 @@ namespace Cognitive3D.Components
 #else
             height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
 #endif
-            Debug.Log("Height is: " + height);
 
             return true;
         }
