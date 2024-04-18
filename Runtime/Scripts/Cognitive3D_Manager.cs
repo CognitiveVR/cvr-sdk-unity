@@ -34,6 +34,10 @@ namespace Cognitive3D
         {
             get
             {
+                if (instance == null)
+                {
+                    instance = FindObjectOfType<Cognitive3D_Manager>();
+                }
                 return instance;
             }
         }
