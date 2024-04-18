@@ -41,7 +41,7 @@ namespace Cognitive3D
             if (found == null) //add Cognitive3D_manager
             {
                 GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
-                PrefabUtility.InstantiatePrefab(c3dManagerPrefab as GameObject);
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
@@ -88,7 +88,7 @@ namespace Cognitive3D
             if (found == null) //add Cognitive3D_manager
             {
                 GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
-                PrefabUtility.InstantiatePrefab(c3dManagerPrefab as GameObject);
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
@@ -719,6 +719,13 @@ namespace Cognitive3D
             if (right != null && right.GetComponent<DynamicObject>() == null)
             {
                 right.AddComponent<DynamicObject>();
+            }
+
+            if (Cognitive3D_Manager.Instance == null)
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
             //add a single controller input tracker to the cognitive3d_manager
