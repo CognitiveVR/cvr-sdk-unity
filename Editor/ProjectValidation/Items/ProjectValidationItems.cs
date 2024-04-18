@@ -249,19 +249,23 @@ namespace Cognitive3D
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
                         if (xrorigins != null && xrorigins.Count != 0)
                         {
-                            if (xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor || xrorigins[0].CurrentTrackingOriginMode != UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                            if (xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor)
                             {
                                 return false;
                             }
-                            return true;
                         }
                         return true;
                     },
                     fixAction: () =>
                     {
-                        xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
+                        if (xrorigins != null && xrorigins.Count != 0)
+                        {
+                            xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                        }
                     }
                 );
             } 
@@ -279,17 +283,24 @@ namespace Cognitive3D
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
-                        if (cameraOffset[0].TrackingOriginMode != UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
-                        {
-                            return false;
-                        }
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
 
+                        if (cameraOffset != null && cameraOffset.Count != 0)
+                        {
+                            if (cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
+                            {
+                                return false;
+                            }
+                        }
                         return true;
                     },
                     fixAction: () =>
                     {
-                        cameraOffset[0].TrackingOriginMode = UnityEngine.XR.TrackingOriginModeFlags.Floor;
-                        cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
+                        if (cameraOffset != null && cameraOffset.Count != 0)
+                        {
+                            cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                        }
                     }
                 );
             }
