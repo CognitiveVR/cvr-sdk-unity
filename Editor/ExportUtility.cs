@@ -103,8 +103,7 @@ namespace Cognitive3D
             }
 
             //write json settings file
-            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + fullName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
-            File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+            ExportUtility.GenerateSettingsFile(objPath, fullName);
 
             string debugContent = DebugInformationWindow.GetDebugContents();
             File.WriteAllText(objPath + "debug.log", debugContent);
@@ -287,9 +286,49 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// generates and saves a file to the export directory during the scene export process
+        /// </summary>
+        /// <param name="path">the directory path to save this settings.json file to</param>
+        /// <param name="sceneName">the name of the scene</param>
         internal static void GenerateSettingsFile(string path, string sceneName)
         {
-            string jsonSettingsContents = "{ \"scale\":1,\"sceneName\":\"" + sceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append("{");
+            sb.Append("\"scale\":1,");
+            sb.Append("\"sceneName\":\"");
+            sb.Append(sceneName);
+            sb.Append("\",");
+            sb.Append("\"sdkVersion\":\"");
+            sb.Append(Cognitive3D_Manager.SDK_VERSION);
+            sb.Append("\"");
+
+            var cameras = SceneView.GetAllSceneCameras();
+            if (cameras != null && cameras.Length > 0 && cameras[0] != null)
+            {
+                sb.Append(",");
+                sb.Append("\"cameraPos\":[");
+                sb.Append(cameras[0].transform.position.x);
+                sb.Append(",");
+                sb.Append(cameras[0].transform.position.y);
+                sb.Append(",");
+                sb.Append(cameras[0].transform.position.z);
+                sb.Append("]");
+
+                sb.Append(",");
+                sb.Append("\"cameraRot\":[");
+                sb.Append(cameras[0].transform.rotation.x);
+                sb.Append(",");
+                sb.Append(cameras[0].transform.rotation.y);
+                sb.Append(",");
+                sb.Append(cameras[0].transform.rotation.z);
+                sb.Append(",");
+                sb.Append(cameras[0].transform.rotation.w);
+                sb.Append("]");
+            }
+            sb.Append("}");
+
+            string jsonSettingsContents = sb.ToString();
             System.IO.File.WriteAllText(path + "settings.json", jsonSettingsContents);
         }
 
@@ -386,11 +425,10 @@ namespace Cognitive3D
                     uploadConfirmed = true;
                     //create a json.settings file in the directory
                     string objPath = EditorCore.GetSubDirectoryPath(sceneName);
+                    string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
 
                     Directory.CreateDirectory(objPath);
-
-                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
-                    File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+                    GenerateSettingsFile(objPath, fullName);
 
                     string debugContent = DebugInformationWindow.GetDebugContents();
                     File.WriteAllText(objPath + "debug.log", debugContent);
