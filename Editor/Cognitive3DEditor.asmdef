@@ -15,7 +15,10 @@
         "SteamVR_Input_Editor",
         "SteamVR_Actions",
         "Oculus.VR.Editor",
-        "Unity.TextMeshPro"
+        "PhotonUnityNetworking",
+        "Unity.TextMeshPro",
+        "UnityEngine.XR.LegacyInputHelpers",
+        "Unity.XR.CoreUtils"
     ],
     "includePlatforms": [
         "Editor"
@@ -36,6 +39,16 @@
             "name": "com.unity.textmeshpro",
             "expression": "",
             "define": "C3D_TMPRO"
+        },
+        {
+            "name": "com.unity.xr.core-utils",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_COREUTILITIES"
+        },
+        {
+            "name": "com.unity.xr.legacyinputhelpers",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
         }
     ],
     "noEngineReferences": false

@@ -1,9 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using Cognitive3D;
 using Cognitive3D.Components;
+#if PHOTON_UNITY_NETWORKING
+using Photon.Pun;
+#endif
 
 #if C3D_STEAMVR2
 using Valve.VR;
@@ -18,10 +19,10 @@ namespace Cognitive3D
     internal class SceneSetupWindow : EditorWindow
     {
 #if C3D_OCULUS
-        bool wantEyeTrackingEnabled;
-        bool wantPassthroughEnabled;
-        bool wantSocialEnabled;
-        bool wantHandTrackingEnabled;
+        static bool wantEyeTrackingEnabled;
+        static bool wantPassthroughEnabled;
+        static bool wantSocialEnabled;
+        static bool wantHandTrackingEnabled;
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
@@ -36,10 +37,89 @@ namespace Cognitive3D
 
             ExportUtility.ClearUploadSceneSettings();
 
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+#if C3D_OCULUS
+            // Get the current state of these components: are they already enabled?
+            // This is so the checkbox can accurately display the status of the components instead of defaulting to false
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+            if (ovrManager != null )
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingEyeTracking = fi.GetValue(ovrManager);
+                fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingFaceTracking = fi.GetValue(ovrManager);
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions != null)
+                {
+                    wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+                }
+            }
+            if (Cognitive3D_Manager.Instance != null)
+            {
+                wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+                wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            }
+#endif
         }
+
+        internal static void Init(Page page)
+        {
+            currentPage = page;
+            SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+            window.initialPlayerSetup = false;
+
+            ExportUtility.ClearUploadSceneSettings();
+
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
+            Texture2D ignored = null;
+            EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+#if C3D_OCULUS
+            // Get the current state of these components: are they already enabled?
+            // This is so the checkbox can accurately display the status of the components instead of defaulting to false
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+            if (ovrManager != null )
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingEyeTracking = fi.GetValue(ovrManager);
+                fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingFaceTracking = fi.GetValue(ovrManager);
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions != null)
+                {
+                    wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+                }
+            }
+            if (Cognitive3D_Manager.Instance != null)
+            {
+                wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+                wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            }
+#endif
+        }
+
         internal static void Init(Rect position)
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -56,7 +136,7 @@ namespace Cognitive3D
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
         }
 
-        enum Page
+        internal enum Page
         {
             ProjectError,
             Welcome,
@@ -69,7 +149,16 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        Page currentPage;
+        private static Page _currentPage;
+        public static Page currentPage {
+            get {
+                return _currentPage;
+            }
+            internal set {
+                _currentPage = value;
+            }
+        }
+        
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -146,6 +235,27 @@ namespace Cognitive3D
                 PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
                 UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
+#if PHOTON_UNITY_NETWORKING
+    #if C3D_PHOTON
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonMultiplayer>();
+                }
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonView>();
+                }
+    #else
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() != null)
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>());
+                }
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() != null)
+                {
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>());
+                }
+    #endif
+#endif
         }
 
         void ProjectErrorUpdate()
@@ -198,6 +308,10 @@ namespace Cognitive3D
                     leftcontroller = dyn.gameObject;
                 }
             }
+
+            // Setting left and right controllers for checking controller setup item in Project Validation
+            EditorCore.SetControllers(true, rightcontroller);
+            EditorCore.SetControllers(false, leftcontroller);
 
             RoomTrackingSpace trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
             if (trackingSpaceInScene != null)
@@ -633,6 +747,7 @@ namespace Cognitive3D
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
+                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
             if (right != null)
             {
@@ -641,6 +756,7 @@ namespace Cognitive3D
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
+                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
         }
 
@@ -1080,7 +1196,7 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail", "normallabel");
+                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail*", "normallabel");
             }
 
             //upload dynamics
@@ -1111,14 +1227,15 @@ namespace Cognitive3D
                     }
                 }
                 GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
+                GUI.Label(new Rect(200, heightOffset+340, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
             //scene thumbnail preview
-            var thumbnailRect = new Rect(175, heightOffset+130, 150, 150);
+            var thumbnailRect = new Rect(40, heightOffset+130, 420, 180);
             Texture2D savedThumbnail = null;
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(150, heightOffset+280, 200, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset+312, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
@@ -1164,7 +1281,7 @@ namespace Cognitive3D
                     Debug.LogError("Cannot find scene settings for " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().path);
                     return;
                 }
-                Application.OpenURL(CognitiveStatics.SCENELINK(sceneSettings.SceneId, sceneSettings.VersionNumber));
+                Application.OpenURL(CognitiveStatics.GetSceneUrl(sceneSettings.SceneId, sceneSettings.VersionNumber));
             }
             Rect onlineRect = buttonRect;
             onlineRect.x += 82;

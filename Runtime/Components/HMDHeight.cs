@@ -1,6 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+using Unity.XR.CoreUtils;
+using UnityEngine.XR;
+
+#endif
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+using UnityEditor.XR.LegacyInputHelpers;
+#endif
+
 /// <summary>
 /// samples height of a player's HMD. average is assumed to be roughly player's eye height
 /// </summary>
@@ -17,6 +27,7 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
+        private Transform trackingSpace;
 
         protected override void OnSessionBegin()
         {
@@ -30,16 +41,89 @@ namespace Cognitive3D.Components
             yield return new WaitForSeconds(StartDelay);
             YieldInstruction wait = new WaitForSeconds(Interval);
 
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+
             //median
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
-                heights[i] = GameplayReferences.HMD.localPosition.y;
-                if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
+                if (TryGetHeight(out float currentheight))
                 {
-                    RecordAndSendMedian(heights, i);
+                    heights[i] = currentheight;
+                    if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
+                    {
+                        RecordAndSendMedian(heights, i);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if tracking space exist and calculates HMD height according to device type
+        /// </summary>
+        /// <returns>A float representing the height of the HMD</returns>
+        private bool TryGetHeight(out float height)
+        {
+            height = 0;
+
+            if (trackingSpace == null)
+            {
+                Debug.LogWarning("Tracking Space not found. Unable to record HMD height.");
+                return false;
+            }
+
+#if C3D_OCULUS
+            // Calculates height according to camera offset relative to Floor level and rig customization
+            height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
+#elif C3D_DEFAULT
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+            XROrigin xrOrigin = null;
+            if (xrOrigin == null)
+            {
+                xrOrigin = FindObjectOfType<XROrigin>(); 
+            }  
+
+            if (xrOrigin != null)
+            {
+                if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
+                {
+                    // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
+                    // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
+                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpace.position.y;
+                }
+                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                {
+                    // Calculates height based on the camera offset relative to Floor level and rig settings
+                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                }
+            } 
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+            CameraOffset cameraOffset = null;
+            if (cameraOffset == null)
+            {
+                cameraOffset = FindObjectOfType<CameraOffset>();
+            }
+            
+            if (cameraOffset != null)
+            {
+                if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
+                {
+                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpace.position.y;
+                }
+                else if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                {
+                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                }
+            }
+#endif
+#else
+            height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+#endif
+
+            return true;
         }
 
         private void RecordAndSendMedian(float[] heights, int lastIndex)
