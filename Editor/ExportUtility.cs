@@ -78,7 +78,8 @@ namespace Cognitive3D
         private enum ExportQuadType
         {
             Canvas = 0,
-            TMPro = 1
+            TMPro = 1,
+            SpriteRenderer = 2
         };
 
         #region Export Scene
@@ -561,6 +562,7 @@ namespace Cognitive3D
             SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsOfType<SkinnedMeshRenderer>();
             Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
+            SpriteRenderer[] spriteRenderers= UnityEngine.Object.FindObjectsOfType<SpriteRenderer>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
             CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
 #if C3D_TMPRO
@@ -573,6 +575,7 @@ namespace Cognitive3D
                 SkinnedMeshes = rootDynamic.GetComponentsInChildren<SkinnedMeshRenderer>();
                 Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
                 Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
+                spriteRenderers = rootDynamic.GetComponentsInChildren<SpriteRenderer>();
                 foreach (var mf in rootDynamic.GetComponentsInChildren<MeshFilter>())
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
@@ -594,7 +597,7 @@ namespace Cognitive3D
             }
 
             //count custom render and terrain separately - much heavier
-            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases);
+            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases, spriteRenderers);
             float progressPerSmallTask = 0.1f / numberOfSmallTasks;
 
             int numberOfLargeTasks = CountValidLargeTasks(CustomRenders, Terrains);
@@ -799,6 +802,27 @@ namespace Cognitive3D
             }
 #endif
             currentTask = 0;
+            foreach (var v in spriteRenderers)
+            {
+                currentProgress += progressPerSmallTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Sprites " + currentTask + "/" + spriteRenderers.Length, currentProgress);
+                //if (!v.isActiveAndEnabled) { continue; }
+                if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
+                {
+                    //spriteRenderers as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && v.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found spriteRenderers in some other dynamic
+                    continue;
+                }
+                
+                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.SpriteRenderer, false);
+            }
+
+            currentTask = 0;
             foreach (var v in Canvases)
             {
                 if (v.renderMode == RenderMode.ScreenSpaceOverlay || v.renderMode == RenderMode.ScreenSpaceCamera)
@@ -842,8 +866,9 @@ namespace Cognitive3D
             bm.tempGo.transform.position = v.transform.position;
             if (type == ExportQuadType.Canvas)
             {
-                width = v.GetComponent<RectTransform>().sizeDelta.x;
-                height = v.GetComponent<RectTransform>().sizeDelta.y;
+                var rt = v.GetComponent<RectTransform>();
+                width = rt.sizeDelta.x;
+                height = rt.sizeDelta.y;
                 if (Mathf.Approximately(width, height))
                 {
                     //centered
@@ -864,14 +889,29 @@ namespace Cognitive3D
                 MeshRenderer mr = v.GetComponent<MeshRenderer>();
                 width = mr.bounds.size.x;
                 height = mr.bounds.size.y;
-                bm.tempGo.transform.position = v.GetComponent<MeshRenderer>().bounds.center;
+                bm.tempGo.transform.position = mr.bounds.center;
+            }
+            else if (type == ExportQuadType.SpriteRenderer)
+            {
+                SpriteRenderer sr = v.GetComponent<SpriteRenderer>();
+                width = (sr.bounds.extents.x * 2) / sr.transform.localScale.x;
+                height = (sr.bounds.extents.y * 2) / sr.transform.localScale.y;
+                bm.tempGo.transform.position = sr.bounds.center;
             }
 
             bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
             bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
             Texture2D screenshot;
             //bake texture from render
-            screenshot = TextureBake(v.transform, type, width, height);
+            if (type == ExportQuadType.SpriteRenderer)
+            {
+                SpriteRenderer sr = v.GetComponent<SpriteRenderer>();
+                screenshot = TextureBake(v.transform, type, sr.bounds.extents.x*2, sr.bounds.extents.y*2);
+            }
+            else
+            {
+                screenshot = TextureBake(v.transform, type, width, height);
+            }
             screenshot.name = v.gameObject.name.Replace(' ', '_');
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
@@ -880,7 +920,7 @@ namespace Cognitive3D
             if (dyn)
             {
                 mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height) / v.transform.lossyScale.x, Mathf.Max(width, height) / v.transform.lossyScale.y);
-            } 
+            }
             else
             {
                 mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
@@ -895,7 +935,7 @@ namespace Cognitive3D
             return bm.tempGo;
         }
 
-        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases)
+        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases, SpriteRenderer[] spriteRenderers)
         {
             int number = 0;
 
@@ -923,6 +963,12 @@ namespace Cognitive3D
             {
                 if (!v.isActiveAndEnabled) { continue; }
                 if (v.renderMode != RenderMode.WorldSpace) { continue; }
+                number++;
+            }
+
+            foreach (var v in spriteRenderers)
+            {
+                if (!v.enabled) { continue; }
                 number++;
             }
             return number;
@@ -1342,7 +1388,10 @@ namespace Cognitive3D
             {
                 cameraGo.transform.position = target.gameObject.GetComponent<MeshRenderer>().bounds.center - target.transform.forward * 0.05f;
             }
-
+            else if (type == ExportQuadType.SpriteRenderer)
+            {
+                cameraGo.transform.position = target.gameObject.GetComponent<SpriteRenderer>().bounds.center - target.transform.forward * 0.05f;
+            }
             cam.nearClipPlane = 0.04f;
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
