@@ -306,8 +306,8 @@ namespace Cognitive3D
         {
             //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -331,7 +331,7 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
@@ -768,8 +768,8 @@ namespace Cognitive3D
         {
             Debug.Log("refresh media sources");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -786,7 +786,7 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
