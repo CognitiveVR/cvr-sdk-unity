@@ -30,6 +30,7 @@ namespace Cognitive3D
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
@@ -75,8 +76,8 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
-            currentPage = page;
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.currentPage = page;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
@@ -149,8 +150,8 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        private static Page _currentPage;
-        public static Page currentPage {
+        private Page _currentPage;
+        public Page currentPage {
             get {
                 return _currentPage;
             }
