@@ -121,7 +121,7 @@ namespace Cognitive3D
                 fixmessage: "Current scene is found in Cognitive3D preferences",
                 checkAction: () =>
                 {
-                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindSceneByPath(SceneManager.GetActiveScene().path);
                     return c3dScene != null ? true : false;
                 },
                 fixAction: () =>
@@ -137,7 +137,7 @@ namespace Cognitive3D
                 fixmessage: "Current scene has SceneId",
                 checkAction: () =>
                 {
-                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindSceneByPath(SceneManager.GetActiveScene().path);
                     return (c3dScene != null  && !string.IsNullOrEmpty(c3dScene.SceneId)) ? true : false;
                 },
                 fixAction: () =>
