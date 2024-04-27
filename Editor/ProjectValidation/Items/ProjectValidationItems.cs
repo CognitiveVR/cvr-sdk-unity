@@ -249,10 +249,10 @@ namespace Cognitive3D
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
-                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
-                        if (xrorigins != null && xrorigins.Count != 0)
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+                        if (_xrorigins != null && _xrorigins.Count != 0)
                         {
-                            if (xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor)
+                            if (_xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor)
                             {
                                 return false;
                             }
@@ -261,10 +261,10 @@ namespace Cognitive3D
                     },
                     fixAction: () =>
                     {
-                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
-                        if (xrorigins != null && xrorigins.Count != 0)
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+                        if (_xrorigins != null && _xrorigins.Count != 0)
                         {
-                            xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                            _xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
                         }
                     }
                 );
@@ -283,11 +283,11 @@ namespace Cognitive3D
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
-                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
 
-                        if (cameraOffset != null && cameraOffset.Count != 0)
+                        if (_cameraOffset != null && _cameraOffset.Count != 0)
                         {
-                            if (cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
+                            if (_cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
                             {
                                 return false;
                             }
@@ -296,10 +296,10 @@ namespace Cognitive3D
                     },
                     fixAction: () =>
                     {
-                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
-                        if (cameraOffset != null && cameraOffset.Count != 0)
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
+                        if (_cameraOffset != null && _cameraOffset.Count != 0)
                         {
-                            cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                            _cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
                         }
                     }
                 );
