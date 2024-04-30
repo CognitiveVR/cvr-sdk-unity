@@ -51,6 +51,11 @@
             "name": "com.unity.xr.legacyinputhelpers",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
+        },
+        {
+            "name": "com.unity.xr.openxr",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_OPENXR"
         }
     ],
     "noEngineReferences": false
