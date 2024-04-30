@@ -147,11 +147,22 @@ namespace Cognitive3D
 
         internal static void Init()
         {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
             GenerateItemLevelList(EditorCore.Error, ProjectValidation.ItemLevel.Required);
             GenerateItemLevelList(EditorCore.Alert, ProjectValidation.ItemLevel.Recommended);
             GenerateCompletedItemList();
 
             isInitialized = true;
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                ProjectValidationItems.UpdateProjectValidationItemStatus();
+                Reset();
+            }
         }
 
         internal static void Reset()
