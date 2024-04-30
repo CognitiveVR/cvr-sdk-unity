@@ -207,7 +207,7 @@ namespace Cognitive3D
                     ProjectValidationItems.UpdateProjectValidationItemStatus();
                     Reset();
                 }
-                if (GUILayout.Button(new GUIContent(EditorCore.SettingsIconWhite, "Additional Actions"), styles.IconButton))
+                if (GUILayout.Button(new GUIContent(EditorCore.SettingsIcon2, "Additional Actions"), styles.IconButton))
                 {
                     GenericMenu menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Verify all build scenes"), false, ProjectValidationItemsStatus.StartSceneVerificationProcess);
