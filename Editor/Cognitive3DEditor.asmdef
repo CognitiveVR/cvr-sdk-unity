@@ -18,7 +18,9 @@
         "PhotonUnityNetworking",
         "Unity.TextMeshPro",
         "UnityEngine.XR.LegacyInputHelpers",
-        "Unity.XR.CoreUtils"
+        "Unity.XR.CoreUtils",
+        "Unity.XR.OpenXR",
+        "Unity.XR.OpenXR.Features.MetaQuestSupport"
     ],
     "includePlatforms": [
         "Editor"

@@ -12,6 +12,10 @@ using Unity.XR.CoreUtils;
 using UnityEditor.XR.LegacyInputHelpers;
 #endif
 
+
+using UnityEngine.XR.OpenXR;
+using UnityEngine.XR.OpenXR.Features.MetaQuestSupport;
+
 namespace Cognitive3D
 {
     [InitializeOnLoad]
@@ -305,6 +309,36 @@ namespace Cognitive3D
                 );
             }
 #endif
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                message: "\"Force Remove Internet Permission\" is enabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target). This could potentially disrupt network connectivity when sending data. Disable \"Force Remove Internet Permission\"?",
+                fixmessage: "\"Force Remove Internet Permission\" is disabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target).",
+                checkAction: () =>
+                {
+                    var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                    var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+                    if (questFeature == null || !questFeature.enabled)
+                        return false; // By default the permission is retained
+
+                    return !questFeature.ForceRemoveInternetPermission;
+                },
+                fixAction: () =>
+                {
+                    var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                    var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+                    if (questFeature == null || !questFeature.enabled)
+                        return;
+
+                    if (questFeature.ForceRemoveInternetPermission)
+                    {
+                        questFeature.ForceRemoveInternetPermission = false;
+                    }
+                }
+            );
 
 #endif
         }
