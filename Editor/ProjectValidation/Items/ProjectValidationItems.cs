@@ -3,6 +3,7 @@ using Cognitive3D.Components;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
+using System.Reflection;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
@@ -12,7 +13,7 @@ using Unity.XR.CoreUtils;
 using UnityEditor.XR.LegacyInputHelpers;
 #endif
 
-#if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
+#if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER || COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
 using UnityEngine.XR.OpenXR;
 using UnityEngine.XR.OpenXR.Features.MetaQuestSupport;
 #endif
@@ -336,6 +337,52 @@ namespace Cognitive3D
                         var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
                         _questFeature.ForceRemoveInternetPermission = false;
+                    }
+                );
+            }
+#endif
+
+#if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
+            var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+            // Check if Meta Quest Support exists and enabled in OpenXR Android settings
+            if (questFeature != null && questFeature.enabled)
+            {
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Required, 
+                    category: CATEGORY,
+                    message: "\"Force Remove Internet Permission\" is enabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target). This could potentially disrupt network connectivity when sending data. Disable \"Force Remove Internet Permission\"?",
+                    fixmessage: "\"Force Remove Internet Permission\" is disabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target).",
+                    checkAction: () =>
+                    {
+                        var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        var _questFeatureType = _questFeature.GetType();
+
+                        var _forceRemoveInternetPermission = _questFeatureType.GetField("forceRemoveInternetPermission", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if(_forceRemoveInternetPermission != null)
+                        {
+                            object _permission = _forceRemoveInternetPermission.GetValue(questFeature);
+
+                            return !(bool)_permission;
+                        }
+                        
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        var _questFeatureType = _questFeature.GetType();
+
+                        var _forceRemoveInternetPermission = _questFeatureType.GetField("forceRemoveInternetPermission", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if(_forceRemoveInternetPermission != null)
+                        {
+                            _forceRemoveInternetPermission.SetValue(questFeature, false);
+                        }
                     }
                 );
             }
