@@ -241,7 +241,7 @@ namespace Cognitive3D
                             // Iterate through each item in the list
                             foreach (var item in list.items)
                             {
-                                string buttonText = list.listName == "Required" ? "Fix" : "Apply";
+                                string buttonText = item.actionType.ToString();
                                 if (list.listName != "Completed" && !item.isFixed)
                                 {
                                     DrawItem(item, list.listItemIcon, item.message, true, buttonText);

@@ -26,6 +26,19 @@ namespace Cognitive3D
             All = 0,
         }
 
+        /// <summary>
+        /// Represents possible actions that can be taken on project validation items (Used for button text).
+        /// </summary>
+        internal enum ItemAction
+        {
+            // Related fix action is performed automatically once the "Fix" button is pressed, with no developer or user involvement required.
+            Fix = 0,
+            // Requires updates and adjustments in the project or scene by developers or users once the "Edit" button is pressed
+            Edit = 1,
+            // Necessary action is performed automatically once the "Apply" button is pressed, with no developer or user involvement required (used for recommonded items).
+            Apply = 2
+        }
+
         internal static readonly ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();
 
         /// <summary>
@@ -45,9 +58,9 @@ namespace Cognitive3D
         /// <param name="fixmessage">Description of the fix for the item</param>
         /// <param name="isFixed">Checks if item is fixed or not</param>
         /// <param name="fixAction">Delegate that validates the item</param>
-        internal static void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null)
+        internal static void AddItem(ItemLevel level, ItemCategory category, ItemAction actionType, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null)
         {
-            var newItem = new ProjectValidationItem(level, category, message, fixmessage, checkAction, fixAction);
+            var newItem = new ProjectValidationItem(level, category, actionType, message, fixmessage, checkAction, fixAction);
             AddItem(newItem);
         }
 
