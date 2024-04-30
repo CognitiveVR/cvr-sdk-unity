@@ -244,13 +244,12 @@ namespace Cognitive3D
                 bool eyePermissionGranted = false;
                 bool facePermissionGranted = false;
 
-#if UNITY_ANDROID && !UNITY_EDITOR
                 string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
                 string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
                 
                 eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
                 facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
-#endif
+
                 if (eyePermissionGranted && facePermissionGranted)
                 {
                     //these return true even if they're already started elsewhere
