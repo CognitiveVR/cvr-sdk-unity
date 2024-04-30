@@ -12,7 +12,7 @@ using Unity.XR.CoreUtils;
 using UnityEditor.XR.LegacyInputHelpers;
 #endif
 
-#if COGNITIVE3D_INCLUDE_OPENXR
+#if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
 using UnityEngine.XR.OpenXR;
 using UnityEngine.XR.OpenXR.Features.MetaQuestSupport;
 #endif
@@ -311,7 +311,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if COGNITIVE3D_INCLUDE_OPENXR
+#if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
