@@ -37,12 +37,6 @@ namespace Cognitive3D
                 if (instance == null)
                 {
                     instance = FindObjectOfType<Cognitive3D_Manager>();
-                    if (instance == null)
-                    {
-                        Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
-                        GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
-                        Instantiate(c3dManagerPrefab);
-                    }
                 }
                 return instance;
             }
@@ -244,13 +238,12 @@ namespace Cognitive3D
                 bool eyePermissionGranted = false;
                 bool facePermissionGranted = false;
 
-#if UNITY_ANDROID && !UNITY_EDITOR
                 string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
                 string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
                 
                 eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
                 facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
-#endif
+
                 if (eyePermissionGranted && facePermissionGranted)
                 {
                     //these return true even if they're already started elsewhere
@@ -361,6 +354,7 @@ namespace Cognitive3D
 #if C3D_OCULUS
         SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
         SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
+        //TODO delay and update 'c3d.device.eyetracking.enabled' based on GameplayReferences.EyeTrackingEnabled instead. Oculus eye tracking doesn't initialize immediately
         if (GameplayReferences.SDKSupportsEyeTracking)
         {
             SetSessionProperty("c3d.device.eyetracking.type", "OVR");
@@ -370,40 +364,36 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.eyetracking.type", "None");
         }
         SetSessionProperty("c3d.app.sdktype", "Oculus");
-#elif C3D_HOLOLENS
-        SetSessionProperty("c3d.device.eyetracking.enabled", false);
-        SetSessionProperty("c3d.device.eyetracking.type","None");
-        SetSessionProperty("c3d.app.sdktype", "Hololens");
 #elif C3D_PICOVR
-        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.device.eyetracking.type","Tobii");
         SetSessionProperty("c3d.app.sdktype", "PicoVR");
         SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #elif C3D_PICOXR
-        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.device.eyetracking.type","Tobii");
         SetSessionProperty("c3d.app.sdktype", "PicoXR");
         SetSessionProperty("c3d.device.model", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
 #elif C3D_MRTK
-        SetSessionProperty("c3d.device.eyetracking.enabled", Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.IsEyeTrackingEnabled);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "MRTK");
 #elif C3D_VIVEWAVE
-        SetSessionProperty("c3d.device.eyetracking.enabled", Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable());
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "Vive Wave");
 #elif C3D_VARJOVR
-        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "Varjo VR");
 #elif C3D_VARJOXR
-        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "Varjo XR");
 #elif C3D_OMNICEPT
-        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.device.eyetracking.type","Tobii");
         SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL
-        SetSessionProperty("c3d.device.eyetracking.enabled", true);
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.device.eyetracking.type","Tobii");
         SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
 #elif C3D_WINDOWSMR
