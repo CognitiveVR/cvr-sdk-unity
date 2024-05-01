@@ -1211,7 +1211,7 @@ namespace Cognitive3D.UnityGLTF
 				//this fallback ignores:
 					//color
 					//occlusion, metallic (no metalness), roughness (no smoothness)
-					//opacity and blending
+					//opacity and blending (except for standard Unity property names)
 					//backface culling
 					//normal
 					//emission
@@ -1236,6 +1236,27 @@ namespace Cognitive3D.UnityGLTF
 									ExportTextureTransform(pbr.BaseColorTexture, materialObj, tempPropertyName);
 									material.PbrMetallicRoughness = pbr;
 									fallbackMainTextureName = tempPropertyName;
+
+									//check for standard alpha/masking properties
+									material.DoubleSided = materialObj.HasProperty("_Cull") && materialObj.GetInt("_Cull") == (float)CullMode.Off;
+
+									if (materialObj.HasProperty("_Cutoff"))
+									{
+										material.AlphaCutoff = materialObj.GetFloat("_Cutoff");
+									}
+
+									switch (materialObj.GetTag("RenderType", false, ""))
+									{
+										case "TransparentCutout":
+											material.AlphaMode = AlphaMode.MASK;
+											break;
+										case "Transparent":
+											material.AlphaMode = AlphaMode.BLEND;
+											break;
+										default:
+											material.AlphaMode = AlphaMode.OPAQUE;
+											break;
+									}
 									break;
 								}
 							}
