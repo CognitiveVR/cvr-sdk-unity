@@ -37,12 +37,6 @@ namespace Cognitive3D
                 if (instance == null)
                 {
                     instance = FindObjectOfType<Cognitive3D_Manager>();
-                    if (instance == null)
-                    {
-                        Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
-                        GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
-                        Instantiate(c3dManagerPrefab);
-                    }
                 }
                 return instance;
             }

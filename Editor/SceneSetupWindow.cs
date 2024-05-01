@@ -722,6 +722,13 @@ namespace Cognitive3D
                 right.AddComponent<DynamicObject>();
             }
 
+            if (Cognitive3D_Manager.Instance == null)
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
             //add a single controller input tracker to the cognitive3d_manager
             var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<Components.ControllerInputTracker>();
             if (inputTracker == null)
