@@ -29,6 +29,10 @@ namespace Cognitive3D
     {
         public static readonly string SDK_VERSION = "1.4.6";
     
+#if COGNITIVE3D_SKIP_RESOURCES
+        public Cognitive3D_Preferences CustomPreferences;
+#endif
+
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
         {

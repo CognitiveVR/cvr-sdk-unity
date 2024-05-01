@@ -15,6 +15,18 @@ namespace Cognitive3D
             {
                 if (IsSet)
                     return instance;
+#if COGNITIVE3D_SKIP_RESOURCES
+                var manager = GameObject.FindObjectOfType<Cognitive3D_Manager>();
+
+                instance = GameObject.FindObjectOfType<Cognitive3D_Manager>().CustomPreferences;
+                IsSet = true;
+                S_GazeSnapshotCount = instance.GazeSnapshotCount;
+                S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
+                S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
+                S_EventDataThreshold = instance.EventDataThreshold;
+                S_SensorSnapshotCount = instance.SensorSnapshotCount;
+                return instance;
+#else
 
                 if (instance == null)
                 {
@@ -39,6 +51,7 @@ namespace Cognitive3D
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
                 return instance;
+#endif
             }
         }
 
