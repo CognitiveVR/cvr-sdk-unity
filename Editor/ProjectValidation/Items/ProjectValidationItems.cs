@@ -43,7 +43,6 @@ namespace Cognitive3D
 
         private static void AddProjectValidationItems()
         {
-            // Required Items
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
@@ -185,6 +184,24 @@ namespace Cognitive3D
             );
 
 #if C3D_OCULUS
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No OVR_Manager found in current scene.",
+                fixmessage: "OVR_Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<OVRManager>();
+                },
+                fixAction: () =>
+                {
+                    var ovrmngr = new GameObject();
+                    ovrmngr.name = "OVR_Manager";
+                    ovrmngr.AddComponent<OVRManager>();
+                }
+            );
+
             OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
