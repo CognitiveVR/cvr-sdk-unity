@@ -25,7 +25,7 @@ namespace Cognitive3D
         static bool wantHandTrackingEnabled;
 #endif
 
-        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
@@ -720,6 +720,13 @@ namespace Cognitive3D
             if (right != null && right.GetComponent<DynamicObject>() == null)
             {
                 right.AddComponent<DynamicObject>();
+            }
+
+            if (Cognitive3D_Manager.Instance == null)
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
             //add a single controller input tracker to the cognitive3d_manager

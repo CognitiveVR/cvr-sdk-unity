@@ -37,12 +37,6 @@ namespace Cognitive3D
                 if (instance == null)
                 {
                     instance = FindObjectOfType<Cognitive3D_Manager>();
-                    if (instance == null)
-                    {
-                        Util.logWarning("Cognitive Manager Instance not present in scene. Creating new gameobject");
-                        GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
-                        Instantiate(c3dManagerPrefab);
-                    }
                 }
                 return instance;
             }
@@ -244,13 +238,12 @@ namespace Cognitive3D
                 bool eyePermissionGranted = false;
                 bool facePermissionGranted = false;
 
-#if UNITY_ANDROID && !UNITY_EDITOR
                 string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
                 string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
                 
                 eyePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeTrackingPermission);
                 facePermissionGranted = UnityEngine.Android.Permission.HasUserAuthorizedPermission(FaceTrackingPermission);
-#endif
+
                 if (eyePermissionGranted && facePermissionGranted)
                 {
                     //these return true even if they're already started elsewhere

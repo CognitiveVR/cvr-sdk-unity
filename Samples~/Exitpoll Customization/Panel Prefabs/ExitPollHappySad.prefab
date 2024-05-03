@@ -1313,10 +1313,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9981709ae24fdf4fbfe39a242328bcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  idSource: 0
-  CustomId: 1e48a99f-cf57-4a0e-a256-a618f5d94673
+  idSource: 1
+  CustomId: 
   UpdateRate: 0.5
-  MeshName: exitpollboolean
+  MeshName: exitpoll
   PositionThreshold: 0.001
   RotationThreshold: 0.1
   ScaleThreshold: 0.1

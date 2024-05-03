@@ -1040,9 +1040,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   idSource: 0
-  CustomId: 
+  CustomId: b709dae1-148f-40e0-b381-10cd5130154a
   UpdateRate: 0.5
-  MeshName: exitpollboolean
+  MeshName: exitpoll
   PositionThreshold: 0.001
   RotationThreshold: 0.1
   ScaleThreshold: 0.1

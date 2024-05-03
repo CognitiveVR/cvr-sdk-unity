@@ -15,6 +15,8 @@ Height Task ID(s) (If applicable):
 
 ## Checklist
 
+- [ ] My changes will not interrupt or disrupt automated build processes
+- [ ] I have checked all outgoing links (i.e. to documentation) for validity
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
