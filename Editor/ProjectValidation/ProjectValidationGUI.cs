@@ -211,6 +211,10 @@ namespace Cognitive3D
                 {
                     GenericMenu menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Verify all build scenes"), false, ProjectValidationItemsStatus.StartSceneVerificationProcess);
+                    menu.AddItem(new GUIContent("Show project verification prompt before build"), ProjectValidationItemsStatus.displayProjectValidationPopup, () => {
+                        ProjectValidationItemsStatus.displayProjectValidationPopup = !ProjectValidationItemsStatus.displayProjectValidationPopup;
+                    });
+
                     menu.ShowAsContext();
                 }
                 GUILayout.EndHorizontal();
