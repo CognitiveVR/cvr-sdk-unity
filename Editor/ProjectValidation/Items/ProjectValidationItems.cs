@@ -280,9 +280,9 @@ namespace Cognitive3D
                 },
                 fixAction: () =>
                 {
-                    var ovrmngr = new GameObject();
-                    ovrmngr.name = "PXR_Manager";
-                    ovrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
+                    var pxrmngr = new GameObject();
+                    pxrmngr.name = "PXR_Manager";
+                    pxrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
                 }
             );
 #elif C3D_DEFAULT
