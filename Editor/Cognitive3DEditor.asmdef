@@ -21,7 +21,8 @@
         "Unity.XR.CoreUtils",
         "Unity.XR.OpenXR",
         "Unity.XR.OpenXR.Features.MetaQuestSupport",
-        "Unity.XR.PICO"
+        "Unity.XR.PICO",
+        "Unity.XR.PicoXR"
     ],
     "includePlatforms": [
         "Editor"
