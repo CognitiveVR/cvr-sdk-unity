@@ -20,7 +20,8 @@
         "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.CoreUtils",
         "Unity.XR.OpenXR",
-        "Unity.XR.OpenXR.Features.MetaQuestSupport"
+        "Unity.XR.OpenXR.Features.MetaQuestSupport",
+        "Unity.XR.PICO"
     ],
     "includePlatforms": [
         "Editor"

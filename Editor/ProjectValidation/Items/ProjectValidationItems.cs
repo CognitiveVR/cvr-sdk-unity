@@ -267,10 +267,27 @@ namespace Cognitive3D
                     }
                 }
             );
-#endif
-#if C3D_DEFAULT
+#elif C3D_PICOXR
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No PXR_Manager found in current scene.",
+                fixmessage: "PXR_Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>();
+                },
+                fixAction: () =>
+                {
+                    var ovrmngr = new GameObject();
+                    ovrmngr.name = "PXR_Manager";
+                    ovrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
+                }
+            );
+#elif C3D_DEFAULT
 
-#if COGNITIVE3D_INCLUDE_COREUTILITIES
+    #if COGNITIVE3D_INCLUDE_COREUTILITIES
             ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
 
             if (xrorigins != null && xrorigins.Count != 0)
@@ -303,9 +320,9 @@ namespace Cognitive3D
                     }
                 );
             } 
-#endif
+    #endif
 
-#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+    #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
             ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
 
             if (cameraOffset != null && cameraOffset.Count != 0)
@@ -339,9 +356,9 @@ namespace Cognitive3D
                     }
                 );
             }
-#endif
+    #endif
 
-#if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
@@ -370,9 +387,9 @@ namespace Cognitive3D
                     }
                 );
             }
-#endif
+    #endif
 
-#if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
@@ -417,7 +434,7 @@ namespace Cognitive3D
                     }
                 );
             }
-#endif
+    #endif
 
 #endif
         }
