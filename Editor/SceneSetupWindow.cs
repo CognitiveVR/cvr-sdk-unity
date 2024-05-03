@@ -25,7 +25,7 @@ namespace Cognitive3D
         static bool wantHandTrackingEnabled;
 #endif
 
-        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
