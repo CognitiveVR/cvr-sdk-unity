@@ -16,8 +16,10 @@
         "Microsoft.MixedReality.Toolkit",
         "Unity.XR.Management",
         "Unity.XR.PICO",
-        "Unity.XR.PicoXR",
         "Unity.XR.Oculus",
+        "Unity.XR.CoreUtils",
+        "UnityEngine.XR.LegacyInputHelpers",
+        "Unity.XR.PicoXR",
         "PhotonUnityNetworking",
         "PhotonRealtime"
     ],

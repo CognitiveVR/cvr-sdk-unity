@@ -135,17 +135,6 @@ namespace Cognitive3D
             }
         }
 
-        private static GameObject _exitPollReticle;
-        public static GameObject ExitPollReticle
-        {
-            get
-            {
-                if (_exitPollReticle == null)
-                    _exitPollReticle = Resources.Load<GameObject>("ExitPollReticle");
-                return _exitPollReticle;
-            }
-        }
-
         public static ExitPollParameters NewExitPoll(string hookName)
         {
             var CurrentExitPollParams = new ExitPollParameters();

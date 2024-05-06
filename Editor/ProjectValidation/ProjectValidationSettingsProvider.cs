@@ -1,4 +1,7 @@
+using UnityEngine;
 using UnityEditor;
+using Cognitive3D.Components;
+using UnityEngine.UIElements;
 
 namespace Cognitive3D
 {
@@ -20,7 +23,6 @@ namespace Cognitive3D
 
         public static void OpenSettingsWindow()
         {
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
             SettingsService.OpenProjectSettings(SettingsPath);
         }
 
@@ -28,6 +30,11 @@ namespace Cognitive3D
         public static SettingsProvider CreateProjectValidationSettingsProvider()
         {
             return new ProjectValidationSettingsProvider(SettingsPath, SettingsScope.Project);
+        }
+
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+            ProjectValidationItems.UpdateProjectValidationItemStatus();
         }
 
         public override void OnGUI(string searchContext)

@@ -25,11 +25,12 @@ namespace Cognitive3D
         static bool wantHandTrackingEnabled;
 #endif
 
-        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
@@ -75,8 +76,8 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
-            currentPage = page;
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.currentPage = page;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
@@ -149,8 +150,8 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        private static Page _currentPage;
-        public static Page currentPage {
+        private Page _currentPage;
+        public Page currentPage {
             get {
                 return _currentPage;
             }
@@ -719,6 +720,13 @@ namespace Cognitive3D
             if (right != null && right.GetComponent<DynamicObject>() == null)
             {
                 right.AddComponent<DynamicObject>();
+            }
+
+            if (Cognitive3D_Manager.Instance == null)
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
             //add a single controller input tracker to the cognitive3d_manager

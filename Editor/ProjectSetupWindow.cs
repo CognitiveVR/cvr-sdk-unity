@@ -18,17 +18,17 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
-            currentPage = Page.Welcome;
+            window.currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
 
         internal static void Init(Page page)
         {
-            currentPage = page;
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
+            window.currentPage = page;
             window.Show();
 
             window.LoadKeys();
@@ -47,7 +47,7 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
-            currentPage = Page.Welcome;
+            window.currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
@@ -66,8 +66,8 @@ namespace Cognitive3D
             PhotonMultiplayerSetup,
             DynamicSetup,
         }
-        private static Page _currentPage;
-        public static Page currentPage {
+        private Page _currentPage;
+        public Page currentPage {
             get {
                 return _currentPage;
             }
@@ -451,7 +451,7 @@ namespace Cognitive3D
         {
             new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
             new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
-            new SDKDefine("Oculus Integration 32.0+","C3D_OCULUS", "Adds Social Features and Eye Tracking" ),
+            new SDKDefine("Oculus Integration 53+ / Meta XR 64+","C3D_OCULUS", "Adds Passthrough, Hand Tracking, Eye Tracking and optional Oculus ID and Subscription Features" ),
             new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT", "Adds Eye Tracking and Sensors" ),
             new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Adds Eyetracking for the Vive Pro Eye" ), //previously C3D_VIVEPROEYE
             new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR", "Adds Eye Tracking for Varjo Headsets"),
@@ -820,6 +820,7 @@ namespace Cognitive3D
             //calculate fill amount
             float fillAmount = (float)(EditorApplication.timeSinceStartup - compileStartTime) / 10f;
             fillAmount = Mathf.Clamp(fillAmount, 0.02f, 1f);
+            var compileDurationBox = new Rect(30, 120, 440, 30);
             var progressBackground = new Rect(30, 150, 440, 30);
             var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);
 
@@ -836,7 +837,7 @@ namespace Cognitive3D
             //display ui elements
             GUI.Box(progressBackground, "", "box");
             GUI.Box(progressPartial, "", "button");
-            GUI.Label(progressBackground, compileDuration, "image_centered");
+            GUI.Label(compileDurationBox, compileDuration, "image_centered");
 
             //done
             if (EditorApplication.isCompiling) { return; }

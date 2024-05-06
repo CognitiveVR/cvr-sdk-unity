@@ -3,6 +3,7 @@ using Cognitive3D.Components;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
+using System.Reflection;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
@@ -10,6 +11,11 @@ using Unity.XR.CoreUtils;
 
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
 using UnityEditor.XR.LegacyInputHelpers;
+#endif
+
+#if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER || COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
+using UnityEngine.XR.OpenXR;
+using UnityEngine.XR.OpenXR.Features.MetaQuestSupport;
 #endif
 
 namespace Cognitive3D
@@ -37,10 +43,10 @@ namespace Cognitive3D
 
         private static void AddProjectValidationItems()
         {
-            // Required Items
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
                 message: "No Cognitive3D player definition is found. Select an SDK in the Project Setup window to support specific features.",
                 fixmessage: "Cognitive3D player definition is added",
                 checkAction: () =>
@@ -56,6 +62,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
                 message: "Tracking space is not configured. Select the tracking space of the player prefab in the Scene Setup window",
                 fixmessage: "Tracking space is configured",
                 checkAction: () =>
@@ -71,6 +78,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
                 message: "Application key is not valid. Re-enter application key in the Project Setup window.",
                 fixmessage: "Valid application key is found",
                 checkAction: () =>
@@ -86,6 +94,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
                 message: "No Cognitive3D manager is found. Add Cognitive3D_Manager prefab to current scene?",
                 fixmessage: "Cognitive3D manager exists in current scene",
                 checkAction: () =>
@@ -102,6 +111,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
                 message: "No Cognitive3D preferences file is found in project folder. Create an instance in Assets/Resources?",
                 fixmessage: "Cognitive3D preferences file created in project folder",
                 checkAction: () =>
@@ -117,11 +127,12 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
                 message: "Current scene is not found in Cognitive3D preferences. Please upload the current scene from the Scene Setup window.",
                 fixmessage: "Current scene is found in Cognitive3D preferences",
                 checkAction: () =>
                 {
-                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindSceneByPath(SceneManager.GetActiveScene().path);
                     return c3dScene != null ? true : false;
                 },
                 fixAction: () =>
@@ -133,11 +144,12 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
                 message: "Current scene has no SceneId. Please upload the current scene from the Scene Setup window.",
                 fixmessage: "Current scene has SceneId",
                 checkAction: () =>
                 {
-                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindScene(SceneManager.GetActiveScene().name);
+                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindSceneByPath(SceneManager.GetActiveScene().path);
                     return (c3dScene != null  && !string.IsNullOrEmpty(c3dScene.SceneId)) ? true : false;
                 },
                 fixAction: () =>
@@ -146,9 +158,11 @@ namespace Cognitive3D
                 }
                 );
 
+            // Check this!
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
                 message: "Current scene path is invalid. Please verify the path in Cognitive3D's preference scene settings",
                 fixmessage: "Current scene path is valid",
                 checkAction: () =>
@@ -169,12 +183,30 @@ namespace Cognitive3D
                 }
             );
 
-            // Recommended Items
 #if C3D_OCULUS
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No OVR_Manager found in current scene.",
+                fixmessage: "OVR_Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<OVRManager>();
+                },
+                fixAction: () =>
+                {
+                    var ovrmngr = new GameObject();
+                    ovrmngr.name = "OVR_Manager";
+                    ovrmngr.AddComponent<OVRManager>();
+                }
+            );
+
             OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
                 message: "Missing some Oculus target devices. Enable all?",
                 fixmessage: "All Oculus target devices are enabled",
                 checkAction: () =>
@@ -206,6 +238,7 @@ namespace Cognitive3D
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
                 message: "Recording Oculus user data like username, id, and display name is disabled. Enable recording Oculus User Data?",
                 fixmessage: "Recording Oculus user data like username, id, and display name is enabled",
                 checkAction: () =>
@@ -234,10 +267,27 @@ namespace Cognitive3D
                     }
                 }
             );
-#endif
-#if C3D_DEFAULT
+#elif C3D_PICOXR
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No PXR_Manager found in current scene.",
+                fixmessage: "PXR_Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>();
+                },
+                fixAction: () =>
+                {
+                    var pxrmngr = new GameObject();
+                    pxrmngr.name = "PXR_Manager";
+                    pxrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
+                }
+            );
+#elif C3D_DEFAULT
 
-#if COGNITIVE3D_INCLUDE_COREUTILITIES
+    #if COGNITIVE3D_INCLUDE_COREUTILITIES
             ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
 
             if (xrorigins != null && xrorigins.Count != 0)
@@ -245,29 +295,34 @@ namespace Cognitive3D
                 ProjectValidation.AddItem(
                     level: ProjectValidation.ItemLevel.Recommended, 
                     category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Apply,
                     message: "Tracking origin is not set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
-                        if (xrorigins != null && xrorigins.Count != 0)
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+                        if (_xrorigins != null && _xrorigins.Count != 0)
                         {
-                            if (xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor || xrorigins[0].CurrentTrackingOriginMode != UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                            if (_xrorigins[0].RequestedTrackingOriginMode != XROrigin.TrackingOriginMode.Floor)
                             {
                                 return false;
                             }
-                            return true;
                         }
                         return true;
                     },
                     fixAction: () =>
                     {
-                        xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+                        if (_xrorigins != null && _xrorigins.Count != 0)
+                        {
+                            _xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                        }
                     }
                 );
             } 
-#endif
+    #endif
 
-#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+    #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
             ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var cameraOffset);
 
             if (cameraOffset != null && cameraOffset.Count != 0)
@@ -275,25 +330,111 @@ namespace Cognitive3D
                 ProjectValidation.AddItem(
                     level: ProjectValidation.ItemLevel.Recommended, 
                     category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Apply,
                     message: "Tracking origin is set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
                     fixmessage: "Tracking origin is set to floor",
                     checkAction: () =>
                     {
-                        if (cameraOffset[0].TrackingOriginMode != UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
-                        {
-                            return false;
-                        }
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
 
+                        if (_cameraOffset != null && _cameraOffset.Count != 0)
+                        {
+                            if (_cameraOffset[0].requestedTrackingMode != UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor)
+                            {
+                                return false;
+                            }
+                        }
                         return true;
                     },
                     fixAction: () =>
                     {
-                        cameraOffset[0].TrackingOriginMode = UnityEngine.XR.TrackingOriginModeFlags.Floor;
-                        cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
+                        if (_cameraOffset != null && _cameraOffset.Count != 0)
+                        {
+                            _cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                        }
                     }
                 );
             }
-#endif
+    #endif
+
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
+            var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+            // Check if Meta Quest Support exists and enabled in OpenXR Android settings
+            if (questFeature != null && questFeature.enabled)
+            {
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Required, 
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "\"Force Remove Internet Permission\" is enabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target). This could potentially disrupt network connectivity when sending data. Disable \"Force Remove Internet Permission\"?",
+                    fixmessage: "\"Force Remove Internet Permission\" is disabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target).",
+                    checkAction: () =>
+                    {
+                        var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+                        return !_questFeature.ForceRemoveInternetPermission;
+                    },
+                    fixAction: () =>
+                    {
+                        var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+                        _questFeature.ForceRemoveInternetPermission = false;
+                    }
+                );
+            }
+    #endif
+
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
+            var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+
+            // Check if Meta Quest Support exists and enabled in OpenXR Android settings
+            if (questFeature != null && questFeature.enabled)
+            {
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Required, 
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "\"Force Remove Internet Permission\" is enabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target). This could potentially disrupt network connectivity when sending data. Disable \"Force Remove Internet Permission\"?",
+                    fixmessage: "\"Force Remove Internet Permission\" is disabled in OpenXR Meta Quest Support > Manifest settings (Android Build Target).",
+                    checkAction: () =>
+                    {
+                        var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        var _questFeatureType = _questFeature.GetType();
+
+                        var _forceRemoveInternetPermission = _questFeatureType.GetField("forceRemoveInternetPermission", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if(_forceRemoveInternetPermission != null)
+                        {
+                            object _permission = _forceRemoveInternetPermission.GetValue(questFeature);
+
+                            return !(bool)_permission;
+                        }
+                        
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        var _questFeatureType = _questFeature.GetType();
+
+                        var _forceRemoveInternetPermission = _questFeatureType.GetField("forceRemoveInternetPermission", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                        if(_forceRemoveInternetPermission != null)
+                        {
+                            _forceRemoveInternetPermission.SetValue(questFeature, false);
+                        }
+                    }
+                );
+            }
+    #endif
 
 #endif
         }

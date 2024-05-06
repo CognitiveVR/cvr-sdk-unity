@@ -28,7 +28,6 @@ namespace Cognitive3D
         public Image MicrophoneImage;
         public Text TipText;
         public Text buttonPrompt;
-        private ActivationType activationType;
         ExitPollSet questionSet;
 
 
