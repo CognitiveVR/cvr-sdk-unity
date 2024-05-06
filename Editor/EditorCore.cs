@@ -668,15 +668,27 @@ namespace Cognitive3D
         }
 
         private static Texture2D _settingsIconWhite;
-        public static Texture2D SettingsIconWhite
+        private static Texture2D _settingsIconBlack;
+        public static Texture2D SettingsIcon2
         {
             get
             {
-                if (_settingsIconWhite == null)
+                if (EditorGUIUtility.isProSkin)
                 {
-                    _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    if (_settingsIconWhite == null)
+                    {
+                        _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    }
+                    return _settingsIconWhite;
                 }
-                return _settingsIconWhite;
+                else
+                {
+                    if (_settingsIconBlack == null)
+                    {
+                        _settingsIconBlack = Resources.Load<Texture2D>("Icons/gear black");
+                    }
+                    return _settingsIconBlack;
+                }
             }
         }
 
