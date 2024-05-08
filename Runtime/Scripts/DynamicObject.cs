@@ -557,6 +557,8 @@ namespace Cognitive3D
 
         private void OnDisable()
         {
+            GameplayReferences.OnControllerValidityChange -= DelayEnable;
+
             Cognitive3D_Manager.OnTick -= SyncWithGazeTick;
 
             DynamicManager.SetTransform(DataId, transform);
