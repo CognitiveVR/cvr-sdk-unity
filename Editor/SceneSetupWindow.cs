@@ -457,11 +457,11 @@ namespace Cognitive3D
             }
             if (leftcontroller == null)
             {
-                leftcontroller = GameObject.Find("Left Controller").gameObject;
+                leftcontroller = GameObject.Find("Left Controller")?.gameObject;
             }
             if (rightcontroller == null)
             {
-                rightcontroller = GameObject.Find("Right Controller").gameObject;
+                rightcontroller = GameObject.Find("Right Controller")?.gameObject;
             }
 #endif
         }
