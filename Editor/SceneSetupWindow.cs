@@ -2,6 +2,12 @@
 using UnityEngine;
 using UnityEditor;
 using Cognitive3D.Components;
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+using Unity.XR.CoreUtils;
+#endif
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+using UnityEditor.XR.LegacyInputHelpers;
+#endif
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
 #endif
@@ -377,9 +383,9 @@ namespace Cognitive3D
 #elif C3D_PICOXR
             //TODO investigate if automatically detecting pico controllers is possible using PicoXR package
 #endif
-            if (leftcontroller != null && rightcontroller != null)
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
             {
-                //found controllers from VR SDKs
+                //found controllers and tracking space from VR SDKs
                 return;
             }
 
@@ -398,6 +404,40 @@ namespace Cognitive3D
                     leftcontroller = driver.gameObject;
                 }
             }
+
+            // if tracking space and controllers not found yet, look for it in other ways
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+            var cameraOffset = FindObjectOfType<CameraOffset>();
+            if (cameraOffset != null)
+            {
+                trackingSpace = cameraOffset.gameObject;
+                var cameraOffsetObject = trackingSpace.transform.Find("Camera Offset");
+                if (cameraOffsetObject != null)
+                {
+                    trackingSpace = cameraOffsetObject.gameObject;
+                }
+            }
+#endif
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+            var xrRig = FindObjectOfType<XROrigin>();
+            if (xrRig != null)
+            {
+                trackingSpace = xrRig.gameObject;
+                var xrRigOffset = xrRig.transform.Find("Camera Offset");
+                if (xrRigOffset != null)
+                {
+                    trackingSpace = xrRigOffset.gameObject;
+                    if (leftcontroller == null)
+                    {
+                        leftcontroller = xrRigOffset.Find("Left Controller").gameObject;
+                    }
+                    if (rightcontroller == null)
+                    {
+                        rightcontroller = xrRigOffset.Find("Right Controller").gameObject;
+                    }
+                }
+            }
+#endif
         }
 
         bool AllSetupComplete;
