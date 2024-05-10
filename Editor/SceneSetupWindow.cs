@@ -349,8 +349,18 @@ namespace Cognitive3D
                 var playArea = FindObjectOfType<SteamVR_PlayArea>();
                 if (playArea != null)
                 {
-                    leftcontroller = playArea.gameObject.transform.Find("Controller (left)").gameObject;
-                    rightcontroller = playArea.gameObject.transform.Find("Controller (right)").gameObject;
+                    var controllers = playArea.GetComponentsInChildren<SteamVR_Behaviour_Pose>();
+                    foreach (var controller in controllers)
+                    {
+                        if (controller.inputSource == SteamVR_Input_Sources.LeftHand)
+                        {
+                            leftcontroller = controller.gameObject;
+                        }
+                        if (controller.inputSource == SteamVR_Input_Sources.RightHand)
+                        {
+                            rightcontroller = controller.gameObject;
+                        }
+                    }
                     trackingSpace = playArea.gameObject;
                 }
             }
@@ -429,6 +439,11 @@ namespace Cognitive3D
                 }
             }
 #endif
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
+            {
+                //found controllers and tracking space from VR SDKs
+                return;
+            }
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
             var xrRig = FindObjectOfType<XROrigin>();
             if (xrRig != null)
