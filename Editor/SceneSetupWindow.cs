@@ -453,15 +453,15 @@ namespace Cognitive3D
                 if (xrRigOffset != null)
                 {
                     trackingSpace = xrRigOffset.gameObject;
-                    if (leftcontroller == null)
-                    {
-                        leftcontroller = xrRigOffset.Find("Left Controller").gameObject;
-                    }
-                    if (rightcontroller == null)
-                    {
-                        rightcontroller = xrRigOffset.Find("Right Controller").gameObject;
-                    }
                 }
+            }
+            if (leftcontroller == null)
+            {
+                leftcontroller = GameObject.Find("Left Controller").gameObject;
+            }
+            if (rightcontroller == null)
+            {
+                rightcontroller = GameObject.Find("Right Controller").gameObject;
             }
 #endif
         }
