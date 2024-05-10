@@ -286,6 +286,7 @@ namespace Cognitive3D
 
         [System.NonSerialized]
         bool initialPlayerSetup;
+
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
@@ -320,9 +321,9 @@ namespace Cognitive3D
                 trackingSpace = trackingSpaceInScene.gameObject;
             }
 
-            if (leftcontroller != null && rightcontroller != null)
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
             {
-                //found dynamic objects for controllers - prefer to use those
+                //found dynamic objects for controllers and tracking space - prefer to use those
                 return;
             }
 
@@ -343,6 +344,7 @@ namespace Cognitive3D
             {
                 leftcontroller = manager.leftHandAnchor.gameObject;
                 rightcontroller = manager.rightHandAnchor.gameObject;
+                trackingSpace = manager.trackingSpace.gameObject;
             }
 
             OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
