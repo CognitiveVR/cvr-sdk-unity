@@ -4,6 +4,9 @@ using UnityEditor;
 using Cognitive3D.Components;
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
+#if C3D_VIVEWAVE
+using Wave.Essence;
+#endif
 #endif
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
 using UnityEditor.XR.LegacyInputHelpers;
@@ -391,6 +394,14 @@ namespace Cognitive3D
 
 #elif C3D_VIVEWAVE
             //TODO investigate if automatically detecting vive wave controllers is possible
+            if (trackingSpace == null)
+            {
+                var waveRig = FindObjectOfType<WaveRig>();
+                if (waveRig != null)
+                {
+                    trackingSpace = waveRig.CameraOffset;
+                }
+            }
 #elif C3D_PICOVR
             //basic setup
             var manager = FindObjectOfType<Pvr_Controller>();
