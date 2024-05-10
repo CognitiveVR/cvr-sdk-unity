@@ -342,6 +342,17 @@ namespace Cognitive3D
             {
                 leftcontroller = player.hands[0].gameObject;
                 rightcontroller = player.hands[1].gameObject;
+                trackingSpace = player.trackingOriginTransform.gameObject; 
+            }
+            else
+            {
+                var playArea = FindObjectOfType<SteamVR_PlayArea>();
+                if (playArea != null)
+                {
+                    leftcontroller = playArea.gameObject.transform.Find("Controller (left)").gameObject;
+                    rightcontroller = playArea.gameObject.transform.Find("Controller (right)").gameObject;
+                    trackingSpace = playArea.gameObject;
+                }
             }
 #elif C3D_OCULUS
             //basic setup
