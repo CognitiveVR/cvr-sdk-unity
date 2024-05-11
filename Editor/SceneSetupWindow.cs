@@ -484,9 +484,10 @@ namespace Cognitive3D
             PlayerSetupStart();
             GUI.Label(new Rect(30, 30, 440, 440), "You can use your existing Player Prefab. For most implementations, this is just a quick check to ensure cameras and controllers are configued correctly.", "normallabel");
             GUI.Label(new Rect(30, 100, 440, 440), "The display for the HMD should be tagged as <b>MainCamera</b>", "normallabel");
+            GUI.Label(new Rect(30, 150, 440, 440), "The <b>TrackingSpace</b> is the root transform for the HMD and controllers", "normallabel");
 
             //hmd
-            int hmdRectHeight = 150;
+            int hmdRectHeight = 200;
 
             GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
             if (GUI.Button(new Rect(180, hmdRectHeight, 255, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
@@ -538,7 +539,7 @@ namespace Cognitive3D
 
 
             // tracking space
-            int hmdRectHeight2 = 185;
+            int hmdRectHeight2 = 235;
 
             GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
             if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
@@ -570,7 +571,7 @@ namespace Cognitive3D
 #if C3D_STEAMVR2
             GUI.Label(new Rect(30, 250, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
+            GUI.Label(new Rect(30, 280, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
             bool leftControllerIsValid = false;
@@ -593,7 +594,7 @@ namespace Cognitive3D
                     }
                 }
             }
-            int handOffset = 290;
+            int handOffset = 320;
 
             //left hand label
             GUI.Label(new Rect(30, handOffset + 15, 150, 30), "Left Controller", "boldlabel");
@@ -694,7 +695,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
+            if (GUI.Button(new Rect(160, 430, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
                 if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
@@ -708,11 +709,11 @@ namespace Cognitive3D
 
             if (AllSetupComplete)
             {
-                GUI.Label(new Rect(130, 400, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 430, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(128, 400, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 430, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
