@@ -31,8 +31,18 @@ namespace Cognitive3D.Components
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
         private Transform trackingSpace;
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
         XROrigin xrOrigin = null;
+#endif
+
+#if C3D_VIVEWAVE
         WaveRig waveRig = null;
+
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+        CameraOffset cameraOffset = null;
+#endif
 
         protected override void OnSessionBegin()
         {
@@ -126,7 +136,6 @@ namespace Cognitive3D.Components
 #endif
 
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
-            CameraOffset cameraOffset = null;
             if (cameraOffset == null)
             {
                 cameraOffset = FindObjectOfType<CameraOffset>();
