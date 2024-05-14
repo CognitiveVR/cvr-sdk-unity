@@ -9,15 +9,15 @@ using UnityEngine.XR;
 
 namespace Cognitive3D
 {
-    public enum ActivationType
-    {
-        PointerFallbackGaze,
-        TriggerButton
-    }
-
     [AddComponentMenu("Cognitive3D/Internal/Virtual Button")]
     public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
     {
+        public enum ActivationType
+        {
+            PointerFallbackGaze,
+            TriggerButton
+        }
+
         public Image fillImage;
         public Image buttonImage;
         public float FillDuration = 1;

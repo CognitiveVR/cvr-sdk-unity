@@ -8,6 +8,7 @@ namespace Cognitive3D.Serialization
     internal static class JsonUtil
     {
         /// <returns>"name":["obj","obj","obj"]</returns>
+        [System.Obsolete]
         public static StringBuilder SetListString(string name, List<string> list, StringBuilder builder)
         {
             builder.Append("\"");
@@ -25,6 +26,7 @@ namespace Cognitive3D.Serialization
         }
 
         /// <returns>"name":[obj,obj,obj]</returns>
+        [System.Obsolete]
         public static StringBuilder SetListObject<T>(string name, List<T> list, StringBuilder builder)
         {
             builder.Append("\"");
@@ -44,9 +46,10 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetString(string name, string stringValue, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":\"");
-
+            stringValue = EscapeString(stringValue);
             builder.Append(stringValue);
             builder.Append("\"");
 
@@ -57,6 +60,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetInt(string name, int intValue, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":");
             builder.Concat(intValue);
@@ -67,6 +71,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetFloat(string name, float floatValue, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":");
             builder.Concat(floatValue);
@@ -77,6 +82,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetDouble(string name, double doubleValue, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":");
             builder.ConcatDouble(doubleValue);
@@ -87,6 +93,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetLong(string name, long longValue, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":");
             builder.Concat(longValue);
@@ -110,7 +117,11 @@ namespace Cognitive3D.Serialization
             if (objectValue.GetType() == typeof(bool))
                 builder.Append(objectValue.ToString().ToLower());
             else
-                builder.Append(objectValue.ToString());
+            {
+                string objectValueString = objectValue.ToString();
+                objectValueString = EscapeString(objectValueString);
+                builder.Append(objectValueString);
+            }
 
             return builder;
         }
@@ -121,6 +132,7 @@ namespace Cognitive3D.Serialization
             if (pos.Length < 3) { pos = new float[3] { 0, 0, 0 }; }
 
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":[");
 
@@ -152,6 +164,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetVectorRaw(string name, float posx, float posy, float posz, StringBuilder builder, bool centimeterLimit = false)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":[");
 
@@ -169,6 +182,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetVector2(string name, float[] pos, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":[");
 
@@ -186,6 +200,7 @@ namespace Cognitive3D.Serialization
             if (quat.Length < 4) { quat = new float[4] { 0, 0, 0, 0 }; }
 
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":[");
 
@@ -205,6 +220,7 @@ namespace Cognitive3D.Serialization
         public static StringBuilder SetQuatRaw(string name, float quatx, float quaty, float quatz, float quatw, StringBuilder builder)
         {
             builder.Append("\"");
+            name = EscapeString(name);
             builder.Append(name);
             builder.Append("\":[");
 
@@ -218,6 +234,13 @@ namespace Cognitive3D.Serialization
 
             builder.Append(']');
             return builder;
+        }
+
+        //escapes linebreaks in strings
+        static string EscapeString(string input)
+        {
+            if (!input.Contains("\n")) { return input; }
+            return input.Replace("\n", "\\n");
         }
     }
 }

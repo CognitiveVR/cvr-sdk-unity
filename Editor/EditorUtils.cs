@@ -22,7 +22,7 @@ namespace Cognitive3D
         /// <summary>
         /// Max time to wait for user response
         /// </summary>
-        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 1200;
+        private const float WAIT_TIME_USER_RESPONSE_SECONDS = 300;
 
         private const string LOG_TAG = "[COGNITIVE3D] ";
 
@@ -110,12 +110,12 @@ namespace Cognitive3D
         }
 
         // Waiting for user respond
-        // If there is no response, the window will be closed after 20 mins and will exit editor's play mode
+        // If there is no response, the window will be closed after 5 mins and will exit editor's play mode
         private static async Task WaitingForUserResponse()
         {
             float time = 0;
 
-            // Waiting for 20 minutes
+            // Waiting for 5 minutes
             while(time < WAIT_TIME_USER_RESPONSE_SECONDS && !buttonPressed)
             {
                 await Task.Yield();

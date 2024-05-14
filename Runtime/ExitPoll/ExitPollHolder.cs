@@ -59,7 +59,9 @@ namespace Cognitive3D
                 poll.RotateToStayOnScreen = false;
                 poll.LockYPosition = false;
             }
-            exitPollSet = poll.Begin();
+
+            exitPollSet = new ExitPollSet();
+            exitPollSet.BeginExitPoll(Parameters);
         }
 
         public void OnTrackingLost(XRNodeState xrNodeState)
