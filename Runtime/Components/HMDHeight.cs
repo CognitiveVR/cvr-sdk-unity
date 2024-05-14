@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.XR;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
-using UnityEngine.XR;
 #endif
 
 #if C3D_VIVEWAVE
