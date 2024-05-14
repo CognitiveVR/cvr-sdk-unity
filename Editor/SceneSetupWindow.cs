@@ -695,7 +695,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(160, 430, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
+            if (GUI.Button(new Rect(160, 420, 200, 30), new GUIContent("Set up GameObjects","Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
                 if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
@@ -709,17 +709,17 @@ namespace Cognitive3D
 
             if (AllSetupComplete)
             {
-                GUI.Label(new Rect(130, 430, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 420, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(128, 430, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 420, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
             //generate default input file if it doesn't already exist
             bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
-            if (GUI.Button(new Rect(160, 465, 200, 30), "Append Input Bindings"))
+            if (GUI.Button(new Rect(160, 455, 200, 30), "Append Input Bindings"))
             {
                 if (SteamVR_Input.actionFile == null)
                 {
@@ -743,11 +743,11 @@ namespace Cognitive3D
             }
             if (DoesC3DInputActionSetExist())
             {
-                GUI.Label(new Rect(130, 465, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 455, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(128, 465, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 455, 32, 32), EditorCore.Alert, "image_centered");
             }
 #endif
         }
