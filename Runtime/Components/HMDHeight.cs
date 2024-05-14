@@ -92,7 +92,10 @@ namespace Cognitive3D.Components
                 {
                     height = GameplayReferences.HMD.position.y + waveRig.CameraYOffset - trackingSpace.position.y;
                 }
-                else if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unknown) // unknown gives incorrect values
+                else if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor 
+                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unknown 
+                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.TrackingReference
+                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unbounded) // unknown and tracking gives incorrect values
                 {
                     height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
                 }
