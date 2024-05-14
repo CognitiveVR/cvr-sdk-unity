@@ -2,15 +2,19 @@
 using UnityEngine;
 using UnityEditor;
 using Cognitive3D.Components;
+
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
+#endif
+
 #if C3D_VIVEWAVE
 using Wave.Essence;
 #endif
-#endif
+
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
 using UnityEditor.XR.LegacyInputHelpers;
 #endif
+
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
 #endif
