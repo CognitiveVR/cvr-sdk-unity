@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
 using UnityEngine.XR;
-
 #endif
+
+#if C3D_VIVEWAVE
+using Wave.Essence;
+#endif
+
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
 using UnityEditor.XR.LegacyInputHelpers;
 #endif
@@ -28,6 +31,8 @@ namespace Cognitive3D.Components
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
         private Transform trackingSpace;
+        XROrigin xrOrigin = null;
+        WaveRig waveRig = null;
 
         protected override void OnSessionBegin()
         {
@@ -75,10 +80,27 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
             // Calculates height according to camera offset relative to Floor level and rig customization
             height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
+#elif C3D_VIVEWAVE
+            if (waveRig == null)
+            {
+                waveRig = FindObjectOfType<WaveRig>();
+            }
+
+            if (waveRig != null)
+            {
+                if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Device)
+                {
+                    height = GameplayReferences.HMD.position.y + waveRig.CameraYOffset - trackingSpace.position.y;
+                }
+                else if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor)
+                {
+                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                }
+            }
+
 #elif C3D_DEFAULT
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
-            XROrigin xrOrigin = null;
             if (xrOrigin == null)
             {
                 xrOrigin = FindObjectOfType<XROrigin>(); 
