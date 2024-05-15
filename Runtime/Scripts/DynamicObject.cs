@@ -185,12 +185,12 @@ namespace Cognitive3D
             if (hasInitialized) { return; }
             StartingScale = transform.lossyScale;
             string registerMeshName = MeshName;
-            GameplayReferences.SetController(this, IsRight);
 
             // if a controller, delay registering the controller until the controller name has returned something valid
             // if current device is hands or null, then use fallback
             if (IsController)
             {
+                GameplayReferences.SetController(this, IsRight);
                 // Special case for hand tracking (particularly when session begins with hand): 
                 //  need this because InputDevice.isValid returns false
                 //  and InputDevice.name gives us nothing
