@@ -10,6 +10,7 @@ namespace Cognitive3D
 {
     public class AndroidPlugin : MonoBehaviour
     {
+#if UNITY_ANDROID
         AndroidJavaObject plugin;
         AndroidJavaObject plugininstance;
 
@@ -65,5 +66,6 @@ namespace Cognitive3D
             AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             return unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
         }
+#endif
     }
 }
