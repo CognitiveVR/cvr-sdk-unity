@@ -20,6 +20,7 @@ namespace Cognitive3D
         {
             Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
 
+
             //if this component is enabled late, run startup as if session just began
             if (Cognitive3D_Manager.IsInitialized)
                 OnSessionBegin();
@@ -42,19 +43,27 @@ namespace Cognitive3D
                 // Create an instance of the Java class
                 plugininstance = new AndroidJavaObject("com.c3d.androidjavaplugin.Plugin");
 
-                plugininstance.Call("InitSessionData", Cognitive3D_Manager.DeviceId, Util.Timestamp(Time.frameCount), Cognitive3D_Manager.SessionID);
+                plugininstance.Call("InitSessionData", 
+                    Cognitive3D_Manager.DeviceId, 
+                    Util.Timestamp(Time.frameCount), 
+                    Cognitive3D_Manager.SessionID
+                );
 
-                plugininstance.Call("setServerURL", CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber));
-                plugininstance.Call("setGazeServerURL", CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber));
-
-                plugininstance.Call("setApplicationKey", CognitiveStatics.ApplicationKey);
-
-                plugininstance.Call("setFilePath", filePath);
-
-                plugininstance.Call("setJSONFilePath", JSONfilePath);
-
-                plugininstance.Call("initCognitive3DAndroidPlugin");
+                plugininstance.Call("initCognitive3DAndroidPlugin", 
+                    GetCurrentActivity(), 
+                    CognitiveStatics.ApplicationKey, 
+                    filePath, 
+                    JSONfilePath, 
+                    CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
+                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber)
+                );
             }
+        }
+
+        private AndroidJavaObject GetCurrentActivity()
+        {
+            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            return unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
         }
     }
 }
