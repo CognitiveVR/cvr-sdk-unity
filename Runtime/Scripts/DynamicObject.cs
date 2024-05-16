@@ -186,25 +186,27 @@ namespace Cognitive3D
             StartingScale = transform.lossyScale;
             string registerMeshName = MeshName;
 
-            //if a controller, delay registering the controller until the controller name has returned something valid
+            // if a controller, delay registering the controller until the controller name has returned something valid
+            // if current device is hands or null, then use fallback
             if (IsController)
-            {            
+            {
+                GameplayReferences.SetController(this, IsRight);
                 // Special case for hand tracking (particularly when session begins with hand): 
-                    //  need this because InputDevice.isValid returns false
-                    //  and InputDevice.name gives us nothing
-                if (GameplayReferences.handTrackingEnabled)
+                //  need this because InputDevice.isValid returns false
+                //  and InputDevice.name gives us nothing
+                if (Cognitive3D_Manager.Instance.GetComponent<Cognitive3D.Components.HandTracking>())
                 {
-                    // If starting with hands; use fallback controller
-                    if (GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.Hand)
+                    // If starting with hands or none; use fallback controller
+                    if (GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.Hand || GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
                     {
                         // just quickly look up controller by type, isRight
                         SetControllerFromFallback(FallbackControllerType, IsRight);
                         registerMeshName = commonDynamicMesh.ToString();
+                        RegisterDynamicObject(registerMeshName);
                         return;
                     }
                 }
 
-                GameplayReferences.SetController(this, IsRight);
                 if (IdentifyControllerAtRuntime)
                 {
                     InputDevice device;
@@ -237,6 +239,11 @@ namespace Cognitive3D
                 }
             }
 
+            RegisterDynamicObject(registerMeshName);
+        }
+        
+        private void RegisterDynamicObject(string registerMeshName)
+        {
             if (SyncWithPlayerGazeTick)
             {
                 UpdateRate = 64;
