@@ -151,6 +151,15 @@ namespace Cognitive3D
         internal static void IgnoreItem(ProjectValidationItem item, bool ignoreStatus)
         {
             item.isIgnored = ignoreStatus;
+            if (ignoreStatus == true)
+            {
+                ProjectValidationLog.AddIgnoreItem(item.message);
+            }
+            else
+            {
+                ProjectValidationLog.RemoveIgnoreItem(item.message);
+            }
+            
             ProjectValidationItems.UpdateProjectValidationItemStatus();
         }
 

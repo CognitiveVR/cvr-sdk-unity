@@ -64,6 +64,25 @@ namespace Cognitive3D
             File.WriteAllText(FILEPATH, JsonUtility.ToJson(pvj));
         }
 
+        public static void RemoveIgnoreItem(string itemId)
+        {
+            //file doesn't exist, create a new file
+            ProjectValidationJSON pvj;
+            if (!ReadLog(out pvj))
+            {
+                pvj = new ProjectValidationJSON();
+            }
+
+            //item doesn't exist
+            if (!pvj.ignoredItems.Contains(itemId)) { return; }
+
+            //remove item to ignored list
+            pvj.ignoredItems.Remove(itemId.ToString());
+
+            //write to file path
+            File.WriteAllText(FILEPATH, JsonUtility.ToJson(pvj));
+        }
+
         static bool ReadLog(out ProjectValidationJSON projectValidationLog)
         {
             if (!File.Exists(FILEPATH))
