@@ -318,7 +318,7 @@ namespace Cognitive3D
                     }
                     else
                     {
-                        if (GUILayout.Button("Don't Ignore", styles.LargeButton))
+                        if (GUILayout.Button("Revert", styles.MediumButton))
                         {
                             ProjectValidation.IgnoreItem(item, false);
                             GenerateIgnoredItemList();
