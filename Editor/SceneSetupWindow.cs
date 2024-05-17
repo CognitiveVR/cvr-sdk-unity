@@ -66,7 +66,7 @@ namespace Cognitive3D
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
                 wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
-                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<SceneAPI>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
         }
@@ -882,10 +882,10 @@ namespace Cognitive3D
             if (wantSceneApiEnabled)
             {
                 // Do not modify OVRManager permissions
-                var sceneApi = FindObjectOfType<SceneAPI>();
+                var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
                 if (sceneApi == null)
                 {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<SceneAPI>();
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<Cognitive3D_MetaSceneMesh>();
                 }
                 GameObject sceneManager = FindObjectOfType<OVRSceneManager>()?.gameObject;
                 if (sceneManager == null)
@@ -930,7 +930,7 @@ namespace Cognitive3D
                 // Do not modify OVRManager permissions
                 
                 // Component in C3D_Manager prefab
-                var sceneApi = FindObjectOfType<SceneAPI>();
+                var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
                 if (sceneApi != null)
                 {
                     DestroyImmediate(sceneApi);

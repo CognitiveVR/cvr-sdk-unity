@@ -5,7 +5,8 @@ using UnityEngine;
 namespace Cognitive3D.Components
 {
     [DisallowMultipleComponent]
-    public class SceneAPI : AnalyticsComponentBase
+    [AddComponentMenu("Cognitive3D/Components/Cognitive3D_MetaSceneMesh")]
+    public class Cognitive3D_MetaSceneMesh : AnalyticsComponentBase
     {
 #if C3D_OCULUS
         OVRSceneManager sceneManager;
