@@ -13,8 +13,7 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             lastTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
-            GameplayReferences.handTrackingEnabled = true; // have to do it here because doing it from scene setup doesn't work
-            Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", GameplayReferences.handTrackingEnabled);
+            Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
         }

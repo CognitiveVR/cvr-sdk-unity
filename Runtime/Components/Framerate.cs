@@ -25,11 +25,13 @@ namespace Cognitive3D.Components
         /// </summary>
         private int intervalFrameCount;
 
+#if C3D_OCULUS
         /// <summary>
         /// ASW caps framerate to half of device refresh rate
         /// We are defining a +- tolerance for the capepd framerate to allow for error etc.
         /// </summary>
         private readonly float TOLERANCE_FOR_CAPPED_FPS = 2;
+#endif
 
         readonly List<float> deltaTimes = new List<float>(120);
 

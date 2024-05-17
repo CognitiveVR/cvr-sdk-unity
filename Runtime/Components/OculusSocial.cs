@@ -17,6 +17,16 @@ namespace Cognitive3D.Components
         [SerializeField]
         private bool RecordOculusUserData = true;
 
+        internal bool GetRecordOculusUserData()
+        {
+            return RecordOculusUserData;
+        }
+
+        internal void SetRecordOculusUserData(bool value)
+        {
+            RecordOculusUserData = value;
+        }
+        
         public enum InitializeType
         {
             Automatic,

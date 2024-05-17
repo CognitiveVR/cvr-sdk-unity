@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D
 {
     [DisallowMultipleComponent]
-    [AddComponentMenu("")]
+    [AddComponentMenu("Cognitive3D/Internal/Room Tracking Space")]
     public class RoomTrackingSpace : MonoBehaviour
     {
         public static event Action<int, Transform> TrackingSpaceChanged;

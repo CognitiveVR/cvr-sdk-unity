@@ -16,7 +16,13 @@
         "SteamVR_Actions",
         "Oculus.VR.Editor",
         "PhotonUnityNetworking",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "UnityEngine.XR.LegacyInputHelpers",
+        "Unity.XR.CoreUtils",
+        "Unity.XR.OpenXR",
+        "Unity.XR.OpenXR.Features.MetaQuestSupport",
+        "Unity.XR.PICO",
+        "Unity.XR.PicoXR"
     ],
     "includePlatforms": [
         "Editor"
@@ -37,6 +43,26 @@
             "name": "com.unity.textmeshpro",
             "expression": "",
             "define": "C3D_TMPRO"
+        },
+        {
+            "name": "com.unity.xr.core-utils",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_COREUTILITIES"
+        },
+        {
+            "name": "com.unity.xr.legacyinputhelpers",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
+        },
+        {
+            "name": "com.unity.xr.openxr",
+            "expression": "1.9.1",
+            "define": "COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.openxr",
+            "expression": "[1.8.1,1.8.2]",
+            "define": "COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2"
         }
     ],
     "noEngineReferences": false

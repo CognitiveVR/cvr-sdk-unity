@@ -2,6 +2,19 @@
 using UnityEngine;
 using UnityEditor;
 using Cognitive3D.Components;
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+using Unity.XR.CoreUtils;
+#endif
+
+#if C3D_VIVEWAVE
+using Wave.Essence;
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+using UnityEditor.XR.LegacyInputHelpers;
+#endif
+
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
 #endif
@@ -30,17 +43,73 @@ namespace Cognitive3D
         const string SCENE_VOLUME_PREFAB_NAME = "Cognitive3D_VolumePrefab";
 #endif
 
-        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
             window.initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
+
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
+            var settings = Cognitive3D_Preferences.FindCurrentScene();
+            Texture2D ignored = null;
+            EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+#if C3D_OCULUS
+            // Get the current state of these components: are they already enabled?
+            // This is so the checkbox can accurately display the status of the components instead of defaulting to false
+            OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
+            if (ovrManager != null )
+            {
+                var fi = typeof(OVRManager).GetField("requestEyeTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingEyeTracking = fi.GetValue(ovrManager);
+                fi = typeof(OVRManager).GetField("requestFaceTrackingPermissionOnStartup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var requestingFaceTracking = fi.GetValue(ovrManager);
+                var faceExpressions = FindObjectOfType<OVRFaceExpressions>();
+                if (faceExpressions != null)
+                {
+                    wantEyeTrackingEnabled = (bool) requestingEyeTracking && (bool) requestingFaceTracking && faceExpressions;
+                }
+            }
+            if (Cognitive3D_Manager.Instance != null)
+            {
+                wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
+                wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
+                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+            }
+#endif
+        }
+
+        internal static void Init(Page page)
+        {
+            SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            window.currentPage = page;
+            window.minSize = new Vector2(500, 550);
+            window.maxSize = new Vector2(500, 550);
+            window.Show();
+            window.initialPlayerSetup = false;
+
+            ExportUtility.ClearUploadSceneSettings();
+
+            var found = Object.FindObjectOfType<Cognitive3D_Manager>();
+            if (found == null) //add Cognitive3D_manager
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
@@ -87,7 +156,7 @@ namespace Cognitive3D
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
         }
 
-        enum Page
+        internal enum Page
         {
             ProjectError,
             Welcome,
@@ -100,7 +169,16 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        Page currentPage;
+        private Page _currentPage;
+        public Page currentPage {
+            get {
+                return _currentPage;
+            }
+            internal set {
+                _currentPage = value;
+            }
+        }
+        
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -227,6 +305,7 @@ namespace Cognitive3D
 
         [System.NonSerialized]
         bool initialPlayerSetup;
+
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()
         {
@@ -251,15 +330,19 @@ namespace Cognitive3D
                 }
             }
 
+            // Setting left and right controllers for checking controller setup item in Project Validation
+            EditorCore.SetControllers(true, rightcontroller);
+            EditorCore.SetControllers(false, leftcontroller);
+
             RoomTrackingSpace trackingSpaceInScene = FindObjectOfType<RoomTrackingSpace>();
             if (trackingSpaceInScene != null)
             {
                 trackingSpace = trackingSpaceInScene.gameObject;
             }
 
-            if (leftcontroller != null && rightcontroller != null)
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
             {
-                //found dynamic objects for controllers - prefer to use those
+                //found dynamic objects for controllers and tracking space - prefer to use those
                 return;
             }
 
@@ -272,6 +355,27 @@ namespace Cognitive3D
             {
                 leftcontroller = player.hands[0].gameObject;
                 rightcontroller = player.hands[1].gameObject;
+                trackingSpace = player.trackingOriginTransform.gameObject; 
+            }
+            else
+            {
+                var playArea = FindObjectOfType<SteamVR_PlayArea>();
+                if (playArea != null)
+                {
+                    var controllers = playArea.GetComponentsInChildren<SteamVR_Behaviour_Pose>();
+                    foreach (var controller in controllers)
+                    {
+                        if (controller.inputSource == SteamVR_Input_Sources.LeftHand)
+                        {
+                            leftcontroller = controller.gameObject;
+                        }
+                        if (controller.inputSource == SteamVR_Input_Sources.RightHand)
+                        {
+                            rightcontroller = controller.gameObject;
+                        }
+                    }
+                    trackingSpace = playArea.gameObject;
+                }
             }
 #elif C3D_OCULUS
             //basic setup
@@ -280,6 +384,7 @@ namespace Cognitive3D
             {
                 leftcontroller = manager.leftHandAnchor.gameObject;
                 rightcontroller = manager.rightHandAnchor.gameObject;
+                trackingSpace = manager.trackingSpace.gameObject;
             }
 
             OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
@@ -299,6 +404,14 @@ namespace Cognitive3D
 
 #elif C3D_VIVEWAVE
             //TODO investigate if automatically detecting vive wave controllers is possible
+            if (trackingSpace == null)
+            {
+                var waveRig = FindObjectOfType<WaveRig>();
+                if (waveRig != null)
+                {
+                    trackingSpace = waveRig.CameraOffset;
+                }
+            }
 #elif C3D_PICOVR
             //basic setup
             var manager = FindObjectOfType<Pvr_Controller>();
@@ -312,9 +425,9 @@ namespace Cognitive3D
 #elif C3D_PICOXR
             //TODO investigate if automatically detecting pico controllers is possible using PicoXR package
 #endif
-            if (leftcontroller != null && rightcontroller != null)
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
             {
-                //found controllers from VR SDKs
+                //found controllers and tracking space from VR SDKs
                 return;
             }
 
@@ -333,6 +446,45 @@ namespace Cognitive3D
                     leftcontroller = driver.gameObject;
                 }
             }
+
+            // if tracking space and controllers not found yet, look for it in other ways
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+            var cameraOffset = FindObjectOfType<CameraOffset>();
+            if (cameraOffset != null)
+            {
+                trackingSpace = cameraOffset.gameObject;
+                var cameraOffsetObject = cameraOffset.cameraFloorOffsetObject;
+                if (cameraOffsetObject != null)
+                {
+                    trackingSpace = cameraOffsetObject.gameObject;
+                }
+            }
+#endif
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
+            {
+                //found controllers and tracking space from VR SDKs
+                return;
+            }
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+            var xrRig = FindObjectOfType<XROrigin>();
+            if (xrRig != null)
+            {
+                trackingSpace = xrRig.gameObject;
+                var xrRigOffset = xrRig.CameraFloorOffsetObject;
+                if (xrRigOffset != null)
+                {
+                    trackingSpace = xrRigOffset.gameObject;
+                }
+            }
+            if (leftcontroller == null)
+            {
+                leftcontroller = GameObject.Find("Left Controller")?.gameObject;
+            }
+            if (rightcontroller == null)
+            {
+                rightcontroller = GameObject.Find("Right Controller")?.gameObject;
+            }
+#endif
         }
 
         bool AllSetupComplete;
@@ -342,9 +494,10 @@ namespace Cognitive3D
             PlayerSetupStart();
             GUI.Label(new Rect(30, 30, 440, 440), "You can use your existing Player Prefab. For most implementations, this is just a quick check to ensure cameras and controllers are configued correctly.", "normallabel");
             GUI.Label(new Rect(30, 100, 440, 440), "The display for the HMD should be tagged as <b>MainCamera</b>", "normallabel");
+            GUI.Label(new Rect(30, 150, 440, 440), "The <b>TrackingSpace</b> is the root transform for the HMD and controllers", "normallabel");
 
             //hmd
-            int hmdRectHeight = 150;
+            int hmdRectHeight = 200;
 
             GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
             if (GUI.Button(new Rect(180, hmdRectHeight, 255, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
@@ -396,7 +549,7 @@ namespace Cognitive3D
 
 
             // tracking space
-            int hmdRectHeight2 = 185;
+            int hmdRectHeight2 = 235;
 
             GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
             if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
@@ -426,9 +579,9 @@ namespace Cognitive3D
 
             //controllers
 #if C3D_STEAMVR2
-            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+            GUI.Label(new Rect(30, 280, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
+            GUI.Label(new Rect(30, 280, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
             bool leftControllerIsValid = false;
@@ -451,7 +604,7 @@ namespace Cognitive3D
                     }
                 }
             }
-            int handOffset = 290;
+            int handOffset = 320;
 
             //left hand label
             GUI.Label(new Rect(30, handOffset + 15, 150, 30), "Left Controller", "boldlabel");
@@ -552,7 +705,7 @@ namespace Cognitive3D
                 }
             }
 
-            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
+            if (GUI.Button(new Rect(160, 420, 200, 30), new GUIContent("Set up GameObjects","Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 SetupControllers(leftcontroller, rightcontroller);
                 if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
@@ -566,17 +719,17 @@ namespace Cognitive3D
 
             if (AllSetupComplete)
             {
-                GUI.Label(new Rect(130, 400, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 420, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(128, 400, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 420, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
             //generate default input file if it doesn't already exist
             bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
-            if (GUI.Button(new Rect(160, 450, 200, 30), "Append Input Bindings"))
+            if (GUI.Button(new Rect(160, 455, 200, 30), "Append Input Bindings"))
             {
                 if (SteamVR_Input.actionFile == null)
                 {
@@ -600,11 +753,11 @@ namespace Cognitive3D
             }
             if (DoesC3DInputActionSetExist())
             {
-                GUI.Label(new Rect(130, 450, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 455, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(128, 450, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 455, 32, 32), EditorCore.Alert, "image_centered");
             }
 #endif
         }
@@ -659,6 +812,13 @@ namespace Cognitive3D
                 right.AddComponent<DynamicObject>();
             }
 
+            if (Cognitive3D_Manager.Instance == null)
+            {
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
             //add a single controller input tracker to the cognitive3d_manager
             var inputTracker = Cognitive3D_Manager.Instance.gameObject.GetComponent<Components.ControllerInputTracker>();
             if (inputTracker == null)
@@ -685,6 +845,7 @@ namespace Cognitive3D
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
+                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
             if (right != null)
             {
@@ -693,6 +854,7 @@ namespace Cognitive3D
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
+                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
         }
 

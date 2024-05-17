@@ -157,6 +157,7 @@ namespace Cognitive3D
 
         #endregion
 
+        [System.Obsolete]
         public ExitPollSet Begin()
         {
             var exitpollset = new ExitPollSet();
