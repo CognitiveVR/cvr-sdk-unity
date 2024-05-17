@@ -76,6 +76,14 @@ namespace Cognitive3D
             return items.Where(item => item.isIgnored == isIgnored && item.level == level);
         }
 
+        public void SetIgnoredItemsFromLog(List<string> ignoredMessages)
+        {
+            if (ignoredMessages != null && ignoredMessages.Count != 0)
+            {
+                items.ForEach(item => item.isIgnored = ignoredMessages.Contains(item.message));
+            }
+        }
+
         public List<ProjectValidationItem> GetAllItems()
         {
             return items;

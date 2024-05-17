@@ -164,6 +164,14 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Sets ignored <see cref="ProjectValidationItem"/> items from log
+        /// </summary>
+        internal static void SetIgnoredItemsFromLog()
+        {
+            registry.SetIgnoredItemsFromLog(ProjectValidationLog.GetLogIgnoreItems());
+        }
+
+        /// <summary>
         /// Resets ignored <see cref="ProjectValidationItem"/> items
         /// </summary>
         internal static void ResetIgnoredItems()

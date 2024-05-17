@@ -169,6 +169,7 @@ namespace Cognitive3D
         {
             if (state == PlayModeStateChange.EnteredEditMode)
             {
+                ProjectValidation.SetIgnoredItemsFromLog();
                 ProjectValidationItems.UpdateProjectValidationItemStatus();
                 Reset();
             }
