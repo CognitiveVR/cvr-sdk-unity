@@ -32,11 +32,11 @@ namespace Cognitive3D.Components
         private float[] heights;
         private Transform trackingSpace;
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
-        XROrigin xrOrigin = null;
+        XROrigin xrOrigin;
 #endif
 
 #if C3D_VIVEWAVE
-        WaveRig waveRig = null;
+        WaveRig waveRig;
 
 #endif
 
