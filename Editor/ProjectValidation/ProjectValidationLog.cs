@@ -76,7 +76,7 @@ namespace Cognitive3D
             //item doesn't exist
             if (!pvj.ignoredItems.Contains(itemId)) { return; }
 
-            //remove item to ignored list
+            //remove item from ignored list
             pvj.ignoredItems.Remove(itemId.ToString());
 
             //write to file path

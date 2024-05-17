@@ -228,6 +228,7 @@ namespace Cognitive3D
                     menu.AddItem(new GUIContent("Reset Ignored Items"), false, () =>
                     {
                         ProjectValidationLog.ClearIgnoreItems();
+                        ProjectValidation.ResetIgnoredItems();
                         ProjectValidationItems.UpdateProjectValidationItemStatus();
                         Reset();
                     });

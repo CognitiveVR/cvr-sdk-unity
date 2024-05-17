@@ -164,6 +164,19 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Resets ignored <see cref="ProjectValidationItem"/> items
+        /// </summary>
+        internal static void ResetIgnoredItems()
+        {
+            var ignoredItems =  registry.GetIgnoredItems(true);
+
+            foreach (var item in ignoredItems)
+            {
+                item.isIgnored = false;
+            }
+        }
+
+        /// <summary>
         /// Clears <see cref="ProjectValidationItem"/> list
         /// </summary>
         internal static void Reset()
