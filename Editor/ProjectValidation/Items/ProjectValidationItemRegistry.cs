@@ -66,6 +66,16 @@ namespace Cognitive3D
             return items.Where(item => item.isFixed == false).Count() != 0 ? true : false;
         }
 
+        public IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored)
+        {
+            return items.Where(item => item.isIgnored == isIgnored);
+        }
+
+        public IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored, ProjectValidation.ItemLevel level)
+        {
+            return items.Where(item => item.isIgnored == isIgnored && item.level == level);
+        }
+
         public List<ProjectValidationItem> GetAllItems()
         {
             return items;

@@ -14,8 +14,9 @@ namespace Cognitive3D
         public Func<bool> checkAction;
         public bool isFixed;
         public Action fixAction { get; }
+        public bool isIgnored;
 
-        public ProjectValidationItem(ProjectValidation.ItemLevel level, ProjectValidation.ItemCategory category, ProjectValidation.ItemAction actionType, string message, string fixmessage, Func<bool> checkAction, Action fixAction)
+        public ProjectValidationItem(ProjectValidation.ItemLevel level, ProjectValidation.ItemCategory category, ProjectValidation.ItemAction actionType, string message, string fixmessage, Func<bool> checkAction, Action fixAction, bool isIgnored)
         {
             this.level = level;
             this.category = category;
@@ -25,6 +26,7 @@ namespace Cognitive3D
             this.checkAction = checkAction;
             this.isFixed = checkAction.Invoke();
             this.fixAction = fixAction;
+            this.isIgnored = isIgnored;
 
 #if UNITY_2020_3_OR_NEWER
             var hash = new Hash128();
