@@ -80,7 +80,13 @@ namespace Cognitive3D
         {
             if (ignoredMessages != null && ignoredMessages.Count != 0)
             {
-                items.ForEach(item => item.isIgnored = ignoredMessages.Contains(item.message));
+                items.ForEach(item =>
+                {
+                    if (!item.isFixed)
+                    {
+                        item.isIgnored = ignoredMessages.Contains(item.message);
+                    }
+                });
             }
         }
 
