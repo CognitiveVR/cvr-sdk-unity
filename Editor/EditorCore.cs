@@ -306,8 +306,8 @@ namespace Cognitive3D
         {
             //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -331,7 +331,7 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
@@ -668,15 +668,27 @@ namespace Cognitive3D
         }
 
         private static Texture2D _settingsIconWhite;
-        public static Texture2D SettingsIconWhite
+        private static Texture2D _settingsIconBlack;
+        public static Texture2D SettingsIcon2
         {
             get
             {
-                if (_settingsIconWhite == null)
+                if (EditorGUIUtility.isProSkin)
                 {
-                    _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    if (_settingsIconWhite == null)
+                    {
+                        _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    }
+                    return _settingsIconWhite;
                 }
-                return _settingsIconWhite;
+                else
+                {
+                    if (_settingsIconBlack == null)
+                    {
+                        _settingsIconBlack = Resources.Load<Texture2D>("Icons/gear black");
+                    }
+                    return _settingsIconBlack;
+                }
             }
         }
 
@@ -768,8 +780,8 @@ namespace Cognitive3D
         {
             Debug.Log("refresh media sources");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -786,7 +798,7 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 

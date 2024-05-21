@@ -143,6 +143,7 @@ namespace Cognitive3D
             newInstance.sceneSettings.Add(new SceneSettings(name, path));
         }
 
+        [Obsolete]
         public static SceneSettings FindScene(string sceneName)
         {
             return Instance.sceneSettings.Find(x => x.SceneName == sceneName);
@@ -171,7 +172,7 @@ namespace Cognitive3D
         [Serializable]
         public class SceneSettings
         {
-            public string SceneName = "";
+            public string SceneName = ""; //only used for editor display. not unique, do not use for logic
             [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
             public string SceneId = "";
             public string ScenePath = "";

@@ -147,11 +147,22 @@ namespace Cognitive3D
 
         internal static void Init()
         {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
             GenerateItemLevelList(EditorCore.Error, ProjectValidation.ItemLevel.Required);
             GenerateItemLevelList(EditorCore.Alert, ProjectValidation.ItemLevel.Recommended);
             GenerateCompletedItemList();
 
             isInitialized = true;
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                ProjectValidationItems.UpdateProjectValidationItemStatus();
+                Reset();
+            }
         }
 
         internal static void Reset()
@@ -196,10 +207,14 @@ namespace Cognitive3D
                     ProjectValidationItems.UpdateProjectValidationItemStatus();
                     Reset();
                 }
-                if (GUILayout.Button(new GUIContent(EditorCore.SettingsIconWhite, "Additional Actions"), styles.IconButton))
+                if (GUILayout.Button(new GUIContent(EditorCore.SettingsIcon2, "Additional Actions"), styles.IconButton))
                 {
                     GenericMenu menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Verify all build scenes"), false, ProjectValidationItemsStatus.StartSceneVerificationProcess);
+                    menu.AddItem(new GUIContent("Show project verification prompt before build"), ProjectValidationItemsStatus.displayProjectValidationPopup, () => {
+                        ProjectValidationItemsStatus.displayProjectValidationPopup = !ProjectValidationItemsStatus.displayProjectValidationPopup;
+                    });
+
                     menu.ShowAsContext();
                 }
                 GUILayout.EndHorizontal();
@@ -230,7 +245,7 @@ namespace Cognitive3D
                             // Iterate through each item in the list
                             foreach (var item in list.items)
                             {
-                                string buttonText = list.listName == "Required" ? "Fix" : "Apply";
+                                string buttonText = item.actionType.ToString();
                                 if (list.listName != "Completed" && !item.isFixed)
                                 {
                                     DrawItem(item, list.listItemIcon, item.message, true, buttonText);
