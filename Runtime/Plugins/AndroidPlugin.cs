@@ -11,6 +11,7 @@ namespace Cognitive3D
 #if UNITY_ANDROID && !UNITY_EDITOR
         AndroidJavaObject plugin;
         AndroidJavaObject plugininstance;
+        string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
         string filePath;
         string JSONfilePath;
@@ -38,12 +39,12 @@ namespace Cognitive3D
 
         private void InitCognitive3DPlugin()
         {
-            plugin = new AndroidJavaClass("com.c3d.androidjavaplugin.Plugin");
+            plugin = new AndroidJavaClass(pluginName);
 
             if (plugin != null)
             {
                 // Create an instance of the Java class
-                plugininstance = new AndroidJavaObject("com.c3d.androidjavaplugin.Plugin");
+                plugininstance = new AndroidJavaObject(pluginName);
             }
         }
 
@@ -58,7 +59,7 @@ namespace Cognitive3D
                     Cognitive3D_Manager.SessionID
                 );
 
-                plugininstance.Call("initCognitive3DAndroidPlugin", 
+                plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
                     CognitiveStatics.ApplicationKey, 
                     filePath, 
