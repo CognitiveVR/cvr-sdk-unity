@@ -16,6 +16,7 @@ namespace Cognitive3D.Components
             if (sceneManager != null )
             {
                 sceneManager.SceneModelLoadedSuccessfully += SetRoomDimensionsAsSessionProperty;
+                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             }
         }
 
@@ -33,6 +34,12 @@ namespace Cognitive3D.Components
                     Cognitive3D_Manager.SetSessionProperty("c3d.physicalRoom.dimensions", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", floor.Width, floor.Height));
                 }
             }
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            sceneManager.SceneModelLoadedSuccessfully -= SetRoomDimensionsAsSessionProperty;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 
         /// <summary>
