@@ -935,7 +935,7 @@ namespace Cognitive3D
             // Hand Tracking
             GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
             Rect infoRect4 = new Rect(320, 280, 30, 30);
-            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings."), "image_centered");
+            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Tracking."), "image_centered");
 
             Rect checkboxRect4 = new Rect(105, 280, 30, 30);
             if (wantHandTrackingEnabled)
