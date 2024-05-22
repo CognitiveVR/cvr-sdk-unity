@@ -1577,6 +1577,7 @@ namespace Cognitive3D
                     break;
                 case Page.QuestProSetup:
 #if C3D_OCULUS
+                    text = "Apply";
                     onclick += () => ApplyOculusSettings();
 #endif
                     break;
