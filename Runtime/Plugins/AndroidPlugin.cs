@@ -1,16 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using System;
-using Cognitive3D;
-using Cognitive3D.Components;
+using System.IO;
 
 namespace Cognitive3D
 {
     public class AndroidPlugin : MonoBehaviour
     {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
         AndroidJavaObject plugin;
         AndroidJavaObject plugininstance;
 
@@ -32,10 +30,13 @@ namespace Cognitive3D
             filePath = Application.persistentDataPath + "/c3dlocal/BackupCrashLogs.log";
             JSONfilePath = Application.persistentDataPath + "/c3dlocal/CrashLogs.json";
 
+            InitCognitive3DPlugin();
             SetCognitive3DPlugin();
+
+            LogFileHasContent();
         }
 
-        public void SetCognitive3DPlugin()
+        private void InitCognitive3DPlugin()
         {
             plugin = new AndroidJavaClass("com.c3d.androidjavaplugin.Plugin");
 
@@ -43,8 +44,15 @@ namespace Cognitive3D
             {
                 // Create an instance of the Java class
                 plugininstance = new AndroidJavaObject("com.c3d.androidjavaplugin.Plugin");
+            }
+        }
 
-                plugininstance.Call("InitSessionData", 
+        public void SetCognitive3DPlugin()
+        {
+            if (plugininstance != null)
+            {
+
+                plugininstance.Call("initSessionData", 
                     Cognitive3D_Manager.DeviceId, 
                     Util.Timestamp(Time.frameCount), 
                     Cognitive3D_Manager.SessionID
@@ -65,6 +73,40 @@ namespace Cognitive3D
         {
             AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             return unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+        }
+
+        private bool LogFileHasContent()
+        {
+            if (plugininstance != null && System.IO.File.Exists(filePath))
+            {
+                // Read all lines from the log file
+                string[] lines = System.IO.File.ReadAllLines(filePath);
+
+                // Check if line 4 exists and is not null or empty
+                if (lines.Length >= 4 && !string.IsNullOrEmpty(lines[3]))
+                {
+                    plugininstance.Call("serializeCrashEvents", 
+                        lines[0],
+                        lines[1],
+                        lines[2],
+                        string.Join("\n", lines[3..])
+                    );
+
+                    plugininstance.Call("serializeCrashGaze", 
+                        lines[0],
+                        lines[1],
+                        lines[2]
+                    );
+
+                    // Redirect and write new session data
+                    plugininstance.Call("redirectErrorLogs");
+                    return true;
+                }
+            }
+
+            // Redirect and write new session data
+            plugininstance.Call("redirectErrorLogs");
+            return false;
         }
 #endif
     }
