@@ -1041,8 +1041,10 @@ namespace Cognitive3D
                     DestroyImmediate(hand);
                 }
             }
+
             if (wantSceneApiEnabled)
             {
+#if !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
                 // Do not modify OVRManager permissions
                 var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
                 if (sceneApi == null)
@@ -1085,6 +1087,7 @@ namespace Cognitive3D
                     volumePrefab.AddComponent<OVRSceneAnchor>();
                     sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
                 }
+#endif
             }
             else
             {
