@@ -58,7 +58,7 @@ namespace Cognitive3D
             if (pvj.ignoredItems.Contains(itemId)) { return; }
 
             //add item to ignored list
-            pvj.ignoredItems.Add(itemId.ToString());
+            pvj.ignoredItems.Add(itemId);
 
             //write to file path
             File.WriteAllText(FILEPATH, JsonUtility.ToJson(pvj));
@@ -77,7 +77,7 @@ namespace Cognitive3D
             if (!pvj.ignoredItems.Contains(itemId)) { return; }
 
             //remove item from ignored list
-            pvj.ignoredItems.Remove(itemId.ToString());
+            pvj.ignoredItems.Remove(itemId);
 
             //write to file path
             File.WriteAllText(FILEPATH, JsonUtility.ToJson(pvj));
