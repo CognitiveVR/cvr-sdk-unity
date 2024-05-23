@@ -36,6 +36,11 @@ namespace Cognitive3D
         static bool wantPassthroughEnabled;
         static bool wantSocialEnabled;
         static bool wantHandTrackingEnabled;
+        static bool wantSceneApiEnabled;
+
+        const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
+        const string SCENE_PLANE_PREFAB_NAME = "Cognitive3D_PlanePrefab";
+        const string SCENE_VOLUME_PREFAB_NAME = "Cognitive3D_VolumePrefab";
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
@@ -130,6 +135,7 @@ namespace Cognitive3D
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
                 wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
         }
@@ -929,7 +935,7 @@ namespace Cognitive3D
             // Hand Tracking
             GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
             Rect infoRect4 = new Rect(320, 280, 30, 30);
-            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings ."), "image_centered");
+            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Tracking."), "image_centered");
 
             Rect checkboxRect4 = new Rect(105, 280, 30, 30);
             if (wantHandTrackingEnabled)
@@ -944,6 +950,27 @@ namespace Cognitive3D
                 if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
                 {
                     wantHandTrackingEnabled = true;
+                }
+            }
+
+            // Scene API
+            GUI.Label(new Rect(140, 335, 440, 440), "Quest 3 Scene API", "normallabel");
+            Rect infoRect5 = new Rect(320, 330, 30, 30);
+            GUI.Label(infoRect5, new GUIContent(EditorCore.Info, "Collects dimensions of the room the participant is in."), "image_centered");
+
+            Rect checkboxRect5 = new Rect(105, 330, 30, 30);
+            if (wantSceneApiEnabled)
+            {
+                if (GUI.Button(checkboxRect5, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantSceneApiEnabled = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect5, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantSceneApiEnabled = true;
                 }
             }
 
@@ -1014,7 +1041,86 @@ namespace Cognitive3D
                     DestroyImmediate(hand);
                 }
             }
+            if (wantSceneApiEnabled)
+            {
+                // Do not modify OVRManager permissions
+                var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
+                if (sceneApi == null)
+                {
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<Cognitive3D_MetaSceneMesh>();
+                }
+                GameObject sceneManager = FindObjectOfType<OVRSceneManager>()?.gameObject;
+                if (sceneManager == null)
+                {
+                    sceneManager = new GameObject(SCENE_MANAGER_NAME);
+                    sceneManager.AddComponent<OVRSceneModelLoader>();
+                }
+                
+                // OVRSceneModelLoader requires OVRSceneManager so that will automatically add it
+                // We have this to future proof this in case that changes
+                var sceneManagerComponent = sceneManager.GetComponent<OVRSceneManager>();
+                if (sceneManagerComponent == null) 
+                {
+                    sceneManager.AddComponent<OVRSceneManager>();
+                }
+                if (sceneManagerComponent.PlanePrefab == null)
+                {
+                    GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                    if (planePrefab == null)
+                    {
+                        planePrefab = new GameObject(SCENE_PLANE_PREFAB_NAME);
+                    }
+                    // OVRSceneAnchor already has [DisallowMultipleComponent]
+                    planePrefab.AddComponent<OVRSceneAnchor>();
+                    sceneManagerComponent.PlanePrefab = planePrefab.GetComponent<OVRSceneAnchor>();
+                }
+                if (sceneManagerComponent.VolumePrefab == null)
+                {
+                    GameObject volumePrefab = GameObject.Find(SCENE_VOLUME_PREFAB_NAME);
+                    if (volumePrefab == null)
+                    {
+                        volumePrefab = new GameObject(SCENE_VOLUME_PREFAB_NAME);
+                    }
+                    // OVRSceneAnchor already has [DisallowMultipleComponent]
+                    volumePrefab.AddComponent<OVRSceneAnchor>();
+                    sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
+                }
+            }
+            else
+            {
+                // Only destory objects and components we created
+                // Do not modify OVRManager permissions
+                
+                // Component in C3D_Manager prefab
+                var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
+                if (sceneApi != null)
+                {
+                    DestroyImmediate(sceneApi);
+                }
 
+                // Scene manager that we created
+                GameObject sceneManager = GameObject.Find(SCENE_MANAGER_NAME);
+                if (sceneManager != null)
+                {
+                    DestroyImmediate(sceneManager);
+                }
+
+                // Plane prefab
+                GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                if (planePrefab != null)
+                {
+                    DestroyImmediate(planePrefab);
+                }
+
+                // Volume prefab
+                GameObject volumePrefab = GameObject.Find(SCENE_VOLUME_PREFAB_NAME);
+                if (volumePrefab != null)
+                {
+                    DestroyImmediate(volumePrefab);
+                }
+            }
+
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }   
 #endif
 
@@ -1471,6 +1577,7 @@ namespace Cognitive3D
                     break;
                 case Page.QuestProSetup:
 #if C3D_OCULUS
+                    text = "Apply";
                     onclick += () => ApplyOculusSettings();
 #endif
                     break;
