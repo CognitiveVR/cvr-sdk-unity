@@ -47,6 +47,11 @@
             "name": "com.unity.xr.legacyinputhelpers",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
+        },
+        {
+            "name": "com.meta.xr.sdk.core",
+            "expression": "65.0.0",
+            "define": "COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER"
         }
     ],
     "noEngineReferences": false
