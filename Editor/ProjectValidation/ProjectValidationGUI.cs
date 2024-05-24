@@ -12,7 +12,8 @@ namespace Cognitive3D
         internal class Styles
         {
             private const float SmallIconSize = 16.0f;
-            private const float FixButtonWidth = 64.0f;
+            private const float MediumButtonWidth = 64.0f;
+            private const float LargeButtonWidth = 90.0f;
             private const float IconButtonWidth = 30.0f;
             internal const float GroupSelectionWidth = 244.0f;
             internal const float LabelWidth = 96f;
@@ -59,11 +60,18 @@ namespace Cognitive3D
                 fixedHeight = SmallIconSize
             };
 
-            internal readonly GUIStyle FixButton = new GUIStyle(EditorStyles.miniButton)
+            internal readonly GUIStyle MediumButton = new GUIStyle(EditorStyles.miniButton)
             {
                 margin = new RectOffset(0, 10, 2, 2),
                 stretchWidth = false,
-                fixedWidth = FixButtonWidth,
+                fixedWidth = MediumButtonWidth,
+            };
+
+            internal readonly GUIStyle LargeButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = LargeButtonWidth,
             };
 
             internal readonly GUIStyle IconButton = new GUIStyle(EditorStyles.miniButton)
@@ -152,6 +160,7 @@ namespace Cognitive3D
             GenerateItemLevelList(EditorCore.Error, ProjectValidation.ItemLevel.Required);
             GenerateItemLevelList(EditorCore.Alert, ProjectValidation.ItemLevel.Recommended);
             GenerateCompletedItemList();
+            GenerateIgnoredItemList();
 
             isInitialized = true;
         }
@@ -160,6 +169,7 @@ namespace Cognitive3D
         {
             if (state == PlayModeStateChange.EnteredEditMode)
             {
+                ProjectValidation.SetIgnoredItemsFromLog();
                 ProjectValidationItems.UpdateProjectValidationItemStatus();
                 Reset();
             }
@@ -211,8 +221,17 @@ namespace Cognitive3D
                 {
                     GenericMenu menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Verify all build scenes"), false, ProjectValidationItemsStatus.StartSceneVerificationProcess);
-                    menu.AddItem(new GUIContent("Show project verification prompt before build"), ProjectValidationItemsStatus.displayProjectValidationPopup, () => {
-                        ProjectValidationItemsStatus.displayProjectValidationPopup = !ProjectValidationItemsStatus.displayProjectValidationPopup;
+                    menu.AddItem(new GUIContent("Show project verification prompt before build"), ProjectValidationLog.GetBuildProcessPopup(), () =>
+                    {
+                        var showPopup = ProjectValidationLog.GetBuildProcessPopup();
+                        ProjectValidationLog.SetBuildProcessPopup(!showPopup);
+                    });
+                    menu.AddItem(new GUIContent("Reset Ignored Items"), false, () =>
+                    {
+                        ProjectValidationLog.ClearIgnoreItems();
+                        ProjectValidation.ResetIgnoredItems();
+                        ProjectValidationItems.UpdateProjectValidationItemStatus();
+                        Reset();
                     });
 
                     menu.ShowAsContext();
@@ -246,9 +265,14 @@ namespace Cognitive3D
                             foreach (var item in list.items)
                             {
                                 string buttonText = item.actionType.ToString();
-                                if (list.listName != "Completed" && !item.isFixed)
+                                if ((list.listName != "Completed" || list.listName != "Ignored") && (!item.isFixed && !item.isIgnored))
                                 {
                                     DrawItem(item, list.listItemIcon, item.message, true, buttonText);
+                                }
+
+                                if (list.listName == "Ignored" && item.isIgnored)
+                                {
+                                    DrawItem(item, null, item.message, true, buttonText);
                                 }
                                 
                                 if (list.listName == "Completed" && item.isFixed)
@@ -270,15 +294,35 @@ namespace Cognitive3D
         {
             using (var scope = new EditorGUILayout.HorizontalScope(styles.ListLabel))
             {
-                GUILayout.Label(itemIcon, styles.InlinedIconStyle);
+                if (itemIcon != null)
+                {
+                    GUILayout.Label(itemIcon, styles.InlinedIconStyle);
+                }
                 GUILayout.Label(message, styles.ItemDescription);
 
-                if (item.fixAction != null)
+                if (item.fixAction != null && buttonEnabled)
                 {
-                    if (buttonEnabled && GUILayout.Button(buttonText, styles.FixButton))
+                    if (!item.isIgnored)
                     {
-                        ProjectValidation.FixItem(item);
-                        GenerateCompletedItemList();
+                        if (GUILayout.Button(buttonText, styles.MediumButton))
+                        {
+                            ProjectValidation.FixItem(item);
+                            GenerateCompletedItemList();
+                        }
+
+                        if (GUILayout.Button("Ignore", styles.MediumButton))
+                        {
+                            ProjectValidation.IgnoreItem(item, true);
+                            GenerateIgnoredItemList();
+                        }
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Revert", styles.MediumButton))
+                        {
+                            ProjectValidation.IgnoreItem(item, false);
+                            GenerateIgnoredItemList();
+                        }
                     }
                 }
             }
@@ -298,6 +342,22 @@ namespace Cognitive3D
             if (foldableList == null)
             {
                 AddToFodableList("Completed", EditorCore.CircleCheckmark, items);
+            }
+            else
+            {
+                foldableList.items = items;
+            }
+        }
+
+        private static void GenerateIgnoredItemList()
+        {
+            var foldableList = foldableLists.FirstOrDefault(list => list.listName == "Ignored");
+            var items = ProjectValidation.GetIgnoredItems(true).ToList();
+
+            if (foldableList == null)
+            {
+                // Item icon should be used!
+                AddToFodableList("Ignored", EditorCore.CircleCheckmark, items);
             }
             else
             {

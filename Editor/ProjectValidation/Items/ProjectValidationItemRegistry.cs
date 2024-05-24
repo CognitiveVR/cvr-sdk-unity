@@ -58,12 +58,36 @@ namespace Cognitive3D
 
         public IEnumerable<ProjectValidation.ItemLevel> GetLevelsOfItemsNotFixed()
         {
-            return items.Where(item => !item.isFixed).Select(item => item.level).Distinct();
+            return items.Where(item => !item.isFixed && !item.isIgnored).Select(item => item.level).Distinct();
         }
 
         public bool hasNotFixedItems()
         {
-            return items.Where(item => item.isFixed == false).Count() != 0 ? true : false;
+            return items.Where(item => !item.isFixed && !item.isIgnored).Count() != 0 ? true : false;
+        }
+
+        public IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored)
+        {
+            return items.Where(item => item.isIgnored == isIgnored);
+        }
+
+        public IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored, ProjectValidation.ItemLevel level)
+        {
+            return items.Where(item => item.isIgnored == isIgnored && item.level == level);
+        }
+
+        public void SetIgnoredItemsFromLog(List<string> ignoredMessages)
+        {
+            if (ignoredMessages != null && ignoredMessages.Count != 0)
+            {
+                items.ForEach(item =>
+                {
+                    if (!item.isFixed)
+                    {
+                        item.isIgnored = ignoredMessages.Contains(item.message);
+                    }
+                });
+            }
         }
 
         public List<ProjectValidationItem> GetAllItems()
