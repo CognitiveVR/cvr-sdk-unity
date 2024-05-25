@@ -128,8 +128,11 @@ namespace Cognitive3D
                 return;
             }
 
-            SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-            SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.AutomaticallyChangeSceneIds)
+            {
+                SceneManager.sceneLoaded += SceneManager_SceneLoaded;
+                SceneManager.sceneUnloaded += SceneManager_SceneUnloaded;
+            }
             Application.wantsToQuit += WantsToQuit;
             RoomTrackingSpace.TrackingSpaceChanged += UpdateTrackingSpace;
 
@@ -186,32 +189,35 @@ namespace Cognitive3D
             IsInitialized = true;
             //TODO support skipping spatial gaze data but still recording session properties for XRPF
 
-            // get all loaded scenes. if one has a sceneid, use that
-            // if more than one scene has ids (additive scenes), use the first scene in the scene manager list that has id
-            var count = SceneManager.sceneCount;
-            Scene scene = new Scene();
-            for(int i = 0; i < count;i++)
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.AutomaticallyChangeSceneIds)
             {
-                scene = SceneManager.GetSceneAt(i);
-                var cogscene = Cognitive3D_Preferences.FindSceneByPath(scene.path);
-                if (cogscene != null && !string.IsNullOrEmpty(cogscene.SceneId))
+                // get all loaded scenes. if one has a sceneid, use that
+                // if more than one scene has ids (additive scenes), use the first scene in the scene manager list that has id
+                var count = SceneManager.sceneCount;
+                Scene scene = new Scene();
+                for (int i = 0; i < count; i++)
                 {
-                    if (!sceneList.Contains(scene))
+                    scene = SceneManager.GetSceneAt(i);
+                    var cogscene = Cognitive3D_Preferences.FindSceneByPath(scene.path);
+                    if (cogscene != null && !string.IsNullOrEmpty(cogscene.SceneId))
                     {
-                        sceneList.Insert(0, scene);
+                        if (!sceneList.Contains(scene))
+                        {
+                            sceneList.Insert(0, scene);
+                        }
+                        SetTrackingSceneByPath(cogscene.ScenePath);
+                        break;
                     }
-                    SetTrackingSceneByPath(cogscene.ScenePath);
-                    break;
                 }
-            }
-            
-            if (TrackingScene == null)
-            {
-                Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
-            }
 
-            // TODO: support for additive scenes? According to doc, it'll be somehow considered single mode
-            InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
+                if (TrackingScene == null)
+                {
+                    Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
+                }
+
+                // TODO: support for additive scenes? According to doc, it'll be somehow considered single mode
+                InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
+            }
 
             CustomEvent startEvent = new CustomEvent("c3d.sessionStart");
             startEvent.Send();
@@ -903,6 +909,11 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Sets the tracking scene. All recorded data will be uploaded to the associated uploaded scene on the dashboard
+        /// Recommended to keep AutomaticallyChangeSceneIds enabled in preferences and not use this function
+        /// </summary>
+        /// <param name="scenePath"></param>
         public static void SetTrackingSceneByPath(string scenePath)
         {
             if (IsInitialized)
@@ -911,6 +922,22 @@ namespace Cognitive3D
                 {
                     TrackingScene = c3dscene;
                 }
+            }
+            else
+            {
+                Util.logWarning("Trying to set scene without a session!");
+            }
+        }
+
+        /// <summary>
+        /// Clears the tracking scene. No data will be recorded and uploaded to any scene on the dashboard
+        /// Recommended to keep AutomaticallyChangeSceneIds enabled in preferences and not use this function
+        /// </summary>
+        public static void ClearTrackingScene()
+        {
+            if (IsInitialized)
+            {
+                TrackingScene = null;
             }
             else
             {
@@ -983,8 +1010,11 @@ namespace Cognitive3D
             HasCustomSessionName = false;
             InvokePostEndSessionEvent();
 
-            SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
-            SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
+            if (Cognitive3D.Cognitive3D_Preferences.Instance.AutomaticallyChangeSceneIds)
+            {
+                SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
+                SceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
+            }
             RoomTrackingSpace.TrackingSpaceChanged -= UpdateTrackingSpace;
             CognitiveStatics.Reset();
         }

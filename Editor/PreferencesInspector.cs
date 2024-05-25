@@ -119,7 +119,8 @@ namespace Cognitive3D
             p.Gateway = EditorGUILayout.TextField(new GUIContent("Gateway", "In almost every case, this should be\ndata.cognitive3d.com"), p.Gateway);
 
             EditorGUILayout.LabelField("Scene Data", EditorStyles.boldLabel);
-            p.IncludeDisabledDynamicObjects = EditorGUILayout.Toggle("Include Disabled Dynamic Objects", p.IncludeDisabledDynamicObjects);
+            p.IncludeDisabledDynamicObjects = EditorGUILayout.Toggle(new GUIContent("Export Disabled Dynamic Objects", "Include disabled Dynamic Objects when exporting and uploading from the Dynamic Objects window and the Scene Setup window"), p.IncludeDisabledDynamicObjects);
+            p.AutomaticallyChangeSceneIds = EditorGUILayout.Toggle(new GUIContent("Automatically Change Scene Ids", "Sets the Scene Id when Unity loads and unloads scenes from the list below"), p.AutomaticallyChangeSceneIds);
             var v = Cognitive3D_Preferences.FindCurrentScene();
             if (v == null || string.IsNullOrEmpty(v.SceneId))
             {

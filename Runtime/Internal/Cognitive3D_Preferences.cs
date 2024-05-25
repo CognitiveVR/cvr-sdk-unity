@@ -115,6 +115,7 @@ namespace Cognitive3D
         public int TextureResize = 2;
         public bool ExportSceneLODLowest = true;
 
+        public bool AutomaticallyChangeSceneIds = true;
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible
         
