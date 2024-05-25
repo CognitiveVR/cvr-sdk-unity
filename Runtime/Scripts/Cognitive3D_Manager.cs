@@ -58,6 +58,7 @@ namespace Cognitive3D
         [HideInInspector]
         public Transform trackingSpace;
 
+        //TODO consider moving 'instance' setting to awake, which happens before OnEnable
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>
@@ -228,6 +229,11 @@ namespace Cognitive3D
             }
             gazeBase.Initialize();
 
+#if C3D_MAGICLEAP2
+            //TODO test does this block until permissions are granted?
+            RequestMagicLeapPermission();
+#endif
+
 #if C3D_OCULUS
             //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled
             //this is used for adding the fixation recorder
@@ -288,6 +294,16 @@ namespace Cognitive3D
             FlushData();
             StartCoroutine(AutomaticSendData());
         }
+
+#if C3D_MAGICLEAP2
+        void RequestMagicLeapPermission()
+        {
+            MagicLeap.Android.Permissions.RequestPermissions(new string[]
+            {
+                UnityEngine.XR.MagicLeap.MLPermission.EyeTracking
+            });
+        }
+#endif
 
         /// <summary>
         /// sets automatic session properties from scripting define symbols, device ids, etc

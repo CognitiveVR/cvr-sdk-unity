@@ -86,8 +86,10 @@ namespace Cognitive3D
         {
             get
             {
-#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_OMNICEPT || C3D_MAGICLEAP2
+#if C3D_SRANIPAL || C3D_VARJOVR || C3D_VARJOXR || C3D_PICOVR || C3D_OMNICEPT
                 return true;
+#elif C3D_MAGICLEAP2
+                return MagicLeap.Android.Permissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.EyeTracking);                
 #elif C3D_PICOXR
                 return Unity.XR.PXR.PXR_Manager.Instance.eyeTracking;
 #elif C3D_MRTK

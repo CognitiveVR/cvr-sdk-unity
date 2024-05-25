@@ -29,11 +29,11 @@ namespace Cognitive3D.Components
             base.OnSessionBegin();
             // HAND_TRACKING is a normal permission, so we don't request it at runtime. It is auto-granted if included in the app manifest.
             // If it's missing from the manifest, the permission is not available.
-            if (UnityEngine.XR.MagicLeap.MLPermissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking).IsOk)
+            if (MagicLeap.Android.Permissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking))
             {
                 //Start Hand Tracking
                 UnityEngine.XR.MagicLeap.InputSubsystem.Extensions.MLHandTracking.StartTracking();
-                GameplayReferences.handTrackingEnabled = true;
+                lastTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.handtracking.enabled", true);
                 Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
                 Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
@@ -61,7 +61,7 @@ namespace Cognitive3D.Components
         UnityEngine.XR.InputDevice controllerDevice;
         GameplayReferences.TrackingType GetMagicLeapTrackingType()
         {
-            if (UnityEngine.XR.MagicLeap.MLPermissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking).IsOk)
+            if (MagicLeap.Android.Permissions.CheckPermission(UnityEngine.XR.MagicLeap.MLPermission.HandTracking))
             {
                 if (!leftHandDevice.isValid || !rightHandDevice.isValid)
                 {
