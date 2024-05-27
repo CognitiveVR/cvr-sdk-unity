@@ -136,14 +136,6 @@ namespace Cognitive3D
                 if (p.UseAttachTransform)
                     p.AttachTransform = (Transform)EditorGUILayout.ObjectField(p.AttachTransform, typeof(Transform), true);
                 GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                p.UseTimeout = EditorGUILayout.Toggle(new GUIContent("Automatic Timeout", "Automatically skip this question if this timer expires"), p.UseTimeout);
-                if (p.UseTimeout)
-                {
-                    p.Timeout = EditorGUILayout.FloatField(p.Timeout);
-                    p.Timeout = Mathf.Max(2, p.Timeout);
-                }
-                GUILayout.EndHorizontal();
             }
             else
             {
@@ -158,14 +150,6 @@ namespace Cognitive3D
                 p.LockYPosition = EditorGUILayout.Toggle(new GUIContent("Lock Y Position", "Lock the vertical position to match the player's height"), p.LockYPosition);
                 p.DisplayDistance = EditorGUILayout.FloatField(new GUIContent("Default Display Distance","Sets the prefered distance away from the player to spawn the panel"), p.DisplayDistance);
                 p.DisplayDistance = Mathf.Max(p.MinimumDisplayDistance, p.DisplayDistance);
-                GUILayout.BeginHorizontal();
-                p.UseTimeout = EditorGUILayout.Toggle(new GUIContent("Automatic Timeout","Automatically skip this question if this timer expires"), p.UseTimeout);
-                if (p.UseTimeout)
-                {
-                    p.Timeout = EditorGUILayout.FloatField(p.Timeout);
-                    p.Timeout = Mathf.Max(2, p.Timeout);
-                }
-                GUILayout.EndHorizontal();
             }
             EditorGUI.indentLevel--;
 
