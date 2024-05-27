@@ -153,6 +153,8 @@ namespace Cognitive3D
             CloseWindow();
         }
 
+        static Vector3 lastPosition;
+
         /// <summary>
         /// Checks whether the headset is currently worn by the user in Editor
         /// </summary>
@@ -179,7 +181,16 @@ namespace Cognitive3D
                 return false;
             }
 #else
-            return true;
+            if (Vector3.Distance(GameplayReferences.HMD.position,lastPosition) < 0.01f) //distance hasn't changed much since last check
+            {
+                lastPosition = GameplayReferences.HMD.position;
+                return false;
+            }
+            else
+            {
+                lastPosition = GameplayReferences.HMD.position;
+                return true;
+            }
 #endif
         }
 
