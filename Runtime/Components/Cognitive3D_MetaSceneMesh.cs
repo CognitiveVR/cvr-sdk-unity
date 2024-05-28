@@ -18,7 +18,7 @@ namespace Cognitive3D.Components
         OVRSceneManager sceneManager;
 
         private void Start()
-        {   
+        {
             sceneManager = FindObjectOfType<OVRSceneManager>();
             if (sceneManager != null )
             {
