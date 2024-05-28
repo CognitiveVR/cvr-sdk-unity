@@ -63,7 +63,6 @@ namespace Cognitive3D.Components
 
         public void MrukLoaded()
         {
-            new CustomEvent("ROOM LOADED MRUKLOADED").Send();
             float width =  mixedRealityUtility.GetCurrentRoom().FloorAnchor.PlaneRect.Value.width;
             float height = mixedRealityUtility.GetCurrentRoom().FloorAnchor.PlaneRect.Value.height;
             Cognitive3D_Manager.SetSessionProperty("c3d.physicalRoom.width", width);
