@@ -7,7 +7,6 @@ using Valve.VR;
 
 /// <summary>
 /// samples distances the the HMD to the player's arm. max is assumed to be roughly player arm length
-/// this only starts tracking when the player has pressed a button/trigger/grip
 /// </summary>
 
 namespace Cognitive3D.Components
