@@ -259,37 +259,45 @@ namespace Cognitive3D
                     GUILayout.Label("Controller Settings", EditorStyles.boldLabel);
                     EditorGUI.indentLevel++;
                     var dyn = targets[0] as DynamicObject;
-                    dyn.IsController = EditorGUILayout.Toggle(new GUIContent("Is Controller","Visualize on SceneExplorer with a common mesh.\nInclude metadata to display button inputs."),dyn.IsController);
+                    dyn.IsController = EditorGUILayout.Toggle(new GUIContent("Is Controller", "Visualize on SceneExplorer with a common mesh.\nInclude metadata to display button inputs."), dyn.IsController);
                     EditorGUI.BeginDisabledGroup(!dyn.IsController);
-                    dyn.IsRight = EditorGUILayout.Toggle("Is Right Hand",dyn.IsRight);
-                    dyn.IdentifyControllerAtRuntime = EditorGUILayout.Toggle(new GUIContent("Identify Controller at Runtime","Use Unity's API to try to identify the InputDevice name"), dyn.IdentifyControllerAtRuntime);
-                    dyn.FallbackControllerType = (DynamicObject.ControllerType)EditorGUILayout.EnumPopup(new GUIContent("Fallback Controller Type","Used if this controller cannot be identified at runtime"),dyn.FallbackControllerType);
+                    dyn.IsRight = EditorGUILayout.Toggle("Is Right Hand", dyn.IsRight);
+                    dyn.IdentifyControllerAtRuntime = EditorGUILayout.Toggle(new GUIContent("Identify Controller at Runtime", "Use Unity's API to try to identify the InputDevice name"), dyn.IdentifyControllerAtRuntime);
+                    dyn.FallbackControllerType = (DynamicObject.ControllerType)EditorGUILayout.EnumPopup(new GUIContent("Fallback Controller Type", "Used if this controller cannot be identified at runtime"), dyn.FallbackControllerType);
                     EditorGUI.EndDisabledGroup();
                     EditorGUI.indentLevel--;
-                }
 
-                //Snapshot Threshold
-                GUILayout.Label("Data Snapshot", EditorStyles.boldLabel);
-                EditorGUI.indentLevel++;
 
-                EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the Dynamic Object on the same frame as gaze. This will smooth the movement of this object in SceneExplorer relative to the player"));
-                EditorGUI.BeginDisabledGroup(syncWithGaze.boolValue);
-                EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This indicates the time interval to check if this Dynamic Object has moved"), GUILayout.MinWidth(50));
-                updateRate.floatValue = Mathf.Max(0.1f, updateRate.floatValue);
-                EditorGUI.EndDisabledGroup();
+                    //Snapshot Threshold
+                    GUILayout.Label("Data Snapshot", EditorStyles.boldLabel);
+                    EditorGUI.indentLevel++;
 
-                EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot"));
-                positionThreshold.floatValue = Mathf.Max(0, positionThreshold.floatValue);
+                    EditorGUILayout.PropertyField(syncWithGaze, new GUIContent("Sync with Gaze", "Records the transform of the Dynamic Object on the same frame as gaze. This will smooth the movement of this object in SceneExplorer relative to the player"));
+                    EditorGUI.BeginDisabledGroup(syncWithGaze.boolValue);
+                    EditorGUILayout.PropertyField(updateRate, new GUIContent("Update Rate", "This indicates the time interval to check if this Dynamic Object has moved"), GUILayout.MinWidth(50));
+                    if (isController.boolValue)
+                    {
+                        updateRate.floatValue = Mathf.Max(0.1f, dyn.ControllerUpdateRate);
+                    }
+                    else
+                    {
+                        updateRate.floatValue = Mathf.Max(0.1f, dyn.NonControllerUpdateRate);
+                    }
+                    EditorGUI.EndDisabledGroup();
 
-                EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot"));
-                rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
+                    EditorGUILayout.PropertyField(positionThreshold, new GUIContent("Position Threshold", "Meters the object must move to write a new snapshot"));
+                    positionThreshold.floatValue = Mathf.Max(0, positionThreshold.floatValue);
 
-                EditorGUILayout.PropertyField(scaleThreshold, new GUIContent("Scale Threshold", "Scale multiplier that must be exceeded to write a new snapshot"));
-                scaleThreshold.floatValue = Mathf.Max(0, scaleThreshold.floatValue);
-                EditorGUI.EndDisabledGroup();
-                EditorGUI.indentLevel--;
-            } //advanced foldout
+                    EditorGUILayout.PropertyField(rotationThreshold, new GUIContent("Rotation Threshold", "Degrees the object must rotate to write a new snapshot"));
+                    rotationThreshold.floatValue = Mathf.Max(0, rotationThreshold.floatValue);
 
+                    EditorGUILayout.PropertyField(scaleThreshold, new GUIContent("Scale Threshold", "Scale multiplier that must be exceeded to write a new snapshot"));
+                    scaleThreshold.floatValue = Mathf.Max(0, scaleThreshold.floatValue);
+                    EditorGUI.EndDisabledGroup();
+                    EditorGUI.indentLevel--;
+                } //advanced foldout
+
+            }
             advancedGUIChanged = EditorGUI.EndChangeCheck();
 
             if (basicGUIChanged || advancedGUIChanged)

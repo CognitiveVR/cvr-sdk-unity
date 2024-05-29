@@ -142,7 +142,8 @@ namespace Cognitive3D
         [SerializeField]
         internal string CustomId;
         public float UpdateRate = 0.1f;
-
+        public float ControllerUpdateRate = 0.1f;
+        public float NonControllerUpdateRate = 1.0f;
 
         //only used to indicate that the mesh needs to be exported/uploaded. false for controllers
         public bool UseCustomMesh
@@ -190,6 +191,7 @@ namespace Cognitive3D
             // if current device is hands or null, then use fallback
             if (IsController)
             {
+                UpdateRate = ControllerUpdateRate;
                 GameplayReferences.SetController(this, IsRight);
                 // Special case for hand tracking (particularly when session begins with hand): 
                 //  need this because InputDevice.isValid returns false
@@ -237,6 +239,10 @@ namespace Cognitive3D
                     SetControllerFromFallback(FallbackControllerType, IsRight);
                     registerMeshName = commonDynamicMesh.ToString();
                 }
+            }
+            else
+            {
+                UpdateRate = NonControllerUpdateRate;
             }
 
             RegisterDynamicObject(registerMeshName);
