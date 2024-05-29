@@ -20,6 +20,8 @@ namespace Cognitive3D.Components
         private readonly float Interval = 1;
         private const float SAMPLE_INTERVAL = 10;
         private readonly float EyeToShoulderHeight = 0.186f; //meters
+        private readonly float MIN_ACCEPTABLE_ARMLENGTH = 0;
+        private readonly float MAX_ACCEPTABLE_ARMLENGTH = 1.25f; // longest arm span in guinness record is approx 250cm
         Transform tempInfo = null;
 
         protected override void OnSessionBegin()
@@ -45,7 +47,10 @@ namespace Cognitive3D.Components
                     if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
                         maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        includedSample = true;
+                        if (maxSqrDistance > MIN_ACCEPTABLE_ARMLENGTH && maxSqrDistance < MAX_ACCEPTABLE_ARMLENGTH)
+                        {
+                            includedSample = true;
+                        }
                     }
                 }
 
@@ -54,18 +59,20 @@ namespace Cognitive3D.Components
                     if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
                         maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        includedSample = true;
+                        if (maxSqrDistance > MIN_ACCEPTABLE_ARMLENGTH && maxSqrDistance < MAX_ACCEPTABLE_ARMLENGTH)
+                        {
+                            includedSample = true;
+                        }
                     }
                 }
 
                 if (includedSample)
                 {
                     samples++;
-                }
-
-                if (Mathf.Approximately(samples % SAMPLE_INTERVAL, 0.0f))
-                {
-                    SendMaxDistance(maxSqrDistance);
+                    if (Mathf.Approximately(samples % SAMPLE_INTERVAL, 0.0f))
+                    {
+                        SendMaxDistance(maxSqrDistance);
+                    }
                 }
             }
         }
