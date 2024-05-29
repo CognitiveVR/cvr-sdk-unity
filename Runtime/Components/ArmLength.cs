@@ -33,6 +33,7 @@ namespace Cognitive3D.Components
         {
             int samples = 0;
             float maxSqrDistance = 0;
+            float currentDistance = 0;
 
             var wait = new WaitForSeconds(Interval);
 
@@ -46,9 +47,10 @@ namespace Cognitive3D.Components
                 {
                     if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
-                        maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        if (maxSqrDistance >= MIN_ACCEPTABLE_ARMLENGTH && maxSqrDistance <= MAX_ACCEPTABLE_ARMLENGTH)
+                        currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
+                        if (currentDistance >= MIN_ACCEPTABLE_ARMLENGTH && currentDistance <= MAX_ACCEPTABLE_ARMLENGTH)
                         {
+                            maxSqrDistance = Mathf.Max(maxSqrDistance, currentDistance);
                             includedSample = true;
                         }
                     }
@@ -58,9 +60,10 @@ namespace Cognitive3D.Components
                 {
                     if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
-                        maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        if (maxSqrDistance >= MIN_ACCEPTABLE_ARMLENGTH && maxSqrDistance <= MAX_ACCEPTABLE_ARMLENGTH)
+                        currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
+                        if (currentDistance >= MIN_ACCEPTABLE_ARMLENGTH && currentDistance <= MAX_ACCEPTABLE_ARMLENGTH)
                         {
+                            maxSqrDistance = Mathf.Max(maxSqrDistance, currentDistance);
                             includedSample = true;
                         }
                     }
