@@ -164,7 +164,6 @@ namespace Cognitive3D
         /// <summary>
         /// Checks whether the headset is currently worn by the user in Editor
         /// </summary>
-        /// TODO: Need support for other SDKs
         private static bool IsUserPresent()
         {
             if (GameplayReferences.HMD == null)
