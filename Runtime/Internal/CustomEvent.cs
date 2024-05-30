@@ -170,6 +170,7 @@ namespace Cognitive3D
             return this;
         }
 
+        /*
         /// <summary>
         /// Appends the latest value of each sensor to this event at the time this is called
         /// This will replace existing sensors of the same name
@@ -213,6 +214,7 @@ namespace Cognitive3D
             }
             return this;
         }
+        
 
         /// <summary>
         /// Appends the latest value of each specified sensor to this event
@@ -253,6 +255,7 @@ namespace Cognitive3D
 
             return this;
         }
+        */
 
         /// <summary>
         /// Record the end of this Custom Event at a position in the world
