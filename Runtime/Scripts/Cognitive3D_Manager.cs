@@ -455,7 +455,12 @@ namespace Cognitive3D
             {
                 FlushData();
             }
+
+            // upload session properties to new scene
             ForceWriteSessionMetadata = true;
+
+            // upload subscriptions to new scene
+            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
 
             // If a scene unloads (useful in additive cases), the scene will be removed from dictionary
             if (SceneStartTimeDict.ContainsKey(unloadingScene.path))
