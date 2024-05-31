@@ -8,7 +8,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Cognitive3D_MetaSceneMesh")]
     public class Cognitive3D_MetaSceneMesh : AnalyticsComponentBase
     {
-#if C3D_OCULUS
+#if C3D_OCULUS && !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
         OVRSceneManager sceneManager;
         private void Start()
         {

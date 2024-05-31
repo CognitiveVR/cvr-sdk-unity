@@ -1044,7 +1044,7 @@ namespace Cognitive3D
                     { 
                         selectedsdks.Remove("C3D_PHOTON");
                     }
-                    onclick += () => currentPage = Page.Recompile;
+                    onclick += () => currentPage = Page.Glia;
                     break;
                 default:
                     throw new System.NotSupportedException();

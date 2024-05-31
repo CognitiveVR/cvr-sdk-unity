@@ -137,7 +137,6 @@ namespace Cognitive3D
 #endif
             fillImage.color = Color.red;
 
-            GetComponentInParent<ExitPollPanel>().DisableTimeout();
             _currentRecordTime = RecordTime;
             _finishedRecording = false;
             _recording = true;

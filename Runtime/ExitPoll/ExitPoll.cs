@@ -160,7 +160,12 @@ namespace Cognitive3D
 
         public void BeginExitPoll(ExitPollParameters parameters)
         {
-            if (!Cognitive3D_Manager.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
+            if (!Cognitive3D_Manager.IsInitialized)
+            {
+                Util.logDebug("Cannot display exitpoll. Session has not begun");
+                Cleanup(false);
+                return;
+            }
 
             myparameters = parameters;
             if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
