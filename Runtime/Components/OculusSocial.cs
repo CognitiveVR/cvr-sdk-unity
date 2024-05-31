@@ -24,6 +24,15 @@ namespace Cognitive3D.Components
         /// </summary>
         List<string> subscriptionQueryParams = new List<string>() {"sku", "is_trial", "is_active", "period_start_time", "period_end_time", "next_renewal_time" };
 #endif
+        internal bool GetRecordOculusUserData()
+        {
+            return RecordOculusUserData;
+        }
+
+        internal void SetRecordOculusUserData(bool value)
+        {
+            RecordOculusUserData = value;
+        }
 
         public enum InitializeType
         {
