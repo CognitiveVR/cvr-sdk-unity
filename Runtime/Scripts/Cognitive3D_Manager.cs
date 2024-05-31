@@ -428,15 +428,16 @@ namespace Cognitive3D
                 SceneStartTimeDict.Clear();
             }
 
+            //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
+            FlushData();
+
             // upload session properties to new scene
             ForceWriteSessionMetadata = true;
 
             // upload subscriptions to new scene
             CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
 
-            //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
-            FlushData();
-               
+
             // If id exist for loaded scene, set new tracking scene
             if (loadingSceneHasSceneId)
             {
@@ -461,6 +462,12 @@ namespace Cognitive3D
             {
                 FlushData();
             }
+
+            // upload session properties to new scene
+            ForceWriteSessionMetadata = true;
+
+            // upload subscriptions to new scene
+            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
 
             // If a scene unloads (useful in additive cases), the scene will be removed from dictionary
             if (SceneStartTimeDict.ContainsKey(unloadingScene.path))
