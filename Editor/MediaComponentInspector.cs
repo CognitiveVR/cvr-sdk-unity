@@ -28,7 +28,8 @@ namespace Cognitive3D
             
             //TODO display video player field in a way that suggests it is optional - a mesh renderer is used for image media instead
             m.VideoPlayer = (UnityEngine.Video.VideoPlayer)EditorGUILayout.ObjectField("Video Player", m.VideoPlayer, typeof(UnityEngine.Video.VideoPlayer), true);
-            
+            bool videoPlayerIsSet = m.VideoPlayer != null;
+
             //media source / media id
             EditorGUILayout.LabelField("Media Name",m.MediaName);
             EditorGUILayout.LabelField("Media Id",m.MediaId);
@@ -127,13 +128,13 @@ namespace Cognitive3D
 
                 EditorGUI.indentLevel--;
             }
-            
+
             var meshrenderer = m.GetComponent<MeshRenderer>();
-            if (m.VideoPlayer == null && meshrenderer != null)
+            if (videoPlayerIsSet == false && meshrenderer != null)
             {
                 //image
             }
-            else if (m.VideoPlayer != null)
+            else if (videoPlayerIsSet == true)
             {
                 //video
             }

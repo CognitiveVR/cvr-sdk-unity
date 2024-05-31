@@ -28,7 +28,6 @@ namespace Cognitive3D
         public Image MicrophoneImage;
         public Text TipText;
         public Text buttonPrompt;
-        private ActivationType activationType;
         ExitPollSet questionSet;
 
 
@@ -138,7 +137,6 @@ namespace Cognitive3D
 #endif
             fillImage.color = Color.red;
 
-            GetComponentInParent<ExitPollPanel>().DisableTimeout();
             _currentRecordTime = RecordTime;
             _finishedRecording = false;
             _recording = true;

@@ -34,8 +34,7 @@ namespace Cognitive3D.Components
         [Tooltip("The behaviour to handle getting user data from the Oculus Platform.\n- Automatic will Initialize the platform with the current Platform.AppID.\n- Delayed will wait until you've checked Entitlement yourself.\n- Manual requires calling the code to record these session properties.")]
         public InitializeType initializeType = InitializeType.Automatic;
 
-
-    protected override void OnSessionBegin()
+        protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
 
@@ -56,7 +55,6 @@ namespace Cognitive3D.Components
                 //if (oculusSocial != null) {oculusSocial.BeginOculusEntitlementCheck(Cognitive3D.Components.OculusSocial.GetAppIDFromConfig());}
             }
         }
-
         IEnumerator WaitForInitialize()
         {
             yield return new WaitUntil(Core.IsInitialized);
@@ -94,7 +92,6 @@ namespace Cognitive3D.Components
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
             }
         }
-
 
 #if C3D_OCULUS
 

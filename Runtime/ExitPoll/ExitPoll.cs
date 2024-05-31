@@ -135,17 +135,6 @@ namespace Cognitive3D
             }
         }
 
-        private static GameObject _exitPollReticle;
-        public static GameObject ExitPollReticle
-        {
-            get
-            {
-                if (_exitPollReticle == null)
-                    _exitPollReticle = Resources.Load<GameObject>("ExitPollReticle");
-                return _exitPollReticle;
-            }
-        }
-
         public static ExitPollParameters NewExitPoll(string hookName)
         {
             var CurrentExitPollParams = new ExitPollParameters();
@@ -171,7 +160,12 @@ namespace Cognitive3D
 
         public void BeginExitPoll(ExitPollParameters parameters)
         {
-            if (!Cognitive3D_Manager.IsInitialized) { Util.logDebug("Cannot display exitpoll. Session has not begun"); return; }
+            if (!Cognitive3D_Manager.IsInitialized)
+            {
+                Util.logDebug("Cannot display exitpoll. Session has not begun");
+                Cleanup(false);
+                return;
+            }
 
             myparameters = parameters;
             if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)

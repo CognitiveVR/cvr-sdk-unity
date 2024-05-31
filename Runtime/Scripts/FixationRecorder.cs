@@ -720,7 +720,7 @@ namespace Cognitive3D
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
             if (!eyeGaze.IsValid)
                 return false;
-            return lblinkweight > ConfidenceThreshold;
+            return lblinkweight < ConfidenceThreshold;
         }
         bool RightEyeOpen()
         {
@@ -732,7 +732,7 @@ namespace Cognitive3D
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
             if (!eyeGaze.IsValid)
                 return false;
-            return rblinkweight > ConfidenceThreshold;
+            return rblinkweight < ConfidenceThreshold;
         }
 
         long EyeCaptureTimestamp()

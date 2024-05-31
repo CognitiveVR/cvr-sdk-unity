@@ -52,9 +52,7 @@ namespace Cognitive3D
 
         ExitPollSet QuestionSet;
 
-        float _remainingTime; //before timeout
         bool _isclosing; //has timed out/answered/skipped but still animating?
-        bool _allowTimeout; //used by microphone to disable timeout
 
         //used for sticky window - reposition window if player teleports
         Transform _root;
@@ -86,11 +84,6 @@ namespace Cognitive3D
             QuestionSet = questionset;
             PanelId = panelId;
             NextResponseTime = ResponseDelayTime + Time.time;
-
-            if (questionset.myparameters.UseTimeout)
-            {
-                _remainingTime = questionset.myparameters.Timeout;
-            }
 
             //display question from properties
 
@@ -181,7 +174,6 @@ namespace Cognitive3D
             }
 
             _isclosing = false;
-            _allowTimeout = true;
 
             StartCoroutine(_SetVisible(true));
         }
@@ -287,10 +279,9 @@ namespace Cognitive3D
         }
 
         //called from microphone button when recording starts
+        [System.Obsolete]
         public void DisableTimeout()
         {
-            _allowTimeout = false;
-            _remainingTime = QuestionSet.myparameters.Timeout;
         }
 
         #region Updates
@@ -319,21 +310,6 @@ namespace Cognitive3D
             {
                 Close();
                 return;
-            }
-            if (QuestionSet.myparameters.UseTimeout && _allowTimeout)
-            {
-                if (_remainingTime > 0)
-                {
-                    if (NextResponseTime < Time.time)
-                    {
-                        _remainingTime -= Time.deltaTime;
-                    }
-                }
-                else
-                {
-                    Timeout();
-                    return;
-                }
             }
             if (QuestionSet.myparameters.StickWindow)
             {
