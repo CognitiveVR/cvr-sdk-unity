@@ -295,7 +295,6 @@ namespace Cognitive3D
                 fixmessage: "WaveRig found in current scene.",
                 checkAction: () =>
                 {   
-                    Debug.Log(ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>());
                     return ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>();
                 },
                 fixAction: () =>
