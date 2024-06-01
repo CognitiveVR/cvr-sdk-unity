@@ -165,6 +165,7 @@ namespace Cognitive3D.Components
                     Cognitive3D_Manager.SetParticipantId(id);
                 }
             }
+           Users.GetAccessToken().OnComplete(GetSubscriptionContext);
         }
 
         /// <summary>
@@ -186,25 +187,28 @@ namespace Cognitive3D.Components
         /// <param name="data">The json string to be deserialized</param>
         private void DeserializeResponseAndSetSessionProperties(string data)
         {
-            SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
-            if (subscriptionContextResponse != null)
+            if (data != null)
             {
-                for (int i = 0; i < subscriptionContextResponse.data.Length; i++)
+                SubscriptionContextResponseText subscriptionContextResponse = JsonUtility.FromJson<SubscriptionContextResponseText>(data);
+                if (subscriptionContextResponse != null)
                 {
-                    if (subscriptionContextResponse.data[i] != null)
+                    for (int i = 0; i < subscriptionContextResponse.data.Length; i++)
                     {
-                        List<KeyValuePair<string, object>> subscription = new List<KeyValuePair<string, object>>();
-                        subscription.Add(new KeyValuePair<string, object>("sku", subscriptionContextResponse.data[i].sku));
-                        subscription.Add(new KeyValuePair<string, object>("is_active", subscriptionContextResponse.data[i].is_active));
-                        subscription.Add(new KeyValuePair<string, object>("is_trial", subscriptionContextResponse.data[i].is_trial));
-                        subscription.Add(new KeyValuePair<string, object>("period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
-                        subscription.Add(new KeyValuePair<string, object>("period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
-                        subscription.Add(new KeyValuePair<string, object>("next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
-                        CoreInterface.WriteMetaSubscriptionProperty(i, subscription);
+                        if (subscriptionContextResponse.data[i] != null)
+                        {
+                            List<KeyValuePair<string, object>> subscription = new List<KeyValuePair<string, object>>();
+                            subscription.Add(new KeyValuePair<string, object>("sku", subscriptionContextResponse.data[i].sku));
+                            subscription.Add(new KeyValuePair<string, object>("is_active", subscriptionContextResponse.data[i].is_active));
+                            subscription.Add(new KeyValuePair<string, object>("is_trial", subscriptionContextResponse.data[i].is_trial));
+                            subscription.Add(new KeyValuePair<string, object>("period_start_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_start_time)));
+                            subscription.Add(new KeyValuePair<string, object>("period_end_date", TimeStringToUnix(subscriptionContextResponse.data[i].period_end_time)));
+                            subscription.Add(new KeyValuePair<string, object>("next_renewal_date", TimeStringToUnix(subscriptionContextResponse.data[i].next_renewal_time)));
+                            CoreInterface.WriteMetaSubscriptionProperty(i, subscription);
+                        }
                     }
+                    CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
                 }
             }
-            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
         }
 #endif
 
@@ -222,7 +226,6 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed)
 #endif
             {
-                Users.GetAccessToken().OnComplete(GetSubscriptionContext);
                 Cognitive3D_Manager.SetParticipantProperty("oculusDisplayName", displayName);
                 if (RecordOculusUserData)
                 {

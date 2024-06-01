@@ -1453,36 +1453,39 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
             if (readyToSerializeSubscriptionDetails)
             {
-                // Write meta subscription details
-                gazebuilder.Append(",");
-                gazebuilder.Append("\"subscriptions\":{");
-                
-                for (int i = 0; i < metaSubscriptionDetails.Count; i++)
+                if (metaSubscriptionDetails.Count > 0)
                 {
-                    gazebuilder.Append("\"" + metaSubscriptionDetails[i][0].Value + "\":{");
-                    List<KeyValuePair <string, object>> thisSubscription = metaSubscriptionDetails[i];
-                    foreach (var kvp in thisSubscription)
+                    // Write meta subscription details
+                    gazebuilder.Append(",");
+                    gazebuilder.Append("\"subscriptions\":{");
+
+                    for (int i = 0; i < metaSubscriptionDetails.Count; i++)
                     {
-                        if (kvp.Value.GetType() == typeof(string))
+                        gazebuilder.Append("\"" + metaSubscriptionDetails[i][0].Value + "\":{");
+                        List<KeyValuePair<string, object>> thisSubscription = metaSubscriptionDetails[i];
+                        foreach (var kvp in thisSubscription)
                         {
-                            JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
+                            if (kvp.Value.GetType() == typeof(string))
+                            {
+                                JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
+                            }
+                            else if (kvp.Value.GetType() == typeof(long))
+                            {
+                                JsonUtil.SetLong(kvp.Key, (long)kvp.Value, gazebuilder);
+                            }
+                            else
+                            {
+                                JsonUtil.SetObject(kvp.Key, kvp.Value, gazebuilder);
+                            }
+                            gazebuilder.Append(",");
                         }
-                        else if (kvp.Value.GetType() == typeof(long))
-                        {
-                            JsonUtil.SetLong(kvp.Key, (long)kvp.Value, gazebuilder);
-                        }
-                        else
-                        {
-                            JsonUtil.SetObject(kvp.Key, kvp.Value, gazebuilder);
-                        }
+                        gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+                        gazebuilder.Append("}"); // closing bracket
                         gazebuilder.Append(",");
                     }
                     gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
                     gazebuilder.Append("}"); // closing bracket
-                    gazebuilder.Append(",");
                 }
-                gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
-                gazebuilder.Append("}"); // closing bracket
                 readyToSerializeSubscriptionDetails = false; // so that subscriptions don't get serialized again
             }
 
