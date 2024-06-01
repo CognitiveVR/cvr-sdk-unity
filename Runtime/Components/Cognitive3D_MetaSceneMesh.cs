@@ -49,6 +49,12 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 
+        private void OnDestroy()
+        {
+            sceneManager.SceneModelLoadedSuccessfully -= SetRoomDimensionsAsSessionProperty;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+
 #elif COGNITIVE3D_INCLUDE_META_XR_UTILITY
         MRUK mixedRealityUtility;
         private void Start()
@@ -77,8 +83,13 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 
-#endif
+        private void OnDestroy()
+        {
+            mixedRealityUtility.SceneLoadedEvent.RemoveListener(MrukLoaded);
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
 
+#endif
 
         /// <summary>
         /// Component description for the inspector
