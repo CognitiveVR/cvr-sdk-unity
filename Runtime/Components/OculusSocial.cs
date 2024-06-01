@@ -23,7 +23,7 @@ namespace Cognitive3D.Components
         /// A comma separated list of query parameters for meta API call
         /// </summary>
         List<string> subscriptionQueryParams = new List<string>() {"sku", "is_trial", "is_active", "period_start_time", "period_end_time", "next_renewal_time" };
-#endif
+
         internal bool GetRecordOculusUserData()
         {
             return RecordOculusUserData;
@@ -101,8 +101,6 @@ namespace Cognitive3D.Components
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.oculus.appid", appID);
             }
         }
-
-#if C3D_OCULUS
 
         /// <summary>
         /// Returns the oculus AppID from oculus platform settings
@@ -210,9 +208,7 @@ namespace Cognitive3D.Components
                 }
             }
         }
-#endif
 
-#if C3D_OCULUS
         /// <summary>
         /// Callback to get the display name
         /// apparently a second request is required
