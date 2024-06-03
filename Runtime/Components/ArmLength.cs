@@ -32,7 +32,6 @@ namespace Cognitive3D.Components
         {
             int samples = 0;
             float maxSqrDistance = 0;
-            float currentDistance = 0;
 
             var wait = new WaitForSeconds(Interval);
 
@@ -46,7 +45,7 @@ namespace Cognitive3D.Components
                 {
                     if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
-                        currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
+                        var currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
                         if (currentDistance >= MIN_ACCEPTABLE_ARMLENGTH && currentDistance <= MAX_ACCEPTABLE_ARMLENGTH)
                         {
                             maxSqrDistance = Mathf.Max(maxSqrDistance, currentDistance);
@@ -59,7 +58,7 @@ namespace Cognitive3D.Components
                 {
                     if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
-                        currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
+                        var currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
                         if (currentDistance >= MIN_ACCEPTABLE_ARMLENGTH && currentDistance <= MAX_ACCEPTABLE_ARMLENGTH)
                         {
                             maxSqrDistance = Mathf.Max(maxSqrDistance, currentDistance);
