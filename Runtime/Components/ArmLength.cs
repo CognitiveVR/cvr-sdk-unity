@@ -7,7 +7,6 @@ using Valve.VR;
 
 /// <summary>
 /// samples distances the the HMD to the player's arm. max is assumed to be roughly player arm length
-/// this only starts tracking when the player has pressed a button/trigger/grip
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -20,6 +19,8 @@ namespace Cognitive3D.Components
         private readonly float Interval = 1;
         private const float SAMPLE_INTERVAL = 10;
         private readonly float EyeToShoulderHeight = 0.186f; //meters
+        private readonly float MIN_ACCEPTABLE_ARMLENGTH = 0.01f;
+        private readonly float MAX_ACCEPTABLE_ARMLENGTH = 1.25f; // longest arm span in guinness record is approx 250cm
         Transform tempInfo = null;
 
         protected override void OnSessionBegin()
@@ -44,8 +45,12 @@ namespace Cognitive3D.Components
                 {
                     if (GameplayReferences.GetControllerTransform(false, out tempInfo))
                     {
-                        maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        includedSample = true;
+                        var currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
+                        if (currentDistance >= MIN_ACCEPTABLE_ARMLENGTH && currentDistance <= MAX_ACCEPTABLE_ARMLENGTH)
+                        {
+                            maxSqrDistance = Mathf.Max(maxSqrDistance, currentDistance);
+                            includedSample = true;
+                        }
                     }
                 }
 
@@ -53,19 +58,22 @@ namespace Cognitive3D.Components
                 {
                     if (GameplayReferences.GetControllerTransform(true, out tempInfo))
                     {
-                        maxSqrDistance = Mathf.Max(maxSqrDistance, Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight)));
-                        includedSample = true;
+                        var currentDistance = Vector3.SqrMagnitude(tempInfo.transform.position - (GameplayReferences.HMD.position - GameplayReferences.HMD.up * EyeToShoulderHeight));
+                        if (currentDistance >= MIN_ACCEPTABLE_ARMLENGTH && currentDistance <= MAX_ACCEPTABLE_ARMLENGTH)
+                        {
+                            maxSqrDistance = Mathf.Max(maxSqrDistance, currentDistance);
+                            includedSample = true;
+                        }
                     }
                 }
 
                 if (includedSample)
                 {
                     samples++;
-                }
-
-                if (Mathf.Approximately(samples % SAMPLE_INTERVAL, 0.0f))
-                {
-                    SendMaxDistance(maxSqrDistance);
+                    if (Mathf.Approximately(samples % SAMPLE_INTERVAL, 0.0f))
+                    {
+                        SendMaxDistance(maxSqrDistance);
+                    }
                 }
             }
         }

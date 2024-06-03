@@ -2,14 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if COGNITIVE3D_INCLUDE_META_XR_UTILITY
+using Meta.XR.MRUtilityKit;
+#endif
+
 namespace Cognitive3D.Components
 {
     [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/Cognitive3D_MetaSceneMesh")]
     public class Cognitive3D_MetaSceneMesh : AnalyticsComponentBase
     {
-#if C3D_OCULUS && !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
+#if C3D_OCULUS
+
+#if !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
         OVRSceneManager sceneManager;
+
         private void Start()
         {
             sceneManager = FindObjectOfType<OVRSceneManager>();
@@ -41,6 +48,48 @@ namespace Cognitive3D.Components
             sceneManager.SceneModelLoadedSuccessfully -= SetRoomDimensionsAsSessionProperty;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
+
+        private void OnDestroy()
+        {
+            sceneManager.SceneModelLoadedSuccessfully -= SetRoomDimensionsAsSessionProperty;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+
+#elif COGNITIVE3D_INCLUDE_META_XR_UTILITY
+        MRUK mixedRealityUtility;
+        private void Start()
+        {
+            mixedRealityUtility = FindObjectOfType<MRUK>();
+            if (mixedRealityUtility != null )
+            {
+                mixedRealityUtility.RegisterSceneLoadedCallback(MrukLoaded);
+                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            }
+        }
+
+        public void MrukLoaded()
+        {
+            float width =  mixedRealityUtility.GetCurrentRoom().FloorAnchor.PlaneRect.Value.width;
+            float height = mixedRealityUtility.GetCurrentRoom().FloorAnchor.PlaneRect.Value.height;
+            Cognitive3D_Manager.SetSessionProperty("c3d.physicalRoom.width", width);
+            Cognitive3D_Manager.SetSessionProperty("c3d.physicalRoom.height", height);
+            Cognitive3D_Manager.SetSessionProperty("c3d.physicalRoom.area", width * height);
+            Cognitive3D_Manager.SetSessionProperty("c3d.physicalRoom.dimensions", string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.0} x {1:0.0}", width, height));
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            mixedRealityUtility.SceneLoadedEvent.RemoveListener(MrukLoaded);
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+
+        private void OnDestroy()
+        {
+            mixedRealityUtility.SceneLoadedEvent.RemoveListener(MrukLoaded);
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+        }
+
+#endif
 
         /// <summary>
         /// Component description for the inspector
