@@ -286,6 +286,52 @@ namespace Cognitive3D
                     pxrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
                 }
             );
+#elif C3D_VIVEWAVE
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No WaveRig found in current scene.",
+                fixmessage: "WaveRig found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>();
+                },
+                fixAction: () =>
+                {
+                    var waverig = new GameObject();
+                    waverig.name = "Wave Rig";
+                    waverig.AddComponent<Wave.Essence.WaveRig>();
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "Tracking origin in Wave Rig is not set to floor. This can lead in to miscalculation in participant and controllers height. Set tracking origin to Floor?",
+                fixmessage: "Tracking origin in Wave Rig is set to floor",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
+                    if (_waveRigs != null && _waveRigs.Count != 0)
+                    {
+                        if (_waveRigs[0].TrackingOrigin != UnityEngine.XR.TrackingOriginModeFlags.Floor)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
+                    if (_waveRigs != null && _waveRigs.Count != 0)
+                    {
+                        _waveRigs[0].TrackingOrigin = UnityEngine.XR.TrackingOriginModeFlags.Floor;
+                    }
+                }
+            );
 #elif C3D_DEFAULT
 
     #if COGNITIVE3D_INCLUDE_COREUTILITIES
