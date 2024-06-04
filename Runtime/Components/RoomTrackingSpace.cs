@@ -21,16 +21,19 @@ namespace Cognitive3D
         /// </summary>
         private void OnEnable()
         {
-            trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
-            cachedTrackingSpace = transform;
-
-            if (!Cognitive3D_Manager.IsInitialized)
+            if (Cognitive3D_Manager.Instance != null)
             {
-                Cognitive3D_Manager.OnSessionBegin += InvokeTrackingSpaceChanged;
-                return;
+                trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
+                cachedTrackingSpace = transform;
+
+                if (!Cognitive3D_Manager.IsInitialized)
+                {
+                    Cognitive3D_Manager.OnSessionBegin += InvokeTrackingSpaceChanged;
+                    return;
+                }
+
+                InvokeTrackingSpaceChanged();
             }
-            
-            InvokeTrackingSpaceChanged();
         }
 
         /// <summary>
