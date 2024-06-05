@@ -186,7 +186,7 @@ namespace Cognitive3D
 
         private ActivationType GetCurrentActivationType(ExitPollHolder exitPollHolder)
         {
-
+            if (exitPollHolder == null) { return ActivationType.TriggerButton; }
             if (exitPollHolder.Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
                 return ActivationType.PointerFallbackGaze;
