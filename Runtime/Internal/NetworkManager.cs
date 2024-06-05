@@ -438,7 +438,6 @@ namespace Cognitive3D
 
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("content-encoding", "gzip");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.SendWebRequest();
