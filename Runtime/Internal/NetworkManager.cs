@@ -2,10 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
-using System.IO;
-using System.Text;
-using System.IO.Compression;
-
 
 //handles network requests at runtime
 //also handles local storage of data. saving + uploading
@@ -310,10 +306,10 @@ namespace Cognitive3D
                 {
                     isuploadingfromcache = true;
                     //lc.GetCachedDataPoint(out url, out content);
-                    
+
                     //wait for post response
-                    var gzippedBytes = CompressStringGzip(content);
-                    CacheRequest = UnityWebRequest.Put(url, gzippedBytes);
+                    var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                    CacheRequest = UnityWebRequest.Put(url, bytes);
                     CacheRequest.method = "POST";
                     CacheRequest.SetRequestHeader("Content-Type", "application/json");
                     CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
@@ -358,8 +354,8 @@ namespace Cognitive3D
         {
             string url = CognitiveStatics.PostExitpollResponses(questionSetName, questionSetVersion);
 
-            var gzippedBytes = CompressStringGzip(stringcontent);
-            var request = UnityWebRequest.Put(url, gzippedBytes);
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
+            var request = UnityWebRequest.Put(url, bytes);
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
@@ -437,8 +433,8 @@ namespace Cognitive3D
                 currentDelay = GetExponentialBackoff(currentDelay);
             }
 
-            var gzippedBytes = CompressStringGzip(stringcontent);
-            var request = UnityWebRequest.Put(url, gzippedBytes);
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
+            var request = UnityWebRequest.Put(url, bytes);
 
             request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
@@ -475,19 +471,6 @@ namespace Cognitive3D
             {
                 runtimeCache.WriteContent(url, content);
             }
-        }
-
-        private static byte[] CompressStringGzip(string stringToCompress)
-        {
-            byte[] stringAsByteArray = Encoding.UTF8.GetBytes(stringToCompress);
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
-                {
-                    gzipStream.Write(stringAsByteArray, 0, stringAsByteArray.Length);
-                }
-            }
-            return stringAsByteArray;
         }
 
         // TODO: Calculate the delay according to the data
