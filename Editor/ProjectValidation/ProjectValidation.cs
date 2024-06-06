@@ -58,9 +58,9 @@ namespace Cognitive3D
         /// <param name="fixmessage">Description of the fix for the item</param>
         /// <param name="isFixed">Checks if item is fixed or not</param>
         /// <param name="fixAction">Delegate that validates the item</param>
-        internal static void AddItem(ItemLevel level, ItemCategory category, ItemAction actionType, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null)
+        internal static void AddItem(ItemLevel level, ItemCategory category, ItemAction actionType, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null, bool isIgnored = false)
         {
-            var newItem = new ProjectValidationItem(level, category, actionType, message, fixmessage, checkAction, fixAction);
+            var newItem = new ProjectValidationItem(level, category, actionType, message, fixmessage, checkAction, fixAction, isIgnored);
             AddItem(newItem);
         }
 
@@ -70,6 +70,22 @@ namespace Cognitive3D
         internal static IEnumerable<ProjectValidationItem> GetAllItems()
         {
             return registry.GetAllItems();
+        }
+
+        // <summary>
+        /// Gets all <see cref="ProjectValidationItem"/>s are ignored or not
+        /// </summary>
+        internal static IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored)
+        {
+            return registry.GetIgnoredItems(isIgnored);
+        }
+
+        // <summary>
+        /// Gets <see cref="ProjectValidationItem"/>s are ignored or not related to a level
+        /// </summary>
+        internal static IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored, ItemLevel level)
+        {
+            return registry.GetIgnoredItems(isIgnored, level);
         }
 
         /// <summary>
@@ -126,6 +142,46 @@ namespace Cognitive3D
             EditorSceneManager.SaveScene(currentScene);
 
             ProjectValidationItems.UpdateProjectValidationItemStatus();
+        }
+
+        /// <summary>
+        /// Ignores <see cref="ProjectValidationItem"/> item
+        /// </summary>
+        /// <param name="item"></param>
+        internal static void IgnoreItem(ProjectValidationItem item, bool ignoreStatus)
+        {
+            item.isIgnored = ignoreStatus;
+            if (ignoreStatus == true)
+            {
+                ProjectValidationLog.AddIgnoreItem(item.message);
+            }
+            else
+            {
+                ProjectValidationLog.RemoveIgnoreItem(item.message);
+            }
+            
+            ProjectValidationItems.UpdateProjectValidationItemStatus();
+        }
+
+        /// <summary>
+        /// Sets ignored <see cref="ProjectValidationItem"/> items from log
+        /// </summary>
+        internal static void SetIgnoredItemsFromLog()
+        {
+            registry.SetIgnoredItemsFromLog(ProjectValidationLog.GetLogIgnoreItems());
+        }
+
+        /// <summary>
+        /// Resets ignored <see cref="ProjectValidationItem"/> items
+        /// </summary>
+        internal static void ResetIgnoredItems()
+        {
+            var ignoredItems =  registry.GetIgnoredItems(true);
+
+            foreach (var item in ignoredItems)
+            {
+                item.isIgnored = false;
+            }
         }
 
         /// <summary>

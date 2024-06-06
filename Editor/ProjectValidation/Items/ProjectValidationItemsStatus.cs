@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections.Generic;
@@ -19,16 +20,6 @@ namespace Cognitive3D
             }
             internal set {
                 _throwExecption = value;
-            }
-        }
-
-        private static bool _displayProjectValidationPopup = true;
-        public static bool displayProjectValidationPopup {
-            get {
-                return _displayProjectValidationPopup;
-            }
-            internal set {
-                _displayProjectValidationPopup = value;
             }
         }
 
@@ -122,10 +113,10 @@ namespace Cognitive3D
         /// </summary>
         internal static void VerifyAllBuildScenes()
         {
-            if (displayProjectValidationPopup)
+            if (ProjectValidationLog.GetBuildProcessPopup())
             {
                 // Popup
-                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nSelect \"Yes\" to verify scenes or \"No\" to continue with the build process. \n \n**Please note that if you choose to verify scenes, the build process will be stopped and will need to be restarted**", "Yes", "No");
+                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to verify that all build scenes meet the Cognitive3D configuration requirements? \n \n**Please note that if you choose to verify scenes, the build process will be stopped and will need to be restarted**", "Verify", "Skip");
                 if (result)
                 {
                     throwExecption = true;

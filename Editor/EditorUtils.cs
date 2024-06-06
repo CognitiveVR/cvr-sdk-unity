@@ -54,12 +54,13 @@ namespace Cognitive3D
             
             if (EditorApplication.isPlaying)
             {
-                if (!IsUserPresent())
+                if (!IsUserPresent()) //player isn't present
                 {
-                    await WaitForUser();
+                    var waitForUserTaskTimeout = await WaitForUser(); //wait until they're back, or time has elapsed
 
-                    // Check if still in play before initializing the window
-                    if (EditorApplication.isPlaying && !IsUserPresent())
+                    if (!EditorApplication.isPlaying) { return; }
+
+                    if (waitForUserTaskTimeout)
                     {
                         OpenWindow(LOG_TAG + "Session Reminder");
                         await WaitingForUserResponse();
@@ -134,17 +135,22 @@ namespace Cognitive3D
 
         // Waiting for user to become active
         // If user become active and put their headset back, wait time will stop
-        private static async Task WaitForUser()
+        private static async Task<bool> WaitForUser()
         {
             float time = 0;
 
             // Waiting for 15 minutes
             // If user is active again during wait time, breaks out of wait loop
-            while(time < MAX_USER_INACTIVITY_IN_SECONDS && !IsUserPresent())
+            while(time < MAX_USER_INACTIVITY_IN_SECONDS)
             {
+                if (IsUserPresent())
+                {
+                    return false;
+                }
                 await Task.Yield();
                 time += Time.deltaTime;
             }
+            return true;
         }
 
         private static void OnButtonPressed()
@@ -153,34 +159,27 @@ namespace Cognitive3D
             CloseWindow();
         }
 
+        static Vector3 lastPosition;
+
         /// <summary>
         /// Checks whether the headset is currently worn by the user in Editor
         /// </summary>
-        /// TODO: Need support for other SDKs
         private static bool IsUserPresent()
         {
-#if C3D_OCULUS
-            bool isPresent;
-            InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-            currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isPresent);
-            return isPresent;
-#elif C3D_DEFAULT
-            Vector3 velocity;
-            InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-
-            currentHmd.TryGetFeatureValue(CommonUsages.deviceVelocity, out velocity);
-
-            if (velocity != Vector3.zero)
-            {
-                return true;
-            }
-            else
+            if (GameplayReferences.HMD == null)
             {
                 return false;
             }
-#else
-            return true;
-#endif
+
+            if (Vector3.Distance(GameplayReferences.HMD.position, lastPosition) < 0.01) // Distance hasn't changed much since last check
+            {
+                return false;
+            }
+            else
+            {
+                lastPosition = GameplayReferences.HMD.position;
+                return true;
+            }
         }
 
         private void OnGUI()

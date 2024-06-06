@@ -21,7 +21,8 @@
         "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.PicoXR",
         "PhotonUnityNetworking",
-        "PhotonRealtime"
+        "PhotonRealtime",
+        "meta.xr.mrutilitykit"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -45,6 +46,16 @@
             "name": "com.unity.xr.legacyinputhelpers",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
+        },
+        {
+            "name": "com.meta.xr.sdk.core",
+            "expression": "65.0.0",
+            "define": "COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
         }
     ],
     "noEngineReferences": false

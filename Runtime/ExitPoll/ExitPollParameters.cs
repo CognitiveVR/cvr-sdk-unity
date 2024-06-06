@@ -46,7 +46,9 @@ namespace Cognitive3D
 
         public bool StickWindow;
 
+        [System.Obsolete]
         public bool UseTimeout = false;
+        [System.Obsolete]
         public float Timeout = 3;
         public LayerMask PanelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
         //the prefered distance to display an exit 
@@ -84,10 +86,9 @@ namespace Cognitive3D
         /// <param name="allowTimeout"></param>
         /// <param name="secondsUntilTimeout"></param>
         /// <returns></returns>
+        [System.Obsolete]
         public ExitPollParameters SetTimeout(bool allowTimeout, float secondsUntilTimeout)
         {
-            UseTimeout = allowTimeout;
-            Timeout = secondsUntilTimeout;
             return this;
         }
 

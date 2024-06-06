@@ -10,7 +10,6 @@ namespace Cognitive3D
 {
     public static class GameplayReferences
     {
-        public static bool handTrackingEnabled;
 
 #if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
@@ -63,7 +62,7 @@ namespace Cognitive3D
         public static TrackingType GetCurrentTrackedDevice()
         {
 #if C3D_OCULUS
-            var currentTrackedDevice = OVRInput.GetActiveController();
+            var currentTrackedDevice = OVRInput.GetConnectedControllers();
             if (currentTrackedDevice == OVRInput.Controller.None)
             {
                 return TrackingType.None;
