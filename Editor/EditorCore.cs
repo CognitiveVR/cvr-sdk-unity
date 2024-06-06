@@ -369,6 +369,118 @@ namespace Cognitive3D
         }
 
 #region GUI
+        internal class Styles
+        {
+            private const float SmallIconSize = 16.0f;
+            private const float MediumButtonWidth = 64.0f;
+            private const float LargeButtonWidth = 90.0f;
+            private const float IconButtonWidth = 30.0f;
+            internal const float GroupSelectionWidth = 244.0f;
+            internal const float LabelWidth = 96f;
+            internal const float TitleLabelWidth = 196f;
+            private const float IconSize = 16f;
+
+            internal readonly GUIStyle ListLabel = new GUIStyle("TV Selection")
+            {
+                border = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(5, 5, 5, 3),
+                margin = new RectOffset(4, 4, 4, 5)
+            };
+
+            internal readonly GUIStyle IssuesTitleBoldLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
+                fontStyle = FontStyle.Bold,
+                padding = new RectOffset(10, 2, 0, 0)
+            };
+
+            internal readonly GUIStyle IssuesTitleLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
+                padding = new RectOffset(10, 10, 0, 0)
+            };
+
+            internal readonly GUIStyle InlinedIconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle IconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(5, 5, 4, 5),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle MediumButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = MediumButtonWidth,
+            };
+
+            internal readonly GUIStyle LargeButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = LargeButtonWidth,
+            };
+
+            internal readonly GUIStyle IconButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 0, 0),
+                fixedWidth = IconButtonWidth,
+                fixedHeight = 25
+            };
+
+            internal readonly GUIStyle InfoButton = new GUIStyle
+            {
+                padding = new RectOffset(0, 0, 5, 0)
+            };
+
+            internal readonly GUIStyle SubtitleHelpText = new GUIStyle(EditorStyles.miniLabel)
+            {
+                margin = new RectOffset(10, 0, 0, 0),
+                wordWrap = true
+            };
+
+            internal readonly GUIStyle List = new GUIStyle(EditorStyles.helpBox)
+            {
+                margin = new RectOffset(10, 10, 10, 10),
+                padding = new RectOffset(5, 5, 5, 5),
+            };
+
+            internal readonly GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout)
+            {
+                fontStyle = FontStyle.Bold
+            };
+
+            internal readonly GUIStyle ItemDescription = new GUIStyle(GUI.skin.label)
+            {
+                wordWrap = true,
+            };
+        }
+
+        private static Styles _styles;
+        // Delays instantiation of the Styles object until it is first accessed
+        public static Styles styles
+        {
+            get
+            {
+                if (_styles == null)
+                    _styles = new Styles();
+                return _styles;
+            }
+        }
+
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
         public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF);
         public static Color CognitiveBlue = new Color32(98, 180, 243, 255);

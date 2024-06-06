@@ -22,7 +22,8 @@
         "Unity.XR.OpenXR",
         "Unity.XR.OpenXR.Features.MetaQuestSupport",
         "Unity.XR.PICO",
-        "Unity.XR.PicoXR"
+        "Unity.XR.PicoXR",
+        "meta.xr.mrutilitykit"
     ],
     "includePlatforms": [
         "Editor"
@@ -68,6 +69,11 @@
             "name": "com.meta.xr.sdk.core",
             "expression": "65.0.0",
             "define": "COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "65.0.0",
+            "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
         }
     ],
     "noEngineReferences": false
