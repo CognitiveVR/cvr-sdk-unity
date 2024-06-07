@@ -2,11 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
+using Cognitive3D.Components;
 
 namespace Cognitive3D
 {
-    public class AndroidPlugin : MonoBehaviour
+    [DisallowMultipleComponent]
+    [AddComponentMenu("Cognitive3D/Components/Cognitive3D_AndroidPlugin")]
+    public class AndroidPlugin : AnalyticsComponentBase
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         AndroidJavaObject plugin;
@@ -16,25 +18,18 @@ namespace Cognitive3D
         string filePath;
         string JSONfilePath;
 
-        protected void OnEnable()
-        {
-            Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
-
-
-            //if this component is enabled late, run startup as if session just began
-            if (Cognitive3D_Manager.IsInitialized)
-                OnSessionBegin();
-        }
-
-        protected void OnSessionBegin()
+        protected override void OnSessionBegin()
         {
             filePath = Application.persistentDataPath + "/c3dlocal/BackupCrashLogs.log";
             JSONfilePath = Application.persistentDataPath + "/c3dlocal/CrashLogs.json";
 
-            InitCognitive3DPlugin();
-            SetCognitive3DPlugin();
+            // if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
+            // {
+                InitCognitive3DPlugin();
+                SetCognitive3DPlugin();
 
-            LogFileHasContent();
+                LogFileHasContent();
+            // }
         }
 
         private void InitCognitive3DPlugin()
@@ -86,10 +81,14 @@ namespace Cognitive3D
                 // Check if line 4 exists and is not null or empty
                 if (lines.Length >= 4 && !string.IsNullOrEmpty(lines[3]))
                 {
+                    // Reading time of crash from logfile
+                    Util.TryExtractUnixTime(lines[5], out string eventTimeStamp);
+
                     plugininstance.Call("serializeCrashEvents", 
                         lines[0],
                         lines[1],
                         lines[2],
+                        eventTimeStamp,
                         string.Join("\n", lines[3..])
                     );
 
@@ -109,6 +108,6 @@ namespace Cognitive3D
             plugininstance.Call("redirectErrorLogs");
             return false;
         }
-#endif
+#endif      
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 namespace Cognitive3D
@@ -115,6 +116,32 @@ namespace Cognitive3D
 			TimeSpan span = DateTime.UtcNow - epoch;
 			return span.TotalSeconds;
 		}
+
+        /// <summary>
+        /// Attempts to extract the Unix timestamp from a line and return it as a float.
+        /// </summary>
+        /// <param name="line">The line from which to extract the Unix timestamp.</param>
+        /// <param name="unixTime">The extracted Unix timestamp as a string, if successful; otherwise, returns current unix time</param>
+        internal static bool TryExtractUnixTime(string line, out string unixTime)
+        {
+            // if not match found, use current timestamp as default
+            unixTime = Timestamp().ToString();
+
+            // Regular expression pattern to match the Unix timestamp with fractional seconds
+            string pattern = @"^\s*(\d+\.\d+)";
+
+            // Match the pattern in the log line
+            Match match = Regex.Match(line, pattern);
+
+            if (match.Success)
+            {
+                // Contains the first capturing group (\d+\.\d+)
+                unixTime = match.Groups[1].Value;
+                return true;
+            }
+
+            return false;
+        }
 
         //https://forum.unity3d.com/threads/how-to-load-an-array-with-jsonutility.375735/
         internal static T[] GetJsonArray<T>(string json)
