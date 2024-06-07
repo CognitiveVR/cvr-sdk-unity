@@ -165,31 +165,35 @@ namespace Cognitive3D
         /// </summary>
         internal static async void StartSceneVerificationProcess()
         {
-            if (TryGetScenesInBuildSettings(out var activeBuildScenes))
+            // Checking if the scene has unsaved changes
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
-                for (int i = 0; i < activeBuildScenes.Count; i += 1)
+                if (TryGetScenesInBuildSettings(out var activeBuildScenes))
                 {
-                    float progress = (float)i / activeBuildScenes.Count;
-                    EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
-
-                    // Open scene
-                    EditorSceneManager.OpenScene(activeBuildScenes[i].path);
-
-                    // Time needed for updating project validation items in a scene
-                    await Task.Delay(1000);
-
-                    // Check if project has not fixed items
-                    if (ProjectValidation.hasNotFixedItems())
+                    for (int i = 0; i < activeBuildScenes.Count; i += 1)
                     {
-                        var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
-                        AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                        float progress = (float)i / activeBuildScenes.Count;
+                        EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
+
+                        // Open scene
+                        EditorSceneManager.OpenScene(activeBuildScenes[i].path);
+
+                        // Time needed for updating project validation items in a scene
+                        await Task.Delay(1000);
+
+                        // Check if project has not fixed items
+                        if (ProjectValidation.hasNotFixedItems())
+                        {
+                            var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
+                            AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                        }
                     }
+
+                    // Clear progress bar
+                    EditorUtility.ClearProgressBar();
+
+                    DisplayScenesWithValidationItems();
                 }
-
-                // Clear progress bar
-                EditorUtility.ClearProgressBar();
-
-                DisplayScenesWithValidationItems();
             }
         }
 

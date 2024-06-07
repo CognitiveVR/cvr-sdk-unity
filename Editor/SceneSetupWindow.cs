@@ -93,6 +93,7 @@ namespace Cognitive3D
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
                 wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
         }
