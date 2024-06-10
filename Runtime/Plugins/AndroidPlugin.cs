@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D.Components;
+using UnityEngine.SceneManagement;
 
 namespace Cognitive3D
 {
@@ -25,14 +26,17 @@ namespace Cognitive3D
 
             // if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
             // {
+                CreateCognitive3DPluginInstance();
                 InitCognitive3DPlugin();
-                SetCognitive3DPlugin();
 
                 LogFileHasContent();
             // }
+
+            // Ensure to unsubscribe from it
+            Cognitive3D_Manager.OnLevelLoaded += SetTrackingScene;
         }
 
-        private void InitCognitive3DPlugin()
+        private void CreateCognitive3DPluginInstance()
         {
             plugin = new AndroidJavaClass(pluginName);
 
@@ -43,24 +47,26 @@ namespace Cognitive3D
             }
         }
 
-        public void SetCognitive3DPlugin()
+        public void InitCognitive3DPlugin()
         {
             if (plugininstance != null)
             {
 
                 plugininstance.Call("initSessionData", 
+                    CognitiveStatics.ApplicationKey, 
                     Cognitive3D_Manager.DeviceId, 
                     Util.Timestamp(Time.frameCount), 
-                    Cognitive3D_Manager.SessionID
+                    Cognitive3D_Manager.SessionID,
+                    Cognitive3D_Manager.TrackingSceneId,
+                    Cognitive3D_Manager.TrackingSceneVersionNumber,
+                    CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
+                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber)
                 );
 
                 plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
-                    CognitiveStatics.ApplicationKey, 
                     filePath, 
-                    JSONfilePath, 
-                    CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
-                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber)
+                    JSONfilePath
                 );
             }
         }
@@ -71,6 +77,19 @@ namespace Cognitive3D
             return unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
         }
 
+        private void SetTrackingScene(Scene scene, LoadSceneMode mode, bool didChangeSceneId)
+        {
+            if (didChangeSceneId)
+            {
+                plugininstance.Call("onTrackingSceneChanged", 
+                    Cognitive3D_Manager.TrackingSceneId, 
+                    Cognitive3D_Manager.TrackingSceneVersionNumber,
+                    CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
+                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber)
+                );
+            }
+        }
+
         private bool LogFileHasContent()
         {
             if (plugininstance != null && System.IO.File.Exists(filePath))
@@ -79,23 +98,25 @@ namespace Cognitive3D
                 string[] lines = System.IO.File.ReadAllLines(filePath);
 
                 // Check if line 4 exists and is not null or empty
-                if (lines.Length >= 4 && !string.IsNullOrEmpty(lines[3]))
+                if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
                 {
                     // Reading time of crash from logfile
-                    Util.TryExtractUnixTime(lines[5], out string crashTimestamp);
+                    Util.TryExtractUnixTime(lines[7], out string crashTimestamp);
 
                     plugininstance.Call("serializeCrashEvents", 
                         lines[0],
                         lines[1],
                         lines[2],
                         crashTimestamp,
-                        string.Join("\n", lines[3..])
+                        CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4])),
+                        string.Join("\n", lines[5..])
                     );
 
                     plugininstance.Call("serializeCrashGaze", 
                         lines[0],
                         lines[1],
-                        lines[2]
+                        lines[2],
+                        CognitiveStatics.PostGazeData(lines[3], int.Parse(lines[4]))
                     );
 
                     // Redirect and write new session data
