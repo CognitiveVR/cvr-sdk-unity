@@ -140,9 +140,9 @@ namespace Cognitive3D
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
 
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            using (new EditorGUILayout.VerticalScope())
             {
-                if (showExperimental = EditorGUILayout.Foldout(showExperimental, "Experimental"))
+                if (showExperimental = EditorGUILayout.Foldout(showExperimental, "Experimental", EditorCore.styles.foldoutStyle))
                 {
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("useCrashLoggerAndroidPlugin"), true);
