@@ -173,12 +173,18 @@ namespace Cognitive3D
         {
             SharedCore.InitializeBoundary(numBoundaryPoints);
         }
-        internal static void RecordBoundaryPoints(Vector3[] points, double time)
+        internal static void RecordBoundaryShape(Vector3[] points, double time)
         {
-            SharedCore.RecordBoundaryPoints(
+            SharedCore.RecordBoundaryShape(
                 points,
                 time);
         }
+
+        internal static void RecordBoundaryCentroid(Vector3 point, double time)
+        {
+            SharedCore.RecordBoundaryCentroid(point, time);
+        }
+
         #endregion
 
         #region Fixation

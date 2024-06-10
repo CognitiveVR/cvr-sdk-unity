@@ -99,7 +99,7 @@ namespace Cognitive3D
         public int DynamicSnapshotCount = 512;
         public int EventDataThreshold = 256;
         public int FixationSnapshotCount = 256;
-        public int BoundarySnapshotCount = 256;
+        public int BoundarySnapshotCount = 64;
 
         public int AutomaticSendTimer = 10;
 

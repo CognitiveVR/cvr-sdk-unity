@@ -85,9 +85,9 @@ namespace Cognitive3D.Components
                         || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if moved enough
                 {
                     currentBoundaryPoints = GetCurrentBoundaryPoints();
-                    RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
                     lastRecordedTrackingSpacePosition = trackingSpace.position;
                     lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
+                    CoreInterface.RecordBoundaryCentroid(CalculateCentroidOfPolygon(currentBoundaryPoints), Util.Timestamp(Time.frameCount));
                 }
             }
         }
@@ -123,7 +123,7 @@ namespace Cognitive3D.Components
                     {
                         previousBoundaryPoints = currentBoundaryPoints;
                         CalculateAndRecordRoomsize(true, true);
-                        RecordBoundaryPointsInWorldSpace(currentBoundaryPoints);
+                        RecordBoundaryShapeInWorldSpace(currentBoundaryPoints);
                     }
                     SendEventIfUserExitsBoundary();
 #endif
@@ -253,10 +253,27 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Converts the boundary points into world space and then serializes them
+        /// Returns the centroid of a polygon defined by an array of Vector3s
+        /// </summary>
+        /// <param name="polygon">An array representing the shape of the polygon</param>
+        /// <returns>A Vector3 representing the centroid of the polygon</returns>
+        private Vector3 CalculateCentroidOfPolygon(Vector3[] polygon)
+        {
+            Vector3 sum = Vector3.zero;
+            int numPoints = 1;
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                sum += polygon[i];
+                numPoints = i;
+            }
+            return sum/numPoints;
+        }
+
+        /// <summary>
+        /// Converts the boundary points into world space and then stores them for serialization
         /// </summary>
         /// <param name="boundaryPoints">An array of Vector3 representing the boundary points</param>
-        private void RecordBoundaryPointsInWorldSpace(Vector3[] boundaryPoints)
+        private void RecordBoundaryShapeInWorldSpace(Vector3[] boundaryPoints)
         {
             if (trackingSpace != null && boundaryPoints != null)
             {
@@ -264,7 +281,7 @@ namespace Cognitive3D.Components
                 {
                     boundaryPoints[i] = trackingSpace.TransformPoint(boundaryPoints[i]);
                 }
-                CoreInterface.RecordBoundaryPoints(boundaryPoints, Util.Timestamp(Time.frameCount));
+                CoreInterface.RecordBoundaryShape(boundaryPoints, Util.Timestamp(Time.frameCount));
             }
         }
 
