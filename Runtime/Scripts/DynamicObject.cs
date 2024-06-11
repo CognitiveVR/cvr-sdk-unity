@@ -143,7 +143,7 @@ namespace Cognitive3D
         internal string CustomId;
         public float UpdateRate = 0.1f;
         public float ControllerUpdateRate = 0.1f;
-        public float NonControllerUpdateRate = 1.0f;
+        public float NonControllerUpdateRate = 0.2f;
 
         //only used to indicate that the mesh needs to be exported/uploaded. false for controllers
         public bool UseCustomMesh
