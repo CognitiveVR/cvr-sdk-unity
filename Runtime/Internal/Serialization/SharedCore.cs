@@ -1550,10 +1550,9 @@ namespace Cognitive3D.Serialization
         {
             if (boundarybuilder == null) { return; }
             
-            boundarybuilder.Append("{");
-            
             foreach (KeyValuePair<double, object> kvp in boundaryShapes)
             {
+                boundarybuilder.Append("{");
                 double timestamp = kvp.Key;
                 JsonUtil.SetDouble("time", timestamp, boundarybuilder);
                 boundarybuilder.Append(",");
@@ -1565,42 +1564,54 @@ namespace Cognitive3D.Serialization
                     JsonUtil.SetVector("p" + i,
                         new float[] { points[i].x, points[i].y, points[i].z }, // Construct a float array from a Vector3
                         boundarybuilder);
-                    boundarybuilder.Append(',');
+                    boundarybuilder.Append(",");
                 }
+                if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+                {
+                    boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
+                }
+                boundarybuilder.Append("}");
+                boundarybuilder.Append(",");
             }
             if (boundarybuilder[boundarybuilder.Length - 1] == ',')
             {
                 boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
             }
-            boundarybuilder.Append("}");
-            boundarybuilder.Append(",");
             boundaryCount++;
-            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
-            {
-                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-            }
-            boundarybuilder.Append("],");
-            boundarybuilder.Append("\"centroids\":[");
+            boundarybuilder.Append("]");
+            boundarybuilder.Append(",");
 
+            boundarybuilder.Append("\"centroids\":[");
             foreach(var kvp in boundaryCentroids)
             {
                 double timestamp = kvp.Key;
                 float[] centroid = new float[] { ((Vector3)kvp.Value).x, ((Vector3)kvp.Value).y, ((Vector3)kvp.Value).z };
+                boundarybuilder.Append("{");
                 JsonUtil.SetDouble("timestamp", (int)timestamp, boundarybuilder);
-                boundarybuilder.Append(',');
+                boundarybuilder.Append(",");
                 // Format as "p1": [x,y,z], "p2": [x,y,z] and so on
                 for (int i = 0; i < centroid.Length; i++)
                 {
                     JsonUtil.SetVector("p" + i,
                         centroid,
                         boundarybuilder);
-                    boundarybuilder.Append(',');
+                    boundarybuilder.Append(",");
                 }
                 if (boundarybuilder[boundarybuilder.Length - 1] == ',')
                 {
                     boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
                 }
+                boundarybuilder.Append("}");
+                boundarybuilder.Append(",");
             }
+            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+            {
+                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
+            }
+
+            boundarybuilder.Append("]");
+            boundarybuilder.Append(",");
+
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetDouble("timestamp", (int)SessionTimestamp, boundarybuilder);
@@ -1617,8 +1628,6 @@ namespace Cognitive3D.Serialization
                     boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
                 }
                 boundarybuilder.Append("}");
-
-                Debug.Log("@@@@ Boundary seialized " + boundarybuilder.ToString());
                 
                 WebPost("boundary", boundarybuilder.ToString(), true);
                 boundarybuilder.Clear();
