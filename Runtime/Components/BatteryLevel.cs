@@ -51,7 +51,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
             {
-                if (SystemInfo.batteryLevel != -1)
+                if (SystemInfo.batteryLevel >= 0)
                 {
                     Cognitive3D.SensorRecorder.RecordDataPoint("HMD Battery Level", SystemInfo.batteryLevel * 100);
                 }
