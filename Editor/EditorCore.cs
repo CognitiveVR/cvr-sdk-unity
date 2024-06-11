@@ -753,6 +753,19 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D experimentalFeatures;
+        internal static Texture2D ExperimentalFeatures
+        {
+            get
+            {
+                if (experimentalFeatures == null)
+                {
+                    experimentalFeatures = Resources.Load<Texture2D>("FeatureImages/ExperimentalFeatures");
+                }
+                return experimentalFeatures;
+            }
+        }
+
         private static Texture2D onboardingVideo;
         internal static Texture2D OnboardingVideo
         {

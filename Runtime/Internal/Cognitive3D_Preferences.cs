@@ -116,7 +116,7 @@ namespace Cognitive3D
         public bool ExportSceneLODLowest = true;
 
         // Crash logger android plugin
-        public bool useCrashLoggerAndroidPlugin;
+        public bool useAndroidCrashLoggingPlugin;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
         //use scene path instead of sceneName, if possible

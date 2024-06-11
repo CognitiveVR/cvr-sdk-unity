@@ -146,12 +146,12 @@ namespace Cognitive3D
                 if (showExperimental)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty("useCrashLoggerAndroidPlugin"), true);
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("useAndroidCrashLoggingPlugin"), true);
                     EditorGUILayout.EndHorizontal();
                 }
 
                 // Add android plugin component based on the property value
-                if (serializedObject.FindProperty("useCrashLoggerAndroidPlugin").boolValue)
+                if (serializedObject.FindProperty("useAndroidCrashLoggingPlugin").boolValue)
                 {
                     if (!Cognitive3D_Manager.Instance.gameObject.TryGetComponent<AndroidPlugin>(out var androidPlugin))
                     {

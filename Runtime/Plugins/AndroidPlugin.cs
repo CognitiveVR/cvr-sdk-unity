@@ -22,7 +22,7 @@ namespace Cognitive3D
         {
             filePath = Application.persistentDataPath + "/c3dlocal/BackupCrashLogs.log";
 
-            if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
+            if (Cognitive3D_Preferences.Instance.useAndroidCrashLoggingPlugin)
             {
                 CreateAndroidPluginInstance();
                 InitAndroidPlugin();
@@ -36,7 +36,7 @@ namespace Cognitive3D
 
        private void OnPreSessionEnd()
         {
-            if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
+            if (Cognitive3D_Preferences.Instance.useAndroidCrashLoggingPlugin)
             {
                 Cognitive3D_Manager.OnLevelLoaded -= SetTrackingScene;
                 Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
