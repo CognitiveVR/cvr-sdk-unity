@@ -79,6 +79,11 @@ namespace Cognitive3D.Components
         /// </summary>
         bool rightControllerLostTracking;
 
+        /// <summary>
+        /// We expect controllers to not be any lower/higher than 1.25m from HMD
+        /// </summary>
+        private const float MAX_ABSOLUTE_CONTROLLER_ELEVATION_FROM_HMD = 1.25f;
+        
         protected override void OnSessionBegin()
         {
 #if XRPF
@@ -173,12 +178,12 @@ namespace Cognitive3D.Components
 
                 if (currentTime > ControllerTrackingInterval)
                 {
-                    if (wasLeftControllerFound)
+                    if (wasLeftControllerFound && System.Math.Abs(leftControllerToHMD.y) < MAX_ABSOLUTE_CONTROLLER_ELEVATION_FROM_HMD)
                     {
                         SensorRecorder.RecordDataPoint("c3d.controller.left.height.fromHMD", leftControllerToHMD.y);
                     }
 
-                    if (wasRightControllerFound)
+                    if (wasRightControllerFound && System.Math.Abs(rightControllerToHMD.y) < MAX_ABSOLUTE_CONTROLLER_ELEVATION_FROM_HMD)
                     {
                         SensorRecorder.RecordDataPoint("c3d.controller.right.height.fromHMD", rightControllerToHMD.y);
                     }

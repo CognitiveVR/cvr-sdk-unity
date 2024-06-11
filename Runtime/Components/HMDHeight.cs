@@ -160,6 +160,10 @@ namespace Cognitive3D.Components
             return true;
         }
 
+        /// Converts eye height to centimetres, adds forehead height, and then records participant property
+        /// </summary>
+        /// <param name="heights">The array of height samples</param>
+        /// <param name="lastIndex">The index of the last sample</param>
         private void RecordAndSendMedian(float[] heights, int lastIndex)
         {
             float medianHeight = Median(heights, lastIndex);
