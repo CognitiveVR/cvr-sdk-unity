@@ -8,7 +8,7 @@ namespace Cognitive3D
 {
     [CustomEditor(typeof(Cognitive3D_Preferences))]
     public class PreferencesInspector : Editor
-    {
+    { 
         bool showExperimental;
         public override void OnInspectorGUI()
         {
@@ -142,7 +142,8 @@ namespace Cognitive3D
 
             using (new EditorGUILayout.VerticalScope())
             {
-                if (showExperimental = EditorGUILayout.Foldout(showExperimental, "Experimental", EditorCore.styles.foldoutStyle))
+                showExperimental = EditorGUILayout.Foldout(showExperimental, "Experimental", EditorCore.styles.foldoutStyle);
+                if (showExperimental)
                 {
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("useCrashLoggerAndroidPlugin"), true);
