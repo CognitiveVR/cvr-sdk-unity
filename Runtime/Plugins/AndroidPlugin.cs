@@ -17,26 +17,33 @@ namespace Cognitive3D
         string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
         string filePath;
-        string JSONfilePath;
 
         protected override void OnSessionBegin()
         {
             filePath = Application.persistentDataPath + "/c3dlocal/BackupCrashLogs.log";
-            JSONfilePath = Application.persistentDataPath + "/c3dlocal/CrashLogs.json";
 
-            // if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
-            // {
-                CreateCognitive3DPluginInstance();
-                InitCognitive3DPlugin();
+            if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
+            {
+                CreateAndroidPluginInstance();
+                InitAndroidPlugin();
 
                 LogFileHasContent();
-            // }
 
-            // Ensure to unsubscribe from it
-            Cognitive3D_Manager.OnLevelLoaded += SetTrackingScene;
+                Cognitive3D_Manager.OnLevelLoaded += SetTrackingScene;
+                Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
+            }
         }
 
-        private void CreateCognitive3DPluginInstance()
+       private void OnPreSessionEnd()
+        {
+            if (Cognitive3D_Preferences.Instance.useCrashLoggerAndroidPlugin)
+            {
+                Cognitive3D_Manager.OnLevelLoaded -= SetTrackingScene;
+                Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
+            }
+        }
+
+        private void CreateAndroidPluginInstance()
         {
             plugin = new AndroidJavaClass(pluginName);
 
@@ -47,7 +54,7 @@ namespace Cognitive3D
             }
         }
 
-        public void InitCognitive3DPlugin()
+        public void InitAndroidPlugin()
         {
             if (plugininstance != null)
             {
@@ -65,8 +72,7 @@ namespace Cognitive3D
 
                 plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
-                    filePath, 
-                    JSONfilePath
+                    filePath
                 );
             }
         }
