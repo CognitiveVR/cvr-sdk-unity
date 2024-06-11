@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using Cognitive3D.Serialization;
 #if C3D_STEAMVR2
 using Valve.VR;
 #endif
@@ -27,7 +28,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.4.7";
+        public static readonly string SDK_VERSION = "1.5.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -429,7 +430,14 @@ namespace Cognitive3D
 
             //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
             FlushData();
-               
+
+            // upload session properties to new scene
+            ForceWriteSessionMetadata = true;
+
+            // upload subscriptions to new scene
+            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
+
+
             // If id exist for loaded scene, set new tracking scene
             if (loadingSceneHasSceneId)
             {
@@ -454,7 +462,12 @@ namespace Cognitive3D
             {
                 FlushData();
             }
+
+            // upload session properties to new scene
             ForceWriteSessionMetadata = true;
+
+            // upload subscriptions to new scene
+            CoreInterface.SetSubscriptionDetailsReadyToSerialize(true);
 
             // If a scene unloads (useful in additive cases), the scene will be removed from dictionary
             if (SceneStartTimeDict.ContainsKey(unloadingScene.path))

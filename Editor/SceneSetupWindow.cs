@@ -25,6 +25,10 @@ using System.IO;
 using Valve.Newtonsoft.Json;
 #endif
 
+#if COGNITIVE3D_INCLUDE_META_XR_UTILITY
+using Meta.XR.MRUtilityKit;
+#endif
+
 //uploading multiple scenes at once?
 
 namespace Cognitive3D
@@ -41,6 +45,7 @@ namespace Cognitive3D
         const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
         const string SCENE_PLANE_PREFAB_NAME = "Cognitive3D_PlanePrefab";
         const string SCENE_VOLUME_PREFAB_NAME = "Cognitive3D_VolumePrefab";
+        const string MRUK_NAME = "Cognitive3D_Meta_MRUK";
 #endif
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
@@ -88,6 +93,7 @@ namespace Cognitive3D
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
                 wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
         }
@@ -1086,6 +1092,13 @@ namespace Cognitive3D
                     // OVRSceneAnchor already has [DisallowMultipleComponent]
                     volumePrefab.AddComponent<OVRSceneAnchor>();
                     sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
+                }
+#elif COGNITIVE3D_INCLUDE_META_XR_UTILITY
+                var mruk = FindObjectOfType<MRUK>()?.gameObject;
+                if (mruk == null)
+                {
+                    mruk = new GameObject(MRUK_NAME);
+                    mruk.AddComponent<MRUK>();
                 }
 #endif
             }
