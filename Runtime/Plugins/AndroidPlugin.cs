@@ -160,6 +160,24 @@ namespace Cognitive3D
                 }
             }
         }
-#endif      
+#endif   
+
+    public override string GetDescription()
+        {
+#if UNITY_ANDROID
+            return "Captures crash logs on Android devices. It is not functional during Unity Editor sessions.";
+#else
+            return "Android crash logging plugin only works when the build target is set to Android.";
+#endif
+        }
+        
+        public override bool GetWarning()
+        {
+#if UNITY_ANDROID
+            return false;
+#else
+            return true;
+#endif
+        }
     }
 }
