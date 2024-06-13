@@ -170,7 +170,6 @@ namespace Cognitive3D
             QuestProSetup,
             //TODO pico eyetracker setup
             //TODO wave eyetracker setup
-            ExperimentalFeatures,
             SceneExport,
             SceneUpload,
             SceneUploadProgress,
@@ -204,9 +203,6 @@ namespace Cognitive3D
                     break;
                 case Page.QuestProSetup:
                     QuestProSetup();
-                    break;
-                case Page.ExperimentalFeatures:
-                    ExperimentalFeaturesUpdate();
                     break;
                 case Page.SceneExport:
                     ExportSceneUpdate();
@@ -1207,13 +1203,6 @@ namespace Cognitive3D
         }
 #endif
 
-        void ExperimentalFeaturesUpdate()
-        {
-            GUI.Label(steptitlerect, "EXPERIMENTAL FEATURES", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "Experimental features will provide early access to new capabilities and functionalities that are not yet part of the official release. \nTo enable or disable these features, navigate to <b>Cognitive3D > Preferences > Experimental</b>", "normallabel");
-            GUI.Box(new Rect(25, 0, 440, 440), EditorCore.ExperimentalFeatures, "image_centered");
-        }
-
         Texture2D isoSceneImage;
 
         void ExportSceneUpdate()
@@ -1608,10 +1597,6 @@ namespace Cognitive3D
                     onclick += () => ApplyOculusSettings();
 #endif
                     break;
-                case Page.ExperimentalFeatures:
-                    text = "Next";
-                    onclick += () => currentPage = Page.SceneExport;
-                    break;
                 case Page.SceneExport:
                     appearDisabled = !EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
@@ -1821,8 +1806,6 @@ namespace Cognitive3D
                 case Page.PlayerSetup:
                     break;
                 case Page.QuestProSetup:
-                    break;
-                case Page.ExperimentalFeatures:
                     break;
                 case Page.SceneExport:
                     onclick = () => currentPage = Page.PlayerSetup;
