@@ -155,7 +155,7 @@ namespace Cognitive3D
                 {
                     if (!Cognitive3D_Manager.Instance.gameObject.TryGetComponent<AndroidPlugin>(out var androidPlugin))
                     {
-                        Cognitive3D_Manager.Instance.gameObject.AddComponent<AndroidPlugin>();
+                        Undo.AddComponent<AndroidPlugin>(Cognitive3D_Manager.Instance.gameObject);
                     }    
                 }
                 else

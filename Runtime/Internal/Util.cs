@@ -118,15 +118,12 @@ namespace Cognitive3D
 		}
 
         /// <summary>
-        /// Attempts to extract the Unix timestamp from a line and return it as a float.
+        /// Extracts the Unix timestamp from a line and return it as a string.
         /// </summary>
         /// <param name="line">The line from which to extract the Unix timestamp.</param>
-        /// <param name="unixTime">The extracted Unix timestamp as a string, if successful; otherwise, returns current unix time</param>
-        internal static bool TryExtractUnixTime(string line, out string unixTime)
+        /// <return>The extracted Unix timestamp as a string, if successful; otherwise, returns current unix time</return>
+        internal static string ExtractUnixTime(string line)
         {
-            // if not match found, use current timestamp as default
-            unixTime = Timestamp().ToString();
-
             // Regular expression pattern to match the Unix timestamp with fractional seconds
             string pattern = @"^\s*(\d+\.\d+)";
 
@@ -136,11 +133,10 @@ namespace Cognitive3D
             if (match.Success)
             {
                 // Contains the first capturing group (\d+\.\d+)
-                unixTime = match.Groups[1].Value;
-                return true;
+                return match.Groups[1].Value;
             }
 
-            return false;
+            return Timestamp().ToString();
         }
 
         //https://forum.unity3d.com/threads/how-to-load-an-array-with-jsonutility.375735/

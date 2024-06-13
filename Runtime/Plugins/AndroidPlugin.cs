@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D.Components;
 using UnityEngine.SceneManagement;
+using System.IO;
 
 namespace Cognitive3D
 {
@@ -16,14 +17,22 @@ namespace Cognitive3D
         AndroidJavaObject plugininstance;
         string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
-        string filePath;
+        string folderPath;
+        string currentFilePath;        
 
         protected override void OnSessionBegin()
         {
-            filePath = Application.persistentDataPath + "/c3dlocal/BackupCrashLogs.log";
+            folderPath = Application.persistentDataPath + "/c3dlocal/CrashLogs";
+            currentFilePath = folderPath + "/BackupCrashLog-" + (int)Util.Timestamp() + ".log";
 
             if (Cognitive3D_Preferences.Instance.useAndroidCrashLoggingPlugin)
             {
+                // Creating a folder for crash logs in local cache directory
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
                 CreateAndroidPluginInstance();
                 InitAndroidPlugin();
 
@@ -72,7 +81,7 @@ namespace Cognitive3D
 
                 plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
-                    filePath
+                    currentFilePath
                 );
             }
         }
@@ -96,44 +105,60 @@ namespace Cognitive3D
             }
         }
 
-        private bool LogFileHasContent()
+        // Checks for crash logs. If there are no crash logs, file gets deleted.
+        private void LogFileHasContent()
         {
-            if (plugininstance != null && System.IO.File.Exists(filePath))
+            // Check if the folder exists
+            if (plugininstance != null && Directory.Exists(folderPath))
             {
-                // Read all lines from the log file
-                string[] lines = System.IO.File.ReadAllLines(filePath);
+                // Get all files in the folder
+                string[] files = Directory.GetFiles(folderPath);
 
-                // Check if line 4 exists and is not null or empty
-                if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
+                if (files != null && files.Length > 0)
                 {
-                    // Reading time of crash from logfile
-                    Util.TryExtractUnixTime(lines[7], out string crashTimestamp);
+                    foreach (string file in files)
+                    {
+                        // Read all lines from the log file
+                        string[] lines = System.IO.File.ReadAllLines(file);
 
-                    plugininstance.Call("serializeCrashEvents", 
-                        lines[0],
-                        lines[1],
-                        lines[2],
-                        crashTimestamp,
-                        CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4])),
-                        string.Join("\n", lines[5..])
-                    );
+                        // Check if line 6 exists for crash logs and is not null or empty
+                        if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
+                        {
+                            // Reading time of crash from logfile
+                            string crashTimestamp = Util.ExtractUnixTime(lines[7]);
 
-                    plugininstance.Call("serializeCrashGaze", 
-                        lines[0],
-                        lines[1],
-                        lines[2],
-                        CognitiveStatics.PostGazeData(lines[3], int.Parse(lines[4]))
-                    );
+                            plugininstance.Call("serializeCrashEvents", 
+                                lines[0],
+                                lines[1],
+                                lines[2],
+                                crashTimestamp,
+                                CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4])),
+                                // Todo: sub arrays won't work in older .net versions
+                                string.Join("\n", lines[5..]),
+                                file
+                            );
 
-                    // Redirect and write new session data
-                    plugininstance.Call("redirectErrorLogs");
-                    return true;
+                            plugininstance.Call("serializeCrashGaze", 
+                                lines[0],
+                                lines[1],
+                                lines[2],
+                                CognitiveStatics.PostGazeData(lines[3], int.Parse(lines[4]))
+                            );
+
+                            // If response code is 200, the file gets deleted (handled in plugin). Otherwise, send in future sessions
+                        }
+                        else
+                        {
+                            // If it's not current session crash log file and has no crash logs, delete it
+                            if (currentFilePath != file)
+                            {
+                                // No crash logs
+                                plugininstance.Call("deleteLogFile", file);
+                            }
+                        }
+                    }
                 }
             }
-
-            // Redirect and write new session data
-            plugininstance.Call("redirectErrorLogs");
-            return false;
         }
 #endif      
     }
