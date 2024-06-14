@@ -60,6 +60,7 @@ namespace Cognitive3D.Components
             if (previousBoundaryPoints != null)
             {
                 CoreInterface.InitializeBoundary(previousBoundaryPoints.Length + (int) Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
+                CoreInterface.RecordBoundaryShape(previousBoundaryPoints, Util.Timestamp(Time.frameCount));
             }
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
@@ -82,12 +83,11 @@ namespace Cognitive3D.Components
             else
             {
                 if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
-                        || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if moved enough
+                        || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if tracking space moved enough
                 {
-                    currentBoundaryPoints = GetCurrentBoundaryPoints();
+                    CoreInterface.RecordTrackingSpaceTransform(trackingSpace, Util.Timestamp(Time.frameCount));
                     lastRecordedTrackingSpacePosition = trackingSpace.position;
                     lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
-                    CoreInterface.RecordBoundaryCentroid(CalculateCentroidOfPolygon(currentBoundaryPoints), Util.Timestamp(Time.frameCount));
                 }
             }
         }
@@ -123,7 +123,7 @@ namespace Cognitive3D.Components
                     {
                         previousBoundaryPoints = currentBoundaryPoints;
                         CalculateAndRecordRoomsize(true, true);
-                        RecordBoundaryShapeInWorldSpace(currentBoundaryPoints);
+                        CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
                     }
                     SendEventIfUserExitsBoundary();
 #endif
@@ -250,39 +250,6 @@ namespace Cognitive3D.Components
             Util.LogOnce("Unable to find boundary points using XRInputSubsystem", LogType.Warning);
             return null;
 #endif
-        }
-
-        /// <summary>
-        /// Returns the centroid of a polygon defined by an array of Vector3s
-        /// </summary>
-        /// <param name="polygon">An array representing the shape of the polygon</param>
-        /// <returns>A Vector3 representing the centroid of the polygon</returns>
-        private Vector3 CalculateCentroidOfPolygon(Vector3[] polygon)
-        {
-            Vector3 sum = Vector3.zero;
-            int numPoints = 1;
-            for (int i = 0; i < polygon.Length; i++)
-            {
-                sum += polygon[i];
-                numPoints = i;
-            }
-            return sum/numPoints;
-        }
-
-        /// <summary>
-        /// Converts the boundary points into world space and then stores them for serialization
-        /// </summary>
-        /// <param name="boundaryPoints">An array of Vector3 representing the boundary points</param>
-        private void RecordBoundaryShapeInWorldSpace(Vector3[] boundaryPoints)
-        {
-            if (trackingSpace != null && boundaryPoints != null)
-            {
-                for (int i = 0; i < boundaryPoints.Length; i++)
-                {
-                    boundaryPoints[i] = trackingSpace.TransformPoint(boundaryPoints[i]);
-                }
-                CoreInterface.RecordBoundaryShape(boundaryPoints, Util.Timestamp(Time.frameCount));
-            }
         }
 
         /// <summary>

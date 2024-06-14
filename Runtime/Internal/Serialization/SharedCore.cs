@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine; //for fixation calculations - don't want to break this right now
 using System.Threading; //for dynamic objects
 using System.Linq;
+using System.IO;
 
 
 //this is on the far side of the interface - what actually serializes and returns data
@@ -77,9 +78,9 @@ namespace Cognitive3D.Serialization
             LogAction = logAction;
 
             IsInitialized = true;
-            
+
             //apply pre session properties
-            foreach(var kvp in preSessionProperties)
+            foreach (var kvp in preSessionProperties)
             {
                 SetSessionProperty(kvp.Key, kvp.Value);
             }
@@ -857,7 +858,7 @@ namespace Cognitive3D.Serialization
             int samples = 0;
             fixationHitDynamicIds.Clear();
             localFixationUsedCaptures.Clear();
-            long firstOnTransformTime = 0;            
+            long firstOnTransformTime = 0;
 
             for (int i = 0; i < CachedEyeCaptures; i++)
             {
@@ -1507,16 +1508,17 @@ namespace Cognitive3D.Serialization
         static StringBuilder boundarybuilder;
         static int boundaryCount;
         static int boundaryJsonPart = 0;
-        
+
         /// <summary>
         /// A dictionary to store the boundary shapes instead of immediately serializing and sending them
         /// </summary>
         static List<KeyValuePair<double, object>> boundaryShapes = new List<KeyValuePair<double, object>>();
 
         /// <summary>
-        /// A dictionary to store the centroids of the boundary
+        /// We will store the transforms of the tracking spaces and then serialize the pos and rot separately
+        /// We won't use scale
         /// </summary>
-        static List<KeyValuePair<double, object>> boundaryCentroids = new List<KeyValuePair<double, object>>();
+        static List<KeyValuePair<double, Transform>> trackingSpaces = new List<KeyValuePair<double, Transform>>();
 
         /// <summary>
         /// Initializes a json to hold the boundary points data
@@ -1529,9 +1531,20 @@ namespace Cognitive3D.Serialization
             boundarybuilder.Append("{\"data\":[");
         }
 
-        internal static void RecordBoundaryCentroid(Vector3 point, double timestamp)
+        /// <summary>
+        /// Adds the transform of the tracking space and associated timestamp to an internal list <br/>
+        /// We will later serialize contents and populate the json
+        /// </summary>
+        /// <param name="transform">The transform of the tracking space</param>
+        /// <param name="timestamp">The time at which the transform was recorded</param>
+        internal static void RecordTrackingSpaceTransform(Transform transform, double timestamp)
         {
-            boundaryCentroids.Add(new KeyValuePair<double, object>(timestamp, point));
+            if (!IsInitialized || transform == null) { return; }
+            trackingSpaces.Add(new KeyValuePair<double, Transform>(timestamp, transform));
+            if (trackingSpaces.Count > BoundaryThreshold)
+            {
+                SerializeBoundaryShapes();
+            }
         }
 
         internal static void RecordBoundaryShape(Vector3[] points, double timestamp)
@@ -1540,84 +1553,72 @@ namespace Cognitive3D.Serialization
             if (points.Length == 0) { return; }
 
             boundaryShapes.Add(new KeyValuePair<double, object>(timestamp, points));
-            if (boundaryShapes.Count > BoundaryThreshold)
-            {
-                SerializeBoundaryShapes();
-            }
         }
 
         static void SerializeBoundaryShapes()
         {
             if (boundarybuilder == null) { return; }
-            
+
+            /// Tracking spaces
+            foreach (var kvp in trackingSpaces)
+            {
+                double timestamp = kvp.Key;
+                boundarybuilder.Append("{");
+                JsonUtil.SetDouble("timestamp", (int)timestamp, boundarybuilder);
+                boundarybuilder.Append(",");
+                JsonUtil.SetVector("p",
+                    new float[] { kvp.Value.position.x, kvp.Value.position.y, kvp.Value.position.z },
+                    boundarybuilder);
+                boundarybuilder.Append(",");
+                JsonUtil.SetQuat("r",
+                        new float[] { kvp.Value.rotation.x, kvp.Value.rotation.y, kvp.Value.rotation.z, kvp.Value.rotation.w },
+                        boundarybuilder);
+                boundarybuilder.Append("}");
+                boundarybuilder.Append(",");
+            }
+            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+            {
+                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
+            }
+            boundarybuilder.Append("]");
+            boundarybuilder.Append(",");
+
+            /// Boundaries
+            boundarybuilder.Append("\"shapes\":[");
             foreach (KeyValuePair<double, object> kvp in boundaryShapes)
             {
                 boundarybuilder.Append("{");
                 double timestamp = kvp.Key;
-                JsonUtil.SetDouble("time", timestamp, boundarybuilder);
+                JsonUtil.SetDouble("timestamp", timestamp, boundarybuilder);
                 boundarybuilder.Append(",");
 
                 Vector3[] points = (Vector3[])kvp.Value;
-                // Format as "p1": [x,y,z], "p2": [x,y,z] and so on
+                // Format as an array of points
+                boundarybuilder.Append("\"points\":");
+                boundarybuilder.Append("[");
                 for (int i = 0; i < points.Length; i++)
                 {
-                    JsonUtil.SetVector("p" + i,
-                        new float[] { points[i].x, points[i].y, points[i].z }, // Construct a float array from a Vector3
-                        boundarybuilder);
+                    JsonUtil.SetArrayOfFloat(new float[] { points[i].x, points[i].y, points[i].z }, boundarybuilder);
                     boundarybuilder.Append(",");
                 }
                 if (boundarybuilder[boundarybuilder.Length - 1] == ',')
                 {
                     boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
                 }
+                boundarybuilder.Append("]");
                 boundarybuilder.Append("}");
-                boundarybuilder.Append(",");
             }
-            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
-            {
-                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-            }
+            boundarybuilder.Append("]");
+            boundarybuilder.Append(",");
             boundaryCount++;
-            boundarybuilder.Append("]");
-            boundarybuilder.Append(",");
 
-            boundarybuilder.Append("\"centroids\":[");
-            foreach(var kvp in boundaryCentroids)
-            {
-                double timestamp = kvp.Key;
-                float[] centroid = new float[] { ((Vector3)kvp.Value).x, ((Vector3)kvp.Value).y, ((Vector3)kvp.Value).z };
-                boundarybuilder.Append("{");
-                JsonUtil.SetDouble("timestamp", (int)timestamp, boundarybuilder);
-                boundarybuilder.Append(",");
-                // Format as "p1": [x,y,z], "p2": [x,y,z] and so on
-                for (int i = 0; i < centroid.Length; i++)
-                {
-                    JsonUtil.SetVector("p" + i,
-                        centroid,
-                        boundarybuilder);
-                    boundarybuilder.Append(",");
-                }
-                if (boundarybuilder[boundarybuilder.Length - 1] == ',')
-                {
-                    boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-                }
-                boundarybuilder.Append("}");
-                boundarybuilder.Append(",");
-            }
-            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
-            {
-                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-            }
-
-            boundarybuilder.Append("]");
-            boundarybuilder.Append(",");
-
+            /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetDouble("timestamp", (int)SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
-            boundarybuilder.Append(",");
+
 
             boundaryJsonPart++;
             boundaryCount = 0;
@@ -1628,7 +1629,6 @@ namespace Cognitive3D.Serialization
                     boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
                 }
                 boundarybuilder.Append("}");
-                
                 WebPost("boundary", boundarybuilder.ToString(), true);
                 boundarybuilder.Clear();
                 boundarybuilder.Append("{\"data\":["); // prepare the json for next batch

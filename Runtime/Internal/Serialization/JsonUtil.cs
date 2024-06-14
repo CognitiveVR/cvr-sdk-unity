@@ -219,5 +219,21 @@ namespace Cognitive3D.Serialization
             builder.Append(']');
             return builder;
         }
+
+        public static StringBuilder SetArrayOfFloat(float[] array, StringBuilder builder)
+        {
+            builder.Append("[");
+            for (int i = 0; i < array.Length; i++)
+            {
+                builder.Append(array[i]);
+                builder.Append(",");
+            }
+            if (builder[builder.Length - 1] == ',')
+            {
+                builder.Remove(builder.Length - 1, 1); // remove comma
+            }
+            builder.Append("]");
+            return builder;
+        }
     }
 }

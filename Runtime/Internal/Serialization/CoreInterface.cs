@@ -180,9 +180,15 @@ namespace Cognitive3D
                 time);
         }
 
-        internal static void RecordBoundaryCentroid(Vector3 point, double time)
+        /// <summary>
+        /// Adds the transform of the tracking space and associated timestamp to an internal list <br/>
+        /// We will later serialize contents and populate the json
+        /// </summary>
+        /// <param name="transform">The transform of the tracking space</param>
+        /// <param name="timestamp">The time at which the transform was recorded</param>
+        internal static void RecordTrackingSpaceTransform(Transform transform, double timestamp)
         {
-            SharedCore.RecordBoundaryCentroid(point, time);
+            SharedCore.RecordTrackingSpaceTransform(transform, timestamp);
         }
 
         #endregion
