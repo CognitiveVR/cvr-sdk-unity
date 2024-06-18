@@ -1631,38 +1631,41 @@ namespace Cognitive3D.Serialization
             //serialize each sensor into separate objects
             foreach (var k in CachedSnapshots.Keys)
             {
-                sb.Append("{");
-                JsonUtil.SetString("name", k, sb);
-                sb.Append(",");
-                if (sensorData.ContainsKey(k))
+                if (CachedSnapshots[k] != null && CachedSnapshots[k].Count !=0)
                 {
-                    JsonUtil.SetString("sensorHzLimitType", sensorData[k].Rate, sb);
+                    sb.Append("{");
+                    JsonUtil.SetString("name", k, sb);
                     sb.Append(",");
-                    if (sensorData[k].UpdateInterval >= 0.1f)
+                    if (sensorData.ContainsKey(k))
                     {
-                        JsonUtil.SetString("sensorHzLimited", "true", sb);
+                        JsonUtil.SetString("sensorHzLimitType", sensorData[k].Rate, sb);
+                        sb.Append(",");
+                        if (sensorData[k].UpdateInterval >= 0.1f)
+                        {
+                            JsonUtil.SetString("sensorHzLimited", "true", sb);
+                            sb.Append(",");
+                        }
+                    }
+
+                    //put each data point (already a timestamp/value pair) into an array
+                    sb.Append("\"data\":[");
+                    foreach (var v in CachedSnapshots[k])
+                    {
+                        sb.Append(v);
                         sb.Append(",");
                     }
-                }
 
-                //put each data point (already a timestamp/value pair) into an array
-                sb.Append("\"data\":[");
-                foreach (var v in CachedSnapshots[k])
-                {
-                    sb.Append(v);
+                    //remove last comma from data array
+                    if (CachedSnapshots[k].Count > 0)
+                    {
+                        sb.Remove(sb.Length - 1, 1);
+                    }
+
+                    //end object
+                    sb.Append("]");
+                    sb.Append("}");
                     sb.Append(",");
                 }
-
-                //remove last comma from data array
-                if (CachedSnapshots[k].Count > 0)
-                {
-                    sb.Remove(sb.Length - 1, 1);
-                }
-
-                //end object
-                sb.Append("]");
-                sb.Append("}");
-                sb.Append(",");
             }
 
             //remove last comma from the array of sensor objects
