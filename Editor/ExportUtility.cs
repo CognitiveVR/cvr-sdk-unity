@@ -892,7 +892,7 @@ namespace Cognitive3D
             //bake texture from render
 
             screenshot = TextureBakeCanvas(v.transform, width, height);
-            screenshot.name = v.gameObject.name.Replace(' ', '_');
+            screenshot.name = v.gameObject.GetInstanceID().ToString(); //use a unqiue texture name for each canvas - unlikely two will be identical
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
             Mesh mesh;
@@ -963,12 +963,14 @@ namespace Cognitive3D
             {
                 SpriteRenderer sr = v.GetComponent<SpriteRenderer>();
                 screenshot = TextureBake(v.transform, type, sr.bounds.extents.x*2, sr.bounds.extents.y*2);
+                screenshot.name = AssetDatabase.GetAssetPath(sr.sprite).GetHashCode().ToString();
             }
-            else
+            else //text mesh pro. canvas should be handled in a different function
             {
                 screenshot = TextureBake(v.transform, type, width, height);
+                screenshot.name = v.gameObject.GetInstanceID().ToString();
             }
-            screenshot.name = v.gameObject.name.Replace(' ', '_');
+            
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
             Mesh mesh;
@@ -1509,7 +1511,7 @@ namespace Cognitive3D
             RenderTexture.active = null;
 
             //delete temporary camera
-            //UnityEngine.Object.DestroyImmediate(cameraGo);
+            UnityEngine.Object.DestroyImmediate(cameraGo);
 
             return tex;
         }
