@@ -10,7 +10,7 @@ namespace Cognitive3D
 {
     public interface IPointerFocus
     {
-        void SetPointerFocus(bool isRightHand);
+        void SetPointerFocus(bool isRightHand, bool activation);
         Vector3 GetPosition();
         MonoBehaviour MonoBehaviour { get; }
     }

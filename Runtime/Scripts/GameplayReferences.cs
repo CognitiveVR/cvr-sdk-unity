@@ -156,6 +156,9 @@ namespace Cognitive3D
             Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
         }
 
+        public static float rightTriggerValue;
+        public static float leftTriggerValue;
+
         //updates controller and hmd inputdevices to call events when states change
         private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
@@ -170,12 +173,14 @@ namespace Cognitive3D
             {
                 controllerDevices[0] = left;
                 InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
+                left.TryGetFeatureValue(CommonUsages.trigger, out leftTriggerValue);
             }
             var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
             if (right.isValid != controllerDevices[1].isValid)
             {
                 controllerDevices[1] = right;
                 InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
+                right.TryGetFeatureValue(CommonUsages.trigger, out rightTriggerValue);
             }
         }
 

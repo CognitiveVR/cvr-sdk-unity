@@ -17,6 +17,7 @@ namespace Cognitive3D
         ExitPollParameters poll;
         ExitPollSet exitPollSet;
         private bool trackingWasLost;
+        private const string CONTROLLER_NOT_FOUND = "Controller not found!";
 
         private void OnEnable()
         {
@@ -71,7 +72,7 @@ namespace Cognitive3D
                 if (xrNodeState.nodeType == XRNode.RightHand && poll.PointerType == ExitPoll.PointerType.RightControllerPointer
                     || xrNodeState.nodeType == XRNode.LeftHand && poll.PointerType == ExitPoll.PointerType.LeftControllerPointer)
                 {
-                    exitPollSet.DisplayControllerError(true);
+                    exitPollSet.DisplayControllerError(true, CONTROLLER_NOT_FOUND);
                     trackingWasLost = true;
                 }
             }

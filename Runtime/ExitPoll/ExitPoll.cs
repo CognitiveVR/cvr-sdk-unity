@@ -212,39 +212,18 @@ namespace Cognitive3D
             Transform t = null;
             if (pointerInstance != null)
             {
-                if (isRight)
+                if (GameplayReferences.GetControllerTransform(isRight, out t))
                 {
-                    if (GameplayReferences.GetControllerTransform(true, out t))
-                    {
-                        pointerInstance.transform.SetParent(t);
-                        pointerInstance.transform.localPosition = Vector3.zero;
-                        pointerInstance.transform.localRotation = Quaternion.identity;
-                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
-                        pointerInstance.GetComponent<ControllerPointer>().isRightHand = true;
-                    }
-                    else
-                    {
-                        myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
-                        SetUpHMDAsPointer();
-                        Debug.LogError("Controller not found, falling back to HMD Pointer");
-                    }
+                    pointerInstance.transform.localPosition = Vector3.zero;
+                    pointerInstance.transform.localRotation = Quaternion.identity;
+                    pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer(t);
+                    pointerInstance.GetComponent<ControllerPointer>().isRightHand = isRight;
                 }
                 else
                 {
-                    if (GameplayReferences.GetControllerTransform(false, out t))
-                    {
-                        pointerInstance.transform.SetParent(t);
-                        pointerInstance.transform.localPosition = Vector3.zero;
-                        pointerInstance.transform.localRotation = Quaternion.identity;
-                        pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer();
-                        pointerInstance.GetComponent<ControllerPointer>().isRightHand = false;
-                    }
-                    else
-                    {
-                        myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
-                        SetUpHMDAsPointer();
-                        Debug.LogError("Controller not found, falling back to HMD Pointer");
-                    }
+                    myparameters.PointerType = ExitPoll.PointerType.HMDPointer;
+                    SetUpHMDAsPointer();
+                    Debug.LogError("Controller not found, falling back to HMD Pointer");
                 }
             }
         }
@@ -280,9 +259,9 @@ namespace Cognitive3D
             OnPanelError();
         }
 
-        public void DisplayControllerError(bool display)
+        public void DisplayControllerError(bool display, string errorText = "")
         {
-            CurrentExitPollPanel.DisplayError(display);
+            CurrentExitPollPanel.DisplayError(display, errorText);
         }
 
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>

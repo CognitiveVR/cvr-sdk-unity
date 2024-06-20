@@ -70,30 +70,14 @@ namespace Cognitive3D
         }
 
         //this is called from update in the ControllerPointer script
-        public virtual void SetPointerFocus(bool isRightHand)
+        public virtual void SetPointerFocus(bool isRightHand, bool activation)
         {
             isUsingRightHand = isRightHand;
             if (canActivate == false)
             {
                 return;
             }
-            if (activationType == ActivationType.TriggerButton)
-            {
-                if (isRightHand)
-                {
-                    InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-                }
-                else
-                {
-                    InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-                }
-
-                focusThisFrame = triggerValue > 0.5;
-            }
-            else
-            {
-                focusThisFrame = true;
-            }
+            focusThisFrame = activation;
         }
 
         //this is called from update in the HMDPointer script
