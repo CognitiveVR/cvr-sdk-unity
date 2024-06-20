@@ -12,12 +12,6 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Virtual Button")]
     public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
     {
-        public enum ActivationType
-        {
-            PointerFallbackGaze,
-            TriggerButton
-        }
-
         public Image fillImage;
         public Image buttonImage;
         public float FillDuration = 1;
@@ -31,16 +25,16 @@ namespace Cognitive3D
         public BoxCollider boxCollider;
         public RectTransform rectTransform;
 
-    [HideInInspector]
+        [HideInInspector]
         public bool isSelected;
 
         protected float FillAmount;
         protected bool focusThisFrame = false;
         protected bool canActivate = true;
+        protected bool slowFill = true;
         protected Color fillStartingColor;
         protected float triggerValue;
         protected bool isUsingRightHand;
-        protected ActivationType activationType;
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
         private ExitPollHolder currentExitPollHolder;
 
@@ -50,7 +44,6 @@ namespace Cognitive3D
         protected virtual void Start()
         {
             currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
-            activationType = GetCurrentActivationType(currentExitPollHolder);
             if (fillImage != null)
             {
                 fillStartingColor = fillImage.color;
@@ -70,26 +63,26 @@ namespace Cognitive3D
         }
 
         //this is called from update in the ControllerPointer script
-        public virtual void SetPointerFocus(bool isRightHand, bool activation)
+        public virtual void SetPointerFocus(bool isRightHand, bool activation, bool fill)
         {
-            isUsingRightHand = isRightHand;
             if (canActivate == false)
             {
                 return;
             }
+            isUsingRightHand = isRightHand;
             focusThisFrame = activation;
+            slowFill = fill;
         }
 
         //this is called from update in the HMDPointer script
         public virtual void SetGazeFocus()
         {
-            if (activationType != ActivationType.PointerFallbackGaze 
-                || (activationType == ActivationType.PointerFallbackGaze && Cognitive3D.GameplayReferences.DoesPointerExistInScene() == false))
+            if (canActivate == false)
             {
-                if (canActivate == false)
-                {
-                    return;
-                }
+                return;
+            }
+            if (slowFill)
+            {
                 focusThisFrame = true;
             }
         }
@@ -106,35 +99,50 @@ namespace Cognitive3D
             if (isEnabled && !isSelected)
             {
                 if (!gameObject.activeInHierarchy) { return; }
-                if (canActivate && focusThisFrame && activationType == ActivationType.TriggerButton)
+
+                // Button interactable and focused
+                if (canActivate && focusThisFrame)
                 {
-                    StartCoroutine(FilledEvent());
-                    OnConfirm.Invoke();
+                    // Immediately "click": usually used by controller
+                    if (!slowFill)
+                    {
+                        StartCoroutine(FilledEvent());
+                        OnConfirm.Invoke();
+                    }
+                    else // Increment the gradual fill: usually used by hand and hmd gaze
+                    {
+                        FillAmount += Time.deltaTime;
+                        // Fill complete, thus "click"
+                        if (FillAmount > FillDuration)
+                        {
+                            canActivate = false;
+                            StartCoroutine(FilledEvent());
+                            OnConfirm.Invoke();
+                        }
+                    }
                 }
-                if (!canActivate && FillAmount <= 0f && activationType != ActivationType.TriggerButton)
+
+                // Make it interactable again
+                if (!canActivate && FillAmount <= 0f && slowFill)
                 {
-                    canActivate = true;
+                    canActivate = true; 
                 }
+
+
+                // Button interactable and not focused: unfill the fill
                 if (!focusThisFrame && canActivate)
                 {
                     FillAmount -= Time.deltaTime;
                     FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
                 }
-                else if (focusThisFrame && canActivate && (activationType != ActivationType.TriggerButton))
-                {
-                    FillAmount += Time.deltaTime;
-                }
 
-                if (fillImage != null && (activationType != ActivationType.TriggerButton))
+                // Update the button image
+                if (fillImage != null && slowFill)
+                {
                     fillImage.fillAmount = FillAmount / FillDuration;
-                focusThisFrame = false;
-
-                if (FillAmount > FillDuration && canActivate && (activationType != ActivationType.TriggerButton))
-                {
-                    canActivate = false;
-                    StartCoroutine(FilledEvent());
-                    OnConfirm.Invoke();
                 }
+
+                focusThisFrame = false;
             }
         }
 
@@ -166,19 +174,6 @@ namespace Cognitive3D
         {
             buttonImage.color = confirmColor;
             isEnabled = true;
-        }
-
-        private ActivationType GetCurrentActivationType(ExitPollHolder exitPollHolder)
-        {
-            if (exitPollHolder == null) { return ActivationType.TriggerButton; }
-            if (exitPollHolder.Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
-            {
-                return ActivationType.PointerFallbackGaze;
-            }
-            else
-            {
-                return ActivationType.TriggerButton;
-            }
         }
 
         private void DynamicallyResize()

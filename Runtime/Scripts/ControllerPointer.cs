@@ -47,8 +47,12 @@ namespace Cognitive3D
 
         void Update()
         {
+            Vector3 raycastStartPos = Vector3.zero;
+            Vector3 raycastDir = Vector3.zero;
             bool activation = false;
+            bool fillActivate = true;
             currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+
             // User using hands: set up to use hands
             if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
             {
@@ -61,8 +65,11 @@ namespace Cognitive3D
                     {
                         pointsArray[0] = Cognitive3D_Manager.Instance.trackingSpace.TransformPoint(hand.PointerPose.position);
                         pointsArray[1] = Cognitive3D_Manager.Instance.trackingSpace.TransformPoint(hand.PointerPose.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER);
+                        raycastStartPos = pointsArray[0];
+                        raycastDir = hand.PointerPose.forward;
                         lr.SetPositions(pointsArray);
                         activation = (hand.GetFingerPinchStrength(OVRHand.HandFinger.Index) == 1) && (hand.HandConfidence == OVRHand.TrackingConfidence.High);
+                        fillActivate = true;
                     }
                 #endif
             }
@@ -70,22 +77,23 @@ namespace Cognitive3D
             {
                 float currentControllerTrigger = isRightHand ? GameplayReferences.rightTriggerValue : GameplayReferences.leftTriggerValue;
                 activation = currentControllerTrigger > 0.5;
+                fillActivate = false;
                 pointsArray[0] = controllerAnchor.position;
                 pointsArray[1] = pointsArray[0] + controllerAnchor.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
+                raycastStartPos = controllerAnchor.position;
+                raycastDir = controllerAnchor.forward;
                 lr.SetPositions(pointsArray);
             }
 
-            Vector3 pos = transform.position;
-            Vector3 forward = transform.forward;
             IPointerFocus button = null;
             RaycastHit hit = new RaycastHit();
-            if (Physics.Raycast(pos, forward, out hit, 20, LayerMask.GetMask("UI"))) //hit a button
+            if (Physics.Raycast(raycastStartPos, raycastDir, out hit, DEFAULT_LENGTH_FOR_LINE_RENDERER, LayerMask.GetMask("UI"))) // hit a button
             {
                 button = hit.collider.GetComponent<IPointerFocus>();
                 if (button != null)
                 {
-                    button.SetPointerFocus(isRightHand, activation);
-                    Vector3[] hitPointsArray = { new Vector3(0, 0, 0), new Vector3(0, 0, hit.distance) };
+                    button.SetPointerFocus(isRightHand, activation, fillActivate);
+                    Vector3[] hitPointsArray = { pointsArray[0], hit.point };
                     lr.SetPositions(hitPointsArray);
                     focused = true;
                     return;

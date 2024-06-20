@@ -30,6 +30,8 @@ namespace Cognitive3D
         public Text buttonPrompt;
         ExitPollSet questionSet;
 
+        private bool activate = false;
+        private bool slowFill = true;
 
         public void SetExitPollQuestionSet(ExitPollSet questionSet)
         {
@@ -41,12 +43,10 @@ namespace Cognitive3D
             if (GameplayReferences.HMD == null) { return; }
             if (FindObjectOfType<ExitPollHolder>().Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
-                activationType = ActivationType.PointerFallbackGaze;
                 buttonPrompt.text = "Hover To Record";
             }
             else
             {
-                activationType = ActivationType.TriggerButton;
                 buttonPrompt.text = "When ready to record click the record button";
             }
             FillAmount = 0;
@@ -91,18 +91,9 @@ namespace Cognitive3D
             if (_recording) { return; }
             if (_finishedRecording) { return; }
 
-            if (isUsingRightHand)
-            {
-                InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-            }
-            else
-            {
-                InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-            }
-
             if (focusThisFrame)
             {
-                if (activationType == ActivationType.PointerFallbackGaze)
+                if (slowFill)
                 {
                     FillAmount += Time.deltaTime;
                     UpdateFillAmount();
@@ -113,10 +104,7 @@ namespace Cognitive3D
                 }
                 else // Controller Trigger
                 {
-                    if (triggerValue > 0.5)
-                    {
-                        RecorderActivate();
-                    }
+                    RecorderActivate();
                 }
             }
             else if (FillAmount > 0)

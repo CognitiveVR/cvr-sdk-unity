@@ -173,15 +173,15 @@ namespace Cognitive3D
             {
                 controllerDevices[0] = left;
                 InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
-                left.TryGetFeatureValue(CommonUsages.trigger, out leftTriggerValue);
             }
+            left.TryGetFeatureValue(CommonUsages.trigger, out leftTriggerValue);
             var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
             if (right.isValid != controllerDevices[1].isValid)
             {
                 controllerDevices[1] = right;
                 InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
-                right.TryGetFeatureValue(CommonUsages.trigger, out rightTriggerValue);
             }
+            right.TryGetFeatureValue(CommonUsages.trigger, out rightTriggerValue);
         }
 
 #region Room
@@ -437,26 +437,6 @@ namespace Cognitive3D
             bool isControllerTrackingRef;
             controller.TryGetFeatureValue(CommonUsages.isTracked, out isControllerTrackingRef);
             return isControllerTrackingRef;
-        }
-
-        public static IControllerPointer ControllerPointerLeft;
-        public static IControllerPointer ControllerPointerRight;
-
-        public static bool DoesPointerExistInScene()
-        {
-            if (ControllerPointerLeft == null && controllerTransforms[0] != null)
-            {
-                ControllerPointerLeft = controllerTransforms[0].GetComponent<IControllerPointer>();
-            }
-            if (ControllerPointerRight == null && controllerTransforms[1] != null)
-            {
-                ControllerPointerRight = controllerTransforms[1].GetComponent<IControllerPointer>();
-            }
-            if (ControllerPointerRight == null && ControllerPointerLeft == null)
-            {
-                return false;
-            }
-            return true;
         }
 
         /// <summary>
