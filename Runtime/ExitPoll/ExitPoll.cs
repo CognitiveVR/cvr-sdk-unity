@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Cognitive3D;
-
+using UnityEngine.XR;
 namespace Cognitive3D
 {
     namespace Json
@@ -54,12 +53,6 @@ namespace Cognitive3D
     //static class for requesting exitpoll question sets with multiple panels
     public static class ExitPoll
     {
-        public enum PointerSource
-        {
-            HMD,
-            RightHand,
-            LeftHand,
-        }
         public enum SpawnType
         {
             World,
@@ -71,7 +64,13 @@ namespace Cognitive3D
             RightControllerPointer,
             LeftControllerPointer,
         }
+        public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
+        {
+            parameters.Hook = hookName;
+            return parameters;
+        }
 
+#region ExitPoll Panel Prefabs
         private static GameObject _exitPollHappySad;
         public static GameObject ExitPollHappySad
         {
@@ -134,20 +133,11 @@ namespace Cognitive3D
                 return _exitPollVoice;
             }
         }
+#endregion
 
-        public static ExitPollParameters NewExitPoll(string hookName)
-        {
-            var CurrentExitPollParams = new ExitPollParameters();
-            CurrentExitPollParams.Hook = hookName;
-            return CurrentExitPollParams;
-        }
-        public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
-        {
-            parameters.Hook = hookName;
-            return parameters;
-        }
     }
 
+#region ExitPollSet
     //creates a series of exit poll panels from question set constructed on the dashboard
     public class ExitPollSet
     {
@@ -157,7 +147,13 @@ namespace Cognitive3D
 
         GameObject pointerInstance = null;
         double StartTime;
+        private bool trackingWasLost;
+        private float noTrackingCountdown;
+        private const float NO_TRACKING_COUNTDOWN_LIMIT = 35;
+        private const string CONTROLLER_NOT_FOUND = "Controller not found!";
+        private readonly string FALLBACK_TO_HMD_POINTER = $"Controller or hands not found for {NO_TRACKING_COUNTDOWN_LIMIT}! Using HMD Pointer.";
 
+#region Begin, End, Update
         public void BeginExitPoll(ExitPollParameters parameters)
         {
             if (!Cognitive3D_Manager.IsInitialized)
@@ -167,7 +163,13 @@ namespace Cognitive3D
                 return;
             }
 
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            InputTracking.trackingLost += OnTrackingLost;
+            InputTracking.trackingAcquired += OnTrackingRegained;
+            
             myparameters = parameters;
+            noTrackingCountdown = 0;
             if (parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
                 SetUpHMDAsPointer();
@@ -201,6 +203,48 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// when you manually need to close the Exit Poll question set manually OR
+        /// when requesting a new exit poll question set when one is already active
+        /// </summary>
+        public void EndQuestionSet(int timeToWait)
+        {
+            panelProperties.Clear();
+            if (CurrentExitPollPanel != null)
+            {
+                CurrentExitPollPanel.CloseError(timeToWait);
+            }
+            OnPanelError();
+        }
+
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            // Increment counter if controller pointer exists and tracking type is none
+            if (GameplayReferences.controllerPointer != null && GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
+            {
+                noTrackingCountdown += deltaTime;
+                
+                // Limit reached: destroy controller pointer and fallback to HMD pointer
+                if (noTrackingCountdown >= NO_TRACKING_COUNTDOWN_LIMIT)
+                {
+                    noTrackingCountdown = 0;
+                    GameObject.Destroy(GameplayReferences.controllerPointer);
+                    SetUpHMDAsPointer();
+                    DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
+                }
+            }
+        }
+
+        private void Cognitive3D_Manager_OnPreSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+            InputTracking.trackingLost -= OnTrackingLost;
+            InputTracking.trackingAcquired -= OnTrackingRegained;
+        }
+#endregion
+
+#region Controllers and Pointers
         private void SetupControllerAsPointer(bool isRight)
         {
             GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
@@ -212,6 +256,7 @@ namespace Cognitive3D
             Transform t = null;
             if (pointerInstance != null)
             {
+                GameplayReferences.controllerPointer = pointerInstance;
                 if (GameplayReferences.GetControllerTransform(isRight, out t))
                 {
                     pointerInstance.transform.localPosition = Vector3.zero;
@@ -239,30 +284,41 @@ namespace Cognitive3D
             if (pointerInstance != null)
             {
                 //parent to hmd and zero position
+                GameplayReferences.hmdPointer = pointerInstance;
                 pointerInstance.transform.SetParent(GameplayReferences.HMD);
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
             }
         }
 
-        /// <summary>
-        /// when you manually need to close the Exit Poll question set manually OR
-        /// when requesting a new exit poll question set when one is already active
-        /// </summary>
-        public void EndQuestionSet(int timeToWait)
+        public void OnTrackingLost(XRNodeState xrNodeState)
         {
-            panelProperties.Clear();
-            if (CurrentExitPollPanel != null)
+            if (!xrNodeState.tracked)
             {
-                CurrentExitPollPanel.CloseError(timeToWait);
+                if (xrNodeState.nodeType == XRNode.RightHand && myparameters.PointerType == ExitPoll.PointerType.RightControllerPointer
+                    || xrNodeState.nodeType == XRNode.LeftHand && myparameters.PointerType == ExitPoll.PointerType.LeftControllerPointer)
+                {
+                    DisplayControllerError(true, CONTROLLER_NOT_FOUND);
+                    trackingWasLost = true;
+                }
             }
-            OnPanelError();
+        }
+
+        public void OnTrackingRegained(XRNodeState xrNodeState)
+        {
+            if (xrNodeState.tracked && trackingWasLost)
+            {
+                DisplayControllerError(false);
+                trackingWasLost = false;
+            }
         }
 
         public void DisplayControllerError(bool display, string errorText = "")
         {
             CurrentExitPollPanel.DisplayError(display, errorText);
         }
+
+        #endregion
 
         //how to display all the panels and their properties. dictionary is <panelType,panelContent>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
@@ -285,7 +341,6 @@ namespace Cognitive3D
                 return;
             }
 
-
             //build all the panel properties
             try
             {
@@ -293,14 +348,14 @@ namespace Cognitive3D
             }
             catch
             {
-                Cognitive3D.Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
+                Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
                 Cleanup(false);
                 return;
             }
 
             if (questionSet.questions == null || questionSet.questions.Length == 0)
             {
-                Cognitive3D.Util.logDebug("Exit poll Question response empty! invoke end action");
+                Util.logDebug("Exit poll Question response empty! invoke end action");
                 Cleanup(false);
                 return;
             }
@@ -397,7 +452,7 @@ namespace Cognitive3D
         {
             CurrentExitPollPanel = null;
             Cleanup(false);
-            Cognitive3D.Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
+            Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
         int currentPanelIndex = 0;
@@ -705,4 +760,6 @@ namespace Cognitive3D
             }
         }
     }
+    #endregion
+
 }

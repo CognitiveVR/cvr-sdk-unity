@@ -10,7 +10,19 @@ namespace Cognitive3D
 {
     public static class GameplayReferences
     {
+        internal static void Initialize()
+        {
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+        }
 
+        private static void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+#region Oculus Eye and Face Tracking
 #if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
         static OVRFaceExpressions cachedOVRFaceExpressions;
@@ -44,7 +56,9 @@ namespace Cognitive3D
         }
 
 #endif
+#endregion
 
+#region Hand Tracking
         /// <summary>
         /// Represents participant is using hands, controller, or neither
         /// </summary>
@@ -82,6 +96,9 @@ namespace Cognitive3D
 #endif
         }
 
+        #endregion
+
+#region Eye Tracking
         public static bool SDKSupportsEyeTracking
         {
             get
@@ -121,17 +138,9 @@ namespace Cognitive3D
 #endif
             }
         }
-        public static bool SDKSupportsControllers
-        {
-            get
-            {
-                //hand tracking not currently part of the setup process. may work, but not implemented as fully as other SDKs
-#if C3D_MRTK
-                return false;
-#endif
-                return true;
-            }
-        }
+        #endregion
+
+#region Room
         public static bool SDKSupportsRoomSize
         {
             //should be everything except AR SDKS
@@ -144,47 +153,6 @@ namespace Cognitive3D
             }
         }
 
-        internal static void Initialize()
-        {
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
-        }
-
-        private static void Cognitive3D_Manager_OnPostSessionEnd()
-        {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
-            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
-        }
-
-        public static float rightTriggerValue;
-        public static float leftTriggerValue;
-
-        //updates controller and hmd inputdevices to call events when states change
-        private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
-        {
-            var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-            if (head.isValid != HMDDevice.isValid)
-            {
-                InvokeHMDValidityChangeEvent(head.isValid);
-                HMDDevice = head;
-            }
-            var left = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
-            if (left.isValid != controllerDevices[0].isValid)
-            {
-                controllerDevices[0] = left;
-                InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
-            }
-            left.TryGetFeatureValue(CommonUsages.trigger, out leftTriggerValue);
-            var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
-            if (right.isValid != controllerDevices[1].isValid)
-            {
-                controllerDevices[1] = right;
-                InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
-            }
-            right.TryGetFeatureValue(CommonUsages.trigger, out rightTriggerValue);
-        }
-
-#region Room
 
         //really simple function to a rect from a collection of points
         //IMPROVEMENT support non-rectangular boundaries
@@ -281,9 +249,14 @@ namespace Cognitive3D
 
 #region HMD
 
-        static InputDevice HMDDevice;
+        private static InputDevice HMDDevice;
 
         private static Camera cam;
+        
+        /// <summary>
+        /// A refrence to the hmd pointer (if) instantiated for exitpoll
+        /// </summary>
+        internal static GameObject hmdPointer;
         public static Camera HMDCameraComponent
         {
             get
@@ -388,15 +361,60 @@ namespace Cognitive3D
             }
         }
 
-#endregion
+        #endregion
 
 #region Controllers
+
+        /// <summary>
+        ///  A refrence to the controller pointer (if) instantiated for exitpoll
+        /// </summary>
+        internal static GameObject controllerPointer;
+
+        public static bool SDKSupportsControllers
+        {
+            get
+            {
+                //hand tracking not currently part of the setup process. may work, but not implemented as fully as other SDKs
+#if C3D_MRTK
+                return false;
+#endif
+                return true;
+            }
+        }
+
 
         //dynamic objects set as controllers call 'set controller' on enable passing a reference to that transform. input device isn't guaranteed to be valid at this point
 
         static Transform[] controllerTransforms = new Transform[2];
         static InputDevice[] controllerDevices = new InputDevice[2];
 
+        public static float rightTriggerValue;
+        public static float leftTriggerValue;
+
+        //updates controller and hmd inputdevices to call events when states change
+        private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (head.isValid != HMDDevice.isValid)
+            {
+                InvokeHMDValidityChangeEvent(head.isValid);
+                HMDDevice = head;
+            }
+            var left = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            if (left.isValid != controllerDevices[0].isValid)
+            {
+                controllerDevices[0] = left;
+                InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
+            }
+            left.TryGetFeatureValue(CommonUsages.trigger, out leftTriggerValue);
+            var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            if (right.isValid != controllerDevices[1].isValid)
+            {
+                controllerDevices[1] = right;
+                InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
+            }
+            right.TryGetFeatureValue(CommonUsages.trigger, out rightTriggerValue);
+        }
 
         public delegate void onDeviceValidityChange(InputDevice device, XRNode node, bool isValid);
         /// <summary>

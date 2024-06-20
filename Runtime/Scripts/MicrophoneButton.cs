@@ -31,7 +31,6 @@ namespace Cognitive3D
         ExitPollSet questionSet;
 
         private bool activate = false;
-        private bool slowFill = true;
 
         public void SetExitPollQuestionSet(ExitPollSet questionSet)
         {
