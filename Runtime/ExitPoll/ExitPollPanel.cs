@@ -375,6 +375,7 @@ namespace Cognitive3D
         #endregion
 
         #region Button Actions
+
         private bool lastBoolAnswer;
         private int lastIntAnswer;
         private string lastRecordedVoice;
@@ -395,7 +396,6 @@ namespace Cognitive3D
             confirmButton.SetConfirmEnabled();
             lastRecordedVoice = base64wav;
         }
-        #endregion
 
         //called from exitpoll when this panel needs to be cleaned up. does not set response in question set
         public void CloseError(int timeToWait = 1)
@@ -411,6 +411,92 @@ namespace Cognitive3D
                 errorMessage.text = errorText;
             }
             errorMessage.gameObject.SetActive(display);
+        }
+
+        // This will be called from the editor	
+        // We have separate functions for positive and negative	
+        //      because we can only pass in one argument, and we need to know the image to modify	
+        // DO NOT DELETE
+        public void AnswerBoolPositive(VirtualButton button)
+        {
+            positiveButton.SetSelect(true);
+            negativeButton.SetSelect(false);
+            lastBoolAnswer = true;
+            confirmButton.SetConfirmEnabled();
+        }
+
+        // This will be called from the editor	
+        // We have separate functions for positive and negative	
+        //      because we can only pass in one argument, and we need to know the image to modify
+        // DO NOT DELETE
+        public void AnswerBoolNegative(VirtualButton button)
+        {
+            negativeButton.SetSelect(true);
+            positiveButton.SetSelect(false);
+            lastBoolAnswer = false;
+            confirmButton.SetConfirmEnabled();
+        }
+
+        // DO NOT DELETE
+        public void ConfirmBoolAnswer()
+        {
+            AnswerBool(lastBoolAnswer);
+        }
+
+        // from scale, multiple choice buttons
+        // DO NOT DELETE	
+        public void AnswerInt(int value)
+        {
+            if (_isclosing) { return; }
+            confirmButton.SetConfirmEnabled();
+            lastIntAnswer = value;
+        }
+
+        // DO NOT DELETE
+        public void ConfirmIntAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, lastIntAnswer));
+        }
+
+        // DO NOT DELETE
+        public void SelectOption(VirtualButton button)
+        {
+            foreach (GameObject obj in AnswerButtons)
+            {
+                obj.GetComponentInChildren<VirtualButton>().SetSelect(false);
+            }
+            button.SetSelect(true);
+        }
+
+        // DO NOT DELETE
+        public void ConfirmMicrophoneAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, lastRecordedVoice));
+        }
+
+        // DO NOT DELETE
+        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, string base64)
+        {
+            PanelRoot.gameObject.SetActive(false);
+            yield return new WaitForSeconds(seconds);
+            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64);
+            Close();
+        }
+
+        #endregion
+
+        //closes the panel with an invalid number that won't be associated with an answer	
+        public void CloseButton()
+        {
+            if (_isclosing) { return; }
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
+        }
+
+        //closes the panel with an invalid number that won't be associated with an answer	
+        public void Timeout()
+        {
+            if (_isclosing) { return; }
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
 
         //close the window visually. informing the question set has already been completed

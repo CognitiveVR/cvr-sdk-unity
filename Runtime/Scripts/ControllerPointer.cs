@@ -23,12 +23,30 @@ namespace Cognitive3D
         private GameplayReferences.TrackingType currentTrackedDevice;
         private Transform controllerAnchor;
         private const float DEFAULT_LENGTH_FOR_LINE_RENDERER = 20;
+        
+        /// <summary>
+        /// True if the button should be activated (trigger or pinch past threshold) <br/>
+        /// Passed into SetPointerFocus
+        /// </summary>
+        private bool activation = false;
+
+        /// <summary>
+        /// True if button should fill to activate (like in HMDPointer) <br/>
+        /// Set to true if hands; false if controller <br/>
+        /// Passed into SetPointerFocus
+        /// </summary>
+        private bool fillActivate = true;
 
 #if C3D_OCULUS
-       private OVRHand hand;
+        private OVRHand hand;
 #endif
 
-        public LineRenderer ConstructDefaultLineRenderer(Transform attachTransform)
+
+        /// <summary>
+        /// Creates and sets up a line renderer to visualize where user is pointing
+        /// </summary>
+        /// <param name="transform">The controller anchor where the ray starts</param>
+        public void ConstructDefaultLineRenderer(Transform transform)
         {
             lr = gameObject.AddComponent<LineRenderer>();
             lr.widthMultiplier = 0.03f;
@@ -41,16 +59,13 @@ namespace Cognitive3D
             }
             lr.material = DefaultPointerMat;
             lr.textureMode = LineTextureMode.Tile;
-            controllerAnchor = attachTransform;
-            return lr;
+            controllerAnchor = transform;
         }
 
         void Update()
         {
             Vector3 raycastStartPos = Vector3.zero;
             Vector3 raycastDir = Vector3.zero;
-            bool activation = false;
-            bool fillActivate = true;
             currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
 
             // User using hands: set up to use hands
@@ -108,10 +123,11 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Resets line renderer to default start and end positions
+        /// </summary>
         private void ResetLineRenderer()
         {
-            lr.material = DefaultPointerMat;
-            lr.textureMode = LineTextureMode.Tile;
             lr.SetPositions(pointsArray);
         }
     }

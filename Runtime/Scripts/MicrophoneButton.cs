@@ -92,6 +92,7 @@ namespace Cognitive3D
 
             if (focusThisFrame)
             {
+                // Gradually fill
                 if (slowFill)
                 {
                     FillAmount += Time.deltaTime;
@@ -101,7 +102,7 @@ namespace Cognitive3D
                         RecorderActivate();
                     }
                 }
-                else // Controller Trigger
+                else // Immediately activate
                 {
                     RecorderActivate();
                 }
