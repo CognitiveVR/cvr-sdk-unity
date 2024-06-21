@@ -195,29 +195,18 @@ namespace Cognitive3D
 
         private string GetPointerDescription(ExitPollParameters parameters)
         {
-            string thingToSpawn = "";
-            string howToAttach = "";
             if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer)
             {
-                thingToSpawn = "Spawn ExitPollControllerPointer";
-                howToAttach = " and attach to Left Controller";
+                return "Users will interact with the buttons by using the left controller and/or left hand, if available.";
             }
             else if (parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
             {
-                thingToSpawn = "Spawn ExitPollControllerPointer";
-                howToAttach = " and attach to Right Controller";
+                return "Users will interact with the buttons by using the right controller and/or right hand, if available.";
             }
-            else if(parameters.PointerType == ExitPoll.PointerType.HMDPointer)
+            else
             {
-                thingToSpawn = "Spawn ExitPollHMDPointer";
-                howToAttach = " and attach to HMD";
+                return "Users will interact with the buttons by focusing their gaze on them.";
             }
-
-            string result = "";
-            result = "\nPointer will be destroyed after ExitPoll closes";
-
-            
-            return thingToSpawn + howToAttach + result;
         }
     }
 }
