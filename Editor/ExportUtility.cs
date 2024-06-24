@@ -862,7 +862,6 @@ namespace Cognitive3D
             bm.tempGo.transform.localRotation = Quaternion.identity;
             bm.tempGo.transform.localScale = Vector3.one;
 
-
             //remove transform scale
             float width = 0;
             float height = 0;
@@ -870,21 +869,6 @@ namespace Cognitive3D
             var rt = v.GetComponent<RectTransform>();
             width = rt.sizeDelta.x;
             height = rt.sizeDelta.y;
-            Debug.Log("export canvas with width/height  " + width + " " + height);
-            if (Mathf.Approximately(width, height))
-            {
-                //centered
-            }
-            else if (height > width) //tall
-            {
-                //half of the difference between width and height
-                //bm.tempGo.transform.position += (bm.tempGo.transform.right) * (height - width) / 2;
-            }
-            else //wide
-            {
-                //half of the difference between width and height
-                //bm.tempGo.transform.position += (bm.tempGo.transform.up) * (width - height) / 2;
-            }
 
             bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
             bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
@@ -1524,21 +1508,6 @@ namespace Cognitive3D
             //snap camera to canvas position
             cameraGo.transform.rotation = target.rotation;
             cameraGo.transform.position = target.position - target.forward * 2f;
-
-            if (Mathf.Approximately(width, height))
-            {
-                //centered
-            }
-            else if (height > width) //tall
-            {
-                //half of the difference between width and height
-                //cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
-            }
-            else //wide
-            {
-                //half of the difference between width and height
-                //cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
-            }
 
             cam.nearClipPlane = 1f;
             cam.farClipPlane = 4f;
