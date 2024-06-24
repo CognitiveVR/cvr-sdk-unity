@@ -5,10 +5,7 @@ using UnityEngine;
 using Cognitive3D.Components;
 using UnityEngine.SceneManagement;
 using System.IO;
-
-#if !NETSTANDARD2_1_OR_GREATER   
 using System.Linq;
-#endif
 
 namespace Cognitive3D
 {
@@ -137,11 +134,7 @@ namespace Cognitive3D
                                 lines[2],
                                 crashTimestamp,
                                 CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4])),
-#if NETSTANDARD2_1_OR_GREATER                      
-                                string.Join("\n", lines[5..]),
-#else
                                 string.Join("\n", lines.Skip(5).ToArray()),
-#endif
                                 file
                             );
 
