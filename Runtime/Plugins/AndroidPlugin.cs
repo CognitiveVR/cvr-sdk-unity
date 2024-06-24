@@ -140,7 +140,7 @@ namespace Cognitive3D
 #if NETSTANDARD2_1_OR_GREATER                      
                                 string.Join("\n", lines[5..]),
 #else
-                                lines.Skip(5).ToArray(),
+                                string.Join("\n", lines.Skip(5).ToArray()),
 #endif
                                 file
                             );
