@@ -40,7 +40,7 @@ namespace Cognitive3D.Components
 
 #endif
 
-#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+#if C3D_DEFAULT && COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
         CameraOffset cameraOffset = null;
 #endif
 
@@ -153,7 +153,7 @@ namespace Cognitive3D.Components
                 }
             }
 #endif
-#else
+#else // C3D_DEFAULT == FALSE
             height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
 #endif
 
