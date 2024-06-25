@@ -14,9 +14,6 @@ namespace Cognitive3D
         public ExitPollParameters Parameters = new ExitPollParameters();
         public bool ActivateOnEnable;
 
-
-
-
         private void OnEnable()
         {
             Cognitive3D_Manager.OnPostSessionEnd += Cleanup;

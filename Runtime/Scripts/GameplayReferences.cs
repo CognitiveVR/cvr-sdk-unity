@@ -406,10 +406,23 @@ namespace Cognitive3D
         static Transform[] controllerTransforms = new Transform[2];
         static InputDevice[] controllerDevices = new InputDevice[2];
 
+        /// <summary>
+        /// Represents how far down the right trigger is pressed <br/>
+        /// Usually 0 - 1 (0 = not at all, 1 = fully pressed)
+        /// </summary>
         internal static float rightTriggerValue;
+
+        /// <summary>
+        /// Represents how far down the left trigger is pressed <br/>
+        /// Usually 0 - 1 (0 = not at all, 1 = fully pressed)
+        /// </summary>
         internal static float leftTriggerValue;
 
-        //updates controller and hmd inputdevices to call events when states change
+
+        /// <summary>
+        /// Updates hmd and controller device info
+        /// </summary>
+        /// <param name="deltaTime">The time elapsed since the last frame</param>
         private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
@@ -476,10 +489,10 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// this function returns true if the cached data for this node is valid. for head, lefthand and righthand only
+        /// Returns true if the cached data for this node is valid. for head, lefthand and righthand only
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The XRNode (we only support head, left hand, right hand)</param>
+        /// <returns>True if the device is valid</returns>
         public static bool IsInputDeviceValid(XRNode node)
         {
             switch (node)
@@ -495,6 +508,12 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="right"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public static bool GetControllerInfo(bool right, out InputDevice info)
         {
             if (right)
@@ -509,6 +528,12 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="right"></param>
+        /// <param name="transform"></param>
+        /// <returns></returns>
         public static bool GetControllerTransform(bool right, out Transform transform)
         {
             if (right)

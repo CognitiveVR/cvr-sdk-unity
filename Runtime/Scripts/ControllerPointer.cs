@@ -1,27 +1,56 @@
 ﻿using UnityEngine;
 
-//this is attached to a controller
-//activates a IPointerFocus component. that component must be on the UI layer
-//a line renderer is used to display the direction of the controller. the line renderer is transparent while it is not pointing at a IPointerFocus component
-
-//TODO use inputfeature to automatically configure this
 
 namespace Cognitive3D
 {
+    /// <summary>
+    /// This is used to interact with exit poll buttons using controllers and/or hands <br/>
+    /// Handles interaction via trigger and/or pinch and displays a line renderer showing where the user is pointing
+    /// </summary>
     [AddComponentMenu("Cognitive3D/Internal/Controller Pointer")]
     public class ControllerPointer : MonoBehaviour, IControllerPointer
     {
-        [HideInInspector]
-        public Material DefaultPointerMat;
-
+        /// <summary>
+        /// True if right hand; false otherwise
+        /// </summary>
         [HideInInspector]
         public bool isRightHand;
 
+        /// <summary>
+        /// The default material for the line renderer
+        /// </summary>
+        [HideInInspector]
+        private Material DefaultPointerMat;
+
+        /// <summary>
+        /// True if the raycast is hitting the button; false otherwise
+        /// </summary>
         private bool focused;
+        
+        /// <summary>
+        /// 
+        /// </summary>
         private Vector3[] pointsArray;
+        
+        /// <summary>
+        /// A reference to the line renderer component
+        /// </summary>
         private LineRenderer lr;
+        
+        /// <summary>
+        /// A reference to the current tracked device (hand, controller, or none)
+        /// </summary>
         private GameplayReferences.TrackingType currentTrackedDevice;
+        
+        /// <summary>
+        /// A reference to the controller anchor this pointer will start from
+        /// </summary>
         private Transform controllerAnchor;
+        
+        /// <summary>
+        /// The default length for the visual line renderer <br/>
+        /// Also used as maximum distance for Raycast
+        /// </summary>
         private const float DEFAULT_LENGTH_FOR_LINE_RENDERER = 20;
         
         /// <summary>
@@ -38,6 +67,9 @@ namespace Cognitive3D
         private bool fillActivate = true;
 
 #if C3D_OCULUS
+        /// <summary>
+        /// A reference to the OVRHand component of this controller anchor
+        /// </summary>
         private OVRHand hand;
 #endif
 
@@ -88,6 +120,7 @@ namespace Cognitive3D
                     }
                 #endif
             }
+            // User using controller
             else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
             {
                 float currentControllerTrigger = isRightHand ? GameplayReferences.rightTriggerValue : GameplayReferences.leftTriggerValue;
@@ -107,7 +140,7 @@ namespace Cognitive3D
                 button = hit.collider.GetComponent<IPointerFocus>();
                 if (button != null)
                 {
-                    button.SetPointerFocus(isRightHand, activation, fillActivate);
+                    button.SetPointerFocus(activation, fillActivate);
                     Vector3[] hitPointsArray = { pointsArray[0], hit.point };
                     lr.SetPositions(hitPointsArray);
                     focused = true;

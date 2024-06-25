@@ -204,7 +204,7 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// when you manually need to close the Exit Poll question set manually OR
+        /// When you manually need to close the Exit Poll question set manually OR <br/>
         /// when requesting a new exit poll question set when one is already active
         /// </summary>
         public void EndQuestionSet(int timeToWait)
@@ -245,6 +245,11 @@ namespace Cognitive3D
 #endregion
 
 #region Controllers and Pointers
+        /// <summary>
+        /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
+        /// If no controller is found, it creates an HMDPointer
+        /// </summary>
+        /// <param name="isRight">True if right hand; false if left</param>
         private void SetupControllerAsPointer(bool isRight)
         {
             GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
@@ -273,6 +278,9 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Creates an HMDPointer and attaches it to the HMD
+        /// </summary>
         public void SetUpHMDAsPointer()
         {
             GameObject prefab = Resources.Load<GameObject>("HMDPointer");
@@ -291,6 +299,10 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Function to execute when tracking is lost
+        /// </summary>
+        /// <param name="xrNodeState">Information on the node that was lost</param>
         public void OnTrackingLost(XRNodeState xrNodeState)
         {
             if (!xrNodeState.tracked)
@@ -304,6 +316,10 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Function to execute when tracking is regained
+        /// </summary>
+        /// <param name="xrNodeState">Information on the node that was regained</param>
         public void OnTrackingRegained(XRNodeState xrNodeState)
         {
             if (xrNodeState.tracked && trackingWasLost)
@@ -313,11 +329,20 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Toggle the display of the error message on the exit poll panel
+        /// </summary>
+        /// <param name="display">True if you want to display an error message; false to hide</param>
         public void DisplayControllerError(bool display)
         {
             CurrentExitPollPanel.DisplayError(display);
         }
 
+        /// <summary>
+        /// Set the display of the error message on the exit poll panel
+        /// </summary>
+        /// <param name="display">True if you want to display an error message; false to hide</param>
+        /// <param name="errorText">The error message to display</param>
         public void DisplayControllerError(bool display, string errorText)
         {
             CurrentExitPollPanel.DisplayError(display, errorText);
@@ -325,14 +350,15 @@ namespace Cognitive3D
 
         #endregion
 
-        //how to display all the panels and their properties. dictionary is <panelType,panelContent>
+        /// <summary>
+        /// A list containing information on each panel <br/>
+        /// The kv pairs in the dictionary are the keys and values of each of the fields on the panel
+        /// </summary>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
 
         int questionSetVersion;
         string QuestionSetName;
-
         string QuestionSetId; //questionsetname:questionsetversion
-
         Json.ExitPollSetJson questionSet;
 
         //IMPROVEMENT this should grab a question received and cached on Cognitive3DManager Init

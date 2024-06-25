@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR;
 
 //SetPointerFocus called from ControllerPointer, or SetGazeFocus from HMDPointer
 //fills an buttonImage over time
@@ -12,35 +11,113 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Virtual Button")]
     public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
     {
+        /// <summary>
+        /// The image that will fill when focused (if slowFill is true)
+        /// </summary>
         public Image fillImage;
+
+        /// <summary>
+        /// The Image for the UI of the button <br/>
+        /// Used to update colour
+        /// </summary>
         public Image buttonImage;
+
+        /// <summary>
+        /// How long to fill button before invoking confirm
+        /// </summary>
         public float FillDuration = 1;
+
+        /// <summary>
+        /// The default color of the button <br/>
+        /// Grey
+        /// </summary>
         public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+
+        /// <summary>
+        /// The color to set button to when "selected" <br/>
+        /// Green
+        /// </summary>
         public Color selectedColor = new Color(0, 1, 0.05f, 1);
+
+        /// <summary>
+        /// Events/function to execute once the button is clicked
+        /// </summary>
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
-        public bool dynamicallyResize;
-        public bool isEnabled = true;
 
+        /// <summary>
+        /// Set to true if you want buttons to resize
+        /// </summary>
+        public bool dynamicallyResize;
+
+        /// <summary>
+        /// A reference to the collider for this button <br/>
+        /// We need this to adjust collisions while resizing buttons <br/>
+        /// Consider using GetComponent instead of keeping as a public var
+        /// </summary>
         public BoxCollider boxCollider;
+
+        /// <summary>
+        /// A reference to the rect for this button <br/>
+        /// We need this to adjust the UI while resizing buttons <br/>
+        /// Consider using GetComponent instead of keeping as a public var
+        /// </summary>
         public RectTransform rectTransform;
 
-        [HideInInspector]
-        public bool isSelected;
-
+        /// <summary>
+        /// Float value representing how much the button has "filled"
+        /// </summary>
         protected float FillAmount;
+
+        /// <summary>
+        /// True if the button has been focused on this frame <br/>
+        /// Used to invoke click or fill
+        /// </summary>
         protected bool focusThisFrame = false;
+
+        /// <summary>
+        /// True if button can be interacted with; false otherwise
+        /// </summary>
         protected bool canActivate = true;
+
+        /// <summary>
+        /// True if button should fill to activate (like in HMDPointer) <br/>
+        /// Set to true if hands; false if controller <br/>
+        /// Passed in from ControllerPointer
+        /// </summary>
         protected bool slowFill = true;
+
+        /// <summary>
+        /// Saves the color the fill image starts with
+        /// </summary>
         protected Color fillStartingColor;
-        protected float triggerValue;
-        protected bool isUsingRightHand;
+
+        /// <summary>
+        /// The color to set on the confirm button when it is enabled <br/>
+        /// A light blue
+        /// </summary>
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
+        
+        /// <summary>
+        /// 
+        /// </summary>
         private ExitPollHolder currentExitPollHolder;
+
+        /// <summary>
+        /// Don't consider clicks on button if this is false
+        /// </summary>
+        private bool isEnabled = true;
+
+        /// <summary>
+        /// True if the button is "selected"
+        /// </summary>
+        private bool isSelected;
 
         public MonoBehaviour MonoBehaviour { get { return this; } }
 
-        //save the fill starting color
+        /// <summary>
+        /// Saves the fill starting color
+        /// </summary>
         protected virtual void Start()
         {
             currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
@@ -49,10 +126,16 @@ namespace Cognitive3D
                 fillStartingColor = fillImage.color;
             }
 
-            // Rects Driven by layout don't have a value in Start()
+            // We wait one frame because:
+            // Rects driven by layout don't have a value in Start()
             StartCoroutine(WaitOneFrame());
         }
 
+        /// <summary>
+        /// Wait for a frame and then dynamically resizes buttons <br/>
+        /// We wait because: Rects driven by layout don't have a value in Start()
+        /// </summary>
+        /// <returns></returns>
         IEnumerator WaitOneFrame()
         {
             yield return new WaitForEndOfFrame();
@@ -62,19 +145,25 @@ namespace Cognitive3D
             }
         }
 
-        //this is called from update in the ControllerPointer script
-        public virtual void SetPointerFocus(bool isRightHand, bool activation, bool fill)
+        /// <summary>
+        /// Called from the ControllerPointer script <br/>
+        /// Enables select/click on this button
+        /// </summary>
+        /// <param name="activation">True if this button is being clicked</param>
+        /// <param name="fill">True if the button will fill (like gaze button); false if otherwise</param>
+        public virtual void SetPointerFocus(bool activation, bool fill)
         {
             if (canActivate == false)
             {
                 return;
             }
-            isUsingRightHand = isRightHand;
             focusThisFrame = activation;
             slowFill = fill;
         }
 
-        //this is called from update in the HMDPointer script
+        /// <summary>
+        /// This is called from the HMDPointer script
+        /// </summary>
         public virtual void SetGazeFocus()
         {
             if (canActivate == false)
@@ -84,13 +173,11 @@ namespace Cognitive3D
             focusThisFrame = true;
         }
 
-        //used by ControllerPointer to draw a line to this button
-        public virtual Vector3 GetPosition()
-        {
-            return transform.position;
-        }
-
-        //increase the fill amount if this buttonImage was focused this frame. calls OnConfirm if past threshold
+        /// <summary>
+        /// Selects button if slowFill is false <br/>
+        /// Otherwise gradually increase/decrease fill amount depending on focused/unfocused <br/>
+        /// Invoke click if past threshold
+        /// </summary>
         protected virtual void LateUpdate()
         {
             if (isEnabled && !isSelected)
@@ -143,7 +230,10 @@ namespace Cognitive3D
             }
         }
 
-        //when filled, change the color of the fill ring to black for half a second before returning to starting color
+        /// <summary>
+        /// When filled, change the color of the fill ring to black for half a second before returning to starting color
+        /// </summary>
+        /// <returns></returns>
         protected virtual IEnumerator FilledEvent()
         {
             float t = 0;
@@ -161,18 +251,30 @@ namespace Cognitive3D
                 fillImage.color = fillStartingColor;
         }
 
+        /// <summary>
+        /// Sets the buttons "selection" state
+        /// </summary>
+        /// <param name="select">True if button selected; false otherwise</param>
         public void SetSelect(bool select)
         {
             isSelected = select;
             buttonImage.color = select ? selectedColor : defaultColor;
         }
 
+        /// <summary>
+        /// Enables the confirm button <br/>
+        /// It is disabled if no option is chosen
+        /// </summary>
         public void SetConfirmEnabled()
         {
             buttonImage.color = confirmColor;
             isEnabled = true;
         }
 
+        /// <summary>
+        /// Resizes the button(s) <br/>
+        /// Can be used in scale answers where there are variable number of options
+        /// </summary>
         private void DynamicallyResize()
         {
             var rect = rectTransform.rect;
