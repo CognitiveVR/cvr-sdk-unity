@@ -250,13 +250,22 @@ namespace Cognitive3D
 #region HMD
 
         private static InputDevice HMDDevice;
-
         private static Camera cam;
         
         /// <summary>
         /// A refrence to the hmd pointer (if) instantiated for exitpoll
         /// </summary>
-        internal static GameObject hmdPointer = null;
+        private static GameObject hmdPointer;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static GameObject HMDPointer
+        {
+            get { return hmdPointer; }
+            set { hmdPointer = value; }
+        }
+
         public static Camera HMDCameraComponent
         {
             get
@@ -368,7 +377,16 @@ namespace Cognitive3D
         /// <summary>
         ///  A refrence to the controller pointer (if) instantiated for exitpoll
         /// </summary>
-        internal static GameObject controllerPointer = null;
+        private static GameObject controllerPointer;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static GameObject ControllerPointer
+        {
+            get { return controllerPointer; }
+            set { controllerPointer = value; }
+        }
 
         public static bool SDKSupportsControllers
         {

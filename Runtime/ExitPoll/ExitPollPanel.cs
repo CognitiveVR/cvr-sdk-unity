@@ -409,7 +409,7 @@ namespace Cognitive3D
             errorMessage.gameObject.SetActive(display);
         }
 
-        public void DisplayError(bool display, string errorText = "")
+        public void DisplayError(bool display, string errorText)
         {
             if (!string.IsNullOrEmpty(errorText))
             {

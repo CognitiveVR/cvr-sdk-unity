@@ -220,7 +220,7 @@ namespace Cognitive3D
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             // Increment counter if controller pointer exists and tracking type is none
-            if (GameplayReferences.controllerPointer != null && GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
+            if (GameplayReferences.ControllerPointer != null && GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
             {
                 noTrackingCountdown += deltaTime;
                 
@@ -228,7 +228,7 @@ namespace Cognitive3D
                 if (noTrackingCountdown >= NO_TRACKING_COUNTDOWN_LIMIT)
                 {
                     noTrackingCountdown = 0;
-                    GameObject.Destroy(GameplayReferences.controllerPointer);
+                    GameObject.Destroy(GameplayReferences.ControllerPointer);
                     SetUpHMDAsPointer();
                     DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
                 }
@@ -256,7 +256,7 @@ namespace Cognitive3D
             Transform t = null;
             if (pointerInstance != null)
             {
-                GameplayReferences.controllerPointer = pointerInstance;
+                GameplayReferences.ControllerPointer = pointerInstance;
                 if (GameplayReferences.GetControllerTransform(isRight, out t))
                 {
                     pointerInstance.transform.localPosition = Vector3.zero;
@@ -284,7 +284,7 @@ namespace Cognitive3D
             if (pointerInstance != null)
             {
                 //parent to hmd and zero position
-                GameplayReferences.hmdPointer = pointerInstance;
+                GameplayReferences.HMDPointer = pointerInstance;
                 pointerInstance.transform.SetParent(GameplayReferences.HMD);
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
