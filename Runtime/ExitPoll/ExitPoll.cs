@@ -313,7 +313,12 @@ namespace Cognitive3D
             }
         }
 
-        public void DisplayControllerError(bool display, string errorText = "")
+        public void DisplayControllerError(bool display)
+        {
+            CurrentExitPollPanel.DisplayError(display);
+        }
+
+        public void DisplayControllerError(bool display, string errorText)
         {
             CurrentExitPollPanel.DisplayError(display, errorText);
         }

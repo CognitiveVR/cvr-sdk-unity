@@ -14,8 +14,7 @@ namespace Cognitive3D
         public ExitPollParameters Parameters = new ExitPollParameters();
         public bool ActivateOnEnable;
 
-        private ExitPollParameters poll;
-        private ExitPollSet exitPollSet;
+
 
 
         private void OnEnable()
@@ -49,8 +48,7 @@ namespace Cognitive3D
         /// </summary>
         public void Activate()
         {
-            poll = ExitPoll.NewExitPoll(Parameters.Hook, Parameters);
-
+            ExitPollParameters poll = ExitPoll.NewExitPoll(Parameters.Hook, Parameters);
             if (poll.ExitpollSpawnType == ExitPoll.SpawnType.World)
             {
                 poll.UseOverridePosition = true;
@@ -60,8 +58,7 @@ namespace Cognitive3D
                 poll.RotateToStayOnScreen = false;
                 poll.LockYPosition = false;
             }
-
-            exitPollSet = new ExitPollSet();
+            ExitPollSet exitPollSet = new ExitPollSet();
             exitPollSet.BeginExitPoll(Parameters);
         }
 

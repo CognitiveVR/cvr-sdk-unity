@@ -404,6 +404,11 @@ namespace Cognitive3D
             StartCoroutine(CloseAfterWaitForSpecifiedTime(timeToWait, short.MinValue));
         }
 
+        public void DisplayError(bool display)
+        {
+            errorMessage.gameObject.SetActive(display);
+        }
+
         public void DisplayError(bool display, string errorText = "")
         {
             if (!string.IsNullOrEmpty(errorText))

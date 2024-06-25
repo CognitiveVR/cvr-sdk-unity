@@ -28,7 +28,7 @@ namespace Cognitive3D
         /// True if the button should be activated (trigger or pinch past threshold) <br/>
         /// Passed into SetPointerFocus
         /// </summary>
-        private bool activation = false;
+        private bool activation;
 
         /// <summary>
         /// True if button should fill to activate (like in HMDPointer) <br/>
@@ -51,7 +51,7 @@ namespace Cognitive3D
             lr = gameObject.AddComponent<LineRenderer>();
             lr.widthMultiplier = 0.03f;
             lr.useWorldSpace = true;
-            pointsArray = new Vector3[] { new Vector3(0, 0, 0), new Vector3(0, 0, DEFAULT_LENGTH_FOR_LINE_RENDERER) };
+            pointsArray = new [] { new Vector3(0, 0, 0), new Vector3(0, 0, DEFAULT_LENGTH_FOR_LINE_RENDERER) };
             lr.SetPositions(pointsArray);
             if (DefaultPointerMat == null)
             {

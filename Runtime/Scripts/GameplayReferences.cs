@@ -256,7 +256,7 @@ namespace Cognitive3D
         /// <summary>
         /// A refrence to the hmd pointer (if) instantiated for exitpoll
         /// </summary>
-        internal static GameObject hmdPointer;
+        internal static GameObject hmdPointer = null;
         public static Camera HMDCameraComponent
         {
             get
@@ -368,7 +368,7 @@ namespace Cognitive3D
         /// <summary>
         ///  A refrence to the controller pointer (if) instantiated for exitpoll
         /// </summary>
-        internal static GameObject controllerPointer;
+        internal static GameObject controllerPointer = null;
 
         public static bool SDKSupportsControllers
         {
@@ -388,8 +388,8 @@ namespace Cognitive3D
         static Transform[] controllerTransforms = new Transform[2];
         static InputDevice[] controllerDevices = new InputDevice[2];
 
-        public static float rightTriggerValue;
-        public static float leftTriggerValue;
+        internal static float rightTriggerValue;
+        internal static float leftTriggerValue;
 
         //updates controller and hmd inputdevices to call events when states change
         private static void Cognitive3D_Manager_OnUpdate(float deltaTime)

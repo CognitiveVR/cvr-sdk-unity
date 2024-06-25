@@ -30,8 +30,6 @@ namespace Cognitive3D
         public Text buttonPrompt;
         ExitPollSet questionSet;
 
-        private bool activate = false;
-
         public void SetExitPollQuestionSet(ExitPollSet questionSet)
         {
             this.questionSet = questionSet;
