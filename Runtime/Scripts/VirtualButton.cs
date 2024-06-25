@@ -81,10 +81,7 @@ namespace Cognitive3D
             {
                 return;
             }
-            if (slowFill)
-            {
-                focusThisFrame = true;
-            }
+            focusThisFrame = true;
         }
 
         //used by ControllerPointer to draw a line to this button
