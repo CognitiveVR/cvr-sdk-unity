@@ -583,6 +583,9 @@ namespace Cognitive3D
                         ProceduralMeshFilters.Add(mf);
                     }
                 }
+#if C3D_TMPRO
+                TextMeshPros = rootDynamic.GetComponentsInChildren<TextMeshPro>();
+#endif
             }
             else
             {
@@ -845,8 +848,45 @@ namespace Cognitive3D
                     continue;
                 }
 
-                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.Canvas, false);
+                BakeCanvasGameObject(v.gameObject, meshes);
             }
+        }
+
+        private static GameObject BakeCanvasGameObject(GameObject v, List<BakeableMesh> meshes)
+        {
+            BakeableMesh bm = new BakeableMesh();
+            bm.tempGo = new GameObject(v.gameObject.name);
+
+            bm.tempGo.transform.parent = v.transform;
+            bm.tempGo.transform.position = v.transform.position;
+            bm.tempGo.transform.localRotation = Quaternion.identity;
+            bm.tempGo.transform.localScale = Vector3.one;
+
+            //remove transform scale
+            float width = 0;
+            float height = 0;
+
+            var rt = v.GetComponent<RectTransform>();
+            width = rt.sizeDelta.x;
+            height = rt.sizeDelta.y;
+
+            bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+            bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
+            Texture2D screenshot;
+            //bake texture from render
+
+            screenshot = TextureBakeCanvas(v.transform, width, height);
+            screenshot.name = v.gameObject.GetInstanceID().ToString(); //use a unqiue texture name for each canvas - unlikely two will be identical
+            bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
+            bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+            Mesh mesh;
+            
+            //write simple quad
+            mesh = GenerateQuadMesh(v.gameObject.name, Mathf.Max(width, height), Mathf.Max(width, height));
+            bm.meshFilter.sharedMesh = mesh;
+            meshes.Add(bm);
+
+            return bm.tempGo;
         }
 
         private static GameObject BakeQuadGameObject(GameObject v, List<BakeableMesh> meshes, ExportQuadType type, bool dyn)
@@ -856,7 +896,7 @@ namespace Cognitive3D
             if (type != ExportQuadType.TMPro)
             {
                 bm.tempGo.transform.parent = v.transform;
-            }            
+            }
             bm.tempGo.transform.localScale = Vector3.one;
             bm.tempGo.transform.localRotation = Quaternion.identity;
 
@@ -907,12 +947,14 @@ namespace Cognitive3D
             {
                 SpriteRenderer sr = v.GetComponent<SpriteRenderer>();
                 screenshot = TextureBake(v.transform, type, sr.bounds.extents.x*2, sr.bounds.extents.y*2);
+                screenshot.name = AssetDatabase.GetAssetPath(sr.sprite).GetHashCode().ToString();
             }
-            else
+            else //text mesh pro. canvas should be handled in a different function
             {
                 screenshot = TextureBake(v.transform, type, width, height);
+                screenshot.name = v.gameObject.GetInstanceID().ToString();
             }
-            screenshot.name = v.gameObject.name.Replace(' ', '_');
+            
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
             Mesh mesh;
@@ -1396,6 +1438,81 @@ namespace Cognitive3D
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
             cam.orthographicSize = Mathf.Max(width, height) / 2;
+            cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
+            cam.backgroundColor = Color.clear;
+
+            //create render texture and assign to camera
+            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16);
+            RenderTexture.active = rt;
+            cam.targetTexture = rt;
+
+            Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
+            List<Transform> children = new List<Transform>();
+            EditorCore.RecursivelyGetChildren(children, target);
+
+            //set camera to render unassigned layer
+            int layer = EditorCore.FindUnusedLayer();
+            if (layer == -1) { Debug.LogWarning("TextureBake couldn't find unused layer, texture generation might be incorrect"); }
+
+            if (layer != -1)
+            {
+                cam.cullingMask = 1 << layer;
+            }
+
+            //save all canvas layers. put on unassigned layer then render
+            try
+            {
+                if (layer != -1)
+                {
+                    foreach (var v in children)
+                    {
+                        originallayers.Add(v.gameObject, v.gameObject.layer);
+                        v.gameObject.layer = layer;
+                    }
+                }
+                //render to texture
+                cam.Render();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            //reset dynamic object layers
+            if (layer != -1)
+            {
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
+            }
+
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(resolution, resolution);
+            RenderTexture.active = rt;
+            tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+
+            //delete temporary camera
+            UnityEngine.Object.DestroyImmediate(cameraGo);
+
+            return tex;
+        }
+
+        private static Texture2D TextureBakeCanvas(Transform target, float width, float height, int resolution = 512)
+        {
+            GameObject cameraGo = new GameObject("Temp_Camera " + target.gameObject.name);
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            //snap camera to canvas position
+            cameraGo.transform.rotation = target.rotation;
+            cameraGo.transform.position = target.position - target.forward * 2f;
+
+            cam.nearClipPlane = 1f;
+            cam.farClipPlane = 4f;
+            cam.orthographic = true;
+            cam.orthographicSize = Mathf.Max(width * target.lossyScale.x, height * target.lossyScale.z) / 2;
             cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
             cam.backgroundColor = Color.clear;
 

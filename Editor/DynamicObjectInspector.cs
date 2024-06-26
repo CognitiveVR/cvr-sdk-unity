@@ -241,8 +241,11 @@ namespace Cognitive3D
                 if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                 {
                     List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
-                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                    UploadCustomIdForAggregation();
+                    bool uploadConfirmed = ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    if (uploadConfirmed)
+                    {
+                        UploadCustomIdForAggregation();
+                    }
                 }
                 EditorGUI.EndDisabledGroup();
 
