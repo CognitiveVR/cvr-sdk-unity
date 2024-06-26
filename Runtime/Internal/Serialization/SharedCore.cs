@@ -1564,7 +1564,7 @@ namespace Cognitive3D.Serialization
             {
                 double timestamp = kvp.Key;
                 boundarybuilder.Append("{");
-                JsonUtil.SetDouble("timestamp", (int)timestamp, boundarybuilder);
+                JsonUtil.SetDouble("time", (int)timestamp, boundarybuilder);
                 boundarybuilder.Append(",");
                 JsonUtil.SetVector("p",
                     new float[] { kvp.Value.position.x, kvp.Value.position.y, kvp.Value.position.z },
@@ -1589,7 +1589,7 @@ namespace Cognitive3D.Serialization
             {
                 boundarybuilder.Append("{");
                 double timestamp = kvp.Key;
-                JsonUtil.SetDouble("timestamp", timestamp, boundarybuilder);
+                JsonUtil.SetDouble("time", timestamp, boundarybuilder);
                 boundarybuilder.Append(",");
 
                 Vector3[] points = (Vector3[])kvp.Value;
@@ -1615,7 +1615,7 @@ namespace Cognitive3D.Serialization
             /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
-            JsonUtil.SetDouble("timestamp", (int)SessionTimestamp, boundarybuilder);
+            JsonUtil.SetDouble("time", (int)SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
 
