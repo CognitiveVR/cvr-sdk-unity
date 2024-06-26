@@ -181,8 +181,8 @@ namespace Cognitive3D
                         // Time needed for updating project validation items in a scene
                         await Task.Delay(1000);
 
-                        // Check if project has not fixed items
-                        if (ProjectValidation.hasNotFixedItems())
+                        // Check if project has not fixed items for scenes that has been uploaded and has scene ID
+                        if (Cognitive3D_Preferences.FindSceneByPath(activeBuildScenes[i].path) != null && ProjectValidation.hasNotFixedItems())
                         {
                             var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
                             AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
