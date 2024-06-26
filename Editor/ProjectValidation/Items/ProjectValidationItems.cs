@@ -43,7 +43,7 @@ namespace Cognitive3D
         }
 
         private static void AddProjectValidationItems()
-        {
+        {            
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
@@ -200,6 +200,36 @@ namespace Cognitive3D
                     var ovrmngr = new GameObject();
                     ovrmngr.name = "OVR_Manager";
                     ovrmngr.AddComponent<OVRManager>();
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "Dynamic Object component detected on Camera rig. Camera rig should have no Dynamic Object component. Remove the component?",
+                fixmessage: "No Dynamic Object component detected on Camera rig.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var ovrCameraRigs);
+
+                    if (ovrCameraRigs != null && ovrCameraRigs.Count > 0)
+                    {
+                        return !ovrCameraRigs[0].GetComponent<DynamicObject>();
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var ovrCameraRigs);
+
+                    if (ovrCameraRigs != null && ovrCameraRigs.Count > 0)
+                    {
+                        if (ovrCameraRigs[0].GetComponent<DynamicObject>())
+                        {
+                            Object.DestroyImmediate(ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
+                    }
                 }
             );
 
