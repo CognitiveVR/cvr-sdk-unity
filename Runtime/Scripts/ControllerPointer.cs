@@ -19,8 +19,7 @@ namespace Cognitive3D
         /// <summary>
         /// The default material for the line renderer
         /// </summary>
-        [HideInInspector]
-        private Material DefaultPointerMat;
+        public Material PointerLineMaterial;
 
         /// <summary>
         /// True if the raycast is hitting the button; false otherwise
@@ -38,11 +37,6 @@ namespace Cognitive3D
         private LineRenderer lr;
         
         /// <summary>
-        /// A reference to the current tracked device (hand, controller, or none)
-        /// </summary>
-        private GameplayReferences.TrackingType currentTrackedDevice;
-        
-        /// <summary>
         /// A reference to the controller anchor this pointer will start from
         /// </summary>
         private Transform controllerAnchor;
@@ -52,12 +46,6 @@ namespace Cognitive3D
         /// Also used as maximum distance for Raycast
         /// </summary>
         private const float DEFAULT_LENGTH_FOR_LINE_RENDERER = 20;
-        
-        /// <summary>
-        /// True if the button should be activated (trigger or pinch past threshold) <br/>
-        /// Passed into SetPointerFocus
-        /// </summary>
-        private bool activation;
 
         /// <summary>
         /// True if button should fill to activate (like in HMDPointer) <br/>
@@ -85,11 +73,11 @@ namespace Cognitive3D
             lr.useWorldSpace = true;
             pointsArray = new [] { new Vector3(0, 0, 0), new Vector3(0, 0, DEFAULT_LENGTH_FOR_LINE_RENDERER) };
             lr.SetPositions(pointsArray);
-            if (DefaultPointerMat == null)
+            if (PointerLineMaterial == null)
             {
-                DefaultPointerMat = Resources.Load<Material>("ExitPollPointerLine");
+                PointerLineMaterial = Resources.Load<Material>("ExitPollPointerLine");
             }
-            lr.material = DefaultPointerMat;
+            lr.material = PointerLineMaterial;
             lr.textureMode = LineTextureMode.Tile;
             controllerAnchor = transform;
         }
@@ -98,22 +86,27 @@ namespace Cognitive3D
         {
             Vector3 raycastStartPos = Vector3.zero;
             Vector3 raycastDir = Vector3.zero;
-            currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+            // True if the button should be activated (trigger or pinch past threshold) <br/>
+            // Passed into SetPointerFocus
+            bool activation = false;
+            //A reference to the current tracked device(hand, controller, or none)
+            var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
 
             // User using hands: set up to use hands
             if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
             {
                 #if C3D_OCULUS
+
                     if (hand == null)
                     {
                         hand = controllerAnchor.GetComponentInChildren<OVRHand>();
                     }
                     if (hand != null)
                     {
-                        pointsArray[0] = Cognitive3D_Manager.Instance.trackingSpace.TransformPoint(hand.PointerPose.position);
-                        pointsArray[1] = Cognitive3D_Manager.Instance.trackingSpace.TransformPoint(hand.PointerPose.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER);
+                        pointsArray[0] = OVRManager.instance.transform.TransformPoint(hand.PointerPose.position);
+                        pointsArray[1] = (OVRManager.instance.transform.rotation * hand.PointerPose.rotation) * Vector3.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
                         raycastStartPos = pointsArray[0];
-                        raycastDir = hand.PointerPose.forward;
+                        raycastDir = pointsArray[1];
                         lr.SetPositions(pointsArray);
                         activation = (hand.GetFingerPinchStrength(OVRHand.HandFinger.Index) == 1) && (hand.HandConfidence == OVRHand.TrackingConfidence.High);
                         fillActivate = true;
