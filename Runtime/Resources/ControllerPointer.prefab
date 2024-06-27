@@ -43,9 +43,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 667cc3628ada57d4284c76d1613d8dfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isRightHand: 0
+  OverridePointerMat: {fileID: 2100000, guid: fe5a4f196f37cf34286ffe2fe8b971eb, type: 2}
   DisplayLineRenderer: 1
-  LineRendererOverride: {fileID: 0}
-  SampleResolution: 10
-  Angle: {x: 0, y: 0, z: 1}
-  LocalPositionOffset: {x: 0, y: 0, z: 0}
-  RequireHMDParallel: 1

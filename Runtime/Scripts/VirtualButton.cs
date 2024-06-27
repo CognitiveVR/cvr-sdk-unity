@@ -97,11 +97,6 @@ namespace Cognitive3D
         /// A light blue
         /// </summary>
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        private ExitPollHolder currentExitPollHolder;
 
         /// <summary>
         /// Don't consider clicks on button if this is false
@@ -120,7 +115,6 @@ namespace Cognitive3D
         /// </summary>
         protected virtual void Start()
         {
-            currentExitPollHolder = FindObjectOfType<ExitPollHolder>();
             if (fillImage != null)
             {
                 fillStartingColor = fillImage.color;
