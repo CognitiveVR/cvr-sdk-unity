@@ -65,6 +65,11 @@ namespace Cognitive3D
         public RectTransform rectTransform;
 
         /// <summary>
+        /// Don't consider clicks on button if this is false
+        /// </summary>
+        public bool isEnabled = true;
+
+        /// <summary>
         /// Float value representing how much the button has "filled"
         /// </summary>
         protected float FillAmount;
@@ -97,11 +102,6 @@ namespace Cognitive3D
         /// A light blue
         /// </summary>
         private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
-
-        /// <summary>
-        /// Don't consider clicks on button if this is false
-        /// </summary>
-        private bool isEnabled = true;
 
         /// <summary>
         /// True if the button is "selected"
