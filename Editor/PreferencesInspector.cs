@@ -8,8 +8,7 @@ namespace Cognitive3D
 {
     [CustomEditor(typeof(Cognitive3D_Preferences))]
     public class PreferencesInspector : Editor
-    { 
-        bool showExperimental;
+    {
         public override void OnInspectorGUI()
         {
             var p = (Cognitive3D_Preferences)target;
