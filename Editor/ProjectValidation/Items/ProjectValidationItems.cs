@@ -204,18 +204,51 @@ namespace Cognitive3D
             );
 
             ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Required, 
+                level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.Apply,
                 message: "Dynamic Object component detected on Camera rig. Camera rig should have no Dynamic Object component. Remove the component?",
                 fixmessage: "No Dynamic Object component detected on Camera rig.",
                 checkAction: () =>
                 {
+                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var _ovrCameraRigs);
+
+                    if (_ovrCameraRigs != null && _ovrCameraRigs.Count > 0)
+                    {
+                        return !_ovrCameraRigs[0].GetComponent<DynamicObject>();
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var _ovrCameraRigs);
+
+                    if (_ovrCameraRigs != null && _ovrCameraRigs.Count > 0)
+                    {
+                        if (_ovrCameraRigs[0].GetComponent<DynamicObject>())
+                        {
+                            Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
+                    }
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "The camera rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the camera rig's Dynamic Object component?",
+                fixmessage: "Camera rig is not detected as controller.",
+                checkAction: () =>
+                {
                     ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var ovrCameraRigs);
 
                     if (ovrCameraRigs != null && ovrCameraRigs.Count > 0)
                     {
-                        return !ovrCameraRigs[0].GetComponent<DynamicObject>();
+                        if (ovrCameraRigs[0].GetComponent<DynamicObject>())
+                        {
+                            return !ovrCameraRigs[0].GetComponent<DynamicObject>().IsController;
+                        }
                     }
                     return true;
                 },
@@ -227,7 +260,7 @@ namespace Cognitive3D
                     {
                         if (ovrCameraRigs[0].GetComponent<DynamicObject>())
                         {
-                            Object.DestroyImmediate(ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
+                            ovrCameraRigs[0].GetComponent<DynamicObject>().IsController = false;
                         }
                     }
                 }
@@ -316,6 +349,69 @@ namespace Cognitive3D
                     pxrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
                 }
             );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "Dynamic Object component detected on XR rig. XR rig should have no Dynamic Object component. Remove the component?",
+                fixmessage: "No Dynamic Object component detected on XR rig.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
+
+                    if (_pxrRigs != null && _pxrRigs.Count > 0)
+                    {
+                        return !_pxrRigs[0].GetComponent<DynamicObject>();
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
+
+                    if (_pxrRigs != null && _pxrRigs.Count > 0)
+                    {
+                        if (_pxrRigs[0].GetComponent<DynamicObject>())
+                        {
+                            Object.DestroyImmediate(_pxrRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
+                    }
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "XR rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the XR rig's Dynamic Object component?",
+                fixmessage: "XR rig is not detected as controller.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
+
+                    if (_pxrRigs != null && _pxrRigs.Count > 0)
+                    {
+                        if (_pxrRigs[0].GetComponent<DynamicObject>())
+                        {
+                            return !_pxrRigs[0].GetComponent<DynamicObject>().IsController;
+                        }
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
+
+                    if (_pxrRigs != null && _pxrRigs.Count > 0)
+                    {
+                        if (_pxrRigs[0].GetComponent<DynamicObject>())
+                        {
+                            _pxrRigs[0].GetComponent<DynamicObject>().IsController = false;
+                        }
+                    }
+                }
+            );
 #elif C3D_VIVEWAVE
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -335,6 +431,7 @@ namespace Cognitive3D
                 }
             );
 
+            // Keep as recommended. For required, should not set as controller.
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
@@ -364,7 +461,7 @@ namespace Cognitive3D
             );
 
             ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Required, 
+                level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.Apply,
                 message: "Dynamic Object component detected on Wave rig. Wave rig should have no Dynamic Object component. Remove the component?",
@@ -386,6 +483,39 @@ namespace Cognitive3D
                         if (_waveRigs[0].GetComponent<DynamicObject>())
                         {
                             Object.DestroyImmediate(_waveRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
+                    }
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "Wave rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the Wave rig's Dynamic Object component?",
+                fixmessage: "Wave rig is not detected as controller.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
+
+                    if (_waveRigs != null && _waveRigs.Count > 0)
+                    {
+                        if (_waveRigs[0].GetComponent<DynamicObject>())
+                        {
+                            return !_waveRigs[0].GetComponent<DynamicObject>().IsController;
+                        }
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
+
+                    if (_waveRigs != null && _waveRigs.Count > 0)
+                    {
+                        if (_waveRigs[0].GetComponent<DynamicObject>())
+                        {
+                            _waveRigs[0].GetComponent<DynamicObject>().IsController = false;
                         }
                     }
                 }
@@ -426,7 +556,7 @@ namespace Cognitive3D
                 );
 
                 ProjectValidation.AddItem(
-                    level: ProjectValidation.ItemLevel.Required, 
+                    level: ProjectValidation.ItemLevel.Recommended, 
                     category: CATEGORY,
                     actionType: ProjectValidation.ItemAction.Apply,
                     message: "Dynamic Object component detected on XR rig. XR rig should have no Dynamic Object component. Remove the component?",
@@ -453,6 +583,38 @@ namespace Cognitive3D
                     }
                 );
 
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Required, 
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "XR rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the XR rig's Dynamic Object component?",
+                    fixmessage: "XR rig is not detected as controller.",
+                    checkAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+
+                        if (_xrorigins != null && _xrorigins.Count > 0)
+                        {
+                            if (_xrorigins[0].GetComponent<DynamicObject>())
+                            {
+                                return !_xrorigins[0].GetComponent<DynamicObject>().IsController;
+                            }
+                        }
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+
+                        if (_xrorigins != null && _xrorigins.Count > 0)
+                        {
+                            if (_xrorigins[0].GetComponent<DynamicObject>())
+                            {
+                                _xrorigins[0].GetComponent<DynamicObject>().IsController = false;
+                            }
+                        }
+                    }
+                );
             } 
     #endif
 
@@ -491,7 +653,7 @@ namespace Cognitive3D
                 );
 
                 ProjectValidation.AddItem(
-                    level: ProjectValidation.ItemLevel.Required, 
+                    level: ProjectValidation.ItemLevel.Recommended, 
                     category: CATEGORY,
                     actionType: ProjectValidation.ItemAction.Apply,
                     message: "Dynamic Object component detected on XR rig. XR rig should have no Dynamic Object component. Remove the component?",
@@ -515,6 +677,39 @@ namespace Cognitive3D
                             if (_cameraOffset[0].GetComponent<DynamicObject>())
                             {
                                 Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as Object, true);
+                            }
+                        }
+                    }
+                );
+
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Required, 
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "XR rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the XR rig's Dynamic Object component?",
+                    fixmessage: "XR rig is not detected as controller.",
+                    checkAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
+
+                        if (_cameraOffset != null && _cameraOffset.Count > 0)
+                        {
+                            if (_cameraOffset[0].GetComponent<DynamicObject>())
+                            {
+                                return !_cameraOffset[0].GetComponent<DynamicObject>().IsController;
+                            }
+                        }
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
+
+                        if (_cameraOffset != null && _cameraOffset.Count > 0)
+                        {
+                            if (_cameraOffset[0].GetComponent<DynamicObject>())
+                            {
+                                _cameraOffset[0].GetComponent<DynamicObject>().IsController = false;
                             }
                         }
                     }
