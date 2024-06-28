@@ -126,7 +126,14 @@ namespace Cognitive3D
                         if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
                         {
                             // Reading time of crash from logfile
-                            string crashTimestamp = Util.ExtractUnixTime(lines[7]);
+                            if (lines.Length >= 7)
+                            {
+                                string crashTimestamp = Util.ExtractUnixTime(lines[6]);
+                            }
+                            else
+                            {
+                                string crashTimestamp = Util.ExtractUnixTime(lines[5]);
+                            }
 
                             plugininstance.Call("serializeCrashEvents", 
                                 lines[0],
