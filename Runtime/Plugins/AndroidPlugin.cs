@@ -43,11 +43,8 @@ namespace Cognitive3D
 
        private void OnPreSessionEnd()
         {
-            if (Cognitive3D_Preferences.Instance.useAndroidCrashLoggingPlugin)
-            {
-                Cognitive3D_Manager.OnLevelLoaded -= SetTrackingScene;
-                Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
-            }
+            Cognitive3D_Manager.OnLevelLoaded -= SetTrackingScene;
+            Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
         }
 
         private void CreateAndroidPluginInstance()
@@ -123,13 +120,14 @@ namespace Cognitive3D
                         if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
                         {
                             // Reading time of crash from logfile
+                            string crashTimestamp; 
                             if (lines.Length >= 7)
                             {
-                                string crashTimestamp = Util.ExtractUnixTime(lines[6]);
+                                crashTimestamp = Util.ExtractUnixTime(lines[6]);
                             }
                             else
                             {
-                                string crashTimestamp = Util.ExtractUnixTime(lines[5]);
+                                crashTimestamp = Util.ExtractUnixTime(lines[5]);
                             }
 
                             plugininstance.Call("serializeCrashEvents", 
