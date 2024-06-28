@@ -140,33 +140,6 @@ namespace Cognitive3D
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();
 
-            using (new EditorGUILayout.VerticalScope())
-            {
-                showExperimental = EditorGUILayout.Foldout(showExperimental, "Experimental", EditorCore.styles.foldoutStyle);
-                if (showExperimental)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty("useAndroidCrashLoggingPlugin"), true);
-                    EditorGUILayout.EndHorizontal();
-                }
-
-                // Add android plugin component based on the property value
-                if (serializedObject.FindProperty("useAndroidCrashLoggingPlugin").boolValue)
-                {
-                    if (!Cognitive3D_Manager.Instance.gameObject.TryGetComponent<AndroidPlugin>(out var androidPlugin))
-                    {
-                        Undo.AddComponent<AndroidPlugin>(Cognitive3D_Manager.Instance.gameObject);
-                    }    
-                }
-                else
-                {
-                    if (Cognitive3D_Manager.Instance.gameObject.TryGetComponent<AndroidPlugin>(out var androidPlugin))
-                    {
-                        Undo.DestroyObjectImmediate(androidPlugin);
-                    }
-                }
-            }
-
             if (GUI.changed)
                 EditorUtility.SetDirty(p);
         }
