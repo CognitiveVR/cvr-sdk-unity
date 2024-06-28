@@ -233,39 +233,6 @@ namespace Cognitive3D
                 }
             );
 
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Required, 
-                category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Fix,
-                message: "The camera rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the camera rig's Dynamic Object component?",
-                fixmessage: "Camera rig is not detected as controller.",
-                checkAction: () =>
-                {
-                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var ovrCameraRigs);
-
-                    if (ovrCameraRigs != null && ovrCameraRigs.Count > 0)
-                    {
-                        if (ovrCameraRigs[0].GetComponent<DynamicObject>())
-                        {
-                            return !ovrCameraRigs[0].GetComponent<DynamicObject>().IsController;
-                        }
-                    }
-                    return true;
-                },
-                fixAction: () =>
-                {
-                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var ovrCameraRigs);
-
-                    if (ovrCameraRigs != null && ovrCameraRigs.Count > 0)
-                    {
-                        if (ovrCameraRigs[0].GetComponent<DynamicObject>())
-                        {
-                            ovrCameraRigs[0].GetComponent<DynamicObject>().IsController = false;
-                        }
-                    }
-                }
-            );
-
             OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
@@ -379,39 +346,6 @@ namespace Cognitive3D
                     }
                 }
             );
-
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Required, 
-                category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Fix,
-                message: "XR rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the XR rig's Dynamic Object component?",
-                fixmessage: "XR rig is not detected as controller.",
-                checkAction: () =>
-                {
-                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
-
-                    if (_pxrRigs != null && _pxrRigs.Count > 0)
-                    {
-                        if (_pxrRigs[0].GetComponent<DynamicObject>())
-                        {
-                            return !_pxrRigs[0].GetComponent<DynamicObject>().IsController;
-                        }
-                    }
-                    return true;
-                },
-                fixAction: () =>
-                {
-                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
-
-                    if (_pxrRigs != null && _pxrRigs.Count > 0)
-                    {
-                        if (_pxrRigs[0].GetComponent<DynamicObject>())
-                        {
-                            _pxrRigs[0].GetComponent<DynamicObject>().IsController = false;
-                        }
-                    }
-                }
-            );
 #elif C3D_VIVEWAVE
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -487,39 +421,6 @@ namespace Cognitive3D
                     }
                 }
             );
-
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Required, 
-                category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Fix,
-                message: "Wave rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the Wave rig's Dynamic Object component?",
-                fixmessage: "Wave rig is not detected as controller.",
-                checkAction: () =>
-                {
-                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
-
-                    if (_waveRigs != null && _waveRigs.Count > 0)
-                    {
-                        if (_waveRigs[0].GetComponent<DynamicObject>())
-                        {
-                            return !_waveRigs[0].GetComponent<DynamicObject>().IsController;
-                        }
-                    }
-                    return true;
-                },
-                fixAction: () =>
-                {
-                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
-
-                    if (_waveRigs != null && _waveRigs.Count > 0)
-                    {
-                        if (_waveRigs[0].GetComponent<DynamicObject>())
-                        {
-                            _waveRigs[0].GetComponent<DynamicObject>().IsController = false;
-                        }
-                    }
-                }
-            );
 #elif C3D_DEFAULT
 
     #if COGNITIVE3D_INCLUDE_COREUTILITIES
@@ -578,39 +479,6 @@ namespace Cognitive3D
                             if (_xrorigins[0].GetComponent<DynamicObject>())
                             {
                                 Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as Object, true);
-                            }
-                        }
-                    }
-                );
-
-                ProjectValidation.AddItem(
-                    level: ProjectValidation.ItemLevel.Required, 
-                    category: CATEGORY,
-                    actionType: ProjectValidation.ItemAction.Fix,
-                    message: "XR rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the XR rig's Dynamic Object component?",
-                    fixmessage: "XR rig is not detected as controller.",
-                    checkAction: () =>
-                    {
-                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
-
-                        if (_xrorigins != null && _xrorigins.Count > 0)
-                        {
-                            if (_xrorigins[0].GetComponent<DynamicObject>())
-                            {
-                                return !_xrorigins[0].GetComponent<DynamicObject>().IsController;
-                            }
-                        }
-                        return true;
-                    },
-                    fixAction: () =>
-                    {
-                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
-
-                        if (_xrorigins != null && _xrorigins.Count > 0)
-                        {
-                            if (_xrorigins[0].GetComponent<DynamicObject>())
-                            {
-                                _xrorigins[0].GetComponent<DynamicObject>().IsController = false;
                             }
                         }
                     }
@@ -677,39 +545,6 @@ namespace Cognitive3D
                             if (_cameraOffset[0].GetComponent<DynamicObject>())
                             {
                                 Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as Object, true);
-                            }
-                        }
-                    }
-                );
-
-                ProjectValidation.AddItem(
-                    level: ProjectValidation.ItemLevel.Required, 
-                    category: CATEGORY,
-                    actionType: ProjectValidation.ItemAction.Fix,
-                    message: "XR rig is incorrectly detected as a controller, which will result in extra controllers appearing in dynamic objects. Disable the 'Is Controller' option on the XR rig's Dynamic Object component?",
-                    fixmessage: "XR rig is not detected as controller.",
-                    checkAction: () =>
-                    {
-                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
-
-                        if (_cameraOffset != null && _cameraOffset.Count > 0)
-                        {
-                            if (_cameraOffset[0].GetComponent<DynamicObject>())
-                            {
-                                return !_cameraOffset[0].GetComponent<DynamicObject>().IsController;
-                            }
-                        }
-                        return true;
-                    },
-                    fixAction: () =>
-                    {
-                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
-
-                        if (_cameraOffset != null && _cameraOffset.Count > 0)
-                        {
-                            if (_cameraOffset[0].GetComponent<DynamicObject>())
-                            {
-                                _cameraOffset[0].GetComponent<DynamicObject>().IsController = false;
                             }
                         }
                     }
