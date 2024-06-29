@@ -43,7 +43,7 @@ namespace Cognitive3D
         }
 
         private static void AddProjectValidationItems()
-        {
+        {            
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
@@ -203,6 +203,36 @@ namespace Cognitive3D
                 }
             );
 
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "Dynamic Object component detected on Camera rig. Camera rig should have no Dynamic Object component. Remove the component?",
+                fixmessage: "No Dynamic Object component detected on Camera rig.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var _ovrCameraRigs);
+
+                    if (_ovrCameraRigs != null && _ovrCameraRigs.Count > 0)
+                    {
+                        return !_ovrCameraRigs[0].GetComponent<DynamicObject>();
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<OVRCameraRig>(out var _ovrCameraRigs);
+
+                    if (_ovrCameraRigs != null && _ovrCameraRigs.Count > 0)
+                    {
+                        if (_ovrCameraRigs[0].GetComponent<DynamicObject>())
+                        {
+                            Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
+                    }
+                }
+            );
+
             OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
@@ -286,6 +316,36 @@ namespace Cognitive3D
                     pxrmngr.AddComponent<Unity.XR.PXR.PXR_Manager>();
                 }
             );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "Dynamic Object component detected on XR rig. XR rig should have no Dynamic Object component. Remove the component?",
+                fixmessage: "No Dynamic Object component detected on XR rig.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
+
+                    if (_pxrRigs != null && _pxrRigs.Count > 0)
+                    {
+                        return !_pxrRigs[0].GetComponent<DynamicObject>();
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Unity.XR.PXR.PXR_Manager>(out var _pxrRigs);
+
+                    if (_pxrRigs != null && _pxrRigs.Count > 0)
+                    {
+                        if (_pxrRigs[0].GetComponent<DynamicObject>())
+                        {
+                            Object.DestroyImmediate(_pxrRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
+                    }
+                }
+            );
 #elif C3D_VIVEWAVE
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -305,6 +365,7 @@ namespace Cognitive3D
                 }
             );
 
+            // Keep as recommended. For required, should not set as controller.
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
@@ -329,6 +390,34 @@ namespace Cognitive3D
                     if (_waveRigs != null && _waveRigs.Count != 0)
                     {
                         _waveRigs[0].TrackingOrigin = UnityEngine.XR.TrackingOriginModeFlags.Floor;
+                    }
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "Dynamic Object component detected on Wave rig. Wave rig should have no Dynamic Object component. Remove the component?",
+                fixmessage: "No Dynamic Object component detected on Wave rig.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
+                    if (_waveRigs != null && _waveRigs.Count != 0)
+                    {
+                        return !_waveRigs[0].GetComponent<DynamicObject>();
+                    }
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<Wave.Essence.WaveRig>(out var _waveRigs);
+                    if (_waveRigs != null && _waveRigs.Count != 0)
+                    {
+                        if (_waveRigs[0].GetComponent<DynamicObject>())
+                        {
+                            Object.DestroyImmediate(_waveRigs[0].GetComponent<DynamicObject>() as Object, true);
+                        }
                     }
                 }
             );
@@ -366,6 +455,34 @@ namespace Cognitive3D
                         }
                     }
                 );
+
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended, 
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Apply,
+                    message: "Dynamic Object component detected on XR rig. XR rig should have no Dynamic Object component. Remove the component?",
+                    fixmessage: "No Dynamic Object component detected on XR rig.",
+                    checkAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+                        if (_xrorigins != null && _xrorigins.Count != 0)
+                        {
+                            return !_xrorigins[0].GetComponent<DynamicObject>();
+                        }
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<XROrigin>(out var _xrorigins);
+                        if (_xrorigins != null && _xrorigins.Count != 0)
+                        {
+                            if (_xrorigins[0].GetComponent<DynamicObject>())
+                            {
+                                Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as Object, true);
+                            }
+                        }
+                    }
+                );
             } 
     #endif
 
@@ -399,6 +516,36 @@ namespace Cognitive3D
                         if (_cameraOffset != null && _cameraOffset.Count != 0)
                         {
                             _cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                        }
+                    }
+                );
+
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended, 
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Apply,
+                    message: "Dynamic Object component detected on XR rig. XR rig should have no Dynamic Object component. Remove the component?",
+                    fixmessage: "No Dynamic Object component detected on XR rig.",
+                    checkAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
+
+                        if (_cameraOffset != null && _cameraOffset.Count != 0)
+                        {
+                            return !_cameraOffset[0].GetComponent<DynamicObject>();
+                        }
+                        return true;
+                    },
+                    fixAction: () =>
+                    {
+                        ProjectValidation.FindComponentInActiveScene<CameraOffset>(out var _cameraOffset);
+
+                        if (_cameraOffset != null && _cameraOffset.Count != 0)
+                        {
+                            if (_cameraOffset[0].GetComponent<DynamicObject>())
+                            {
+                                Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as Object, true);
+                            }
                         }
                     }
                 );
