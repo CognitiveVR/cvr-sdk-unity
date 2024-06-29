@@ -51,7 +51,10 @@ namespace Cognitive3D.Components
 
         private void OnDestroy()
         {
-            sceneManager.SceneModelLoadedSuccessfully -= SetRoomDimensionsAsSessionProperty;
+            if (sceneManager != null)
+            {
+                sceneManager.SceneModelLoadedSuccessfully -= SetRoomDimensionsAsSessionProperty;
+            }
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 
