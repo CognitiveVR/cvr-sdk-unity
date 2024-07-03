@@ -30,7 +30,6 @@ namespace Cognitive3D
         public Text buttonPrompt;
         ExitPollSet questionSet;
 
-
         public void SetExitPollQuestionSet(ExitPollSet questionSet)
         {
             this.questionSet = questionSet;
@@ -41,12 +40,10 @@ namespace Cognitive3D
             if (GameplayReferences.HMD == null) { return; }
             if (FindObjectOfType<ExitPollHolder>().Parameters.PointerType == ExitPoll.PointerType.HMDPointer)
             {
-                activationType = ActivationType.PointerFallbackGaze;
                 buttonPrompt.text = "Hover To Record";
             }
             else
             {
-                activationType = ActivationType.TriggerButton;
                 buttonPrompt.text = "When ready to record click the record button";
             }
             FillAmount = 0;
@@ -91,18 +88,10 @@ namespace Cognitive3D
             if (_recording) { return; }
             if (_finishedRecording) { return; }
 
-            if (isUsingRightHand)
-            {
-                InputDevices.GetDeviceAtXRNode(XRNode.RightHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-            }
-            else
-            {
-                InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-            }
-
             if (focusThisFrame)
             {
-                if (activationType == ActivationType.PointerFallbackGaze)
+                // Gradually fill
+                if (slowFill)
                 {
                     FillAmount += Time.deltaTime;
                     UpdateFillAmount();
@@ -111,12 +100,9 @@ namespace Cognitive3D
                         RecorderActivate();
                     }
                 }
-                else // Controller Trigger
+                else // Immediately activate
                 {
-                    if (triggerValue > 0.5)
-                    {
-                        RecorderActivate();
-                    }
+                    RecorderActivate();
                 }
             }
             else if (FillAmount > 0)

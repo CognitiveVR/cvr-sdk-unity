@@ -165,34 +165,53 @@ namespace Cognitive3D
         /// </summary>
         internal static async void StartSceneVerificationProcess()
         {
+            int uploadedScenes = 0;
+
             // Checking if the scene has unsaved changes
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
                 if (TryGetScenesInBuildSettings(out var activeBuildScenes))
                 {
-                    for (int i = 0; i < activeBuildScenes.Count; i += 1)
+                    // Checking if at least one build scene has been uploaded
+                    for (int i = 0; i < activeBuildScenes.Count; i++)
                     {
-                        float progress = (float)i / activeBuildScenes.Count;
-                        EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
-
-                        // Open scene
-                        EditorSceneManager.OpenScene(activeBuildScenes[i].path);
-
-                        // Time needed for updating project validation items in a scene
-                        await Task.Delay(1000);
-
-                        // Check if project has not fixed items
-                        if (ProjectValidation.hasNotFixedItems())
+                        if (Cognitive3D_Preferences.FindSceneByPath(activeBuildScenes[i].path) != null)
                         {
-                            var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
-                            AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                            ++uploadedScenes;
                         }
                     }
 
-                    // Clear progress bar
-                    EditorUtility.ClearProgressBar();
+                    if (uploadedScenes <= 0)
+                    {
+                        // Warn the user to upload at least one build scene if none have been uploaded
+                        EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "No build scenes have been uploaded. Please upload at least one scene.", "OK");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < activeBuildScenes.Count; i++)
+                        {
+                            float progress = (float)i / activeBuildScenes.Count;
+                            EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
 
-                    DisplayScenesWithValidationItems();
+                            // Open scene
+                            EditorSceneManager.OpenScene(activeBuildScenes[i].path);
+
+                            // Time needed for updating project validation items in a scene
+                            await Task.Delay(1000);
+
+                            // Check if project has not-fixed items for scenes that has been uploaded and has scene ID
+                            if (Cognitive3D_Preferences.FindSceneByPath(activeBuildScenes[i].path) != null && ProjectValidation.hasNotFixedItems())
+                            {
+                                var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
+                                AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                            }
+                        }
+
+                        // Clear progress bar
+                        EditorUtility.ClearProgressBar();
+
+                        DisplayScenesWithValidationItems();
+                    }
                 }
             }
         }
