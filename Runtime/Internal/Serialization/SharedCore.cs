@@ -1550,6 +1550,7 @@ namespace Cognitive3D.Serialization
         internal static void RecordBoundaryShape(Vector3[] points, double timestamp)
         {
             if (!IsInitialized) { return; }
+            if (points == null) { return; }
             if (points.Length == 0) { return; }
 
             boundaryShapes.Add(new KeyValuePair<double, object>(timestamp, points));
@@ -1607,6 +1608,11 @@ namespace Cognitive3D.Serialization
                 }
                 boundarybuilder.Append("]");
                 boundarybuilder.Append("}");
+                boundarybuilder.Append(",");
+            }
+            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
+            {
+                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
             }
             boundarybuilder.Append("]");
             boundarybuilder.Append(",");
