@@ -124,19 +124,18 @@ namespace Cognitive3D
                             foreach (var item in list.items)
                             {
                                 string buttonText = item.actionType.ToString();
-                                if ((list.listName != "Completed" || list.listName != "Ignored") && (!item.isFixed && !item.isIgnored))
-                                {
-                                    DrawItem(item, list.listItemIcon, item.message, true, buttonText);
-                                }
 
                                 if (list.listName == "Ignored" && item.isIgnored)
                                 {
                                     DrawItem(item, null, item.message, true, buttonText);
-                                }
-                                
-                                if (list.listName == "Completed" && item.isFixed)
+                                } 
+                                else if (list.listName == "Completed" && item.isFixed)
                                 {
                                     DrawItem(item, list.listItemIcon, item.fixmessage, false, "");
+                                }
+                                else if (list.listName != "Completed" && !item.isFixed && !item.isIgnored)
+                                {
+                                    DrawItem(item, list.listItemIcon, item.message, true, buttonText);
                                 }
                             }
 

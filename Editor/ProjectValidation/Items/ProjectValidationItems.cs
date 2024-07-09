@@ -189,13 +189,13 @@ namespace Cognitive3D
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.None,
-                message : "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : ""),
+                message : "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers. Remove any additional controller dynamic objects." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : ""),
                 fixmessage: "2 Controllers detected in scene.",
                 checkAction: () =>
                 {
                     ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var _controllers);
 
-                    string newmessage = "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : "");
+                    string newmessage = "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers. Remove any additional controller dynamic objects." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : "");
 
                     UpdateProjectValidationItemMessage("More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers.", newmessage);
                     
