@@ -4,6 +4,8 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Collections.Generic;
+using System;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
@@ -159,7 +161,6 @@ namespace Cognitive3D
                 }
                 );
 
-            // Check this!
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
@@ -184,6 +185,27 @@ namespace Cognitive3D
                 }
             );
 
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message : "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : ""),
+                fixmessage: "2 Controllers detected in scene.",
+                checkAction: () =>
+                {
+                    ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var _controllers);
+
+                    string newmessage = "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : "");
+
+                    UpdateProjectValidationItemMessage("More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers.", newmessage);
+                    
+                    return _controllers.Count <= 2;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
 #if C3D_OCULUS
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -227,7 +249,7 @@ namespace Cognitive3D
                     {
                         if (_ovrCameraRigs[0].GetComponent<DynamicObject>())
                         {
-                            Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
+                            UnityEngine.Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
                         }
                     }
                 }
@@ -638,8 +660,37 @@ namespace Cognitive3D
             var items = ProjectValidation.registry.GetAllItems();
             foreach (var item in items)
             {
+                item.message = item.message;
                 item.isFixed = item.checkAction();
             }
+        }
+
+        public static void UpdateProjectValidationItemMessage(string oldmessage, string newmessage)
+        {
+            var items = ProjectValidation.registry.GetAllItems();
+            foreach (var item in items)
+            {
+                if (item.message.Contains(oldmessage))
+                {
+                    item.message = newmessage;
+                }
+            }
+        }
+
+        internal static bool TryGetControllers(out List<String> controllerNamesList)
+        {
+            controllerNamesList = new List<string>();
+            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
+            if (controllers == null)
+            {
+                return false;
+            }
+
+            foreach (var controller in controllers)
+            {
+                controllerNamesList.Add(controller.name);
+            }
+            return true;
         }
     }
 }

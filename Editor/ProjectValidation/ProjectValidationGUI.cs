@@ -163,10 +163,13 @@ namespace Cognitive3D
                 {
                     if (!item.isIgnored)
                     {
-                        if (GUILayout.Button(buttonText, EditorCore.styles.MediumButton))
+                        if (buttonText != "None")
                         {
-                            ProjectValidation.FixItem(item);
-                            GenerateCompletedItemList();
+                            if (GUILayout.Button(buttonText, EditorCore.styles.MediumButton))
+                            {
+                                ProjectValidation.FixItem(item);
+                                GenerateCompletedItemList();
+                            }
                         }
 
                         if (GUILayout.Button("Ignore", EditorCore.styles.MediumButton))
