@@ -107,6 +107,7 @@ namespace Cognitive3D
                         pointsArray[1] = (OVRManager.instance.transform.rotation * hand.PointerPose.rotation) * Vector3.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
                         raycastStartPos = pointsArray[0];
                         raycastDir = pointsArray[1];
+                        pointsArray[1] += pointsArray[0]; // Adjusting line renderer end position for rigs that move
                         lr.SetPositions(pointsArray);
                         activation = (hand.GetFingerPinchStrength(OVRHand.HandFinger.Index) == 1) && (hand.HandConfidence == OVRHand.TrackingConfidence.High);
                         fillActivate = true;
