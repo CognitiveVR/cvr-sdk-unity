@@ -190,7 +190,7 @@ namespace Cognitive3D
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.None,
                 message : "Controllers are not correctly set up.",
-                fixmessage: "The maximum limit of controllers has not been exceeded in the scene.",
+                fixmessage: "Controllers are correctly set up in current scene",
                 checkAction: () =>
                 {
                     string newMessage;
