@@ -189,17 +189,27 @@ namespace Cognitive3D
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.None,
-                message : "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers. Remove any additional controller dynamic objects." + (TryGetControllers(out var controllerNamesList) ? $" The detected controller objects: {string.Join(", ", controllerNamesList)}" : ""),
-                fixmessage: "2 Controllers detected in scene.",
+                message : "Controllers are not correctly set up.",
+                fixmessage: "The maximum limit of controllers has not been exceeded in the scene.",
                 checkAction: () =>
                 {
-                    ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var _controllers);
-
-                    string newmessage = "More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers. Remove any additional controller dynamic objects." + (TryGetControllers(out var _controllerNamesList) ? $" The detected controller objects: {string.Join(", ", _controllerNamesList)}" : "");
-
-                    UpdateProjectValidationItemMessage("More than 2 controller dynamic objects were found. Each scene should have a maximum of 2 controllers.", newmessage);
+                    string newMessage;
+                    string oldMessage = "Controllers are not correctly set up.";
+                    if (TryGetControllers(out var _controllerNamesList))
+                    {
+                        if (_controllerNamesList.Count > 2)
+                        {
+                            newMessage = oldMessage + $" The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects. The detected controller objects are: {string.Join(", ", _controllerNamesList)}";
+                            UpdateProjectValidationItemMessage(oldMessage, newMessage);
+                        }
+                        else if (_controllerNamesList.Count < 2)
+                        {
+                            newMessage = oldMessage + " Less than 2 controllers are detected in the scene. You can configure the controllers in Cognitive3D > Scene Setup";
+                            UpdateProjectValidationItemMessage(oldMessage, newMessage);
+                        }
+                    }
                     
-                    return _controllers.Count <= 2;
+                    return _controllerNamesList.Count == 2;
                 },
                 fixAction: () =>
                 {
@@ -660,7 +670,6 @@ namespace Cognitive3D
             var items = ProjectValidation.registry.GetAllItems();
             foreach (var item in items)
             {
-                item.message = item.message;
                 item.isFixed = item.checkAction();
             }
         }
@@ -688,7 +697,10 @@ namespace Cognitive3D
 
             foreach (var controller in controllers)
             {
-                controllerNamesList.Add(controller.name);
+                if (controller.IsController)
+                {
+                    controllerNamesList.Add(controller.name);
+                }
             }
             return true;
         }
