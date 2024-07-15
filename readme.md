@@ -9,6 +9,8 @@ Welcome!  This SDK allows you to integrate your Unity games with Cognitive3D, wh
 Quickstart
 =========
 ## Installation
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCognitiveVR%2Fcvr-sdk-unity.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FCognitiveVR%2Fcvr-sdk-unity?ref=badge_shield)
+
 
 * Open **Package Manager** from the Window menu
 * Click the + in the top left and select **Add Package from git URL**
@@ -23,3 +25,7 @@ The **Scene Setup Window** should automatically open or it can be opened from th
 The documentation explains how to authenticate with the SDK, track your users' experience and how to export your scene to view on Cognitive3D.com
 
 [Go to the Docs](https://docs.cognitive3d.com/unity/minimal-setup-guide/)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCognitiveVR%2Fcvr-sdk-unity.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FCognitiveVR%2Fcvr-sdk-unity?ref=badge_large)
