@@ -528,7 +528,7 @@ namespace Cognitive3D
                         {
                             if (_xrorigins[0].GetComponent<DynamicObject>())
                             {
-                                Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as Object, true);
+                                UnityEngine.Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
                             }
                         }
                     }
@@ -594,7 +594,7 @@ namespace Cognitive3D
                         {
                             if (_cameraOffset[0].GetComponent<DynamicObject>())
                             {
-                                Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as Object, true);
+                                UnityEngine.Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
                             }
                         }
                     }
