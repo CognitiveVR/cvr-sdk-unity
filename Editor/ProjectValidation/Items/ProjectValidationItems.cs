@@ -234,6 +234,22 @@ namespace Cognitive3D
                     SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
                 }
             );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
+                message: "A camera with the 'MainCamera' tag should be included in the scene. If the player rig is spawned or persist from another scene, no action is needed. Edit the player rig?",
+                fixmessage: "Main Camera found in the scene",
+                checkAction: () =>
+                {
+                    return Camera.main != null;
+                },
+                fixAction: () =>
+                {
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
+                }
+            );
 #if C3D_OCULUS
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 

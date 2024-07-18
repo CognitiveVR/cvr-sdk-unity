@@ -713,6 +713,11 @@ namespace Cognitive3D
 
             if (GUI.Button(new Rect(160, 420, 200, 30), new GUIContent("Set up GameObjects","Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
+                if (mainCameraObject != null)
+                {
+                    mainCameraObject.tag = "MainCamera";
+                }
+
                 SetupControllers(leftcontroller, rightcontroller);
                 if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
                 {
