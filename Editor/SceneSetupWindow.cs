@@ -1333,16 +1333,17 @@ namespace Cognitive3D
         bool UploadSceneGeometry = true;
         bool UploadThumbnail = true;
         bool UploadDynamicMeshes = true;
-
+        bool ExportDynamicMeshesInScene = true;
+        DynamicObject[] dynsInScene;
         bool SceneExistsOnDashboard;
         bool SceneHasExportFiles;
 
         void UploadSummaryUpdate()
         {
             GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "These will be uploaded to the Cognitive3D Dashboard:", "normallabel");
 
-            int heightOffset = 120;
+            int heightOffset = 100;
 
             int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
@@ -1358,12 +1359,15 @@ namespace Cognitive3D
 
             SceneHasExportFiles = EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
+            /// ////////////////////////////////////
+            /// UPLOAD SCENE GEOMETRY
+            /// ///////////////////////////////////
             var uploadSceneRect = new Rect(30, heightOffset, 30, 30);
             if (!SceneHasExportFiles)
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadSceneRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+2, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 2, 400, 30), "Scene geometry (no files exported)", "normallabel");
                 UploadSceneGeometry = false;
             }
             else
@@ -1383,12 +1387,12 @@ namespace Cognitive3D
                         UploadSceneGeometry = true;
                     }
                 }
-                string uploadGeometryText = "Upload Scene Geometry";
+                string uploadGeometryText = "Scene geometry";
                 if (SceneExistsOnDashboard)
                 {
-                    uploadGeometryText = "Upload Scene Geometry (Version " + (sceneVersion+1) + ")";
+                    uploadGeometryText = "Scene geometry (version " + (sceneVersion+1) + ")";
                 }
-                GUI.Label(new Rect(60, heightOffset+2, 400, 30), uploadGeometryText, "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 2, 400, 30), uploadGeometryText, "normallabel");
             }
 
             var uploadThumbnailRect = new Rect(30, heightOffset+40, 30, 30);
@@ -1396,7 +1400,7 @@ namespace Cognitive3D
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+42, 340, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 42, 340, 30), "Scene thumbnail (no scene exists)", "normallabel");
             }
             else
             {
@@ -1415,18 +1419,21 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail*", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 42, 300, 30), "Scene thumbnail*", "normallabel");
             }
 
-            //upload dynamics
-            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
-            var uploadDynamicRect = new Rect(30, heightOffset+80, 30, 30);
+            /// ////////////////////////////////////
+            /// EXPORTED DYNAMIC OBJECTS
+            /// ///////////////////////////////////
+            var uploadDynamicRect = new Rect(30, heightOffset + 80, 30, 30);
+            int numExportedDynamicObjects = EditorCore.GetExportedDynamicObjectNames().Count;
 
+            // No scene exists
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
-                //can't upload dynamics
                 GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+82, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 82, 450, 30),  numExportedDynamicObjects + " previously exported dynamic mesh(es) (no scene exists)", "normallabel");
+                GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
             else
             {
@@ -1445,36 +1452,108 @@ namespace Cognitive3D
                         UploadDynamicMeshes = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
-                GUI.Label(new Rect(200, heightOffset+340, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
+
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30), numExportedDynamicObjects + " previously exported dynamic mesh(es)", "normallabel");
+                GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
-            //scene thumbnail preview
-            var thumbnailRect = new Rect(40, heightOffset+130, 420, 180);
+            /// ////////////////////////////////////
+            /// DYNAMICS IN SCENE BUT NOT EXPORTED
+            /// ///////////////////////////////////
+            var exportDynamicRect = new Rect(30, heightOffset + 120, 30, 30);
+            int dynamicObjectsNotExported = 0;
+            List<string> exportedDynamicObjectNames = EditorCore.GetExportedDynamicObjectNames();
+
+            // Go through all dynamic objects in scene
+            // See if it has been exported already (use mesh name as an identifier)
+            // IGNORE CONTROLLERS
+            dynsInScene = FindObjectsOfType<DynamicObject>();
+
+            foreach (var dynamicObject in dynsInScene)
+            {
+                bool found = false;
+                if (!dynamicObject.IsController)
+                {
+                    // In case there are NO exported object
+                    if (exportedDynamicObjectNames.Count == 0)
+                    {
+                        dynamicObjectsNotExported++;
+                    }
+                    else
+                    {
+                        foreach (var exportedDynamicObjectName in exportedDynamicObjectNames)
+                        {
+                            if (dynamicObject.MeshName == exportedDynamicObjectName)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            dynamicObjectsNotExported++;
+                        }
+                    }
+                }
+            }
+
+            // No scene exists
+            if (!SceneExistsOnDashboard && !UploadSceneGeometry)
+            {
+                GUI.Button(exportDynamicRect, EditorCore.BoxEmpty, "image_centered");
+                GUI.Label(new Rect(60, heightOffset + 122, 400, 30), dynamicObjectsNotExported + " new dynamic mesh(es) (no scene exists)", "normallabel");
+            }
+            else
+            {
+                // upload dynamics toggle
+                if (ExportDynamicMeshesInScene)
+                {
+                    if (GUI.Button(exportDynamicRect, EditorCore.BoxCheckmark, "image_centered"))
+                    {
+                        ExportDynamicMeshesInScene = false;
+                    }
+                }
+                else
+                {
+                    if (GUI.Button(exportDynamicRect, EditorCore.BoxEmpty, "image_centered"))
+                    {
+                        ExportDynamicMeshesInScene = true;
+                    }
+                }
+
+                GUI.Label(new Rect(60, heightOffset + 122, 300, 30), dynamicObjectsNotExported + " new dynamic mesh(es)", "normallabel");
+            }
+
+
+            /// ////////////////////////////////////
+            /// SCENE THUMBNAIL PREVIEW
+            /// ///////////////////////////////////
+            var thumbnailRect = new Rect(40, heightOffset+170, 420, 180);
             Texture2D savedThumbnail = null;
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(150, heightOffset+312, 200, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset + 312, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
                 else
                     GUI.Box(thumbnailRect, "Scene view not found", "image_centeredboxed");
             }
+            // look for thumbnail image file
             else if (EditorCore.GetSceneThumbnail(settings, ref savedThumbnail, false))
             {
-                //look for thumbnail image file
                 GUI.Label(new Rect(150, heightOffset + 280, 200, 20), "Thumbnail from previous scene version");
                 GUI.Box(thumbnailRect, savedThumbnail, "image_centeredboxed");
             }
+            // scene exists and has been uploaded, but no image to fall back to use
             else if (SceneExistsOnDashboard)
             {
-                //scene exists and has been uploaded, but no image to fall back to use
                 GUI.Box(thumbnailRect, "Fallback thumbnail\nnot available", "image_centeredboxed");
             }
+            // if a new scene version is uploaded, can it use the previous thumbnail?
             else
             {
-                //if a new scene version is uploaded, can it use the previous thumbnail?
                 GUI.Box(thumbnailRect, "Thumbnail not uploaded", "image_centeredboxed");
             }
         }
@@ -1616,6 +1695,10 @@ namespace Cognitive3D
                     buttonAppear = false;
                     break;
                 case Page.SceneUpload:
+                    // Look below at onclick()
+                    // These all happen after that
+
+
                     System.Action completedmanifestupload = delegate
                     {
                         if (UploadDynamicMeshes)
@@ -1625,7 +1708,7 @@ namespace Cognitive3D
                         currentPage = Page.SetupComplete;
                     };
 
-                    //fifth upload manifest
+                    // Fifth: upload manifest
                     System.Action completedRefreshSceneVersion = delegate
                     {
                         if (UploadDynamicMeshes)
@@ -1641,16 +1724,25 @@ namespace Cognitive3D
                         }
                     };
 
-                    //fourth upload dynamics
+                    // Fourth upload dynamics
                     System.Action<int> completeSceneUpload = delegate (int responseCode)
                     {
                         if (responseCode == 200 || responseCode == 201)
                         {
-                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
+                            if (ExportDynamicMeshesInScene)
+                            {
+                                List<DynamicObject> dynsInSceneList = new List<DynamicObject>();
+                                foreach (var dyn in dynsInScene)
+                                {
+                                    dynsInSceneList.Add(dyn);
+                                }
+                                ExportUtility.ExportDynamicObjects(dynsInSceneList);
+                            }
+                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
                         }
                         else
                         {
-                            //ExportUtility displays an error popup, so don't need to do other UI here
+                            // ExportUtility displays an error popup, so don't need to do other UI here
                             currentPage = Page.SceneUpload;
                         }
                     };
