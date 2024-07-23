@@ -186,7 +186,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="transform">The transform of the tracking space</param>
         /// <param name="timestamp">The time at which the transform was recorded</param>
-        internal static void RecordTrackingSpaceTransform(Transform transform, double timestamp)
+        internal static void RecordTrackingSpaceTransform(Cognitive3D.Components.CustomTransform transform, double timestamp)
         {
             SharedCore.RecordTrackingSpaceTransform(transform, timestamp);
         }

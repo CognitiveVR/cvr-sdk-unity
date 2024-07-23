@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 using UnityEngine.XR;
 using System;
+using System.Collections.Generic;
 #if C3D_VIVEWAVE
     using Wave;
     using Wave.Native;
     using Wave.Essence;
     using Wave.Essence.Events;
 #endif
+
+using TMPro;
 
 /// <summary>
 /// Adds room size from VR boundary to the session properties
@@ -35,7 +38,7 @@ namespace Cognitive3D.Components
         /// <summary>
         /// The threshold for minimum position (in metres) change to re-record boundary points
         /// </summary>
-        private readonly float TRACKING_SPACE_POSITION_THRESHOLD = 0.05f;
+        private readonly float TRACKING_SPACE_POSITION_THRESHOLD = 0.1f;
 
         /// <summary>
         /// The threshold for minimum rotation (in degrees) change to re-record boundary points
@@ -45,29 +48,66 @@ namespace Cognitive3D.Components
         //counts up the deltatime to determine when the interval ends
         float currentTime;
 
+        public GameObject post;
+        public TextMeshPro trackingPos;
+        public TextMeshPro boolText;
+        public TextMeshPro message;
+
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
 #endif
 
+        private GameObject[] posts;
+        GameObject post1;
+        GameObject post2;
+        GameObject post3;
+        GameObject post4;
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            previousBoundaryPoints = GetCurrentBoundaryPoints();
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
+
+            // Get initial values of boundary and tracking space
+            currentBoundaryPoints = GetCurrentBoundaryPoints();
+            previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            lastRecordedTrackingSpacePosition = trackingSpace.position;
+            lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
+            CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+            CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+            trackingPos.text = trackingSpace.position.ToString();
+
             // We want to intialize the string builder to a size appropriate for the number of points
             // This number might change if the participant redraws boundary, so we are adding a grace extension
             // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
             // That is expensive, but there is a low probability of this happening
-            if (previousBoundaryPoints != null)
+            if (currentBoundaryPoints != null)
             {
-                CoreInterface.InitializeBoundary(previousBoundaryPoints.Length + (int) Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
-                CoreInterface.RecordBoundaryShape(previousBoundaryPoints, Util.Timestamp(Time.frameCount));
+                CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
+                CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
             }
-            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
+
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref lastRoomSize);
             WriteRoomSizeAsSessionProperty(lastRoomSize);
+
+            post1 = Instantiate(post, Vector3.zero, Quaternion.identity);
+            post2 = Instantiate(post, Vector3.zero, Quaternion.identity);
+            post3 = Instantiate(post, Vector3.zero, Quaternion.identity);
+            post4 = Instantiate(post, Vector3.zero, Quaternion.identity);
+
+            post1.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
+            post2.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
+            post3.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
+            post4.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
+
+            post1.transform.localPosition = previousBoundaryPoints[0];
+            post2.transform.localPosition = previousBoundaryPoints[1];
+            post3.transform.localPosition = previousBoundaryPoints[2];
+            post4.transform.localPosition = previousBoundaryPoints[3];
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -76,19 +116,21 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnTick()
         {
-            if (trackingSpace == null)
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
+                    || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if tracking space moved enough
             {
-                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+                message.text = "Adding to dict, " + Cognitive3D_Manager.Instance.trackingSpace.position.ToString();
+                trackingPos.text = trackingSpace.position.ToString();
+                lastRecordedTrackingSpacePosition = trackingSpace.position;
+                lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
+                boolText.text = "TRUE";
             }
             else
             {
-                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
-                        || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if tracking space moved enough
-                {
-                    CoreInterface.RecordTrackingSpaceTransform(trackingSpace, Util.Timestamp(Time.frameCount));
-                    lastRecordedTrackingSpacePosition = trackingSpace.position;
-                    lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
-                }
+                boolText.text = "FALSE";
             }
         }
 
@@ -122,6 +164,10 @@ namespace Cognitive3D.Components
                     if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                     {
                         previousBoundaryPoints = currentBoundaryPoints;
+                        post1.transform.localPosition = previousBoundaryPoints[0];
+                        post2.transform.localPosition = previousBoundaryPoints[1];
+                        post3.transform.localPosition = previousBoundaryPoints[2];
+                        post4.transform.localPosition = previousBoundaryPoints[3];
                         CalculateAndRecordRoomsize(true, true);
                         CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
                     }
@@ -303,7 +349,7 @@ namespace Cognitive3D.Components
         /// </summary>
         /// <param name="roomSizeRef">A Vector3 representing new roomsize</param>
         private void SendBoundaryChangeEvent(Vector3 roomSizeRef)
-        {     
+        {
             // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
             new CustomEvent("c3d.User changed boundary")
             .SetProperty("Previous Room Size", lastRoomSize.x * lastRoomSize.z)
@@ -535,7 +581,7 @@ namespace Cognitive3D.Components
 #endif
         }
 
-    #region Inspector Utils
+        #region Inspector Utils
         public override bool GetWarning()
         {
             return !GameplayReferences.SDKSupportsRoomSize;
@@ -552,7 +598,19 @@ namespace Cognitive3D.Components
                 return "Current platform does not support this component";
             }
         }
-#endregion
+        #endregion
 
+    }
+
+    internal class CustomTransform
+    {
+        internal CustomTransform(Vector3 position, Quaternion rotation)
+        {
+            this.pos = position;
+            this.rot = rotation;
+        }
+
+        internal Vector3 pos;
+        internal Quaternion rot;
     }
 }

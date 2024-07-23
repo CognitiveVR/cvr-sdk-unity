@@ -1518,7 +1518,9 @@ namespace Cognitive3D.Serialization
         /// We will store the transforms of the tracking spaces and then serialize the pos and rot separately
         /// We won't use scale
         /// </summary>
-        static List<KeyValuePair<double, Transform>> trackingSpaces = new List<KeyValuePair<double, Transform>>();
+        static List<KeyValuePair<double, Cognitive3D.Components.CustomTransform>> trackingSpaces = new List<KeyValuePair<double, Cognitive3D.Components.CustomTransform>>();
+
+        static string path = "";
 
         /// <summary>
         /// Initializes a json to hold the boundary points data
@@ -1529,6 +1531,8 @@ namespace Cognitive3D.Serialization
             // Approximately 70 characters per snapshot, 1200 characters extra room
             boundarybuilder = new StringBuilder(70 * numBoundaryPoints * Cognitive3D_Preferences.S_BoundarySnapshotCount + 1200);
             boundarybuilder.Append("{\"data\":[");
+            path = Application.persistentDataPath + "/" + "boundary.txt";
+            File.Create(path);
         }
 
         /// <summary>
@@ -1537,12 +1541,14 @@ namespace Cognitive3D.Serialization
         /// </summary>
         /// <param name="transform">The transform of the tracking space</param>
         /// <param name="timestamp">The time at which the transform was recorded</param>
-        internal static void RecordTrackingSpaceTransform(Transform transform, double timestamp)
+        internal static void RecordTrackingSpaceTransform(Cognitive3D.Components.CustomTransform transform, double timestamp)
         {
             if (!IsInitialized || transform == null) { return; }
-            trackingSpaces.Add(new KeyValuePair<double, Transform>(timestamp, transform));
+            trackingSpaces.Add(new KeyValuePair<double, Cognitive3D.Components.CustomTransform>(timestamp, transform));
+            // File.AppendAllText(path, "RecordTrackingSpaceTransform");
             if (trackingSpaces.Count > BoundaryThreshold)
             {
+                File.AppendAllText(path, "Gonna serialize\n");
                 SerializeBoundaryShapes();
             }
         }
@@ -1552,27 +1558,27 @@ namespace Cognitive3D.Serialization
             if (!IsInitialized) { return; }
             if (points == null) { return; }
             if (points.Length == 0) { return; }
-
             boundaryShapes.Add(new KeyValuePair<double, object>(timestamp, points));
         }
 
         static void SerializeBoundaryShapes()
         {
             if (boundarybuilder == null) { return; }
-
+            File.AppendAllText(path, "\nBeginning serialize, boundarybuilder: " + boundarybuilder.ToString() + "\n");
             /// Tracking spaces
             foreach (var kvp in trackingSpaces)
             {
+                File.AppendAllText(path, "Adding tracking space: " + kvp.Value.pos.x + " " + kvp.Value.pos.y + " " + kvp.Value.pos.z + "\n");
                 double timestamp = kvp.Key;
                 boundarybuilder.Append("{");
                 JsonUtil.SetDouble("time", (int)timestamp, boundarybuilder);
                 boundarybuilder.Append(",");
                 JsonUtil.SetVector("p",
-                    new float[] { kvp.Value.position.x, kvp.Value.position.y, kvp.Value.position.z },
+                    new float[] { kvp.Value.pos.x, kvp.Value.pos.y, kvp.Value.pos.z },
                     boundarybuilder);
                 boundarybuilder.Append(",");
                 JsonUtil.SetQuat("r",
-                        new float[] { kvp.Value.rotation.x, kvp.Value.rotation.y, kvp.Value.rotation.z, kvp.Value.rotation.w },
+                        new float[] { kvp.Value.rot.x, kvp.Value.rot.y, kvp.Value.rot.z, kvp.Value.rot.w },
                         boundarybuilder);
                 boundarybuilder.Append("}");
                 boundarybuilder.Append(",");
@@ -1584,10 +1590,13 @@ namespace Cognitive3D.Serialization
             boundarybuilder.Append("]");
             boundarybuilder.Append(",");
 
+            File.AppendAllText(path, "After tracking space, boundarybuilder: " + boundarybuilder.ToString() + "\n");
+
             /// Boundaries
             boundarybuilder.Append("\"shapes\":[");
             foreach (KeyValuePair<double, object> kvp in boundaryShapes)
             {
+                File.AppendAllText(path, "Adding boundary");
                 boundarybuilder.Append("{");
                 double timestamp = kvp.Key;
                 JsonUtil.SetDouble("time", timestamp, boundarybuilder);
@@ -1609,6 +1618,7 @@ namespace Cognitive3D.Serialization
                 boundarybuilder.Append("]");
                 boundarybuilder.Append("}");
                 boundarybuilder.Append(",");
+                File.AppendAllText(path, "After shapes, boundarybuilder: " + boundarybuilder.ToString() + "\n");
             }
             if (boundarybuilder[boundarybuilder.Length - 1] == ',')
             {
@@ -1618,27 +1628,27 @@ namespace Cognitive3D.Serialization
             boundarybuilder.Append(",");
             boundaryCount++;
 
+            File.AppendAllText(path, "Before header, boundarybuilder: " + boundarybuilder.ToString() + "\n");
+
             /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetDouble("time", (int)SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
-
-
+            
             boundaryJsonPart++;
             boundaryCount = 0;
-            if (boundarybuilder != null)
+
+            if (boundarybuilder[boundarybuilder.Length - 1] == ',')
             {
-                if (boundarybuilder[boundarybuilder.Length - 1] == ',')
-                {
-                    boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
-                }
-                boundarybuilder.Append("}");
-                WebPost("boundary", boundarybuilder.ToString(), true);
-                boundarybuilder.Clear();
-                boundarybuilder.Append("{\"data\":["); // prepare the json for next batch
+                boundarybuilder.Remove(boundarybuilder.Length - 1, 1); //remove comma
             }
+            boundarybuilder.Append("}");
+            File.AppendAllText(path, "Before send, boundarybuilder: " + boundarybuilder.ToString() + "\n");
+            WebPost("boundary", boundarybuilder.ToString(), true);
+            boundarybuilder.Clear();
+            boundarybuilder.Append("{\"data\":["); // prepare the json for next batch
         }
 
         static void ResetBoundary()
