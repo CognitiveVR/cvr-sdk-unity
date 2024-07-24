@@ -214,6 +214,8 @@ namespace Cognitive3D
             return this;
         }
 
+        /// Commenting this since it has 0 references. Doesn't seem like it's being used
+        /*
         /// <summary>
         /// Appends the latest value of each specified sensor to this event
         /// </summary>
@@ -253,6 +255,7 @@ namespace Cognitive3D
 
             return this;
         }
+        */
 
         /// <summary>
         /// Record the end of this Custom Event at a position in the world
