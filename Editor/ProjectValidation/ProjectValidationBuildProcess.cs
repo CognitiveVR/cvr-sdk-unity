@@ -26,7 +26,7 @@ namespace Cognitive3D
                 ProjectValidationItemsStatus.VerifyAllBuildScenes();
             }
 
-            if (ProjectValidationItemsStatus.throwExecption)
+            if (ProjectValidationItemsStatus.throwBuildException)
             {
                 throw new BuildFailedException(LOG_TAG + "Build process stopped");
             }
