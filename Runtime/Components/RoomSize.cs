@@ -40,8 +40,11 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             previousBoundaryPoints = GetCurrentBoundaryPoints();
             CalculateAndRecordRoomsize(false, false);
-            GetRoomSize(ref lastRoomSize);
-            WriteRoomSizeAsSessionProperty(lastRoomSize);
+
+            if (GetRoomSize(ref lastRoomSize))
+            {
+                WriteRoomSizeAsSessionProperty(lastRoomSize);
+            }
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -336,7 +339,7 @@ namespace Cognitive3D.Components
             if (Valve.VR.OpenVR.Chaperone != null && Valve.VR.OpenVR.Chaperone.GetPlayAreaSize(ref roomX, ref roomY))
             {
                 roomSize = new Vector3(roomX, 0, roomY);
-                return true;
+                return (roomSize.x > 0 && roomSize.z > 0);
             }
             else
             {
@@ -347,7 +350,7 @@ namespace Cognitive3D.Components
             if (OVRManager.boundary.GetConfigured())
             {
                 roomSize = OVRManager.boundary.GetDimensions(OVRBoundary.BoundaryType.PlayArea);
-                return true;
+                return (roomSize.x > 0 && roomSize.z > 0);
             }
             return false;
 #elif C3D_PICOXR
@@ -355,7 +358,7 @@ namespace Cognitive3D.Components
             {
                 roomSize = Unity.XR.PXR.PXR_Boundary.GetDimensions(Unity.XR.PXR.BoundaryType.PlayArea);
                 roomSize /= 1000;
-                return true;
+                return (roomSize.x > 0 && roomSize.z > 0);
             }
             else
             {
@@ -367,7 +370,7 @@ namespace Cognitive3D.Components
                 //api returns mm
                 roomSize = Pvr_UnitySDKAPI.BoundarySystem.UPvr_BoundaryGetDimensions(Pvr_UnitySDKAPI.BoundarySystem.BoundaryType.PlayArea);
                 roomSize /= 1000;
-                return true;
+                return (roomSize.x > 0 && roomSize.z > 0);
             }
             else
             {
@@ -376,7 +379,7 @@ namespace Cognitive3D.Components
 #elif C3D_VIVEWAVE
             // We consider width to go from left-to-right hence width is x-component
             roomSize = new Vector3(Interop.WVR_GetArena().area.rectangle.width, 0f, Interop.WVR_GetArena().area.rectangle.length);
-            return true;
+            return (roomSize.x > 0 && roomSize.z > 0);
 #else
             UnityEngine.XR.InputDevice inputDevice = InputDevices.GetDeviceAtXRNode(XRNode.Head);
             if (inputDevice.isValid)
@@ -391,7 +394,7 @@ namespace Cognitive3D.Components
                 if (XRIS.TryGetBoundaryPoints(boundaryPoints))
                 {
                     roomSize = GetArea(boundaryPoints.ToArray());
-                    return true;
+                    return (roomSize > 0);
                 }
             }
             return false;
