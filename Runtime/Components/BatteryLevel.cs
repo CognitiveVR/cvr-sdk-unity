@@ -11,6 +11,12 @@ namespace Cognitive3D.Components
     public class BatteryLevel : AnalyticsComponentBase
     {
         private BatteryStatus batteryStatus;
+
+        /// <summary>
+        /// We won't record the battery level if it's below this value
+        /// </summary>
+        private const int MIN_BATTERY_LEVEL_THRESHOLD = 0;
+
 #if !UNITY_EDITOR && !UNITY_STANDALONE_WIN
         private float currentTime = 0;
         private readonly float BatteryLevelSendInterval = 10.0f;
@@ -51,7 +57,7 @@ namespace Cognitive3D.Components
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
             {
-                if (SystemInfo.batteryLevel != -1)
+                if (SystemInfo.batteryLevel > MIN_BATTERY_LEVEL_THRESHOLD)
                 {
                     Cognitive3D.SensorRecorder.RecordDataPoint("HMD Battery Level", SystemInfo.batteryLevel * 100);
                 }
