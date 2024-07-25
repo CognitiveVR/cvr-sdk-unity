@@ -1334,7 +1334,7 @@ namespace Cognitive3D
         bool UploadThumbnail = true;
         bool UploadDynamicMeshes = true;
         bool ExportDynamicMeshesInScene = true;
-        DynamicObject[] dynsInScene;
+        DynamicObject[] dynamicObjectsInScene;
         bool SceneExistsOnDashboard;
         bool SceneHasExportFiles;
 
@@ -1343,7 +1343,7 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "These will be uploaded to the Cognitive3D Dashboard:", "normallabel");
 
-            int heightOffset = 100;
+            int heightOffset = 80;
 
             int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
@@ -1432,7 +1432,7 @@ namespace Cognitive3D
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
                 GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset + 82, 450, 30),  numExportedDynamicObjects + " previously exported dynamic mesh(es) (no scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30),  numExportedDynamicObjects + " previously exported dynamic meshes (no scene exists)", "normallabel");
                 GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
             else
@@ -1453,7 +1453,7 @@ namespace Cognitive3D
                     }
                 }
 
-                GUI.Label(new Rect(60, heightOffset + 82, 420, 30), numExportedDynamicObjects + " previously exported dynamic mesh(es)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30), numExportedDynamicObjects + " previously exported dynamic meshes", "normallabel");
                 GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
@@ -1467,9 +1467,9 @@ namespace Cognitive3D
             // Go through all dynamic objects in scene
             // See if it has been exported already (use mesh name as an identifier)
             // IGNORE CONTROLLERS
-            dynsInScene = FindObjectsOfType<DynamicObject>();
+            dynamicObjectsInScene = FindObjectsOfType<DynamicObject>();
 
-            foreach (var dynamicObject in dynsInScene)
+            foreach (var dynamicObject in dynamicObjectsInScene)
             {
                 bool found = false;
                 if (!dynamicObject.IsController)
@@ -1732,7 +1732,7 @@ namespace Cognitive3D
                             if (ExportDynamicMeshesInScene)
                             {
                                 List<DynamicObject> dynsInSceneList = new List<DynamicObject>();
-                                foreach (var dyn in dynsInScene)
+                                foreach (var dyn in dynamicObjectsInScene)
                                 {
                                     dynsInSceneList.Add(dyn);
                                 }
