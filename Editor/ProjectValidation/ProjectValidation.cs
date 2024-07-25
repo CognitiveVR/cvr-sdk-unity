@@ -31,12 +31,13 @@ namespace Cognitive3D
         /// </summary>
         internal enum ItemAction
         {
+            None = 0,
             // Related fix action is performed automatically once the "Fix" button is pressed, with no developer or user involvement required.
-            Fix = 0,
+            Fix = 1,
             // Requires updates and adjustments in the project or scene by developers or users once the "Edit" button is pressed
-            Edit = 1,
+            Edit = 2,
             // Necessary action is performed automatically once the "Apply" button is pressed, with no developer or user involvement required (used for recommonded items).
-            Apply = 2
+            Apply = 3
         }
 
         internal static readonly ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();

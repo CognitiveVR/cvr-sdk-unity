@@ -13,13 +13,13 @@ namespace Cognitive3D
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
         static Dictionary<string, List<ProjectValidation.ItemLevel>> scenesNeedFix = new Dictionary<string, List<ProjectValidation.ItemLevel>>();
-        private static bool _throwExecption;
-        public static bool throwExecption {
+        private static bool _throwBuildException;
+        public static bool throwBuildException {
             get {
-                return _throwExecption;
+                return _throwBuildException;
             }
             internal set {
-                _throwExecption = value;
+                _throwBuildException = value;
             }
         }
 
@@ -89,7 +89,7 @@ namespace Cognitive3D
                         // Opens up the first scene in the list that needs fix
                         EditorSceneManager.OpenScene(scenesNeedFix.Keys.First().ToString());
                         ProjectValidationSettingsProvider.OpenSettingsWindow();
-                        throwExecption = true;
+                        throwBuildException = true;
                     }
 
                     Clear();
@@ -104,7 +104,7 @@ namespace Cognitive3D
                 }
             }
 
-            throwExecption = false;
+            throwBuildException = false;
             Clear();
         }
 
@@ -119,13 +119,13 @@ namespace Cognitive3D
                 bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to verify that all build scenes meet the Cognitive3D configuration requirements? \n \n**Please note that if you choose to verify scenes, the build process will be stopped and will need to be restarted**", "Verify", "Skip");
                 if (result)
                 {
-                    throwExecption = true;
+                    throwBuildException = true;
                     StartSceneVerificationProcess();
                     return;
                 }
                 else
                 {
-                    throwExecption = false;
+                    throwBuildException = false;
                     return;
                 }
             }
