@@ -54,5 +54,10 @@ namespace Cognitive3D
         {
             EditorCore.ForceCheckUpdates();
         }
+        [MenuItem("Cognitive3D/Scene Management", priority = 22)]
+        static void Cognitive3DSceneManagement()
+        {
+            SceneManagementWindow.Init();
+        }
     }
 }
