@@ -390,7 +390,7 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode);
+                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode + " \n"+ contents);
             lastDataResponse = (int)www.responseCode;
             if (callback != null)
             {
@@ -459,9 +459,6 @@ namespace Cognitive3D
                 currentDelay = minRetryDelay;
                 lastRequestFailed = false;
             }
-
-            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
         }
 
         internal delegate void GetRequestSuccessCallback(string content);
