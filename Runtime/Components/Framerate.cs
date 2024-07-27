@@ -28,7 +28,7 @@ namespace Cognitive3D.Components
         /// <summary>
         /// We won't record the framrerate if it's below this value
         /// </summary>
-        private const int MIN_FRAMERATE_THRESHOLD = 0;
+        private const int MIN_FRAMERATE_THRESHOLD = 1;
 
 #if C3D_OCULUS
         /// <summary>
