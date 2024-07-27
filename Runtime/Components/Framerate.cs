@@ -25,11 +25,6 @@ namespace Cognitive3D.Components
         /// </summary>
         private int intervalFrameCount;
 
-        /// <summary>
-        /// We won't record the framrerate if it's below this value
-        /// </summary>
-        private const int MIN_FRAMERATE_THRESHOLD = 1;
-
 #if C3D_OCULUS
         /// <summary>
         /// ASW caps framerate to half of device refresh rate
@@ -118,20 +113,9 @@ namespace Cognitive3D.Components
                 fpsMultiplier = 1;
             }
 #endif
-
-            if (framesPerSecond * fpsMultiplier > MIN_FRAMERATE_THRESHOLD)
-            {
-                SensorRecorder.RecordDataPoint("c3d.fps.avg", framesPerSecond * fpsMultiplier);
-            }
-            if (finalLow5Percent * fpsMultiplier > MIN_FRAMERATE_THRESHOLD)
-            {
-                SensorRecorder.RecordDataPoint("c3d.fps.5pl", finalLow5Percent * fpsMultiplier);
-            }
-            if (finalLow1Percent * fpsMultiplier > MIN_FRAMERATE_THRESHOLD)
-            {
-                SensorRecorder.RecordDataPoint("c3d.fps.1pl", finalLow1Percent * fpsMultiplier);
-            }
-
+            SensorRecorder.RecordDataPoint("c3d.fps.avg", framesPerSecond * fpsMultiplier);
+            SensorRecorder.RecordDataPoint("c3d.fps.5pl", finalLow5Percent * fpsMultiplier);
+            SensorRecorder.RecordDataPoint("c3d.fps.1pl", finalLow1Percent * fpsMultiplier);
             intervalFrameCount = 0;
             currentTime = 0;
             deltaTimes.Clear();
