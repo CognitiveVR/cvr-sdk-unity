@@ -45,10 +45,6 @@ namespace Cognitive3D.Components
             {
                 WriteRoomSizeAsSessionProperty(lastRoomSize);
             }
-            else
-            {
-                Cognitive3D_Manager.SetSessionProperty("c3d.roomsizeDescriptionMeters", "Invalid");
-            }
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
