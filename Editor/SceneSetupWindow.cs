@@ -57,7 +57,7 @@ namespace Cognitive3D
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -105,7 +105,7 @@ namespace Cognitive3D
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -153,13 +153,24 @@ namespace Cognitive3D
             window.maxSize = new Vector2(500, 550);
             window.position = new Rect(position.x+5, position.y+5, 500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+        }
+
+        /// <summary>
+        /// Instantiates a Cognitive3D_Manager
+        /// Identifies controller and camera objects
+        /// Sets them up (for example with dynamic objects)
+        /// </summary>
+        internal static void PerformBasicSetup()
+        {
+            Init();
+            PlayerSetupStart();
         }
 
         internal enum Page
@@ -304,16 +315,16 @@ namespace Cognitive3D
 
 #region Controllers
 
-        GameObject leftcontroller;
-        GameObject rightcontroller;
-        GameObject mainCameraObject;
-        GameObject trackingSpace;
+        static GameObject leftcontroller;
+        static GameObject rightcontroller;
+        static GameObject mainCameraObject;
+        static GameObject trackingSpace;
 
         [System.NonSerialized]
-        bool initialPlayerSetup;
+        static bool initialPlayerSetup;
 
         //called once when entering controller update page. finds/sets expected defaults
-        void PlayerSetupStart()
+        static void PlayerSetupStart()
         {
             if (initialPlayerSetup) { return; }
             initialPlayerSetup = true;
@@ -718,7 +729,7 @@ namespace Cognitive3D
                     mainCameraObject.tag = "MainCamera";
                 }
 
-                SetupControllers(leftcontroller, rightcontroller);
+                SetupControllers();
                 if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
                 {
                     trackingSpace.AddComponent<RoomTrackingSpace>();
@@ -812,15 +823,15 @@ namespace Cognitive3D
             }
         }
 
-        public static void SetupControllers(GameObject left, GameObject right)
+        public static void SetupControllers()
         {
-            if (left != null && left.GetComponent<DynamicObject>() == null)
+            if (leftcontroller != null && leftcontroller.GetComponent<DynamicObject>() == null)
             {
-                left.AddComponent<DynamicObject>();
+                leftcontroller.AddComponent<DynamicObject>();
             }
-            if (right != null && right.GetComponent<DynamicObject>() == null)
+            if (rightcontroller != null && rightcontroller.GetComponent<DynamicObject>() == null)
             {
-                right.AddComponent<DynamicObject>();
+                rightcontroller.AddComponent<DynamicObject>();
             }
 
             if (Cognitive3D_Manager.Instance == null)
@@ -849,18 +860,18 @@ namespace Cognitive3D
                 controllerType = DynamicObject.ControllerType.ViveFocus;
 #endif
             
-            if (left != null)
+            if (leftcontroller != null)
             {
-                var dyn = left.GetComponent<DynamicObject>();
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
                 dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
-            if (right != null)
+            if (rightcontroller != null)
             {
-                var dyn = right.GetComponent<DynamicObject>();
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
@@ -1334,7 +1345,7 @@ namespace Cognitive3D
         bool UploadThumbnail = true;
         bool UploadDynamicMeshes = true;
         bool ExportDynamicMeshesInScene = true;
-        DynamicObject[] dynamicObjectsInScene;
+        static DynamicObject[] dynamicObjectsInScene;
         bool SceneExistsOnDashboard;
         bool SceneHasExportFiles;
 
@@ -1731,12 +1742,7 @@ namespace Cognitive3D
                         {
                             if (ExportDynamicMeshesInScene)
                             {
-                                List<DynamicObject> dynsInSceneList = new List<DynamicObject>();
-                                foreach (var dyn in dynamicObjectsInScene)
-                                {
-                                    dynsInSceneList.Add(dyn);
-                                }
-                                ExportUtility.ExportDynamicObjects(dynsInSceneList);
+                                ExportAllDynamicsInScene();
                             }
                             EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
                         }
@@ -1879,6 +1885,21 @@ namespace Cognitive3D
                 onlineRect.x += 25;
                 GUI.Label(onlineRect, EditorCore.CloudUploadIcon);
             }
+        }
+
+        internal static void ExportAllDynamicsInScene()
+        {
+            List<DynamicObject> dynsInSceneList = new List<DynamicObject>();        
+            
+            // This array HAS TO BE reinitialized here because
+            // this function can be from other places and
+            // we cannot guarantee that it has been initialized
+            dynamicObjectsInScene = FindObjectsOfType<DynamicObject>();
+            foreach (var dyn in dynamicObjectsInScene)
+            {
+                dynsInSceneList.Add(dyn);
+            }
+            ExportUtility.ExportDynamicObjects(dynsInSceneList);
         }
 
         float sceneUploadProgress;
