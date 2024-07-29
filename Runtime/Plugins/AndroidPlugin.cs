@@ -26,19 +26,27 @@ namespace Cognitive3D
             folderPath = Application.persistentDataPath + "/c3dlocal/CrashLogs";
             currentFilePath = folderPath + "/BackupCrashLog-" + (int)Util.Timestamp() + ".log";
 
-            // Creating a folder for crash logs in local cache directory
-            if (!Directory.Exists(folderPath))
+            try
             {
-                Directory.CreateDirectory(folderPath);
+
+                // Creating a folder for crash logs in local cache directory
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                CreateAndroidPluginInstance();
+                InitAndroidPlugin();
+
+                LogFileHasContent();
+
+                Cognitive3D_Manager.OnLevelLoaded += SetTrackingScene;
+                Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
             }
-
-            CreateAndroidPluginInstance();
-            InitAndroidPlugin();
-
-            LogFileHasContent();
-
-            Cognitive3D_Manager.OnLevelLoaded += SetTrackingScene;
-            Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
        private void OnPreSessionEnd()
