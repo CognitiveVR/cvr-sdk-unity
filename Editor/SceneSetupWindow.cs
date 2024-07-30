@@ -1716,6 +1716,16 @@ namespace Cognitive3D
                         {
                             ExportUtility.UploadAllDynamicObjectMeshes(true);
                         }
+                        if (ExportDynamicMeshesInScene)
+                        {
+                            List<string> dynamicMeshNames = new List<string>();
+                            foreach (var dyn in dynamicObjectsInScene)
+                            {
+                                dynamicMeshNames.Add(dyn.MeshName);
+                            }
+                            ExportUtility.UploadDynamicObjects(dynamicMeshNames, false);
+                        }
+
                         currentPage = Page.SetupComplete;
                     };
 
@@ -1743,12 +1753,6 @@ namespace Cognitive3D
                             if (ExportDynamicMeshesInScene)
                             {
                                 ExportAllDynamicsInScene();
-                                List <string> dynamicMeshNames = new List<string>();
-                                foreach (var dyn in dynamicObjectsInScene)
-                                {
-                                    dynamicMeshNames.Add(dyn.MeshName);
-                                }
-                                ExportUtility.UploadDynamicObjects(dynamicMeshNames, false);
                             }
                             EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
                         }
