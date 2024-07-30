@@ -179,8 +179,8 @@ namespace Cognitive3D
             ////////////////////////
             if (GUI.Button(new Rect(85, 510, 220, 30), new GUIContent("Export and upload all scenes")))
             {
+                selectedOnly = false;
                 exportNow = true;
-
             }
 
             ////////////////////////
@@ -188,7 +188,8 @@ namespace Cognitive3D
             ///////////////////////
             if (GUI.Button(new Rect(315, 510, 220, 30), new GUIContent("Export and upload selected scenes")))
             {
-
+                selectedOnly = true;
+                exportNow = true;
             }
         }
 
@@ -210,6 +211,7 @@ namespace Cognitive3D
             // Step 1: If export enabled, start
             if (exportNow)
             {
+                Debug.Log("@@ CALLING EXPORT, EXPORT DYNAMICS " + exportDynamics);
                 // If scene not opened, open it and move to next frame
                 if (!sceneOpened)
                 {
@@ -239,16 +241,36 @@ namespace Cognitive3D
                     SceneSetupWindow.SetupControllers();
                     gameObjectsSetupComplete = true;
                     return;
-                }    
-
-                // Step 4: If export dynamics enabled, export dynamics from this scene
-                if (exportDynamics)
-                {
-                    SceneSetupWindow.ExportAllDynamicsInScene();
                 }
 
-                // Step 5: Save, reset variables, exit
+                // Step 4: Export sceneException
+                string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+                var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
+                if (currentSettings == null)
+                {
+                    Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                }
+                ExportUtility.ExportGLTFScene();
+                string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                string path = EditorCore.GetSubDirectoryPath(fullName);
+
+                ExportUtility.GenerateSettingsFile(path, fullName);
+
+                DebugInformationWindow.WriteDebugToFile(path + "debug.log");
+                EditorUtility.SetDirty(EditorCore.GetPreferences());
+
+                UnityEditor.AssetDatabase.SaveAssets();
+                EditorCore.RefreshSceneVersion(null);
+
+
+                // Step 5: Do the upload flow in SceneSetupWindow
+                // In this case, we are using a single checkbox to determine upload dynamics from scene AND exports folder
+                SceneSetupWindow.UploadSceneAndDynamics(exportDynamics, exportDynamics, true, true, false);
+
+
+                // Step 6: Save, reset variables, exit
                 EditorSceneManager.SaveOpenScenes();
+                EditorCore.RefreshSceneVersion(null);
                 sceneOpened = false;
                 sceneIndex++;
                 return;
