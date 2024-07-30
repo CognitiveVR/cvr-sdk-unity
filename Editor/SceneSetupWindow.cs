@@ -1722,7 +1722,7 @@ namespace Cognitive3D
                     // Fifth: upload manifest
                     System.Action completedRefreshSceneVersion = delegate
                     {
-                        if (UploadDynamicMeshes)
+                        if (UploadDynamicMeshes || ExportDynamicMeshesInScene)
                         {
                             //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
                             AggregationManifest manifest = new AggregationManifest();
@@ -1743,6 +1743,12 @@ namespace Cognitive3D
                             if (ExportDynamicMeshesInScene)
                             {
                                 ExportAllDynamicsInScene();
+                                List <string> dynamicMeshNames = new List<string>();
+                                foreach (var dyn in dynamicObjectsInScene)
+                                {
+                                    dynamicMeshNames.Add(dyn.MeshName);
+                                }
+                                ExportUtility.UploadDynamicObjects(dynamicMeshNames, false);
                             }
                             EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
                         }
