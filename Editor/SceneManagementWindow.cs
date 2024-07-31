@@ -70,6 +70,27 @@ namespace Cognitive3D
 
         bool isUploading = false;
 
+        internal enum SceneManagementUploadState
+        {
+            /// <summary>
+            /// We start here <br/>
+            /// If target scene is open, we move to scene setup <br/>
+            /// Otherwise, we open scene, and then move to scene setup
+            /// </summary>
+            Init,
+   
+            SceneSetup,
+            GameObjectSetup,
+            Export,
+            StartUpload,
+            Uploading,
+            Complete
+        };
+
+        internal SceneManagementUploadState sceneUploadState = SceneManagementUploadState.Init;
+
+
+
         internal static void Init()
         {
             // Only search "Assets/" - don't search Packages/
@@ -187,6 +208,7 @@ namespace Cognitive3D
             {
                 selectedOnly = false;
                 exportNow = true;
+                sceneUploadState = SceneManagementUploadState.Init;
             }
 
             ////////////////////////
@@ -196,9 +218,17 @@ namespace Cognitive3D
             {
                 selectedOnly = true;
                 exportNow = true;
+                sceneUploadState = SceneManagementUploadState.Init;
             }
         }
 
+        internal bool IsSceneOpen(string scenePath)
+        {
+            return EditorSceneManager.GetActiveScene().path == scenePath;
+        }
+
+
+        int frame = 0;
         /// <summary>
         /// This function defines a state machine
         /// We are unable to use coroutines here, so we rely on Update
@@ -214,80 +244,89 @@ namespace Cognitive3D
                 return;
             }
 
-            // Step 1: If export enabled, start
             if (exportNow)
             {
-                // If scene not opened, open it and move to next frame
-                if (!sceneOpened)
+                frame++;
+                Debug.Log("@@ STARTED EXPORT, " + frame + "  " + sceneUploadState);
+                switch (sceneUploadState)
                 {
-                    SceneEntry sceneEntry = entries[sceneIndex];
-                    EditorSceneManager.OpenScene(sceneEntry.path);
-                    sceneOpened = true;
-                    return;
-                }
-
-                // Step 2: If scene is open, set it up
-                if (sceneOpened && !isUploading)
-                {
-                    // Instantiate and setup C3D_Manager if doesn't exist
-                    if (!FindObjectOfType<Cognitive3D_Manager>())
-                    {
-                        SceneSetupWindow.PerformBasicSetup();
-                        gameObjectsSetupComplete = false;
-                        EditorSceneManager.SaveOpenScenes();
+                    // If required scene isn't open, open it
+                    case SceneManagementUploadState.Init:
+                        if (EditorSceneManager.GetActiveScene().path == entries[sceneIndex].path)
+                        {
+                            sceneUploadState = SceneManagementUploadState.SceneSetup;
+                        }
+                        else
+                        {
+                            SceneEntry sceneEntry = entries[sceneIndex];
+                            EditorSceneManager.OpenScene(sceneEntry.path);
+                            sceneUploadState = SceneManagementUploadState.SceneSetup;
+                        }
                         return;
-                    }
-                }
 
-                // Step 3: In the next frame, assign dynamic objects to the controllers
-                if (!gameObjectsSetupComplete && !isUploading)
-                {
-                    EditorSceneManager.SaveOpenScenes();
-                    SceneSetupWindow.SetupControllers();
-                    gameObjectsSetupComplete = true;
-                    return;
-                }
+                    // Instantiate and setup C3D_Manager if it doesn't exist
+                    case SceneManagementUploadState.SceneSetup:
+                        if (!FindObjectOfType<Cognitive3D_Manager>())
+                        {
+                            SceneSetupWindow.PerformBasicSetup();
+                            gameObjectsSetupComplete = false;
+                            EditorSceneManager.SaveOpenScenes();
+                        }
+                        sceneUploadState = SceneManagementUploadState.GameObjectSetup;
+                        return;
 
-                // Step 4: Export scene
-                if (!readyToUpload && !isUploading)
-                {
-                    string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
-                    var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
-                    if (currentSettings == null)
-                    {
-                        Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-                    }
-                    ExportUtility.ExportGLTFScene();
-                    string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                    string path = EditorCore.GetSubDirectoryPath(fullName);
-                    ExportUtility.GenerateSettingsFile(path, fullName);
+                    // Assign dynamics to controllers
+                    case SceneManagementUploadState.GameObjectSetup:
+                        EditorSceneManager.SaveOpenScenes();
+                        SceneSetupWindow.SetupControllers();
+                        sceneUploadState = SceneManagementUploadState.Export;
+                        return;
 
-                    DebugInformationWindow.WriteDebugToFile(path + "debug.log");
-                    EditorUtility.SetDirty(EditorCore.GetPreferences());
+                    // Export the scene
+                    case SceneManagementUploadState.Export:
 
-                    UnityEditor.AssetDatabase.SaveAssets();
-                    readyToUpload = true;
-                }
+                        string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+                        var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
 
-                // Step 5: Do the upload flow in SceneSetupWindow
-                // In this case, we are using a single checkbox to determine upload dynamics from scene AND exports folder
-                if (readyToUpload)
-                {
-                    completedUpload = false;
-                    SceneSetupWindow.UploadSceneAndDynamics(exportDynamics, exportDynamics, true, true, false);
-                    readyToUpload = false;
-                    isUploading = true;
-                }
+                        // If not in preferences, add it
+                        if (currentSettings == null)
+                        {
+                            Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                        }
 
-                // Step 6: Save, reset variables, exit
-                if (SceneSetupWindow.completedUpload)
-                {
-                    EditorSceneManager.SaveOpenScenes();
-                    sceneOpened = false;
-                    isUploading = false;
-                    sceneIndex++;
-                    SceneSetupWindow.completedUpload = false;
-                    return;
+                        ExportUtility.ExportGLTFScene();
+
+                        string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                        string path = EditorCore.GetSubDirectoryPath(fullName);
+                        ExportUtility.GenerateSettingsFile(path, fullName);
+                        DebugInformationWindow.WriteDebugToFile(path + "debug.log");
+                        EditorUtility.SetDirty(EditorCore.GetPreferences());
+                        UnityEditor.AssetDatabase.SaveAssets();
+
+                        sceneUploadState = SceneManagementUploadState.StartUpload;
+                        return;
+
+                    // 
+                    case SceneManagementUploadState.StartUpload:
+                        SceneSetupWindow.completedUpload = false;
+                        SceneSetupWindow.UploadSceneAndDynamics(exportDynamics, exportDynamics, true, true, false);
+                        sceneUploadState = SceneManagementUploadState.Uploading;
+                        return;
+
+                    case SceneManagementUploadState.Uploading:
+                        if (SceneSetupWindow.completedUpload)
+                        {
+                            sceneUploadState = SceneManagementUploadState.Complete;
+                        }
+                        return;
+
+                    // All done, clean up and move to next scene
+                    case SceneManagementUploadState.Complete:
+                        EditorSceneManager.SaveOpenScenes();
+                        SceneSetupWindow.completedUpload = false;
+                        sceneUploadState = SceneManagementUploadState.Init;
+                        sceneIndex++;
+                        return;
                 }
             }
         }
