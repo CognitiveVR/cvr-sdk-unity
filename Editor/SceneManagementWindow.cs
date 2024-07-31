@@ -15,11 +15,13 @@ namespace Cognitive3D
         {
             internal string path;
             internal bool selected;
+            internal bool shouldDisplay;
 
             internal SceneEntry(string pathToScene)
             {
                 path = pathToScene;
                 selected = false;
+                shouldDisplay = true;
             }
         }
 
@@ -87,6 +89,8 @@ namespace Cognitive3D
             }
         }
 
+        string temp;
+        string searchBarString = string.Empty;
         private void OnGUI()
         {
             // Basic GUI skin
@@ -98,24 +102,50 @@ namespace Cognitive3D
             GUI.Label(steptitlerect, "SCENES FOUND IN PROJECT: " + entries.Count, "image_centered");
 
             // Search bar
-            string searchBarString  = string.Empty;
             Rect searchBarRect = new Rect(100, 40, 400, 20);
-            string temp = GUI.TextField(searchBarRect, searchBarString, 64);
+            temp = GUI.TextField(searchBarRect, searchBarString, 64);
+
+            if (string.IsNullOrEmpty(temp))
+            {
+                foreach (var id in entries)
+                {
+                    id.shouldDisplay = true;
+                }
+            }
 
             // If search string exists, filter
             if (temp != string.Empty)
             {
-                // FilterList(temp);
+                FilterList(temp);
+                searchBarString = temp;
+            }
+            else if (searchBarString != temp)
+            {
+                searchBarString = temp;
+            }
+
+            int displayIndex = 0;
+            int visible = 0;
+            foreach (var entry in entries)
+            {
+                if (entry.shouldDisplay)
+                {
+                    visible++;
+                }
             }
 
             // Scroll area
-            Rect innerScrollSize = new Rect(30, 80, 520, 1000);
+            Rect innerScrollSize = new Rect(30, 80, 520, visible * 40);
             dynamicScrollPosition = GUI.BeginScrollView(new Rect(30, 80, 540, 360), dynamicScrollPosition, innerScrollSize, false, true, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar);
 
             for (int i = 0; i < entries.Count; i++)
             {
-                Rect rect = new Rect(31, i * 40 + 80, 538, 35);
-                DrawSceneEntry(entries[i], rect, i % 2 == 0);
+                if (entries[i].shouldDisplay)
+                {
+                    Rect rect = new Rect(31, displayIndex * 40 + 80, 538, 35);
+                    DrawSceneEntry(entries[i], rect, displayIndex % 2 == 0);
+                    displayIndex++;
+                }
             }
 
             GUI.EndScrollView();
@@ -168,7 +198,21 @@ namespace Cognitive3D
         /// <param name="filterQuery">A string of the parameters to filter on</param>
         private void FilterList(string filterQuery)
         {
+            // Copied from dynamicobjectswindow
 
+            if (filterQuery == null) { return; }
+            string compareString = filterQuery.ToLower(System.Globalization.CultureInfo.InvariantCulture);
+            foreach (var entry in entries)
+            {
+                if (entry == null) { continue; }
+                if (string.IsNullOrEmpty(entry.path)) { continue; }
+
+                entry.shouldDisplay = false;
+                if (entry.path.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(compareString))
+                {
+                    entry.shouldDisplay = true;
+                }
+            }
         }
 
         /// <summary>
