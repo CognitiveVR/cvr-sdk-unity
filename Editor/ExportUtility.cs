@@ -1857,7 +1857,7 @@ namespace Cognitive3D
         /// search through files for list of dynamic object meshes. if dynamics.name contains exported folder, upload
         /// can display popup warning. returns false if cancelled
         /// </summary>
-        static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
+        internal static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
 
