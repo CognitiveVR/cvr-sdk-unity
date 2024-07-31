@@ -19,12 +19,14 @@ namespace Cognitive3D
         string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
         string folderPath;
-        string currentFilePath;        
+        string currentFilePath;
+        string endSessionFilePath;   
 
         protected override void OnSessionBegin()
         {
             folderPath = Application.persistentDataPath + "/c3dlocal/CrashLogs";
             currentFilePath = folderPath + "/BackupCrashLog-" + (int)Util.Timestamp() + ".log";
+            endSessionFilePath = Application.persistentDataPath + "/c3dlocal/EndSession.log";
 
             try
             {
@@ -49,7 +51,7 @@ namespace Cognitive3D
             }
         }
 
-       private void OnPreSessionEnd()
+        private void OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnLevelLoaded -= SetTrackingScene;
             Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
@@ -84,7 +86,8 @@ namespace Cognitive3D
 
                 plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
-                    currentFilePath
+                    currentFilePath,
+                    endSessionFilePath
                 );
             }
         }
@@ -112,62 +115,94 @@ namespace Cognitive3D
         private void LogFileHasContent()
         {
             // Check if the folder exists
-            if (plugininstance != null && Directory.Exists(folderPath))
+            if (plugininstance != null)
             {
-                // Get all files in the folder
-                string[] files = Directory.GetFiles(folderPath);
-
-                if (files != null && files.Length > 0)
+                // Check crash logs
+                if (Directory.Exists(folderPath))
                 {
-                    foreach (string file in files)
-                    {
-                        // Read all lines from the log file
-                        string[] lines = System.IO.File.ReadAllLines(file);
+                    // Get all files in the folder
+                    string[] files = Directory.GetFiles(folderPath);
 
-                        // Check if line 6 exists for crash logs and is not null or empty
-                        if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
+                    if (files != null && files.Length > 0)
+                    {
+                        foreach (string file in files)
                         {
-                            // Reading time of crash from logfile
-                            string crashTimestamp; 
-                            if (lines.Length >= 7)
+                            // Read all lines from the log file
+                            string[] lines = System.IO.File.ReadAllLines(file);
+
+                            // Check if line 6 exists for crash logs and is not null or empty
+                            if (lines.Length >= 6 && !string.IsNullOrEmpty(lines[5]))
                             {
-                                crashTimestamp = Util.ExtractUnixTime(lines[6]);
+                                // Reading time of crash from logfile
+                                string crashTimestamp; 
+                                if (lines.Length >= 7)
+                                {
+                                    crashTimestamp = Util.ExtractUnixTime(lines[6]);
+                                }
+                                else
+                                {
+                                    crashTimestamp = Util.ExtractUnixTime(lines[5]);
+                                }
+
+                                plugininstance.Call("sendCrashEvents", 
+                                    lines[0],
+                                    lines[1],
+                                    lines[2],
+                                    crashTimestamp,
+                                    CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4])),
+                                    string.Join("\n", lines.Skip(5).ToArray()),
+                                    file
+                                );
+
+                                plugininstance.Call("sendCrashGaze", 
+                                    lines[0],
+                                    lines[1],
+                                    lines[2],
+                                    CognitiveStatics.PostGazeData(lines[3], int.Parse(lines[4]))
+                                );
+
+                                // If response code is 200, the file gets deleted (handled in plugin). Otherwise, send in future sessions
                             }
                             else
                             {
-                                crashTimestamp = Util.ExtractUnixTime(lines[5]);
-                            }
-
-                            plugininstance.Call("serializeCrashEvents", 
-                                lines[0],
-                                lines[1],
-                                lines[2],
-                                crashTimestamp,
-                                CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4])),
-                                string.Join("\n", lines.Skip(5).ToArray()),
-                                file
-                            );
-
-                            plugininstance.Call("serializeCrashGaze", 
-                                lines[0],
-                                lines[1],
-                                lines[2],
-                                CognitiveStatics.PostGazeData(lines[3], int.Parse(lines[4]))
-                            );
-
-                            // If response code is 200, the file gets deleted (handled in plugin). Otherwise, send in future sessions
-                        }
-                        else
-                        {
-                            // If it's not current session crash log file and has no crash logs, delete it
-                            if (currentFilePath != file)
-                            {
-                                // No crash logs
-                                plugininstance.Call("deleteLogFile", file);
+                                // If it's not current session crash log file and has no crash logs, delete it
+                                if (currentFilePath != file)
+                                {
+                                    // No crash logs
+                                    plugininstance.Call("deleteLogFile", file);
+                                }
                             }
                         }
                     }
                 }
+
+                // Check end session log
+                if (File.Exists(endSessionFilePath))
+                {
+                    // Read all lines from the log file
+                    string[] lines = System.IO.File.ReadAllLines(endSessionFilePath);
+
+                    if (lines.Length > 0)
+                    {
+                        plugininstance.Call("sendEndSessionEvents", 
+                            lines[0],
+                            lines[1],
+                            lines[2],
+                            CognitiveStatics.PostEventData(lines[3], int.Parse(lines[4]))
+                        );
+
+                        // If response code is 200, the file gets deleted (handled in plugin). Otherwise, send in future sessions
+                    }
+                }
+                else
+                {
+                    // File.Create(endSessionFilePath);
+                    plugininstance.Call("writeSessionDataIntoLogFile", 
+                        endSessionFilePath,
+                        false
+                    );
+                }
+                
             }
         }
 #endif   
