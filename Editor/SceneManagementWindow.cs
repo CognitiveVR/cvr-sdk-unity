@@ -231,6 +231,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(85, 510, 220, 30), new GUIContent("Export and upload all scenes")))
             {
                 selectedOnly = false;
+                sceneIndex = 0;
                 exportNow = true;
                 sceneUploadState = SceneManagementUploadState.Init;
             }
@@ -241,6 +242,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(315, 510, 220, 30), new GUIContent("Export and upload selected scenes")))
             {
                 selectedOnly = true;
+                sceneIndex = 0;
                 exportNow = true;
                 sceneUploadState = SceneManagementUploadState.Init;
             }
