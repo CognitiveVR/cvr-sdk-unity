@@ -91,6 +91,8 @@ namespace Cognitive3D
 
         string temp;
         string searchBarString = string.Empty;
+        bool allSelected = false;
+
         private void OnGUI()
         {
             // Basic GUI skin
@@ -100,6 +102,39 @@ namespace Cognitive3D
             // Title
             Rect steptitlerect = new Rect(0, 0, 600, 30);
             GUI.Label(steptitlerect, "SCENES FOUND IN PROJECT: " + entries.Count, "image_centered");
+
+            // Select All button
+            Rect toggleRect = new Rect(30, 36, 30, 30);
+            var toggleIcon = allSelected ? EditorCore.BoxCheckmark : EditorCore.BoxEmpty;
+            bool pressed = GUI.Button(toggleRect, toggleIcon, "image_centered");
+
+            if (pressed)
+            {
+                allSelected = !allSelected;
+                ToggleSelectAll(allSelected);
+
+                // IF TRUE SELECT ONLY THE VISIBLE ONES
+                if (allSelected)
+                {
+                    foreach (var entry in entries)
+                    {
+                        if (!entry.shouldDisplay)
+                        {
+                            entry.selected = false;
+                            continue;
+                        }
+                        
+                        entry.selected = true;
+                    }
+                }
+                else // IF FALSE DESELECT ALL
+                {
+                    foreach (var entry in entries)
+                    {
+                        entry.selected = false;
+                    }
+                }
+            }
 
             // Search bar
             Rect searchBarRect = new Rect(100, 40, 400, 20);
@@ -211,6 +246,17 @@ namespace Cognitive3D
                 if (entry.path.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(compareString))
                 {
                     entry.shouldDisplay = true;
+                }
+            }
+        }
+
+        private void ToggleSelectAll(bool select)
+        {
+            foreach (var entry in entries)
+            {
+                if (entry.shouldDisplay)
+                {
+                    entry.selected = select;
                 }
             }
         }
