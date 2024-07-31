@@ -401,6 +401,9 @@ namespace Cognitive3D
                         sceneUploadState = SceneManagementUploadState.Init;
                         sceneIndex++;
                         return;
+
+                    default:
+                        return;
                 }
             }
         }
