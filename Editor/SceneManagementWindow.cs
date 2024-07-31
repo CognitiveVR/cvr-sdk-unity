@@ -382,13 +382,13 @@ namespace Cognitive3D
 
                     // 
                     case SceneManagementUploadState.StartUpload:
-                        SceneSetupWindow.completedUpload = false;
+                        SceneSetupWindow.CompletedUpload = false;
                         SceneSetupWindow.UploadSceneAndDynamics(exportDynamics, exportDynamics, true, true, false);
                         sceneUploadState = SceneManagementUploadState.Uploading;
                         return;
 
                     case SceneManagementUploadState.Uploading:
-                        if (SceneSetupWindow.completedUpload)
+                        if (SceneSetupWindow.CompletedUpload)
                         {
                             sceneUploadState = SceneManagementUploadState.Complete;
                         }
@@ -397,7 +397,7 @@ namespace Cognitive3D
                     // All done, clean up and move to next scene
                     case SceneManagementUploadState.Complete:
                         EditorSceneManager.SaveOpenScenes();
-                        SceneSetupWindow.completedUpload = false;
+                        SceneSetupWindow.CompletedUpload = false;
                         sceneUploadState = SceneManagementUploadState.Init;
                         sceneIndex++;
                         return;

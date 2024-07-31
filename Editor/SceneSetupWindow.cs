@@ -51,7 +51,8 @@ namespace Cognitive3D
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
 
-        internal static bool completedUpload = false;
+        private static bool completedUpload = false;
+        internal static bool CompletedUpload { get => completedUpload; set => completedUpload = value; }
 
         internal static void Init()
         {
@@ -199,7 +200,7 @@ namespace Cognitive3D
                 _currentPage = value;
             }
         }
-        
+
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -1885,7 +1886,7 @@ namespace Cognitive3D
                     ExportUtility.UploadDynamicObjects(dynamicMeshNames, showPopups);
                 }
                 currentPage = Page.SetupComplete;
-                completedUpload = true;
+                CompletedUpload = true;
             };
 
             // Fifth: upload manifest
@@ -1990,7 +1991,7 @@ namespace Cognitive3D
                 }
             };
 
-            completedUpload = false;
+            CompletedUpload = false;
             EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
         }
 
