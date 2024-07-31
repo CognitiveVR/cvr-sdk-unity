@@ -52,24 +52,6 @@ namespace Cognitive3D
         /// </summary>
         int sceneIndex = 0;
 
-        /// <summary>
-        /// Set to false until scene opened in FSM <br/>
-        /// It is set back to false before the next iteration<br/>
-        /// </summary>
-        bool sceneOpened = false;
-
-        /// <summary>
-        /// Set to true once the controllers have dynamics attached to them <br/>
-        /// It is set back to false before the next iteration
-        /// </summary>
-        bool gameObjectsSetupComplete = false;
-
-        bool readyToUpload = false;
-
-        bool completedUpload = false;
-
-        bool isUploading = false;
-
         internal enum SceneManagementUploadState
         {
             /// <summary>
@@ -88,8 +70,6 @@ namespace Cognitive3D
         };
 
         internal SceneManagementUploadState sceneUploadState = SceneManagementUploadState.Init;
-
-
 
         internal static void Init()
         {
@@ -228,7 +208,6 @@ namespace Cognitive3D
         }
 
 
-        int frame = 0;
         /// <summary>
         /// This function defines a state machine
         /// We are unable to use coroutines here, so we rely on Update
@@ -246,8 +225,14 @@ namespace Cognitive3D
 
             if (exportNow)
             {
-                frame++;
-                Debug.Log("@@ STARTED EXPORT, " + frame + "  " + sceneUploadState);
+                // Skip scene if we want to export selected only and this scene isn't selected
+                if (selectedOnly && !entries[sceneIndex].selected)
+                {
+                    sceneIndex++;
+                    sceneUploadState = SceneManagementUploadState.Init;
+                    return;
+                }
+
                 switch (sceneUploadState)
                 {
                     // If required scene isn't open, open it
@@ -269,7 +254,6 @@ namespace Cognitive3D
                         if (!FindObjectOfType<Cognitive3D_Manager>())
                         {
                             SceneSetupWindow.PerformBasicSetup();
-                            gameObjectsSetupComplete = false;
                             EditorSceneManager.SaveOpenScenes();
                         }
                         sceneUploadState = SceneManagementUploadState.GameObjectSetup;
