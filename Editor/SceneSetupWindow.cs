@@ -332,7 +332,6 @@ namespace Cognitive3D
         {
             if (initialPlayerSetup) { return; }
             initialPlayerSetup = true;
-
             var camera = Camera.main;
             if (camera != null)
             {
@@ -734,10 +733,6 @@ namespace Cognitive3D
                 }
 
                 SetupControllers();
-                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
-                {
-                    trackingSpace.AddComponent<RoomTrackingSpace>();
-                }
 
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
@@ -829,6 +824,11 @@ namespace Cognitive3D
 
         public static void SetupControllers()
         {
+            if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
+            {
+                trackingSpace.AddComponent<RoomTrackingSpace>();
+            }
+
             if (leftcontroller != null && leftcontroller.GetComponent<DynamicObject>() == null)
             {
                 leftcontroller.AddComponent<DynamicObject>();

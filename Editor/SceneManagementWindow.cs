@@ -297,18 +297,16 @@ namespace Cognitive3D
 
                     // Instantiate and setup C3D_Manager if it doesn't exist
                     case SceneManagementUploadState.SceneSetup:
-                        if (!FindObjectOfType<Cognitive3D_Manager>())
-                        {
-                            SceneSetupWindow.PerformBasicSetup();
-                            EditorSceneManager.SaveOpenScenes();
-                        }
+                        SceneSetupWindow.PerformBasicSetup();
+                        EditorSceneManager.SaveOpenScenes();
                         sceneUploadState = SceneManagementUploadState.GameObjectSetup;
                         return;
 
                     // Assign dynamics to controllers
                     case SceneManagementUploadState.GameObjectSetup:
-                        EditorSceneManager.SaveOpenScenes();
+                        SceneSetupWindow.Init();
                         SceneSetupWindow.SetupControllers();
+                        EditorSceneManager.SaveOpenScenes();
                         sceneUploadState = SceneManagementUploadState.Export;
                         return;
 
