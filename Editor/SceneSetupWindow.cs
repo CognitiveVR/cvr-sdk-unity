@@ -304,13 +304,18 @@ namespace Cognitive3D
 
 #region Controllers
 
-        GameObject leftcontroller;
-        GameObject rightcontroller;
-        GameObject mainCameraObject;
-        GameObject trackingSpace;
+        internal GameObject leftcontroller;
+        internal GameObject rightcontroller;
+        internal GameObject mainCameraObject;
+        internal GameObject trackingSpace;
 
         [System.NonSerialized]
         bool initialPlayerSetup;
+
+        internal GameObject GetLeftController()
+        {
+            return leftcontroller;
+        }
 
         //called once when entering controller update page. finds/sets expected defaults
         void PlayerSetupStart()

@@ -9,7 +9,9 @@ namespace Cognitive3D
     internal class ProjectSetupWindow : EditorWindow
     {
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
-        internal static void Init()
+        static bool isTestMode;
+
+        internal static void Init(bool isTest = false)
         {
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
@@ -20,10 +22,11 @@ namespace Cognitive3D
             window.GetSelectedSDKs();
             window.currentPage = Page.Welcome;
 
+            isTestMode = isTest;
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        internal static void Init(Page page)
+        internal static void Init(Page page, bool isTest = false)
         {
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
@@ -34,10 +37,11 @@ namespace Cognitive3D
             window.LoadKeys();
             window.GetSelectedSDKs();
 
+            isTestMode = isTest;
             ExportUtility.ClearUploadSceneSettings();
         }
 
-        internal static void Init(Rect position)
+        internal static void Init(Rect position, bool isTest = false)
         {
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
@@ -49,6 +53,7 @@ namespace Cognitive3D
             window.GetSelectedSDKs();
             window.currentPage = Page.Welcome;
 
+            isTestMode = isTest;
             ExportUtility.ClearUploadSceneSettings();
         }
 
@@ -432,9 +437,9 @@ namespace Cognitive3D
         }
 
         Vector2 sdkScrollPos;
-        List<string> selectedsdks = new List<string>();
+        internal List<string> selectedsdks = new List<string>();
 
-        class SDKDefine
+        internal class SDKDefine
         {
             public string Name;
             public string Define;
@@ -447,7 +452,7 @@ namespace Cognitive3D
             }
         }
 
-        readonly List<SDKDefine> SDKNamesDefines = new List<SDKDefine>
+        internal readonly List<SDKDefine> SDKNamesDefines = new List<SDKDefine>
         {
             new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
             new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
@@ -562,7 +567,7 @@ namespace Cognitive3D
 
         void SelectSDKUpdate()
         {
-            if (!hasDoneSDKRecommendation)
+            if (!hasDoneSDKRecommendation && !isTestMode)
             {
                 hasDoneSDKRecommendation = true;
                 if (!EditorCore.HasC3DDefine())
@@ -594,7 +599,7 @@ namespace Cognitive3D
                     content.tooltip = SDKNamesDefines[i].Tooltip;
                 }
 
-                if (GUI.Button(new Rect(30, i * 32+ separator, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
+                if (GUI.Button(new Rect(30, i * 32 + separator, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
                 {
                     if (selected)
                     {
