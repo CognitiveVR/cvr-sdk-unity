@@ -250,6 +250,24 @@ namespace Cognitive3D
                     SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
                 }
             );
+
+#if UNITY_ANDROID
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "The minimum Android API level is below 30. The minimum recommended level is 30 to ensure full support for Cognitive3D android plugin features and functionality.",
+                fixmessage: "The minimum Android API level is 30 or higher.",
+                checkAction: () =>
+                {
+                    return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel30;
+                },
+                fixAction: () =>
+                {
+                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
+                }
+            );
+#endif
 #if C3D_OCULUS
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
