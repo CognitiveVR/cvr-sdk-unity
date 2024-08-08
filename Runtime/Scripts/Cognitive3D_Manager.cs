@@ -731,11 +731,23 @@ namespace Cognitive3D
             if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
-            new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // if android plugin is initialized or Android platform is not used, send end session event from plugin. Otherwisr, send it from unity
+            if (AndroidPlugin.isInitialized)
+            {
+                AndroidPlugin.WantsToQuit();
+            }
+            else
+#endif
+            {
+                new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
                     { "Reason", "Quit from within app" },
                     { "sessionlength", playtime }
                 }).Send();
+            }
+        
             StartCoroutine(SlowQuit());
             return false;
         }

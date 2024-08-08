@@ -268,6 +268,7 @@ namespace Cognitive3D
                 }
             );
 #endif
+
 #if C3D_OCULUS
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 

@@ -14,19 +14,20 @@ namespace Cognitive3D
     public class AndroidPlugin : AnalyticsComponentBase
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        AndroidJavaObject plugin;
-        AndroidJavaObject plugininstance;
+        internal static bool isInitialized;
+        static AndroidJavaObject plugin;
+        static AndroidJavaObject plugininstance;
         string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
         string folderPath;
         string currentFilePath;
-        string endSessionFilePath;   
+        string previousSessionFilePath;
 
         protected override void OnSessionBegin()
         {
             folderPath = Application.persistentDataPath + "/c3dlocal/CrashLogs";
             currentFilePath = folderPath + "/BackupCrashLog-" + (int)Util.Timestamp() + ".log";
-            endSessionFilePath = Application.persistentDataPath + "/c3dlocal/EndSession.log";
+            previousSessionFilePath = Application.persistentDataPath + "/c3dlocal/PreviousSessionData.log";
 
             try
             {
@@ -47,6 +48,7 @@ namespace Cognitive3D
             }
             catch (System.Exception e)
             {
+                isInitialized = false;
                 Debug.LogException(e);
             }
         }
@@ -87,8 +89,10 @@ namespace Cognitive3D
                 plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
                     currentFilePath,
-                    endSessionFilePath
+                    previousSessionFilePath
                 );
+
+                isInitialized = true;
             }
         }
 
@@ -176,11 +180,11 @@ namespace Cognitive3D
                     }
                 }
 
-                // Check end session log
-                if (File.Exists(endSessionFilePath))
+                // Check previous session log file
+                if (File.Exists(previousSessionFilePath))
                 {
                     // Read all lines from the log file
-                    string[] lines = System.IO.File.ReadAllLines(endSessionFilePath);
+                    string[] lines = System.IO.File.ReadAllLines(previousSessionFilePath);
 
                     if (lines.Length > 0)
                     {
@@ -192,18 +196,21 @@ namespace Cognitive3D
                         );
 
                         // If response code is 200, the file gets deleted (handled in plugin). Otherwise, send in future sessions
+                        return;
                     }
                 }
-                else
-                {
-                    // File.Create(endSessionFilePath);
-                    plugininstance.Call("writeSessionDataIntoLogFile", 
-                        endSessionFilePath,
-                        false
-                    );
-                }
-                
+
+                // Write current session data into a log file (used for next session)
+                plugininstance.Call("writeSessionDataIntoLogFile", 
+                    previousSessionFilePath,
+                    false
+                );
             }
+        }
+
+        internal static void WantsToQuit()
+        {
+            plugininstance.Call("sendEndSessionEvents");
         }
 #endif   
 
