@@ -15,8 +15,8 @@ namespace Cognitive3D
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         internal static bool isInitialized;
-        static AndroidJavaObject plugin;
-        static AndroidJavaObject plugininstance;
+        internal static AndroidJavaObject plugin;
+        internal static AndroidJavaObject plugininstance;
         string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
         string folderPath;
