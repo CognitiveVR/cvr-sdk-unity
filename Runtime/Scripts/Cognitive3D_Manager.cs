@@ -733,7 +733,7 @@ namespace Cognitive3D
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-            // if android plugin is initialized or Android platform is not used, send end session event from plugin. Otherwisr, send it from unity
+            // if android plugin is initialized or Android platform is used, send end session event from plugin. Otherwise, send it from unity
             if (AndroidPlugin.isInitialized)
             {
                 AndroidPlugin.WantsToQuit();
