@@ -40,5 +40,23 @@ namespace Cognitive3D
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 #endif
+
+public override string GetDescription()
+        {
+#if UNITY_ANDROID
+            return "Records Wi-Fi RSSI on Android devices, providing the received signal strength in dBm to indicate Wi-Fi connection quality. It is not functional during Unity Editor sessions.";
+#else
+            return "Wi-Fi signal stringth sensor can only be accessed when using the Android platform";
+#endif
+        }
+        
+        public override bool GetWarning()
+        {
+#if UNITY_ANDROID
+            return false;
+#else
+            return true;
+#endif
+        }
     }
 }
