@@ -1868,6 +1868,14 @@ namespace Cognitive3D
             return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
         }
 
+        /// <summary>
+        /// Upload exported scene and optionally, dynamics
+        /// </summary>
+        /// <param name="uploadExportedDynamics">If true, upload dynamics from export directory</param>
+        /// <param name="exportAndUploadDynamicsFromScene">If true, exports dynamics from scene, and uploads them</param>
+        /// <param name="uploadSceneGeometry">If true, upload scene geometry</param>
+        /// <param name="uploadThumbnail">If true, upload scene thumbnail</param>
+        /// <param name="showPopups">If true, show popups (use false for automation)</param>
         internal static void UploadSceneAndDynamics(bool uploadExportedDynamics, bool exportAndUploadDynamicsFromScene, bool uploadSceneGeometry, bool uploadThumbnail, bool showPopups = false)
         {
             System.Action completedmanifestupload = delegate

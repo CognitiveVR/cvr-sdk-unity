@@ -63,11 +63,34 @@ namespace Cognitive3D
             /// </summary>
             Init,
    
+            /// <summary>
+            /// Perform basic scene setup
+            /// </summary>
             SceneSetup,
+
+            /// <summary>
+            /// Sets up controllers
+            /// </summary>
             GameObjectSetup,
+
+            /// <summary>
+            /// Export Scene
+            /// </summary>
             Export,
+
+            /// <summary>
+            /// Begin upload process
+            /// </summary>
             StartUpload,
+
+            /// <summary>
+            /// Wait for upload to complete
+            /// </summary>
             Uploading,
+
+            /// <summary>
+            /// Complete process, cleanup
+            /// </summary>
             Complete
         };
 
@@ -384,13 +407,14 @@ namespace Cognitive3D
                     sceneUploadState = SceneManagementUploadState.StartUpload;
                     return;
 
-                // 
+                // Start upload process
                 case SceneManagementUploadState.StartUpload:
                     SceneSetupWindow.CompletedUpload = false;
                     SceneSetupWindow.UploadSceneAndDynamics(exportDynamics, exportDynamics, true, true, false);
                     sceneUploadState = SceneManagementUploadState.Uploading;
                     return;
 
+                // Wait for upload to finish
                 case SceneManagementUploadState.Uploading:
                     if (SceneSetupWindow.CompletedUpload)
                     {
