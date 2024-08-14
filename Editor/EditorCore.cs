@@ -2046,6 +2046,10 @@ namespace Cognitive3D
                 sb.Append(entry.id);
                 sb.Append("\",");
 
+                sb.Append("\"isController\":\"");
+                sb.Append(entry.isController);
+                sb.Append("\",");
+
                 sb.Append("\"mesh\":\"");
                 sb.Append(entry.mesh);
                 sb.Append("\",");
