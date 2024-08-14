@@ -9,8 +9,6 @@ using System.Collections.Generic;
     using Wave.Essence.Events;
 #endif
 
-using TMPro;
-
 /// <summary>
 /// Adds room size from VR boundary to the session properties
 /// Records room size as a sensor
@@ -38,20 +36,21 @@ namespace Cognitive3D.Components
         /// <summary>
         /// The threshold for minimum position (in metres) change to re-record boundary points
         /// </summary>
-        private readonly float TRACKING_SPACE_POSITION_THRESHOLD = 0.1f;
+        private readonly float TRACKING_SPACE_POSITION_THRESHOLD = 0.01f;
 
         /// <summary>
         /// The threshold for minimum rotation (in degrees) change to re-record boundary points
         /// </summary>
         private readonly float TRACKING_SPACE_ROTATION_THRESHOLD = 5f;
 
+        private bool didRecordInitialTrackingSpace = false;
+
+        private bool didRecordInitialBoundaryShape = false;
+
         //counts up the deltatime to determine when the interval ends
         float currentTime;
 
         public GameObject post;
-        public TextMeshPro trackingPos;
-        public TextMeshPro boolText;
-        public TextMeshPro message;
 
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
@@ -67,18 +66,11 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
 
             // Get initial values of boundary and tracking space
             currentBoundaryPoints = GetCurrentBoundaryPoints();
             previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-            lastRecordedTrackingSpacePosition = trackingSpace.position;
-            lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
-            CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-            CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-            trackingPos.text = trackingSpace.position.ToString();
 
             // We want to intialize the string builder to a size appropriate for the number of points
             // This number might change if the participant redraws boundary, so we are adding a grace extension
@@ -87,7 +79,6 @@ namespace Cognitive3D.Components
             if (currentBoundaryPoints != null)
             {
                 CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
-                CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
             }
 
             CalculateAndRecordRoomsize(false, false);
@@ -117,34 +108,36 @@ namespace Cognitive3D.Components
         private void Cognitive3D_Manager_OnTick()
         {
             trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-            if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
+            
+            if (!didRecordInitialBoundaryShape)
+            {
+                CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+                didRecordInitialBoundaryShape = true;
+            }
+            
+            if (!didRecordInitialTrackingSpace)
+            {
+                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+                lastRecordedTrackingSpacePosition = trackingSpace.position;
+                lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
+                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+                didRecordInitialTrackingSpace = true;
+            }
+            else if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
                     || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if tracking space moved enough
             {
                 CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
                 CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-                message.text = "Adding to dict, " + Cognitive3D_Manager.Instance.trackingSpace.position.ToString();
-                trackingPos.text = trackingSpace.position.ToString();
                 lastRecordedTrackingSpacePosition = trackingSpace.position;
                 lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
-                boolText.text = "TRUE";
             }
-            else
-            {
-                boolText.text = "FALSE";
-            }
-        }
 
-        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
-        {
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
-                currentTime += deltaTime;
-                if (currentTime > BoundaryTrackingInterval)
-                {
-                    currentTime = 0;
 
 #if C3D_VIVEWAVE
 
@@ -173,7 +166,6 @@ namespace Cognitive3D.Components
                     }
                     SendEventIfUserExitsBoundary();
 #endif
-                }
             }
             else
             {
@@ -572,7 +564,6 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
 
