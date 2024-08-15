@@ -62,7 +62,7 @@ namespace Cognitive3D
                         foreach (var id in pool.Ids)
                         {
                             //TODO pools need a reference to a gameobject to aggregate data correctly
-                            /// NOTE: These objects will be treated as NOT CONTROLLERS
+                            /// NOTE: These will be treated as NOT CONTROLLERS
                             manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(pool.PrefabName, pool.MeshName, id, false,
                                 new float[3] { 1, 1, 1 },
                                 new float[3] { 0, 0, 0 },
