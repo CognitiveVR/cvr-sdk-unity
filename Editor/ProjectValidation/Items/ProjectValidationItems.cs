@@ -318,7 +318,7 @@ namespace Cognitive3D
                 }
             );
 
-            OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
+            OVRProjectConfig projectConfig = OVRProjectConfig.CachedProjectConfig;
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
