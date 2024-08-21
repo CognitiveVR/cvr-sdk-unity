@@ -1571,7 +1571,7 @@ namespace Cognitive3D.Serialization
                 File.AppendAllText(path, "Adding tracking space: " + kvp.Value.pos.x + " " + kvp.Value.pos.y + " " + kvp.Value.pos.z + "\n");
                 double timestamp = kvp.Key;
                 boundarybuilder.Append("{");
-                JsonUtil.SetDouble("time", (int)timestamp, boundarybuilder);
+                JsonUtil.SetDouble("time", timestamp, boundarybuilder);
                 boundarybuilder.Append(",");
                 JsonUtil.SetVector("p",
                     new float[] { kvp.Value.pos.x, kvp.Value.pos.y, kvp.Value.pos.z },
@@ -1633,7 +1633,7 @@ namespace Cognitive3D.Serialization
             /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
-            JsonUtil.SetDouble("time", (int)SessionTimestamp, boundarybuilder);
+            JsonUtil.SetDouble("time", SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
             

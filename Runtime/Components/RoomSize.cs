@@ -50,17 +50,9 @@ namespace Cognitive3D.Components
         //counts up the deltatime to determine when the interval ends
         float currentTime;
 
-        public GameObject post;
-
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
 #endif
-
-        private GameObject[] posts;
-        GameObject post1;
-        GameObject post2;
-        GameObject post3;
-        GameObject post4;
 
         protected override void OnSessionBegin()
         {
@@ -84,21 +76,6 @@ namespace Cognitive3D.Components
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref lastRoomSize);
             WriteRoomSizeAsSessionProperty(lastRoomSize);
-
-            post1 = Instantiate(post, Vector3.zero, Quaternion.identity);
-            post2 = Instantiate(post, Vector3.zero, Quaternion.identity);
-            post3 = Instantiate(post, Vector3.zero, Quaternion.identity);
-            post4 = Instantiate(post, Vector3.zero, Quaternion.identity);
-
-            post1.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
-            post2.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
-            post3.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
-            post4.transform.parent = Cognitive3D_Manager.Instance.trackingSpace.transform;
-
-            post1.transform.localPosition = previousBoundaryPoints[0];
-            post2.transform.localPosition = previousBoundaryPoints[1];
-            post3.transform.localPosition = previousBoundaryPoints[2];
-            post4.transform.localPosition = previousBoundaryPoints[3];
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -124,7 +101,7 @@ namespace Cognitive3D.Components
                 CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
                 didRecordInitialTrackingSpace = true;
             }
-            else if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD
+            else if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD * TRACKING_SPACE_POSITION_THRESHOLD
                     || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if tracking space moved enough
             {
                 CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
@@ -157,10 +134,6 @@ namespace Cognitive3D.Components
                     if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                     {
                         previousBoundaryPoints = currentBoundaryPoints;
-                        post1.transform.localPosition = previousBoundaryPoints[0];
-                        post2.transform.localPosition = previousBoundaryPoints[1];
-                        post3.transform.localPosition = previousBoundaryPoints[2];
-                        post4.transform.localPosition = previousBoundaryPoints[3];
                         CalculateAndRecordRoomsize(true, true);
                         CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
                     }
