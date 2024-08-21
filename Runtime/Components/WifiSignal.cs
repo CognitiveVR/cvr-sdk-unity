@@ -11,7 +11,6 @@ namespace Cognitive3D
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         int prevRSSI;
-        int lastRSSI;
 
         protected override void OnSessionBegin()
         {
@@ -24,12 +23,13 @@ namespace Cognitive3D
         {
             if (AndroidPlugin.isInitialized && AndroidPlugin.plugininstance != null)
             {
-                lastRSSI = AndroidPlugin.plugininstance.Call<int>("getWifiSignalStrength");
+                var currentRSSI = AndroidPlugin.plugininstance.Call<int>("getWifiSignalStrength");
 
-                if (lastRSSI != prevRSSI)
+                // Sends sensor data on change
+                if (currentRSSI != prevRSSI)
                 {
-                    SensorRecorder.RecordDataPoint("WifiRSSI", lastRSSI);
-                    prevRSSI = lastRSSI;
+                    SensorRecorder.RecordDataPoint("WifiRSSI", currentRSSI);
+                    prevRSSI = currentRSSI;
                 }
             }
         }
@@ -46,7 +46,7 @@ public override string GetDescription()
 #if UNITY_ANDROID
             return "Records Wi-Fi RSSI on Android devices, providing the received signal strength in dBm to indicate Wi-Fi connection quality. It is not functional during Unity Editor sessions.";
 #else
-            return "Wi-Fi signal stringth sensor can only be accessed when using the Android platform";
+            return "Wi-Fi signal strength sensor can only be accessed when using the Android platform";
 #endif
         }
         
