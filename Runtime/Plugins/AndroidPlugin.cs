@@ -22,21 +22,26 @@ namespace Cognitive3D
         string folderPath;
         string currentFilePath;
         string previousSessionFilePath;
+        string writeDataFilePath;
+
+        ICache runtimeCache;
 
         protected override void OnSessionBegin()
         {
             folderPath = Application.persistentDataPath + "/c3dlocal/CrashLogs";
             currentFilePath = folderPath + "/BackupCrashLog-" + (int)Util.Timestamp() + ".log";
             previousSessionFilePath = Application.persistentDataPath + "/c3dlocal/PreviousSessionData.log";
+            writeDataFilePath = Application.persistentDataPath + "/c3dlocal/data_write";
 
             try
             {
-
                 // Creating a folder for crash logs in local cache directory
                 if (!Directory.Exists(folderPath))
                 {
                     Directory.CreateDirectory(folderPath);
                 }
+
+                runtimeCache = Cognitive3D_Manager.DataCache;
 
                 CreateAndroidPluginInstance();
                 InitAndroidPlugin();
@@ -89,8 +94,12 @@ namespace Cognitive3D
                 plugininstance.Call("initAndroidPlugin", 
                     GetCurrentActivity(), 
                     currentFilePath,
-                    previousSessionFilePath
+                    previousSessionFilePath,
+                    writeDataFilePath
                 );
+
+                var pluginVersion = plugininstance.Call<string>("getAndroidPluginVersionInfo");
+                Cognitive3D_Manager.SetSessionProperty("c3d.app.androidPlugin.version", pluginVersion);
 
                 isInitialized = true;
             }
@@ -205,6 +214,17 @@ namespace Cognitive3D
                     previousSessionFilePath,
                     false
                 );
+            }
+        }
+
+        public void WriteIntoCache(string content)
+        {
+            if (runtimeCache == null) { return; }
+
+            if (runtimeCache.CanWrite(content))
+            {
+                //try to append to local cache file
+                runtimeCache.WriteContent(content);
             }
         }
 
