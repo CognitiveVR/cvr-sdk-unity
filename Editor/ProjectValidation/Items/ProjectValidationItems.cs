@@ -407,7 +407,7 @@ namespace Cognitive3D
                     {
                         if (_pxrRigs[0].GetComponent<DynamicObject>())
                         {
-                            Object.DestroyImmediate(_pxrRigs[0].GetComponent<DynamicObject>() as Object, true);
+                            Object.DestroyImmediate(_pxrRigs[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
                         }
                     }
                 }
@@ -482,7 +482,7 @@ namespace Cognitive3D
                     {
                         if (_waveRigs[0].GetComponent<DynamicObject>())
                         {
-                            Object.DestroyImmediate(_waveRigs[0].GetComponent<DynamicObject>() as Object, true);
+                            Object.DestroyImmediate(_waveRigs[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
                         }
                     }
                 }
