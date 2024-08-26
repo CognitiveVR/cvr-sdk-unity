@@ -16,10 +16,10 @@ namespace Cognitive3D
         {
             base.OnSessionBegin();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
         }
 
-        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        private void Cognitive3D_Manager_OnTick()
         {
             if (AndroidPlugin.isInitialized && AndroidPlugin.plugininstance != null)
             {
@@ -36,7 +36,7 @@ namespace Cognitive3D
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 #endif
