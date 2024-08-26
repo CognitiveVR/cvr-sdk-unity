@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using Object = UnityEngine.Object;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
@@ -173,7 +174,7 @@ namespace Cognitive3D
                     if (c3dScene != null)
                     {
                         // Load the asset at the C3D scene path
-                        UnityEngine.Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
+                        Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
                         return scene != null;
                     }
                     
@@ -312,7 +313,7 @@ namespace Cognitive3D
                     {
                         if (_ovrCameraRigs[0].GetComponent<DynamicObject>())
                         {
-                            UnityEngine.Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
+                            Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
                         }
                     }
                 }
@@ -563,7 +564,7 @@ namespace Cognitive3D
                         {
                             if (_xrorigins[0].GetComponent<DynamicObject>())
                             {
-                                UnityEngine.Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
+                                Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as Object, true);
                             }
                         }
                     }
@@ -629,7 +630,7 @@ namespace Cognitive3D
                         {
                             if (_cameraOffset[0].GetComponent<DynamicObject>())
                             {
-                                UnityEngine.Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
+                                Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as Object, true);
                             }
                         }
                     }

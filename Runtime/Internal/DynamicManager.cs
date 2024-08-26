@@ -660,7 +660,6 @@ namespace Cognitive3D
 
             if (forceWrite)
             {
-                System.Text.StringBuilder builder = new System.Text.StringBuilder(256);
 
                 if (ActiveDynamicObjectsArray[i].dirty || ActiveDynamicObjectsArray[i].HasProperties || !ActiveDynamicObjectsArray[i].hasEnabled || ActiveDynamicObjectsArray[i].remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
                 {
@@ -732,7 +731,7 @@ namespace Cognitive3D
                         ActiveDynamicObjectsArray[i].HasProperties = false;
                         ActiveDynamicObjectsArray[i].Properties = null;
                     }
-                    CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
+                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[i], props, writeScale, Util.Timestamp(Time.frameCount));
                 }
             }
         }
