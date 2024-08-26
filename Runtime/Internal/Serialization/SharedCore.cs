@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine; //for fixation calculations - don't want to break this right now
 using System.Threading; //for dynamic objects
-using System.Linq;
 using System.IO;
 
 
@@ -1633,7 +1632,7 @@ namespace Cognitive3D.Serialization
             /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
-            JsonUtil.SetDouble("time", SessionTimestamp, boundarybuilder);
+            JsonUtil.SetDouble("time", (int) SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
             

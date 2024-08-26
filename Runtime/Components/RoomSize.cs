@@ -22,7 +22,6 @@ namespace Cognitive3D.Components
     {
         Vector3[] previousBoundaryPoints = new Vector3[0];
         Vector3[] currentBoundaryPoints = new Vector3[0];
-        readonly float BoundaryTrackingInterval = 1;
         Vector3 lastRoomSize = new Vector3();
         Vector3 roomSize = new Vector3();
         bool isHMDOutsideBoundary;
@@ -42,10 +41,6 @@ namespace Cognitive3D.Components
         /// The threshold for minimum rotation (in degrees) change to re-record boundary points
         /// </summary>
         private readonly float TRACKING_SPACE_ROTATION_THRESHOLD = 5f;
-
-        private bool didRecordInitialTrackingSpace = false;
-
-        private bool didRecordInitialBoundaryShape = false;
 
         //counts up the deltatime to determine when the interval ends
         float currentTime;
@@ -73,6 +68,16 @@ namespace Cognitive3D.Components
                 CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * previousBoundaryPoints.Length));
             }
 
+            // Record initial boundary shape
+            CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+
+            // Record initial tracking space pos and rot
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            lastRecordedTrackingSpacePosition = trackingSpace.position;
+            lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
+            CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+            CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref lastRoomSize);
             WriteRoomSizeAsSessionProperty(lastRoomSize);
@@ -86,22 +91,7 @@ namespace Cognitive3D.Components
         {
             trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             
-            if (!didRecordInitialBoundaryShape)
-            {
-                CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
-                didRecordInitialBoundaryShape = true;
-            }
-            
-            if (!didRecordInitialTrackingSpace)
-            {
-                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-                lastRecordedTrackingSpacePosition = trackingSpace.position;
-                lastRecordedTrackingSpaceRotation = trackingSpace.rotation;
-                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-                didRecordInitialTrackingSpace = true;
-            }
-            else if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD * TRACKING_SPACE_POSITION_THRESHOLD
+            if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD * TRACKING_SPACE_POSITION_THRESHOLD
                     || Math.Abs(Vector3.Angle(lastRecordedTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD) // if tracking space moved enough
             {
                 CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);

@@ -18,8 +18,7 @@
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
         "PhotonUnityNetworking",
-        "PhotonRealtime",
-        "Unity.TextMeshPro"
+        "PhotonRealtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
