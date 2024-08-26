@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine; //for fixation calculations - don't want to break this right now
 using System.Threading; //for dynamic objects
-using System.IO;
-
 
 //this is on the far side of the interface - what actually serializes and returns data
 //might be written in c++ eventually. might be multithreaded
