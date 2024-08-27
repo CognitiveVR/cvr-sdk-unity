@@ -220,6 +220,12 @@ namespace Cognitive3D.Serialization
             return builder;
         }
 
+        /// <summary>
+        /// Writes an array of floats in the stringbuilder
+        /// </summary>
+        /// <param name="array">The array to write</param>
+        /// <param name="builder">A reference to the strinbuilder to write to</param>
+        /// <returns>The string builder that was written to</returns>
         public static StringBuilder SetArrayOfFloat(float[] array, StringBuilder builder)
         {
             builder.Append("[");
