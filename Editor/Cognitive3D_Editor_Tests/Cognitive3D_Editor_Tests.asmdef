@@ -1,0 +1,9 @@
+{
+    "name": "Cognitive3D_Editor_Tests",
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ]
+}
