@@ -1525,6 +1525,12 @@ namespace Cognitive3D.Serialization
         static List<KeyValuePair<double, Cognitive3D.Components.CustomTransform>> trackingSpaces = new List<KeyValuePair<double, Cognitive3D.Components.CustomTransform>>();
 
         /// <summary>
+        /// Threshold for tracking space count
+        /// Not in preferences; don't want users changing this
+        /// </summary>
+        static int BOUNDARY_SHAPE_COUNT_THRESHOLD = 5;
+
+        /// <summary>
         /// Initializes a json to hold the boundary points data
         /// This will be added to the gaze stream
         /// </summary>
@@ -1545,7 +1551,8 @@ namespace Cognitive3D.Serialization
         {
             if (!IsInitialized || transform == null) { return; }
             trackingSpaces.Add(new KeyValuePair<double, Cognitive3D.Components.CustomTransform>(timestamp, transform));
-            // File.AppendAllText(path, "RecordTrackingSpaceTransform");
+            
+            // Once we have more than threshold, serialize and send request
             if (trackingSpaces.Count > BoundaryThreshold)
             {
                 SerializeBoundaryShapes();
@@ -1564,8 +1571,17 @@ namespace Cognitive3D.Serialization
             if (points == null) { return; }
             if (points.Length == 0) { return; }
             boundaryShapes.Add(new KeyValuePair<double, object>(timestamp, points));
+            
+            // Once we have threshold of boundary shapes count, serialize and send request
+            if (boundaryShapes.Count > BOUNDARY_SHAPE_COUNT_THRESHOLD)
+            {
+                SerializeBoundaryShapes();
+            }
         }
 
+        /// <summary>
+        /// Constructs boundary json from internal lists and sends a web request
+        /// </summary>
         static void SerializeBoundaryShapes()
         {
             if (boundarybuilder == null) { return; }
