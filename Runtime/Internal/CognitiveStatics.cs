@@ -10,6 +10,7 @@ namespace Cognitive3D
     internal static class CognitiveStatics
     {
         private const string version = "0";
+        private const string META_SUBSCRIPTION_URL = "https://graph.oculus.com/application/subscriptions";
 
         //editor urls
         //GET dynamic object manifest
@@ -140,6 +141,28 @@ namespace Cognitive3D
         internal static string PostExitpollResponses(string questionsetname, int questionsetversion)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
+        }
+
+        /// <summary>
+        /// Creates the GET request endpoint with access token and search parameters
+        /// </summary>
+        /// <returns>The endpoint for meta subscription GET request</returns>
+        internal static string MetaSubscriptionContextEndpoint(string accessToken, List<string> queryParams)
+        {
+            string endpoint = META_SUBSCRIPTION_URL + "?access_token=" + accessToken;
+            if (queryParams.Count > 0)
+            {
+                endpoint += "&fields=";
+            }
+            for (int i = 0; i < queryParams.Count; i++)
+            {
+                endpoint += queryParams[i];
+                if (i < queryParams.Count - 1)
+                {
+                    endpoint += ",";
+                }
+            }
+            return endpoint;
         }
     }
 }

@@ -241,8 +241,11 @@ namespace Cognitive3D
                 if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                 {
                     List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
-                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                    UploadCustomIdForAggregation();
+                    bool uploadConfirmed = ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    if (uploadConfirmed)
+                    {
+                        UploadCustomIdForAggregation();
+                    }
                 }
                 EditorGUI.EndDisabledGroup();
 
@@ -323,7 +326,7 @@ namespace Cognitive3D
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
                     AggregationManifest manifest = new AggregationManifest();
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, dyn.IsController,
                         new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                         new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                         new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
@@ -338,7 +341,7 @@ namespace Cognitive3D
                     AggregationManifest manifest = new AggregationManifest();
                     for (int i = 0; i < dyn.IdPool.Ids.Length; i++)
                     {
-                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
+                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], dyn.IsController,
                             new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                             new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                             new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));

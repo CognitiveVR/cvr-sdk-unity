@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
+using System.Collections;
 
 
 //handles network requests at runtime
@@ -354,7 +355,6 @@ namespace Cognitive3D
         public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
         {
             string url = CognitiveStatics.PostExitpollResponses(questionSetName, questionSetVersion);
-
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
             request.method = "POST";
@@ -390,7 +390,7 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode);
+                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode + " \n"+ contents);
             lastDataResponse = (int)www.responseCode;
             if (callback != null)
             {
@@ -459,10 +459,28 @@ namespace Cognitive3D
                 currentDelay = minRetryDelay;
                 lastRequestFailed = false;
             }
-
-            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
         }
+
+        internal delegate void GetRequestSuccessCallback(string content);
+        internal void Get(string url, GetRequestSuccessCallback successCallback)
+        {
+            StartCoroutine(SendGetRequest(url, successCallback));
+        }
+
+        IEnumerator SendGetRequest(string url,GetRequestSuccessCallback successCallback)
+        {
+            var req = UnityWebRequest.Get(url);
+            yield return req.SendWebRequest();
+            if (req.responseCode == 200)
+            {
+                var data = req.downloadHandler.text;
+                successCallback(data);
+            }
+            else
+            {
+                Util.logError($"Error in GET request to get subscription. Error type: {req.responseCode.ToString()}");
+            }
+         }
 
         // Writing to cache
         private void WriteToCache(string url, string content)

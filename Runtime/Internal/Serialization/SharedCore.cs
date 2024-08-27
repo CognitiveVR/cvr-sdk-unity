@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine; //for fixation calculations - don't want to break this right now
 using System.Threading; //for dynamic objects
+using System;
 
 //this is on the far side of the interface - what actually serializes and returns data
 //might be written in c++ eventually. might be multithreaded
@@ -52,6 +53,13 @@ namespace Cognitive3D.Serialization
         static int SensorThreshold;
         static int FixationThreshold;
         static bool IsInitialized = false;
+
+        /// <summary>
+        /// Storing meta subscription context details as dictionary so we can serialize
+        /// </summary>
+        static List <List <KeyValuePair<string, object>>> metaSubscriptionDetails = new List <List <KeyValuePair<string, object>>>();
+
+        static bool readyToSerializeSubscriptionDetails = false;
 
         //TODO replace with a struct
         internal static void InitializeSettings(string sessionId, int eventThreshold, int gazeThreshold, int boundaryThreshold, int dynamicThreshold, int sensorThreshold, int fixationThreshold, double sessionTimestamp, string deviceId, System.Action<string, string, bool> webPost, System.Action<string> logAction, string hmdName)
@@ -252,6 +260,16 @@ namespace Cognitive3D.Serialization
 
             knownSessionProperties.Add(new KeyValuePair<string, object>(key, value));
             newSessionProperties.Add(new KeyValuePair<string, object>(key, value));
+        }
+
+        internal static void WriteSubscriptionDetailToDict(int index, List<KeyValuePair<string, object>> list)
+        {
+            metaSubscriptionDetails.Insert(index, list);
+        }
+
+        internal static void SetSubscriptionDetailsReady(bool ready)
+        {
+            readyToSerializeSubscriptionDetails = ready;
         }
 
         internal static void SetLobbyId(string lobbyid)
@@ -1443,6 +1461,43 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append(",");
 
             JsonUtil.SetString("formatversion", "1.0", gazebuilder);
+            if (readyToSerializeSubscriptionDetails)
+            {
+                if (metaSubscriptionDetails.Count > 0)
+                {
+                    // Write meta subscription details
+                    gazebuilder.Append(",");
+                    gazebuilder.Append("\"subscriptions\":{");
+
+                    for (int i = 0; i < metaSubscriptionDetails.Count; i++)
+                    {
+                        gazebuilder.Append("\"" + metaSubscriptionDetails[i][0].Value + "\":{");
+                        List<KeyValuePair<string, object>> thisSubscription = metaSubscriptionDetails[i];
+                        foreach (var kvp in thisSubscription)
+                        {
+                            if (kvp.Value.GetType() == typeof(string))
+                            {
+                                JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
+                            }
+                            else if (kvp.Value.GetType() == typeof(long))
+                            {
+                                JsonUtil.SetLong(kvp.Key, (long)kvp.Value, gazebuilder);
+                            }
+                            else
+                            {
+                                JsonUtil.SetObject(kvp.Key, kvp.Value, gazebuilder);
+                            }
+                            gazebuilder.Append(",");
+                        }
+                        gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+                        gazebuilder.Append("}"); // closing bracket
+                        gazebuilder.Append(",");
+                    }
+                    gazebuilder.Remove(gazebuilder.Length - 1, 1); //remove comma
+                    gazebuilder.Append("}"); // closing bracket
+                }
+                readyToSerializeSubscriptionDetails = false; // so that subscriptions don't get serialized again
+            }
 
             //TODO remove this reference to cognitive manager - this should be true when scene has changed - add a callback
             if (Cognitive3D_Manager.ForceWriteSessionMetadata) //if scene changed and haven't sent metadata recently
@@ -1758,38 +1813,41 @@ namespace Cognitive3D.Serialization
             //serialize each sensor into separate objects
             foreach (var k in CachedSnapshots.Keys)
             {
-                sb.Append("{");
-                JsonUtil.SetString("name", k, sb);
-                sb.Append(",");
-                if (sensorData.ContainsKey(k))
+                if (CachedSnapshots[k] != null && CachedSnapshots[k].Count !=0)
                 {
-                    JsonUtil.SetString("sensorHzLimitType", sensorData[k].Rate, sb);
+                    sb.Append("{");
+                    JsonUtil.SetString("name", k, sb);
                     sb.Append(",");
-                    if (sensorData[k].UpdateInterval >= 0.1f)
+                    if (sensorData.ContainsKey(k))
                     {
-                        JsonUtil.SetString("sensorHzLimited", "true", sb);
+                        JsonUtil.SetString("sensorHzLimitType", sensorData[k].Rate, sb);
+                        sb.Append(",");
+                        if (sensorData[k].UpdateInterval >= 0.1f)
+                        {
+                            JsonUtil.SetString("sensorHzLimited", "true", sb);
+                            sb.Append(",");
+                        }
+                    }
+
+                    //put each data point (already a timestamp/value pair) into an array
+                    sb.Append("\"data\":[");
+                    foreach (var v in CachedSnapshots[k])
+                    {
+                        sb.Append(v);
                         sb.Append(",");
                     }
-                }
 
-                //put each data point (already a timestamp/value pair) into an array
-                sb.Append("\"data\":[");
-                foreach (var v in CachedSnapshots[k])
-                {
-                    sb.Append(v);
+                    //remove last comma from data array
+                    if (CachedSnapshots[k].Count > 0)
+                    {
+                        sb.Remove(sb.Length - 1, 1);
+                    }
+
+                    //end object
+                    sb.Append("]");
+                    sb.Append("}");
                     sb.Append(",");
                 }
-
-                //remove last comma from data array
-                if (CachedSnapshots[k].Count > 0)
-                {
-                    sb.Remove(sb.Length - 1, 1);
-                }
-
-                //end object
-                sb.Append("]");
-                sb.Append("}");
-                sb.Append(",");
             }
 
             //remove last comma from the array of sensor objects

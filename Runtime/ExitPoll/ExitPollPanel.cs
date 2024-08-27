@@ -52,9 +52,7 @@ namespace Cognitive3D
 
         ExitPollSet QuestionSet;
 
-        float _remainingTime; //before timeout
         bool _isclosing; //has timed out/answered/skipped but still animating?
-        bool _allowTimeout; //used by microphone to disable timeout
 
         //used for sticky window - reposition window if player teleports
         Transform _root;
@@ -86,11 +84,6 @@ namespace Cognitive3D
             QuestionSet = questionset;
             PanelId = panelId;
             NextResponseTime = ResponseDelayTime + Time.time;
-
-            if (questionset.myparameters.UseTimeout)
-            {
-                _remainingTime = questionset.myparameters.Timeout;
-            }
 
             //display question from properties
 
@@ -181,7 +174,6 @@ namespace Cognitive3D
             }
 
             _isclosing = false;
-            _allowTimeout = true;
 
             StartCoroutine(_SetVisible(true));
         }
@@ -227,11 +219,6 @@ namespace Cognitive3D
                     group.spacing = Mathf.Lerp(MaximumSpacing, MinimumSpacing, (maxValue - minValue + 1) / (maxValue + 1f));
                 }
             }
-        }
-
-        void SetIntegerButtonColor(Image image, float gradientValue)
-        {
-            image.color = IntegerGradient.Evaluate(gradientValue);
         }
 
 #endregion
@@ -286,13 +273,6 @@ namespace Cognitive3D
             }
         }
 
-        //called from microphone button when recording starts
-        public void DisableTimeout()
-        {
-            _allowTimeout = false;
-            _remainingTime = QuestionSet.myparameters.Timeout;
-        }
-
         #region Updates
 
         IEnumerator CloseAfterWaitForSpecifiedTime(int seconds, int value)
@@ -303,14 +283,6 @@ namespace Cognitive3D
             Close();
         }        
         
-        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, string base64)
-        {
-            PanelRoot.gameObject.SetActive(false);
-            yield return new WaitForSeconds(seconds);
-            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64);
-            Close();
-        }
-
         void Update()
         {
             //don't activate anything if the question has already started closing
@@ -319,21 +291,6 @@ namespace Cognitive3D
             {
                 Close();
                 return;
-            }
-            if (QuestionSet.myparameters.UseTimeout && _allowTimeout)
-            {
-                if (_remainingTime > 0)
-                {
-                    if (NextResponseTime < Time.time)
-                    {
-                        _remainingTime -= Time.deltaTime;
-                    }
-                }
-                else
-                {
-                    Timeout();
-                    return;
-                }
             }
             if (QuestionSet.myparameters.StickWindow)
             {
@@ -418,6 +375,7 @@ namespace Cognitive3D
         #endregion
 
         #region Button Actions
+
         private bool lastBoolAnswer;
         private int lastIntAnswer;
         private string lastRecordedVoice;
@@ -431,56 +389,6 @@ namespace Cognitive3D
             StartCoroutine(CloseAfterWaitForSpecifiedTime(1, responseValue));
         }
 
-        // This will be called from the editor
-        // We have separate functions for positive and negative
-        //      because we can only pass in one argument, and we need to know the image to modify
-        public void AnswerBoolPositive(VirtualButton button)
-        {
-            positiveButton.SetSelect(true);
-            negativeButton.SetSelect(false);
-            lastBoolAnswer = true;
-            confirmButton.SetConfirmEnabled();
-        }
-
-        // This will be called from the editor
-        // We have separate functions for positive and negative
-        //      because we can only pass in one argument, and we need to know the image to modify
-        public void AnswerBoolNegative(VirtualButton button)
-        {
-            negativeButton.SetSelect(true);
-            positiveButton.SetSelect(false);
-            lastBoolAnswer = false;
-            confirmButton.SetConfirmEnabled();
-        }
-
-        public void ConfirmBoolAnswer()
-        {
-            AnswerBool(lastBoolAnswer);
-        }
-
-        //from scale, multiple choice buttons
-        public void AnswerInt(int value)
-        {
-            if (_isclosing) { return; }
-            confirmButton.SetConfirmEnabled();
-            lastIntAnswer = value;
-        }
-
-        public void ConfirmIntAnswer()
-        {
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, lastIntAnswer));
-        }
-        
-        public void SelectOption(VirtualButton button)
-        {
-            foreach (GameObject obj in AnswerButtons)
-            {
-                obj.GetComponentInChildren<VirtualButton>().SetSelect(false);
-            }
-            button.SetSelect(true);
-        }
-
-
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
         {
@@ -488,26 +396,6 @@ namespace Cognitive3D
             confirmButton.SetConfirmEnabled();
             lastRecordedVoice = base64wav;
         }
-
-        public void ConfirmMicrophoneAnswer()
-        {
-            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, lastRecordedVoice));
-        }
-
-        //closes the panel with an invalid number that won't be associated with an answer
-        public void CloseButton()
-        {
-            if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
-        }
-
-        //closes the panel with an invalid number that won't be associated with an answer
-        public void Timeout()
-        {
-            if (_isclosing) { return; }
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
-        }
-        #endregion
 
         //called from exitpoll when this panel needs to be cleaned up. does not set response in question set
         public void CloseError(int timeToWait = 1)
@@ -519,6 +407,101 @@ namespace Cognitive3D
         public void DisplayError(bool display)
         {
             errorMessage.gameObject.SetActive(display);
+        }
+
+        public void DisplayError(bool display, string errorText)
+        {
+            if (!string.IsNullOrEmpty(errorText))
+            {
+                errorMessage.text = errorText;
+            }
+            errorMessage.gameObject.SetActive(display);
+        }
+
+        // This will be called from the editor	
+        // We have separate functions for positive and negative	
+        //      because we can only pass in one argument, and we need to know the image to modify	
+        // DO NOT DELETE
+        public void AnswerBoolPositive(VirtualButton button)
+        {
+            positiveButton.SetSelect(true);
+            negativeButton.SetSelect(false);
+            lastBoolAnswer = true;
+            confirmButton.SetConfirmEnabled();
+        }
+
+        // This will be called from the editor	
+        // We have separate functions for positive and negative	
+        //      because we can only pass in one argument, and we need to know the image to modify
+        // DO NOT DELETE
+        public void AnswerBoolNegative(VirtualButton button)
+        {
+            negativeButton.SetSelect(true);
+            positiveButton.SetSelect(false);
+            lastBoolAnswer = false;
+            confirmButton.SetConfirmEnabled();
+        }
+
+        // DO NOT DELETE
+        public void ConfirmBoolAnswer()
+        {
+            AnswerBool(lastBoolAnswer);
+        }
+
+        // from scale, multiple choice buttons
+        // DO NOT DELETE	
+        public void AnswerInt(int value)
+        {
+            if (_isclosing) { return; }
+            confirmButton.SetConfirmEnabled();
+            lastIntAnswer = value;
+        }
+
+        // DO NOT DELETE
+        public void ConfirmIntAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, lastIntAnswer));
+        }
+
+        // DO NOT DELETE
+        public void SelectOption(VirtualButton button)
+        {
+            foreach (GameObject obj in AnswerButtons)
+            {
+                obj.GetComponentInChildren<VirtualButton>().SetSelect(false);
+            }
+            button.SetSelect(true);
+        }
+
+        // DO NOT DELETE
+        public void ConfirmMicrophoneAnswer()
+        {
+            StartCoroutine(CloseAfterWaitForSpecifiedTimeVoice(1, lastRecordedVoice));
+        }
+
+        // DO NOT DELETE
+        IEnumerator CloseAfterWaitForSpecifiedTimeVoice(int seconds, string base64)
+        {
+            PanelRoot.gameObject.SetActive(false);
+            yield return new WaitForSeconds(seconds);
+            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64);
+            Close();
+        }
+
+        #endregion
+
+        //closes the panel with an invalid number that won't be associated with an answer	
+        public void CloseButton()
+        {
+            if (_isclosing) { return; }
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
+        }
+
+        //closes the panel with an invalid number that won't be associated with an answer	
+        public void Timeout()
+        {
+            if (_isclosing) { return; }
+            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, short.MinValue));
         }
 
         //close the window visually. informing the question set has already been completed

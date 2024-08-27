@@ -43,6 +43,12 @@ namespace Cognitive3D
             }
         }
 
+        // 
+        internal static bool GetPreferencesFile()
+        {
+            return Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences") ? true : false;
+        }
+
         //static for faster access
         public const float SnapshotInterval = 0.1f;
         public static int S_GazeSnapshotCount;
@@ -109,7 +115,7 @@ namespace Cognitive3D
         public bool UploadCacheOnEndPlay = true;
 
         public bool IncludeDisabledDynamicObjects = true;
-        public int TextureResize = 1;
+        public int TextureResize = 2;
         public bool ExportSceneLODLowest = true;
 
         public List<SceneSettings> sceneSettings = new List<SceneSettings>();
@@ -140,6 +146,7 @@ namespace Cognitive3D
             newInstance.sceneSettings.Add(new SceneSettings(name, path));
         }
 
+        [Obsolete]
         public static SceneSettings FindScene(string sceneName)
         {
             return Instance.sceneSettings.Find(x => x.SceneName == sceneName);
@@ -168,7 +175,7 @@ namespace Cognitive3D
         [Serializable]
         public class SceneSettings
         {
-            public string SceneName = "";
+            public string SceneName = ""; //only used for editor display. not unique, do not use for logic
             [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
             public string SceneId = "";
             public string ScenePath = "";

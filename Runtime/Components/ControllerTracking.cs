@@ -154,10 +154,10 @@ namespace Cognitive3D.Components
             {
                 currentTime += deltaTime;
                 UpdateCooldownClock(deltaTime);
-                Transform rightControllerTransform;
                 Transform leftControllerTransform;
-                bool wasRightControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
-                bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
+                Transform rightControllerTransform;
+                bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
+                bool wasRightControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
                 
                 if (wasLeftControllerFound)
                 {

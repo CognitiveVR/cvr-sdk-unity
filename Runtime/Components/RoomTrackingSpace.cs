@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D
 {
     [DisallowMultipleComponent]
-    [AddComponentMenu("")]
+    [AddComponentMenu("Cognitive3D/Internal/Room Tracking Space")]
     public class RoomTrackingSpace : MonoBehaviour
     {
         public static event Action<int, Transform> TrackingSpaceChanged;
@@ -21,16 +21,19 @@ namespace Cognitive3D
         /// </summary>
         private void OnEnable()
         {
-            trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
-            cachedTrackingSpace = transform;
-
-            if (!Cognitive3D_Manager.IsInitialized)
+            if (Cognitive3D_Manager.Instance != null)
             {
-                Cognitive3D_Manager.OnSessionBegin += InvokeTrackingSpaceChanged;
-                return;
+                trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
+                cachedTrackingSpace = transform;
+
+                if (!Cognitive3D_Manager.IsInitialized)
+                {
+                    Cognitive3D_Manager.OnSessionBegin += InvokeTrackingSpaceChanged;
+                    return;
+                }
+
+                InvokeTrackingSpaceChanged();
             }
-            
-            InvokeTrackingSpaceChanged();
         }
 
         /// <summary>
