@@ -256,6 +256,7 @@ namespace Cognitive3D.Serialization
             }
             builder.Append("]");
             return builder;
+        }
 
         //escapes linebreaks in strings
         static string EscapeString(string input)
