@@ -177,21 +177,21 @@ namespace Cognitive3D
         /// <returns>The Custom Event object</returns>
         public CustomEvent AppendSensors()
         {
-            if (SensorRecorder.LastSensorValues.Count == 0) { Cognitive3D.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
+            if (SensorRecorder.sensorData.Count == 0) { Cognitive3D.Util.logWarning("Cannot SetSensors on Event - no Sensors recorded!"); return this; }
             if (_properties == null)
             {
                 _properties = new List<KeyValuePair<string, object>>();
 
                 //don't check for name collisions, since there are no previous properties
-                foreach (var sensor in SensorRecorder.LastSensorValues)
+                foreach (var sensor in SensorRecorder.sensorData)
                 {
-                    _properties.Add(new KeyValuePair<string, object>("c3d.sensor."+sensor.Key, sensor.Value));
+                    _properties.Add(new KeyValuePair<string, object>("c3d.sensor." + sensor.Key, sensor.Value.LastSensorValue));
                 }
                 return this;
             }
             int propertyCount = _properties.Count;
 
-            foreach(var sensor in SensorRecorder.LastSensorValues)
+            foreach(var sensor in SensorRecorder.sensorData)
             {
                 string key = "c3d.sensor." + sensor.Key;
                 bool foundExistingKey = false;
@@ -200,7 +200,7 @@ namespace Cognitive3D
                     if (_properties[i].Key == key)
                     {
                         //replace
-                        _properties[i] = new KeyValuePair<string, object>(key, sensor.Value);
+                        _properties[i] = new KeyValuePair<string, object>(key, sensor.Value.LastSensorValue);
                         foundExistingKey = true;
                         break;
                     }
@@ -208,7 +208,7 @@ namespace Cognitive3D
                 if (!foundExistingKey)
                 {
                     //add
-                    _properties.Add(new KeyValuePair<string, object>(key, sensor.Value));
+                    _properties.Add(new KeyValuePair<string, object>(key, sensor.Value.LastSensorValue));
                 }
             }
             return this;
