@@ -21,13 +21,13 @@ namespace Cognitive3D.Components
     public class RoomSize : AnalyticsComponentBase
     {
         /// <summary>
-        /// The previous list of coordinates describing the boundary
+        /// The previous list of coordinates (local to tracking space) describing the boundary <br/>
         /// Used for comparison to determine if the boundary changed
         /// </summary>
         Vector3[] previousBoundaryPoints = new Vector3[0];
 
         /// <summary>
-        /// The current (this frame) list of coordinates describing the boundary
+        /// The current (this frame) list of coordinates (local to tracking space) describing the boundary
         /// </summary>
         Vector3[] currentBoundaryPoints = new Vector3[0];
 
@@ -123,22 +123,22 @@ namespace Cognitive3D.Components
         /// </summary>
         private void Cognitive3D_Manager_OnTick()
         {
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-            
-            if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
-                    || Math.Abs(Vector3.Angle(previousTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES) // if tracking space moved enough
-            {
-                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-                lastRecordedTrackingSpacePosition = trackingSpace.position;
-                previousTrackingSpaceRotation = trackingSpace.rotation;
-            }
-
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
+                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+
+                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
+                        || Math.Abs(Vector3.Angle(previousTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES) // if tracking space moved enough
+                { 
+                    CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                    CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+                    lastRecordedTrackingSpacePosition = trackingSpace.position;
+                    previousTrackingSpaceRotation = trackingSpace.rotation;
+                }
+
 
 #if C3D_VIVEWAVE
 
@@ -154,14 +154,15 @@ namespace Cognitive3D.Components
                         isHMDOutsideBoundary = false;
                     }
 #else
-                    currentBoundaryPoints = GetCurrentBoundaryPoints();
-                    if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
-                    {
-                        previousBoundaryPoints = currentBoundaryPoints;
-                        CalculateAndRecordRoomsize(true, true);
-                        CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
-                    }
-                    SendEventIfUserExitsBoundary();
+                currentBoundaryPoints = GetCurrentBoundaryPoints();
+
+                if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
+                {
+                    previousBoundaryPoints = currentBoundaryPoints;
+                    CalculateAndRecordRoomsize(true, true);
+                    CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+                }
+                SendEventIfUserExitsBoundary();
 #endif
             }
             else
