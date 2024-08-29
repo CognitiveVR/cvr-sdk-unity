@@ -29,28 +29,31 @@ namespace Cognitive3D
             public string name;
             public string mesh;
             public string id;
+            public bool isController;
             public float[] scaleCustom = new float[] { 1, 1, 1 };
             public float[] position = new float[] { 0, 0, 0 };
             public float[] rotation = new float[] { 0, 0, 0, 1 };
-            public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom)
+            public AggregationManifestEntry(string _name, string _mesh, string _id, bool _isController, float[] _scaleCustom)
             {
                 name = _name;
                 mesh = _mesh;
                 id = _id;
+                isController = _isController;
                 scaleCustom = _scaleCustom;
             }
-            public AggregationManifestEntry(string _name, string _mesh, string _id, float[] _scaleCustom, float[] _position, float[] _rotation)
+            public AggregationManifestEntry(string _name, string _mesh, string _id, bool _isController, float[] _scaleCustom, float[] _position, float[] _rotation)
             {
                 name = _name;
                 mesh = _mesh;
                 id = _id;
+                isController = _isController;
                 scaleCustom = _scaleCustom;
                 position = _position;
                 rotation = _rotation;
             }
             public override string ToString()
             {
-                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id +
+                return "{\"name\":\"" + name + "\",\"mesh\":\"" + mesh + "\",\"id\":\"" + id + "\",\"isController\":\"" + isController +
                     "\",\"scaleCustom\":[" + scaleCustom[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + scaleCustom[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + scaleCustom[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) +
                     "],\"initialPosition\":[" + position[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + position[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + position[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) +
                     "],\"initialRotation\":[" + rotation[0].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + rotation[1].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + rotation[2].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "," + rotation[3].ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "]}";
@@ -76,6 +79,7 @@ namespace Cognitive3D
                     if (!string.IsNullOrEmpty(dynamic.MeshName))
                     {
                         objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),
+                            dynamic.IsController,
                             new float[] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z },
                             new float[] { dynamic.transform.position.x, dynamic.transform.position.y, dynamic.transform.position.z },
                             new float[] { dynamic.transform.rotation.x, dynamic.transform.rotation.y, dynamic.transform.rotation.z, dynamic.transform.rotation.w }));
@@ -1312,7 +1316,7 @@ namespace Cognitive3D
                             {
                                 foreach (var poolid in entry.poolReference.Ids)
                                 {
-                                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, new float[] { 1, 1, 1 }, new float[] { 0, 0, 0 }, new float[] { 0, 0, 0, 1 }));
+                                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(entry.poolReference.PrefabName, entry.poolReference.MeshName, poolid, entry.objectReference.IsController, new float[] { 1, 1, 1 }, new float[] { 0, 0, 0 }, new float[] { 0, 0, 0, 1 }));
                                 }
                             }
                         }
@@ -1354,7 +1358,7 @@ namespace Cognitive3D
                     //don't include meshes with empty mesh names in manifest
                     if (!string.IsNullOrEmpty(dynamic.MeshName))
                     {
-                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(),
+                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dynamic.gameObject.name, dynamic.MeshName, dynamic.CustomId.ToString(), dynamic.IsController,
                             new float[] { dynamic.transform.lossyScale.x, dynamic.transform.lossyScale.y, dynamic.transform.lossyScale.z },
                             new float[] { dynamic.transform.position.x, dynamic.transform.position.y, dynamic.transform.position.z },
                             new float[] { dynamic.transform.rotation.x, dynamic.transform.rotation.y, dynamic.transform.rotation.z, dynamic.transform.rotation.w }));

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using Object = UnityEngine.Object;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
@@ -173,7 +174,7 @@ namespace Cognitive3D
                     if (c3dScene != null)
                     {
                         // Load the asset at the C3D scene path
-                        UnityEngine.Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
+                        Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
                         return scene != null;
                     }
                     
@@ -250,6 +251,25 @@ namespace Cognitive3D
                     SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
                 }
             );
+
+#if UNITY_ANDROID
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "The minimum Android API level is below 30. The minimum recommended level is 30 to ensure full support for Cognitive3D android plugin features and functionality.",
+                fixmessage: "The minimum Android API level is 30 or higher.",
+                checkAction: () =>
+                {
+                    return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel30;
+                },
+                fixAction: () =>
+                {
+                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
+                }
+            );
+#endif
+
 #if C3D_OCULUS
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -293,13 +313,13 @@ namespace Cognitive3D
                     {
                         if (_ovrCameraRigs[0].GetComponent<DynamicObject>())
                         {
-                            UnityEngine.Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
+                            Object.DestroyImmediate(_ovrCameraRigs[0].GetComponent<DynamicObject>() as Object, true);
                         }
                     }
                 }
             );
 
-            OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
+            OVRProjectConfig projectConfig = OVRProjectConfig.CachedProjectConfig;
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
@@ -544,7 +564,7 @@ namespace Cognitive3D
                         {
                             if (_xrorigins[0].GetComponent<DynamicObject>())
                             {
-                                UnityEngine.Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
+                                Object.DestroyImmediate(_xrorigins[0].GetComponent<DynamicObject>() as Object, true);
                             }
                         }
                     }
@@ -610,7 +630,7 @@ namespace Cognitive3D
                         {
                             if (_cameraOffset[0].GetComponent<DynamicObject>())
                             {
-                                UnityEngine.Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as UnityEngine.Object, true);
+                                Object.DestroyImmediate(_cameraOffset[0].GetComponent<DynamicObject>() as Object, true);
                             }
                         }
                     }

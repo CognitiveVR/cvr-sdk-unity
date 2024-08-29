@@ -28,7 +28,7 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.5.3";
+        public static readonly string SDK_VERSION = "1.5.4";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -731,11 +731,23 @@ namespace Cognitive3D
             if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
-            new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // if android plugin is initialized or Android platform is used, send end session event from plugin. Otherwise, send it from unity
+            if (AndroidPlugin.isInitialized)
+            {
+                AndroidPlugin.WantsToQuit();
+            }
+            else
+#endif
+            {
+                new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
                 {
                     { "Reason", "Quit from within app" },
                     { "sessionlength", playtime }
                 }).Send();
+            }
+        
             StartCoroutine(SlowQuit());
             return false;
         }

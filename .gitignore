@@ -49,3 +49,6 @@ sysinfo.txt
 .DS_Store
 CognitiveVRUnity/Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset
 CognitiveVRUnity/Assets/CognitiveVR/Resources/CognitiveVR_Preferences.asset.meta
+
+# License .meta
+LICENSE.meta
