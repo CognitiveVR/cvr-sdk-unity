@@ -80,6 +80,14 @@ namespace Cognitive3D.Components
         bool didViveArenaChange;
 #endif
 
+
+        public GameObject post;
+
+        private GameObject post1;
+        private GameObject post2;
+        private GameObject post3;
+        private GameObject post4;
+
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -112,6 +120,18 @@ namespace Cognitive3D.Components
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref previousRoomSize);
             WriteRoomSizeAsSessionProperty(previousRoomSize);
+
+            // TEST: INSTANTIATE POSTS
+            post1 = Instantiate(post, Vector3.zero, Quaternion.identity);
+            post2 = Instantiate(post, Vector3.zero, Quaternion.identity);
+            post3 = Instantiate(post, Vector3.zero, Quaternion.identity);
+            post4 = Instantiate(post, Vector3.zero, Quaternion.identity);
+
+            // TEST: PARENT THE POSTS TO TRACKING SPACE
+            post1.transform.parent = trackingSpace;
+            post2.transform.parent = trackingSpace;
+            post3.transform.parent = trackingSpace;
+            post4.transform.parent = trackingSpace;
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -155,6 +175,13 @@ namespace Cognitive3D.Components
                     }
 #else
                 currentBoundaryPoints = GetCurrentBoundaryPoints();
+
+                // TEST: SET POSITIONS OF POLES
+                post1.transform.localPosition = currentBoundaryPoints[0];
+                post2.transform.localPosition = currentBoundaryPoints[1];
+                post3.transform.localPosition = currentBoundaryPoints[2];
+                post4.transform.localPosition = currentBoundaryPoints[3];
+
 
                 if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                 {
@@ -342,9 +369,9 @@ namespace Cognitive3D.Components
         {
             // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
             new CustomEvent("c3d.User changed boundary")
-            .SetProperty("Previous Room Size", previousRoomSize.x * previousRoomSize.z)
-            .SetProperty("New Room Size", roomSizeRef.x * roomSizeRef.z)
-            .Send();
+                .SetProperty("Previous Room Size", previousRoomSize.x * previousRoomSize.z)
+                .SetProperty("New Room Size", roomSizeRef.x * roomSizeRef.z)
+                .Send();
         }
 
         /// <summary>
@@ -379,6 +406,14 @@ namespace Cognitive3D.Components
                     // We have determined that a recenter causes change in boundary points without chaning the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
+                        // FIX TRACKING AND BOUNDARIES AGAIN
+                        // If recenter, tracking space gets xz pos of camera, and y rotation of camera
+                        CustomTransform recenteredTransform = new CustomTransform(
+                            new Vector3(GameplayReferences.HMD.position.x, trackingSpace.position.y, GameplayReferences.HMD.position.z),
+                            Quaternion.Euler(trackingSpace.rotation.x, GameplayReferences.HMD.rotation.y, trackingSpace.rotation.z));
+                        CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
+                        CoreInterface.RecordBoundaryShape(GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
+
                         if (recordRecenterAsEvent)
                         {
                             SendRecenterEvent();
