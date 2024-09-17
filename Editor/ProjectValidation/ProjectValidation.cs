@@ -241,6 +241,31 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Attempts to retrieve a list of controller names from the active scene.
+        /// If no controllers are found, the function returns false
+        /// </summary>
+        /// <param name="controllerNamesList">An output list of controller names if found</param>
+        /// <returns>Returns true if controllers are found, otherwise false</returns>
+        internal static bool TryGetControllers(out List<String> controllerNamesList)
+        {
+            controllerNamesList = new List<string>();
+            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
+            if (controllers == null)
+            {
+                return false;
+            }
+
+            foreach (var controller in controllers)
+            {
+                if (controller.IsController)
+                {
+                    controllerNamesList.Add(controller.name);
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Searches through game objects in active scene to find a component
         /// </summary>
         /// <typeparam name="T">Type of target component</typeparam>

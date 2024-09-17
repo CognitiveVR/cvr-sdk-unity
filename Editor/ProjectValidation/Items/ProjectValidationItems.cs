@@ -292,7 +292,7 @@ namespace Cognitive3D
                 {
                     string newMessage;
                     string oldMessage = "The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects.";
-                    if (TryGetControllers(out var _controllerNamesList))
+                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
                     {
                         if (_controllerNamesList.Count > 2)
                         {
@@ -319,7 +319,7 @@ namespace Cognitive3D
                 fixmessage: "Controllers are correctly set up in current scene",
                 checkAction: () =>
                 {
-                    if (TryGetControllers(out var _controllerNamesList))
+                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
                     {
                         return _controllerNamesList.Count >= 2;
                     }
@@ -813,31 +813,6 @@ namespace Cognitive3D
     #endif
 
 #endif
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a list of controller names from the active scene.
-        /// If no controllers are found, the function returns false
-        /// </summary>
-        /// <param name="controllerNamesList">An output list of controller names if found</param>
-        /// <returns>Returns true if controllers are found, otherwise false</returns>
-        internal static bool TryGetControllers(out List<String> controllerNamesList)
-        {
-            controllerNamesList = new List<string>();
-            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
-            if (controllers == null)
-            {
-                return false;
-            }
-
-            foreach (var controller in controllers)
-            {
-                if (controller.IsController)
-                {
-                    controllerNamesList.Add(controller.name);
-                }
-            }
-            return true;
         }
     }
 }
