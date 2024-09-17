@@ -64,6 +64,81 @@ namespace Cognitive3D
                 );
 
             ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No latest scene version is used.",
+                fixmessage: "Latest scene version is used.",
+                checkAction: () =>
+                {
+                    bool latestScene = true;
+                    string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+                    var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
+                    if (currentSettings != null)
+                    {
+                        string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
+                        Dictionary<string, string> headers = new Dictionary<string, string>
+                        {
+                            { "Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey }
+                        };
+
+                        string info = EditorNetwork.GetCallback(url, (responsecode, error, text) => 
+                        {
+                            var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+                            if (collection != null)
+                            {
+                                if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
+                                {
+                                    latestScene = false;
+                                }
+                            }
+                        }, headers, true, "Get Scene Version");
+                    }
+                    return latestScene;
+                },
+                fixAction: () =>
+                {
+                    EditorCore.RefreshSceneVersion(null);
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
+                message: "This scene not found on dashboard.",
+                fixmessage: "Use latest dashboard's scene version.",
+                checkAction: () =>
+                {
+                    bool latestScene = true;
+                    string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+                    var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
+                    if (currentSettings != null)
+                    {
+                        string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
+                        Debug.Log("Current url is " + url);
+                        Dictionary<string, string> headers = new Dictionary<string, string>();
+                        headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+                        EditorNetwork.Get(url, GetSceneVersionResponse, headers, true, "Get Scene Version");//AUTH
+
+                        void GetSceneVersionResponse(int responsecode, string error, string text)
+                        {
+                            // Debug.Log(responsecode + " text is " + text);
+                            if (responsecode != 200)
+                            {
+                                latestScene = false;
+                            }
+                        }
+                    }
+                    return latestScene;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+                );
+
+            ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.Edit,
