@@ -181,6 +181,19 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Reevaluates all validation items and updates their fixed status
+        /// </summary>
+        /// Save this function for later
+        public static void UpdateItemFixedStatus()
+        {
+            var items = ProjectValidation.registry.GetAllItems();
+            foreach (var item in items)
+            {
+                item.isFixed = item.checkAction();
+            }
+        }
+
+        /// <summary>
         /// Regenerates the validation item list by clearing the existing items and rebuilding the list
         /// </summary>
         public static void RegenerateItems()

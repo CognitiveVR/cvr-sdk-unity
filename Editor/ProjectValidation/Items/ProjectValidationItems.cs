@@ -814,19 +814,6 @@ namespace Cognitive3D
 
 #endif
         }
-        
-        /// <summary>
-        /// Reevaluates all validation items and updates their fixed status
-        /// </summary>
-        /// Save this function for later
-        public static void UpdateProjectValidationItemStatus()
-        {
-            var items = ProjectValidation.registry.GetAllItems();
-            foreach (var item in items)
-            {
-                item.isFixed = item.checkAction();
-            }
-        }
 
         /// <summary>
         /// Updates the message of a validation item that contain the specified message
