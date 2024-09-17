@@ -220,6 +220,14 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Resets project validation window GUI
+        /// </summary>
+        internal static void ResetGUI()
+        {
+            ProjectValidationGUI.Reset();
+        }
+
+        /// <summary>
         /// Resets ignored <see cref="ProjectValidationItem"/> items
         /// </summary>
         internal static void ResetIgnoredItems()

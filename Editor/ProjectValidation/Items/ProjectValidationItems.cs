@@ -41,7 +41,7 @@ namespace Cognitive3D
 
             AddProjectValidationItems();
             ProjectValidation.SetIgnoredItemsFromLog();
-            ProjectValidationGUI.Reset();
+            ProjectValidation.ResetGUI();
         }
 
         /// <summary>

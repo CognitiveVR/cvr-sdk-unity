@@ -59,7 +59,7 @@ namespace Cognitive3D
         public void OnPostprocessBuild(BuildReport report)
         {
             ProjectValidationItems.DelayAndInitializeProjectValidation();
-            ProjectValidationGUI.Reset();
+            ProjectValidation.ResetGUI();
         }
     }
 }
