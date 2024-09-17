@@ -34,7 +34,7 @@ namespace Cognitive3D
 
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            ProjectValidationItems.RegenerateProjectValidationItems();
         }
 
         public override void OnGUI(string searchContext)

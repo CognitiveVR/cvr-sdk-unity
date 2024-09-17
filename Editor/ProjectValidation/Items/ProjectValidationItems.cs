@@ -31,20 +31,22 @@ namespace Cognitive3D
 
         static ProjectValidationItems()
         {
-            WaitBeforeProjectValidation();
+            DelayAndInitializeProjectValidation();
         }
 
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
-        internal static async void WaitBeforeProjectValidation()
+        internal static async void DelayAndInitializeProjectValidation()
         {
             await Task.Delay((int)(INITIAL_DELAY_IN_SECONDS * 1000));
 
             AddProjectValidationItems();
-            UpdateProjectValidationItemStatus();
             ProjectValidation.SetIgnoredItemsFromLog();
             ProjectValidationGUI.Reset();
         }
 
+        /// <summary>
+        /// Adds project validation items to the registry
+        /// </summary>
         private static void AddProjectValidationItems()
         {            
             ProjectValidation.AddItem(
@@ -63,80 +65,99 @@ namespace Cognitive3D
                 }
                 );
 
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Recommended, 
-                category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Fix,
-                message: "No latest scene version is used.",
-                fixmessage: "Latest scene version is used.",
-                checkAction: () =>
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
+            if (currentSettings != null)
+            {
+                string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
+                Dictionary<string, string> headers = new Dictionary<string, string>
                 {
-                    bool latestScene = true;
-                    string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
-                    var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
-                    if (currentSettings != null)
-                    {
-                        string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
-                        Dictionary<string, string> headers = new Dictionary<string, string>
-                        {
-                            { "Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey }
-                        };
+                    { "Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey }
+                };
 
-                        string info = EditorNetwork.GetCallback(url, (responsecode, error, text) => 
+                EditorNetwork.Get(url, (responsecode, error, text) => 
+                {
+                    var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+                    if (collection != null)
+                    {
+                        // Required item for non-exist scene on dashboard
+                        if (collection.versions.Find(version => version.versionNumber == currentSettings.VersionNumber) != null)
                         {
-                            var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
-                            if (collection != null)
-                            {
-                                if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Required, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Fix,
+                                message: "Current scene not found on dashboard.",
+                                fixmessage: "Current scene found on dashboard.",
+                                checkAction: () =>
                                 {
-                                    latestScene = false;
+                                    return true;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
                                 }
-                            }
-                        }, headers, true, "Get Scene Version");
-                    }
-                    return latestScene;
-                },
-                fixAction: () =>
-                {
-                    EditorCore.RefreshSceneVersion(null);
-                }
-            );
-
-            ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Required, 
-                category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Edit,
-                message: "This scene not found on dashboard.",
-                fixmessage: "Use latest dashboard's scene version.",
-                checkAction: () =>
-                {
-                    bool latestScene = true;
-                    string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
-                    var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
-                    if (currentSettings != null)
-                    {
-                        string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
-                        Debug.Log("Current url is " + url);
-                        Dictionary<string, string> headers = new Dictionary<string, string>();
-                        headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                        EditorNetwork.Get(url, GetSceneVersionResponse, headers, true, "Get Scene Version");//AUTH
-
-                        void GetSceneVersionResponse(int responsecode, string error, string text)
+                            );
+                        }
+                        else
                         {
-                            // Debug.Log(responsecode + " text is " + text);
-                            if (responsecode != 200)
-                            {
-                                latestScene = false;
-                            }
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Required, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Fix,
+                                message: "This scene not found on dashboard.",
+                                fixmessage: "Use latest dashboard's scene version.",
+                                checkAction: () =>
+                                {
+                                    return false;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
+                        }
+
+                        // Recommended item for latest version
+                        if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
+                        {
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Recommended, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Apply,
+                                message: "No latest scene version is used.",
+                                fixmessage: "Latest scene version is used.",
+                                checkAction: () =>
+                                {
+                                    return false;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
+                        }
+                        else
+                        {
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Recommended, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Apply,
+                                message: "No latest scene version is used.",
+                                fixmessage: "Latest scene version is used.",
+                                checkAction: () =>
+                                {
+                                    return true;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
                         }
                     }
-                    return latestScene;
-                },
-                fixAction: () =>
-                {
-                    
-                }
-                );
+                }, headers, true, "Get Scene Version");
+            }
 
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -794,6 +815,19 @@ namespace Cognitive3D
 #endif
         }
 
+        /// <summary>
+        /// Regenerates the validation item list by clearing the existing items and rebuilding the list
+        /// </summary>
+        public static void RegenerateProjectValidationItems()
+        {
+            ProjectValidation.Reset();
+            DelayAndInitializeProjectValidation();
+        }
+        
+        /// <summary>
+        /// Reevaluates all validation items and updates their fixed status
+        /// </summary>
+        /// Save this function for later
         public static void UpdateProjectValidationItemStatus()
         {
             var items = ProjectValidation.registry.GetAllItems();
@@ -803,6 +837,11 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Updates the message of a validation item that contain the specified message
+        /// </summary>
+        /// <param name="oldmessage">The message to search for in the validation items</param>
+        /// <param name="newmessage">The new message to replace the old message with</param>
         public static void UpdateProjectValidationItemMessage(string oldmessage, string newmessage)
         {
             var items = ProjectValidation.registry.GetAllItems();
@@ -815,6 +854,12 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Attempts to retrieve a list of controller names from the active scene.
+        /// If no controllers are found, the function returns false
+        /// </summary>
+        /// <param name="controllerNamesList">An output list of controller names if found</param>
+        /// <returns>Returns true if controllers are found, otherwise false</returns>
         internal static bool TryGetControllers(out List<String> controllerNamesList)
         {
             controllerNamesList = new List<string>();

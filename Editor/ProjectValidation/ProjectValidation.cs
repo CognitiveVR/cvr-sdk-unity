@@ -142,7 +142,7 @@ namespace Cognitive3D
             Scene currentScene = SceneManager.GetActiveScene();
             EditorSceneManager.SaveScene(currentScene);
 
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            ProjectValidationItems.RegenerateProjectValidationItems();
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Cognitive3D
                 ProjectValidationLog.RemoveIgnoreItem(item.message);
             }
             
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            ProjectValidationItems.RegenerateProjectValidationItems();
         }
 
         /// <summary>
@@ -170,6 +170,14 @@ namespace Cognitive3D
         internal static void SetIgnoredItemsFromLog()
         {
             registry.SetIgnoredItemsFromLog(ProjectValidationLog.GetLogIgnoreItems());
+        }
+
+        /// <summary>
+        /// Removes a <see cref="ProjectValidationItem"/> item from registry
+        /// </summary>
+        internal static void RemoveItem(Hash128 id)
+        {
+            registry.RemoveItem(id);
         }
 
         /// <summary>
