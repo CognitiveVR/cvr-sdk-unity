@@ -814,15 +814,6 @@ namespace Cognitive3D
 
 #endif
         }
-
-        /// <summary>
-        /// Regenerates the validation item list by clearing the existing items and rebuilding the list
-        /// </summary>
-        public static void RegenerateProjectValidationItems()
-        {
-            ProjectValidation.Reset();
-            DelayAndInitializeProjectValidation();
-        }
         
         /// <summary>
         /// Reevaluates all validation items and updates their fixed status

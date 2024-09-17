@@ -142,7 +142,7 @@ namespace Cognitive3D
             Scene currentScene = SceneManager.GetActiveScene();
             EditorSceneManager.SaveScene(currentScene);
 
-            ProjectValidationItems.RegenerateProjectValidationItems();
+            ProjectValidation.RegenerateItems();
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Cognitive3D
                 ProjectValidationLog.RemoveIgnoreItem(item.message);
             }
             
-            ProjectValidationItems.RegenerateProjectValidationItems();
+            ProjectValidation.RegenerateItems();
         }
 
         /// <summary>
@@ -178,6 +178,15 @@ namespace Cognitive3D
         internal static void RemoveItem(Hash128 id)
         {
             registry.RemoveItem(id);
+        }
+
+        /// <summary>
+        /// Regenerates the validation item list by clearing the existing items and rebuilding the list
+        /// </summary>
+        public static void RegenerateItems()
+        {
+            Reset();
+            ProjectValidationItems.DelayAndInitializeProjectValidation();
         }
 
         /// <summary>

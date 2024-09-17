@@ -36,7 +36,7 @@ namespace Cognitive3D
         // Update project validation items when a new scene opens
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
-            ProjectValidationItems.RegenerateProjectValidationItems();
+            ProjectValidation.RegenerateItems();
         }
 
         /// <summary>
