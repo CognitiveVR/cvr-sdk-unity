@@ -181,12 +181,29 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Updates the message of a validation item that contain the specified message
+        /// </summary>
+        /// <param name="oldmessage">The message to search for in the validation items</param>
+        /// <param name="newmessage">The new message to replace the old message with</param>
+        public static void UpdateItemMessage(string oldmessage, string newmessage)
+        {
+            var items = registry.GetAllItems();
+            foreach (var item in items)
+            {
+                if (item.message.Contains(oldmessage))
+                {
+                    item.message = newmessage;
+                }
+            }
+        }
+
+        /// <summary>
         /// Reevaluates all validation items and updates their fixed status
         /// </summary>
         /// Save this function for later
         public static void UpdateItemFixedStatus()
         {
-            var items = ProjectValidation.registry.GetAllItems();
+            var items = registry.GetAllItems();
             foreach (var item in items)
             {
                 item.isFixed = item.checkAction();

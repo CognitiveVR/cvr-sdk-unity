@@ -297,7 +297,7 @@ namespace Cognitive3D
                         if (_controllerNamesList.Count > 2)
                         {
                             newMessage = oldMessage + $" The detected controller objects are: {string.Join(", ", _controllerNamesList)}";
-                            UpdateProjectValidationItemMessage(oldMessage, newMessage);
+                            ProjectValidation.UpdateItemMessage(oldMessage, newMessage);
                         }
 
                         return _controllerNamesList.Count <= 2;
@@ -813,23 +813,6 @@ namespace Cognitive3D
     #endif
 
 #endif
-        }
-
-        /// <summary>
-        /// Updates the message of a validation item that contain the specified message
-        /// </summary>
-        /// <param name="oldmessage">The message to search for in the validation items</param>
-        /// <param name="newmessage">The new message to replace the old message with</param>
-        public static void UpdateProjectValidationItemMessage(string oldmessage, string newmessage)
-        {
-            var items = ProjectValidation.registry.GetAllItems();
-            foreach (var item in items)
-            {
-                if (item.message.Contains(oldmessage))
-                {
-                    item.message = newmessage;
-                }
-            }
         }
 
         /// <summary>
