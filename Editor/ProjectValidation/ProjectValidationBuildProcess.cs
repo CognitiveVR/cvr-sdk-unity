@@ -58,8 +58,7 @@ namespace Cognitive3D
         // Updates and refreshes project verification items after build
         public void OnPostprocessBuild(BuildReport report)
         {
-            ProjectValidationItems.DelayAndInitializeProjectValidation();
-            ProjectValidation.ResetGUI();
+            ProjectValidation.RegenerateItems();
         }
     }
 }
