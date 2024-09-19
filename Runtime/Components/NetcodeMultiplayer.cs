@@ -13,18 +13,24 @@ using Unity.Services.Lobbies.Models;
 namespace Cognitive3D.Components
 {
     [DisallowMultipleComponent]
-    public class NetcodeMultiplayer : AnalyticsComponentBase
+    public class NetcodeMultiplayer : NetworkBehaviour
     {
         private UnityTransport transport;
         private ulong localClientId;
+        int connectedClientsCount;
 
         private string serverAddress;
         private int port;
 
         private Lobby currentLobby;
-        private string lobbyID;
+        private static string lobbyID = string.Empty;
 
-        protected override void OnSessionBegin()
+        protected void Awake()
+        {
+            Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
+        }
+
+        protected void OnSessionBegin()
         {
             if (Unity.Netcode.NetworkManager.Singleton != null)
             {
@@ -41,6 +47,7 @@ namespace Cognitive3D.Components
         {
             if (Unity.Netcode.NetworkManager.Singleton != null)
             {
+                Cognitive3D_Manager.OnSessionBegin -= OnSessionBegin;
                 Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
 
                 Unity.Netcode.NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnectedCallback;
@@ -50,45 +57,52 @@ namespace Cognitive3D.Components
             }
         }
 
+        // Callback made on all clients
         protected void OnClientConnectedCallback(ulong clientId)
         {
+            SetLobbyIDServerRpc(clientId);
+            SetConnectedCountServerRPC();
             SetMultiplayerSessionProperties();
 #if COGNITIVE3D_INCLUDE_UNITY_LOBBY_SERVICES
             GetLobbiesInfo();
 #endif
-
-            if (Unity.Netcode.NetworkManager.Singleton.IsHost)
+            if (Unity.Netcode.NetworkManager.Singleton.LocalClientId == clientId)
             {
-                GenerateAndSetLobbyIDForAllClients();
-                
-                new CustomEvent("c3d.multiplayer.thisHostConnected")
-                    .SetProperty("Player ID", clientId)
-                    .SetProperty("Number of players in room", Unity.Netcode.NetworkManager.Singleton.ConnectedClientsList.Count)
-                    .Send();
-            } 
-            else if (Unity.Netcode.NetworkManager.Singleton.IsClient)
-            {
-                new CustomEvent("c3d.multiplayer.thisClientConnected")
-                    .SetProperty("Player ID", clientId)
-                    .SetProperty("Number of players in room", Unity.Netcode.NetworkManager.Singleton.ConnectedClientsList.Count)
-                    .Send();
+                if (IsHost)
+                {
+                    new CustomEvent("c3d.multiplayer.connected_as_host")
+                        .SetProperty("Player ID", clientId)
+                        .SetProperty("Number of connected players", connectedClientsCount)
+                        .Send();
+                } 
+                else if (IsClient)
+                {
+                    new CustomEvent("c3d.multiplayer.connected_as_client")
+                        .SetProperty("Player ID", clientId)
+                        .SetProperty("Number of connected players", connectedClientsCount)
+                        .Send();
+                }
             }
-
-            SetLobbyAndViewID(lobbyID);
-            SendClientConnected(clientId);
+            else
+            {
+                new CustomEvent("c3d.multiplayer.new_client_connected")
+                .SetProperty("Player ID", clientId)
+                .SetProperty("Number of connected players", connectedClientsCount)
+                .Send();
+            }
         }
 
         protected void OnClientDisconnectCallback(ulong clientId)
         {
             if (Unity.Netcode.NetworkManager.Singleton.IsHost)
             {
-                new CustomEvent("c3d.multiplayer.thisHostDisconnected")
+                new CustomEvent("c3d.multiplayer.host_disconnected")
                     .SetProperty("Player ID", clientId)
                     .Send();
             }
             else if (Unity.Netcode.NetworkManager.Singleton.IsClient)
             {
-                new CustomEvent("c3d.multiplayer.thisClientDisconnected")
+                new CustomEvent("c3d.multiplayer.client_disconnected")
                     .SetProperty("Player ID", clientId)
                     .Send();
             }
@@ -96,7 +110,7 @@ namespace Cognitive3D.Components
 
         protected void OnServerStartedCallback()
         {
-            new CustomEvent("c3d.multiplayer.serverStarted")
+            new CustomEvent("c3d.multiplayer.server_started")
                     .Send();
         }
 
@@ -104,13 +118,13 @@ namespace Cognitive3D.Components
         {
             if (isHostShutdown)
             {
-                new CustomEvent("c3d.multiplayer.serverStopped")
+                new CustomEvent("c3d.multiplayer.server_stopped")
                     .SetProperty("Reason", "Shutdown by host")
                     .Send();
             }
             else
             {
-                new CustomEvent("c3d.multiplayer.serverStopped")
+                new CustomEvent("c3d.multiplayer.server_stopped")
                     .SetProperty("Reason", "Shutdown due to external reasons")
                     .Send();
             }
@@ -138,8 +152,8 @@ namespace Cognitive3D.Components
 
                 if (currentLobby != null)
                 {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.photonRoomName", currentLobby.Name);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.maxNumberConnections", currentLobby.MaxPlayers);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.lobby_name", currentLobby.Name);
+                    Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.max_connections", currentLobby.MaxPlayers);
                 }
             }
             catch (SystemException e)
@@ -162,30 +176,40 @@ namespace Cognitive3D.Components
                 serverAddress = transport.ConnectionData.Address;
             }
             
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.localClientId", localClientId);
-            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.serverAddress", serverAddress);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.local_client_id", localClientId);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.server_address", serverAddress);
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.port", port);
-        }
-
-        /// <summary>
-        /// Generate and assigns a lobby id for all participants
-        /// Helpful for identifying multiple individual sessions as part of a multiplayer sessions
-        /// For more info, see: https://docs.cognitive3d.com/unity/multiplayer/#lobby-id
-        /// </summary>
-        private void GenerateAndSetLobbyIDForAllClients()
-        {
-            lobbyID = System.Guid.NewGuid().ToString();
         }
 
 #region RPC
         /// <summary>
-        /// RPC to set lobbyID for all participants
+        /// Sets the lobby ID on the server and sends to other clients
         /// </summary>
-        /// <param name="lobbyID">The lobbyID as a string</param>
-        [ClientRpc]
-        private void SetLobbyAndViewID(string lobbyID)
+        /// <param name="clientId"></param>
+        [ServerRpc (RequireOwnership = false)]
+        public void SetLobbyIDServerRpc(ulong clientId)
         {
-            Cognitive3D_Manager.SetLobbyId(lobbyID);
+            if (IsServer && string.IsNullOrEmpty(lobbyID))
+            {
+                lobbyID = System.Guid.NewGuid().ToString();
+            }
+
+            // Send the lobby ID from server to clients
+            SendLobbyIDToClientRPC(clientId, lobbyID);
+        }
+
+        /// <summary>
+        /// Sets the lobby ID for clients
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="lobbyID"></param>
+        [ClientRpc]
+        private void SendLobbyIDToClientRPC(ulong clientId, string lobbyID)
+        {
+            if (IsClient && Unity.Netcode.NetworkManager.Singleton.LocalClientId == clientId)
+            {
+                Cognitive3D_Manager.SetLobbyId(lobbyID);
+            }
         }
 
         /// <summary>
@@ -193,16 +217,20 @@ namespace Cognitive3D.Components
         /// For other users: Participant A sends event when participant B connects
         /// </summary>
         [ClientRpc]
-        private void SendClientConnected(ulong clientID)
+        private void SetConnectedCountClientRPC(int clientsCount)
         {
-            // Send events only for "other" players
-            if (localClientId != clientID)
+            connectedClientsCount = clientsCount;
+        }
+
+        [ServerRpc (RequireOwnership = false)]
+        public void SetConnectedCountServerRPC()
+        {
+            if (IsServer)
             {
-                new CustomEvent("c3d.multiplayer.aNewClientConnected")
-                .SetProperty("Player ID", clientID)
-                .SetProperty("Number of players in room", Unity.Netcode.NetworkManager.Singleton.ConnectedClientsList.Count)
-                .Send();
+                connectedClientsCount = Unity.Netcode.NetworkManager.Singleton.ConnectedClientsList.Count;
             }
+
+            SetConnectedCountClientRPC(connectedClientsCount);
         }
 #endregion
     }
