@@ -52,7 +52,10 @@ namespace Cognitive3D.Components
             }
         }
 
-        // Callback made on all clients
+        /// <summary>
+        /// Handles the callback when a client connects the server.
+        /// </summary>
+        /// <param name="clientId"></param>
         protected void OnClientConnectedCallback(ulong clientId)
         {
             SetLobbyIDServerRpc(clientId);
@@ -78,35 +81,46 @@ namespace Cognitive3D.Components
             }
             else
             {
-                new CustomEvent("c3d.multiplayer.new_client_connected")
-                .SetProperty("Player ID", clientId)
-                .SetProperty("Number of connected players", connectedClientsCount)
-                .Send();
+                SendClientConnectedServerRPC(clientId, connectedClientsCount);
             }
         }
 
+        /// <summary>
+        /// Handles the callback when a client disconnects from the server.
+        /// </summary>
+        /// <param name="clientId">The ID of the disconnected client.</param>
         protected void OnClientDisconnectCallback(ulong clientId)
         {
+            SetConnectedCountServerRPC();
+
             if (Unity.Netcode.NetworkManager.ServerClientId == clientId)
             {
                 new CustomEvent("c3d.multiplayer.host_disconnected")
                     .SetProperty("Player ID", clientId)
+                    .SetProperty("Number of connected players", connectedClientsCount - 1)
                     .Send();
             }
             else
             {
-                new CustomEvent("c3d.multiplayer.client_disconnected")
-                    .SetProperty("Player ID", clientId)
-                    .Send();
+                SendClientDisconnectedServerRPC(clientId, connectedClientsCount - 1);
             }
         }
 
+        /// <summary>
+        /// Handles the callback when the server starts, sending a custom event to notify 
+        /// that the server has successfully started.
+        /// </summary>
         protected void OnServerStartedCallback()
         {
             new CustomEvent("c3d.multiplayer.server_started")
                     .Send();
         }
 
+        /// <summary>
+        /// Handles the callback when the server stops, sending a custom event to notify 
+        /// about the reason for the shutdown.
+        /// </summary>
+        /// <param name="isHostShutdown">indicating whether the shutdown was initiated by the host.</param>
         protected void OnServerStoppedCallback(bool isHostShutdown)
         {
             if (isHostShutdown)
@@ -174,8 +188,7 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// RPC when a client connects <br/>
-        /// For other users: Participant A sends event when participant B connects
+        /// A client RPC that updates the local count of connected clients.
         /// </summary>
         [ClientRpc]
         private void SetConnectedCountClientRPC(int clientsCount)
@@ -183,6 +196,10 @@ namespace Cognitive3D.Components
             connectedClientsCount = clientsCount;
         }
 
+        /// <summary>
+        /// A server RPC that updates the total count of connected clients and broadcasts it to all clients.
+        /// After updating the count, it sends this value to all clients via the `SetConnectedCountClientRPC` method.
+        /// </summary>
         [ServerRpc (RequireOwnership = false)]
         public void SetConnectedCountServerRPC()
         {
@@ -192,6 +209,76 @@ namespace Cognitive3D.Components
             }
 
             SetConnectedCountClientRPC(connectedClientsCount);
+        }
+
+        /// <summary>
+        /// Sends a custom event indicating a new client has connected to the server
+        /// This is triggered for all clients except the local client
+        /// </summary>
+        /// <param name="clientId">The ID of the newly connected client</param>
+        /// <param name="clientsCount">The total number of clients connected to the server</param>
+        [ClientRpc]
+        private void SendClientConnectedClientRPC(ulong clientId, int clientsCount)
+        {
+            if (Unity.Netcode.NetworkManager.Singleton.LocalClientId != clientId)
+            {
+                new CustomEvent("c3d.multiplayer.new_client_connected")
+                .SetProperty("Player ID", clientId)
+                .SetProperty("Number of connected players", clientsCount)
+                .Send();
+            }
+        }
+
+        /// <summary>
+        /// A server RPC that triggers a client-side event when a new client connects.
+        /// This method is called on the server and executes the `SendClientConnectedClientRPC` 
+        /// method to send an event containing the connected client's ID and the total number of 
+        /// connected clients.
+        /// </summary>
+        /// <param name="clientId">The ID of the newly connected client.</param>
+        /// <param name="clientsCount">The total number of clients connected to the server.</param>
+        [ServerRpc (RequireOwnership = false)]
+        public void SendClientConnectedServerRPC(ulong clientId, int clientsCount)
+        {
+            if (IsServer)
+            {
+                SendClientConnectedClientRPC(clientId, clientsCount);
+            }
+        }
+
+        /// <summary>
+        /// Sends a custom event when a client disconnects from the server.
+        /// This method is called on the clients to notify about a disconnected client, 
+        /// except for the local client itself.
+        /// </summary>
+        /// <param name="clientId">The ID of the disconnected client.</param>
+        /// <param name="clientsCount">The current total number of connected clients after the disconnection.</param>
+        [ClientRpc]
+        private void SendClientDisconnectedClientRPC(ulong clientId, int clientsCount)
+        {
+            if (Unity.Netcode.NetworkManager.Singleton.LocalClientId != clientId)
+            {
+                new CustomEvent("c3d.multiplayer.client_disconnected")
+                .SetProperty("Player ID", clientId)
+                .SetProperty("Number of connected players", clientsCount)
+                .Send();
+            }
+        }
+
+        /// <summary>
+        /// A server RPC that triggers a client-side event when a client disconnects from the server.
+        /// This method is called on the server and executes the `SendClientDisconnectedClientRPC` method 
+        /// to notify clients about the disconnection.
+        /// </summary>
+        /// <param name="clientId">The ID of the disconnected client.</param>
+        /// <param name="clientsCount">The current total number of connected clients after the disconnection.</param>
+        [ServerRpc (RequireOwnership = false)]
+        public void SendClientDisconnectedServerRPC(ulong clientId, int clientsCount)
+        {
+            if (IsServer)
+            {
+                SendClientDisconnectedClientRPC(clientId, clientsCount);
+            }
         }
 #endregion
     }
