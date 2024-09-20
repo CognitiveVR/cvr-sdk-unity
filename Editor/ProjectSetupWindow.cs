@@ -63,7 +63,7 @@ namespace Cognitive3D
             Recompile,
             Wave,
             NextSteps,
-            PhotonMultiplayerSetup,
+            MultiplayerSetup,
             DynamicSetup,
         }
         private Page _currentPage;
@@ -115,8 +115,8 @@ namespace Cognitive3D
                 case Page.DynamicSetup:
                     DynamicUpdate();
                     break;
-                case Page.PhotonMultiplayerSetup:
-                    PhotonMultiplayerSetup();
+                case Page.MultiplayerSetup:
+                    MultiplayerSetup();
                     break;
                 default:
                     throw new System.NotSupportedException();
@@ -872,7 +872,13 @@ namespace Cognitive3D
 #else
         bool wantPhotonPunSupport = false;
 #endif
-        void PhotonMultiplayerSetup()
+
+#if C3D_NETCODE
+        bool wantNetcodeSupport = true;
+#else
+        bool wantNetcodeSupport = false;
+#endif
+        void MultiplayerSetup()
         {
             GUI.Label(steptitlerect, "MUTLIPLAYER SUPPORT", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "You can enable multiplayer support here. Select the package or framework you are using below.", "normallabel");
@@ -897,6 +903,27 @@ namespace Cognitive3D
                 if (GUI.Button(checkboxRect1, EditorCore.BoxEmpty, "image_centered"))
                 {
                     wantPhotonPunSupport = true;
+                }
+            }
+
+            // Netcode
+            GUI.Label(new Rect(140, 130, 440, 440), "Unity Netcode for Gameobjects", "normallabel");
+            Rect infoRect2 = new Rect(400, 125, 30, 30);
+            GUI.Label(infoRect2, new GUIContent(EditorCore.Info, "Enables support for Unity Netcode for Gameobjects. Requires Unity Netcode Runtime assemblies."), "image_centered");
+
+            Rect checkboxRect2 = new Rect(105, 125, 30, 30);
+            if (wantNetcodeSupport)
+            {
+                if (GUI.Button(checkboxRect2, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantNetcodeSupport = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect2, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantNetcodeSupport = true;
                 }
             }
         }
@@ -997,7 +1024,7 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.SDKSelection:
-                    onclick = () => currentPage = Page.PhotonMultiplayerSetup;
+                    onclick = () => currentPage = Page.MultiplayerSetup;
                     break;
                 case Page.Recompile:
                     onclick = null;
@@ -1032,7 +1059,7 @@ namespace Cognitive3D
                     break;
                 case Page.Wave:
                     break;
-                case Page.PhotonMultiplayerSetup:
+                case Page.MultiplayerSetup:
                     if (wantPhotonPunSupport)
                     { 
                         if (!selectedsdks.Contains("C3D_PHOTON"))
@@ -1043,6 +1070,18 @@ namespace Cognitive3D
                     else
                     { 
                         selectedsdks.Remove("C3D_PHOTON");
+                    }
+
+                    if (wantNetcodeSupport)
+                    { 
+                        if (!selectedsdks.Contains("C3D_NETCODE"))
+                        {
+                            selectedsdks.Add("C3D_NETCODE");
+                        }
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_NETCODE");
                     }
                     onclick += () => currentPage = Page.Glia;
                     break;
@@ -1088,7 +1127,7 @@ namespace Cognitive3D
                 case Page.SRAnipal:
                 case Page.Wave:
                 case Page.NextSteps:
-                    if (wantPhotonPunSupport) { onclick = () => currentPage = Page.PhotonMultiplayerSetup; }
+                    if (wantPhotonPunSupport || wantNetcodeSupport) { onclick = () => currentPage = Page.MultiplayerSetup; }
                     else { onclick = () => currentPage = Page.SDKSelection; }
                     break;
                 case Page.DynamicSetup:
@@ -1100,7 +1139,7 @@ namespace Cognitive3D
                 case Page.Recompile:
                     buttonDisabled = true;
                     break;
-                case Page.PhotonMultiplayerSetup:
+                case Page.MultiplayerSetup:
                     onclick += () => currentPage = Page.SDKSelection;
                     break;
                 default:

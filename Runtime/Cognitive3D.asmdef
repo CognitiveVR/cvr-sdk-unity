@@ -63,6 +63,11 @@
             "name": "com.unity.services.lobby",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_UNITY_LOBBY_SERVICES"
+        },
+        {
+            "name": "com.unity.netcode.gameobjects",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_UNITY_NETCODE"
         }
     ],
     "noEngineReferences": false

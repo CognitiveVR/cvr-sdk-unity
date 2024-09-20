@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 
@@ -94,13 +95,13 @@ namespace Cognitive3D.Components
 
         protected void OnClientDisconnectCallback(ulong clientId)
         {
-            if (Unity.Netcode.NetworkManager.Singleton.IsHost)
+            if (IsHost)
             {
                 new CustomEvent("c3d.multiplayer.host_disconnected")
                     .SetProperty("Player ID", clientId)
                     .Send();
             }
-            else if (Unity.Netcode.NetworkManager.Singleton.IsClient)
+            else if (IsClient)
             {
                 new CustomEvent("c3d.multiplayer.client_disconnected")
                     .SetProperty("Player ID", clientId)
@@ -235,3 +236,4 @@ namespace Cognitive3D.Components
 #endregion
     }
 }
+#endif
