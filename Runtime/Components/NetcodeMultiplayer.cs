@@ -6,11 +6,6 @@ using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 
-#if COGNITIVE3D_INCLUDE_UNITY_LOBBY_SERVICES
-using Unity.Services.Lobbies;
-using Unity.Services.Lobbies.Models;
-#endif
-
 namespace Cognitive3D.Components
 {
     [DisallowMultipleComponent]
@@ -23,7 +18,6 @@ namespace Cognitive3D.Components
         private string serverAddress;
         private int port;
 
-        private Lobby currentLobby;
         private static string lobbyID = string.Empty;
 
         protected void Awake()
@@ -64,9 +58,7 @@ namespace Cognitive3D.Components
             SetLobbyIDServerRpc(clientId);
             SetConnectedCountServerRPC();
             SetMultiplayerSessionProperties();
-#if COGNITIVE3D_INCLUDE_UNITY_LOBBY_SERVICES
-            GetLobbiesInfo();
-#endif
+
             if (Unity.Netcode.NetworkManager.Singleton.LocalClientId == clientId)
             {
                 if (IsHost)
@@ -95,13 +87,13 @@ namespace Cognitive3D.Components
 
         protected void OnClientDisconnectCallback(ulong clientId)
         {
-            if (IsHost)
+            if (Unity.Netcode.NetworkManager.ServerClientId == clientId)
             {
                 new CustomEvent("c3d.multiplayer.host_disconnected")
                     .SetProperty("Player ID", clientId)
                     .Send();
             }
-            else if (IsClient)
+            else
             {
                 new CustomEvent("c3d.multiplayer.client_disconnected")
                     .SetProperty("Player ID", clientId)
@@ -131,38 +123,6 @@ namespace Cognitive3D.Components
             }
             
         }
-
-#if COGNITIVE3D_INCLUDE_UNITY_LOBBY_SERVICES
-        public async void GetLobbiesInfo()
-        {
-            try
-            {
-                QueryResponse response = await Lobbies.Instance.QueryLobbiesAsync();
-                List<Lobby> lobbies = response.Results;
-                
-                foreach (Lobby lobby in lobbies)
-                {
-                    foreach (var player in lobby.Players)
-                    {
-                        if (player.Id == localClientId.ToString())
-                        {
-                            currentLobby = lobby;
-                        }
-                    }
-                }
-
-                if (currentLobby != null)
-                {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.lobby_name", currentLobby.Name);
-                    Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.max_connections", currentLobby.MaxPlayers);
-                }
-            }
-            catch (SystemException e)
-            {
-                Util.LogOnce($"Failed to retrieve list of lobbies: {e.Message}", LogType.Error);
-            }
-        } 
-#endif
 
         /// <summary>
         /// Sets session properties for multiplayer related details

@@ -23,8 +23,7 @@
         "PhotonUnityNetworking",
         "PhotonRealtime",
         "meta.xr.mrutilitykit",
-        "Unity.Netcode.Runtime",
-        "Unity.Services.Lobbies"
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -58,11 +57,6 @@
             "name": "com.meta.xr.mrutilitykit",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
-        },
-        {
-            "name": "com.unity.services.lobby",
-            "expression": "",
-            "define": "COGNITIVE3D_INCLUDE_UNITY_LOBBY_SERVICES"
         },
         {
             "name": "com.unity.netcode.gameobjects",
