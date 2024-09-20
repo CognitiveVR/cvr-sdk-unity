@@ -126,61 +126,14 @@ namespace Cognitive3D
                 OnNewSensorRecorded(sensorName, initialValue);
         }
 
+        /// <summary>
+        /// Records sensor values as float <br/>
+        /// </summary>
+        /// <param name="category"></param>
+        /// <param name="value"></param>
         public static void RecordDataPoint(string category, float value)
         {
-            if (Cognitive3D_Manager.IsInitialized == false)
-            {
-                if (!hasDisplayedInitializeWarning)
-                {
-                    hasDisplayedInitializeWarning = true;
-                    Cognitive3D.Util.logWarning("SensorRecorder session has not started!");
-                }
-                return;
-            }
-            if (Cognitive3D_Manager.TrackingScene == null)
-            {
-                if (!hasDisplayedSceneIdWarning)
-                {
-                    hasDisplayedSceneIdWarning = true;
-                    Cognitive3D.Util.logWarning("SensorRecorder invalid SceneId");
-                }
-                return;
-            }
-
-            if (float.IsNaN(value))
-            {
-                Cognitive3D.Util.logWarning("SensorRecorder category:"+ category + " is value: NaN");
-                return;
-            }
-
-            //check next valid write time
-            if (sensorData.ContainsKey(category))
-            {
-                if (Time.realtimeSinceStartup < sensorData[category].NextRecordTime)
-                {
-                    //recording too fast!
-                    return;
-                }
-            }
-            else
-            {
-                InitializeSensor(category, 10, value);
-            }
-
-            //if ONLY changed enough or more than two seconds
-            if (System.Math.Abs(sensorData[category].LastSensorValue.value - value) >= SENSOR_VALUE_CHANGE_THRESHOLD ||
-                (Time.realtimeSinceStartup - sensorData[category].LastSensorValue.recordedTime) >= MIN_FREQUENCY_KEEP_ALIVE_SIGNAL)
-            {
-                //update internal values and record data
-                sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
-                sensorData[category].LastSensorValue = new LastSensor(value, Time.realtimeSinceStartup);
-
-                CoreInterface.RecordSensor(category, value, Util.Timestamp(Time.frameCount));
-
-                if (OnNewSensorRecorded != null)
-                    OnNewSensorRecorded(category, value);
-            }
-
+            RecordDataPoint(category, value, Util.Timestamp(Time.frameCount));
         }
 
         /// <summary>
@@ -191,47 +144,7 @@ namespace Cognitive3D
         /// <param name="value"></param>
         public static void RecordDataPoint(string category, double value)
         {
-            if (Cognitive3D_Manager.IsInitialized == false)
-            {
-                if (!hasDisplayedInitializeWarning)
-                {
-                    hasDisplayedInitializeWarning = true;
-                    Cognitive3D.Util.logWarning("SensorRecorder session has not started!");
-                }
-                return;
-            }
-            if (Cognitive3D_Manager.TrackingScene == null)
-            {
-                if (!hasDisplayedSceneIdWarning)
-                {
-                    hasDisplayedSceneIdWarning = true;
-                    Cognitive3D.Util.logWarning("SensorRecorder invalid SceneId");
-                }
-                return;
-            }
-
-            //check next valid write time
-            if (sensorData.ContainsKey(category))
-            {
-                if (Time.realtimeSinceStartup < sensorData[category].NextRecordTime)
-                {
-                    //recording too fast!
-                    return;
-                }
-            }
-            else
-            {
-                InitializeSensor(category, 10, (float)value);
-            }
-
-            //update internal values and record data
-            sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
-            sensorData[category].LastSensorValue.value = (float) value;
-
-            CoreInterface.RecordSensor(category, (float)value, Util.Timestamp(Time.frameCount));
-
-            if (OnNewSensorRecorded != null)
-                OnNewSensorRecorded(category, (float)value);
+            RecordDataPoint(category, (float)value, Util.Timestamp(Time.frameCount));
         }
 
         /// <summary>
@@ -276,14 +189,19 @@ namespace Cognitive3D
                 InitializeSensor(category, 10, value);
             }
 
-            //update internal values and record data
-            sensorData[category].NextRecordTime = (float)(unixTimestamp + sensorData[category].UpdateInterval);
-            sensorData[category].LastSensorValue.value = value;
+            //if ONLY changed enough or more than two seconds
+            if (System.Math.Abs(sensorData[category].LastSensorValue.value - value) >= SENSOR_VALUE_CHANGE_THRESHOLD ||
+                (Time.realtimeSinceStartup - sensorData[category].LastSensorValue.recordedTime) >= MIN_FREQUENCY_KEEP_ALIVE_SIGNAL)
+            {
+                //update internal values and record data
+                sensorData[category].NextRecordTime = Time.realtimeSinceStartup + sensorData[category].UpdateInterval;
+                sensorData[category].LastSensorValue = new LastSensor(value, Time.realtimeSinceStartup);
 
-            CoreInterface.RecordSensor(category, (float)value, unixTimestamp);
+                CoreInterface.RecordSensor(category, value, unixTimestamp);
 
-            if (OnNewSensorRecorded != null)
-                OnNewSensorRecorded(category, value);
+                if (OnNewSensorRecorded != null)
+                    OnNewSensorRecorded(category, value);
+            }
         }
 
         //used by active session view

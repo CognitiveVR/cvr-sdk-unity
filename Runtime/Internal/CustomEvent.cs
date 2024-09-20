@@ -185,7 +185,7 @@ namespace Cognitive3D
                 //don't check for name collisions, since there are no previous properties
                 foreach (var sensor in SensorRecorder.sensorData)
                 {
-                    _properties.Add(new KeyValuePair<string, object>("c3d.sensor." + sensor.Key, sensor.Value.LastSensorValue));
+                    _properties.Add(new KeyValuePair<string, object>("c3d.sensor." + sensor.Key, sensor.Value.LastSensorValue.value));
                 }
                 return this;
             }
@@ -200,7 +200,7 @@ namespace Cognitive3D
                     if (_properties[i].Key == key)
                     {
                         //replace
-                        _properties[i] = new KeyValuePair<string, object>(key, sensor.Value.LastSensorValue);
+                        _properties[i] = new KeyValuePair<string, object>(key, sensor.Value.LastSensorValue.value);
                         foundExistingKey = true;
                         break;
                     }
@@ -208,14 +208,12 @@ namespace Cognitive3D
                 if (!foundExistingKey)
                 {
                     //add
-                    _properties.Add(new KeyValuePair<string, object>(key, sensor.Value.LastSensorValue));
+                    _properties.Add(new KeyValuePair<string, object>(key, sensor.Value.LastSensorValue.value));
                 }
             }
             return this;
         }
 
-        /// Commenting this since it has 0 references. Doesn't seem like it's being used
-        /*
         /// <summary>
         /// Appends the latest value of each specified sensor to this event
         /// </summary>
@@ -230,8 +228,8 @@ namespace Cognitive3D
             {
                 string name = "c3d.sensor." + sensorName;
 
-                float sensorValue = 0;
-                if (SensorRecorder.LastSensorValues.TryGetValue(sensorName, out sensorValue))
+                SensorRecorder.SensorData sensorData;
+                if (SensorRecorder.sensorData.TryGetValue(sensorName, out sensorData))
                 {
                     bool foundExistingKey = false;
                     for (int i = 0; i < propertyCount; i++)
@@ -239,7 +237,7 @@ namespace Cognitive3D
                         if (_properties[i].Key == name)
                         {
                             //replace
-                            _properties[i] = new KeyValuePair<string, object>(name, sensorValue);
+                            _properties[i] = new KeyValuePair<string, object>(name, sensorData.LastSensorValue.value);
                             foundExistingKey = true;
                             break;
                         }
@@ -247,7 +245,7 @@ namespace Cognitive3D
                     if (!foundExistingKey)
                     {
                         //add
-                        _properties.Add(new KeyValuePair<string, object>(name, sensorValue));
+                        _properties.Add(new KeyValuePair<string, object>(name, sensorData.LastSensorValue.value));
                     }
                 }
                 //else - sensor with this name doesn't exist
@@ -255,7 +253,6 @@ namespace Cognitive3D
 
             return this;
         }
-        */
 
         /// <summary>
         /// Record the end of this Custom Event at a position in the world
