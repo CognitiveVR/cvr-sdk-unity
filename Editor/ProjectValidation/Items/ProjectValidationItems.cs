@@ -87,8 +87,8 @@ namespace Cognitive3D
                                 level: ProjectValidation.ItemLevel.Required, 
                                 category: CATEGORY,
                                 actionType: ProjectValidation.ItemAction.Fix,
-                                message: "Current scene not found on dashboard.",
-                                fixmessage: "Current scene found on dashboard.",
+                                message: "Current scene version not found on dashboard. Set to the latest version?",
+                                fixmessage: "Current scene version found on dashboard.",
                                 checkAction: () =>
                                 {
                                     return true;
@@ -105,8 +105,8 @@ namespace Cognitive3D
                                 level: ProjectValidation.ItemLevel.Required, 
                                 category: CATEGORY,
                                 actionType: ProjectValidation.ItemAction.Fix,
-                                message: "This scene not found on dashboard.",
-                                fixmessage: "Use latest dashboard's scene version.",
+                                message: "Current scene version not found on dashboard. Set to the latest version?",
+                                fixmessage: "Current scene version found on dashboard.",
                                 checkAction: () =>
                                 {
                                     return false;
