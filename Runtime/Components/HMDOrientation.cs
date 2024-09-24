@@ -10,13 +10,13 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
-        Transform trackingSpace;
+        private readonly float HMDOrientationInterval = 1;
+        private float currentTime;
 
         protected override void OnSessionBegin()
         {
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.Instance.TryGetTrackingSpace(out trackingSpace);
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -26,13 +26,18 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                if (GameplayReferences.HMD == null || trackingSpace == null)
+                currentTime += Time.deltaTime;
+                if (currentTime > HMDOrientationInterval)
                 {
-                    Debug.LogWarning("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.");
-                    return;
+                    currentTime = 0;
+                    if (GameplayReferences.HMD == null || Cognitive3D_Manager.Instance.trackingSpace == null)
+                    {
+                        Util.LogOnce("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.", LogType.Warning);
+                        return;
+                    }
+                    RecordPitch();
+                    RecordYaw();
                 }
-                RecordPitch();
-                RecordYaw();
             }
             else
             {
@@ -49,7 +54,7 @@ namespace Cognitive3D.Components
         {
             // Start with quaternions to calculate rotation
             Quaternion hmdRotation = GameplayReferences.HMD.rotation;
-            Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
+            Quaternion trackingSpaceRotation = Cognitive3D_Manager.Instance.trackingSpace.transform.rotation;
 
             // Adjust rotations to "isolate" HMD rotation from trackingSpace rotation
             Quaternion adjustedRotation = Quaternion.Inverse(trackingSpaceRotation) * hmdRotation;
@@ -76,7 +81,7 @@ namespace Cognitive3D.Components
         {
             // Start with quaternions to calculate rotation
             Quaternion hmdRotation = GameplayReferences.HMD.rotation;
-            Quaternion trackingSpaceRotation = trackingSpace.transform.rotation;
+            Quaternion trackingSpaceRotation = Cognitive3D_Manager.Instance.trackingSpace.transform.rotation;
 
             // Adjust rotations to "isolate" HMD rotation from trackingSpace rotation
             Quaternion adjustedRotation = Quaternion.Inverse(trackingSpaceRotation) * hmdRotation;

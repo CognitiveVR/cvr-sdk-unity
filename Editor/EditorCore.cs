@@ -55,6 +55,8 @@ namespace Cognitive3D
                 EditorApplication.playModeStateChanged -= ModeChanged;
                 EditorApplication.playModeStateChanged += ModeChanged;
             }
+
+            EditorUtils.Init();
         }
 
         //there's some new bug in 2021.1.15ish. creating editor window in constructor gets BaseLiveReloadAssetTracker. delay to avoid that
@@ -304,8 +306,8 @@ namespace Cognitive3D
         {
             //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -322,14 +324,14 @@ namespace Cognitive3D
                 }
 
                 RefreshSceneVersionComplete = refreshSceneVersionComplete;
-                string url = CognitiveStatics.GETSCENEVERSIONS(currentSettings.SceneId);
+                string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add("Authorization", "APIKEY:DEVELOPER " + DeveloperKey);
                 EditorNetwork.Get(url, GetSceneVersionResponse, headers, true, "Get Scene Version");//AUTH
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
@@ -367,8 +369,121 @@ namespace Cognitive3D
         }
 
 #region GUI
+        internal class Styles
+        {
+            private const float SmallIconSize = 16.0f;
+            private const float MediumButtonWidth = 64.0f;
+            private const float LargeButtonWidth = 90.0f;
+            private const float IconButtonWidth = 30.0f;
+            internal const float GroupSelectionWidth = 244.0f;
+            internal const float LabelWidth = 96f;
+            internal const float TitleLabelWidth = 196f;
+            private const float IconSize = 16f;
+
+            internal readonly GUIStyle ListLabel = new GUIStyle("TV Selection")
+            {
+                border = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(5, 5, 5, 3),
+                margin = new RectOffset(4, 4, 4, 5)
+            };
+
+            internal readonly GUIStyle IssuesTitleBoldLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
+                fontStyle = FontStyle.Bold,
+                padding = new RectOffset(10, 2, 0, 0)
+            };
+
+            internal readonly GUIStyle IssuesTitleLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
+                padding = new RectOffset(10, 10, 0, 0)
+            };
+
+            internal readonly GUIStyle InlinedIconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle IconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(5, 5, 4, 5),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle MediumButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = MediumButtonWidth,
+            };
+
+            internal readonly GUIStyle LargeButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = LargeButtonWidth,
+            };
+
+            internal readonly GUIStyle IconButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 0, 0),
+                fixedWidth = IconButtonWidth,
+                fixedHeight = 25
+            };
+
+            internal readonly GUIStyle InfoButton = new GUIStyle
+            {
+                padding = new RectOffset(0, 0, 5, 0)
+            };
+
+            internal readonly GUIStyle SubtitleHelpText = new GUIStyle(EditorStyles.miniLabel)
+            {
+                margin = new RectOffset(10, 0, 0, 0),
+                wordWrap = true
+            };
+
+            internal readonly GUIStyle List = new GUIStyle(EditorStyles.helpBox)
+            {
+                margin = new RectOffset(10, 10, 10, 10),
+                padding = new RectOffset(5, 5, 5, 5),
+            };
+
+            internal readonly GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout)
+            {
+                fontStyle = FontStyle.Bold
+            };
+
+            internal readonly GUIStyle ItemDescription = new GUIStyle(GUI.skin.label)
+            {
+                wordWrap = true,
+            };
+        }
+
+        private static Styles _styles;
+        // Delays instantiation of the Styles object until it is first accessed
+        public static Styles styles
+        {
+            get
+            {
+                if (_styles == null)
+                    _styles = new Styles();
+                return _styles;
+            }
+        }
+
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
         public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF);
+        public static Color CognitiveBlue = new Color32(98, 180, 243, 255);
 
         static GUIStyle headerStyle;
         public static GUIStyle HeaderStyle
@@ -521,6 +636,19 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _infoGrey;
+        public static Texture2D InfoGrey
+        {
+            get
+            {
+                if (_infoGrey == null)
+                {
+                    _infoGrey = Resources.Load<Texture2D>("Icons/info grey");
+                }
+                return _infoGrey;
+            }
+        }
+
         private static Texture2D _searchIcon;
         public static Texture2D SearchIcon
         {
@@ -650,6 +778,32 @@ namespace Cognitive3D
                 return _settingsIcon;
             }
         }
+
+        private static Texture2D _settingsIconWhite;
+        private static Texture2D _settingsIconBlack;
+        public static Texture2D SettingsIcon2
+        {
+            get
+            {
+                if (EditorGUIUtility.isProSkin)
+                {
+                    if (_settingsIconWhite == null)
+                    {
+                        _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    }
+                    return _settingsIconWhite;
+                }
+                else
+                {
+                    if (_settingsIconBlack == null)
+                    {
+                        _settingsIconBlack = Resources.Load<Texture2D>("Icons/gear black");
+                    }
+                    return _settingsIconBlack;
+                }
+            }
+        }
+
         private static Texture2D _filterIcon;
         public static Texture2D FilterIcon
         {
@@ -738,8 +892,8 @@ namespace Cognitive3D
         {
             Debug.Log("refresh media sources");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -749,14 +903,14 @@ namespace Cognitive3D
                     Debug.Log("SendSceneVersionRequest no scene settings!");
                     return;
                 }
-                string url = CognitiveStatics.GETMEDIASOURCELIST();
+                string url = CognitiveStatics.GetMediaSourceList();
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
                 EditorNetwork.Get(url, GetMediaSourcesResponse, headers, true, "Get Scene Version");//AUTH
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
@@ -839,7 +993,60 @@ namespace Cognitive3D
             }
             return "unknown";
         }
-        #endregion
+
+        private static GameObject _leftController;
+        public static GameObject leftController {
+            get {
+                return _leftController;
+            }
+            internal set {
+                _leftController = value;
+            }
+        }
+        private static GameObject _rightController;
+        public static GameObject rightController {
+            get {
+                return _rightController;
+            }
+            internal set {
+                _rightController = value;
+            }
+        }
+
+        /// <summary>
+        /// Sets controllers from Scene Setup window
+        /// </summary>
+        /// <param name="isRight"></param>
+        /// <param name="controller"></param>
+        internal static void SetControllers(bool isRight, GameObject controller)
+        {
+            if (isRight)
+            {
+                rightController = controller;
+            }
+            else
+            {
+                leftController = controller;
+            }
+        }
+
+        /// <summary>
+        /// Checks if left controller is valid and properly setup in Scene Setup window
+        /// </summary>
+        /// This is used in project validation to check if controllers are setup properly
+        internal static bool IsLeftControllerValid()
+        {
+            return leftController ? true : false;
+        }
+
+        /// <summary>
+        /// Checks if right controller is valid and properly setup in Scene Setup window
+        /// </summary>
+        internal static bool IsRightControllerValid()
+        {
+            return rightController ? true : false;
+        }
+#endregion
 
         #region Packages
 
@@ -1296,7 +1503,7 @@ namespace Cognitive3D
                 return;
             }
 
-            string url = CognitiveStatics.POSTSCREENSHOT(settings.SceneId, settings.VersionNumber);
+            string url = CognitiveStatics.PostScreenshot(settings.SceneId, settings.VersionNumber);
             var bytes = File.ReadAllBytes(path);
             WWWForm form = new WWWForm();
             form.AddBinaryData("screenshot", bytes, "screenshot.png");
@@ -1340,7 +1547,7 @@ namespace Cognitive3D
             //confirm popup and upload
             if (EditorUtility.DisplayDialog("Upload Screenshot", "Upload " + filename + " to " + currentScene.SceneName + " version " + currentScene.VersionNumber + "?", "Upload", "Cancel"))
             {
-                string url = CognitiveStatics.POSTSCREENSHOT(currentScene.SceneId, currentScene.VersionNumber);
+                string url = CognitiveStatics.PostScreenshot(currentScene.SceneId, currentScene.VersionNumber);
                 var bytes = File.ReadAllBytes(path);
                 WWWForm form = new WWWForm();
                 form.AddBinaryData("screenshot", bytes, "screenshot.png");
@@ -1839,6 +2046,10 @@ namespace Cognitive3D
                 sb.Append(entry.id);
                 sb.Append("\",");
 
+                sb.Append("\"isController\":\"");
+                sb.Append(entry.isController);
+                sb.Append("\",");
+
                 sb.Append("\"mesh\":\"");
                 sb.Append(entry.mesh);
                 sb.Append("\",");
@@ -1898,7 +2109,7 @@ namespace Cognitive3D
                 return;
             }
 
-            string url = CognitiveStatics.POSTDYNAMICMANIFEST(settings.SceneId, versionNumber);
+            string url = CognitiveStatics.PostDynamicManifest(settings.SceneId, versionNumber);
             Util.logDebug("Send Manifest Contents: " + json);
 
             //upload manifest

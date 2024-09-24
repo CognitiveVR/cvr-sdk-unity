@@ -53,6 +53,16 @@ namespace Cognitive3D
             SharedCore.SetLobbyId(lobbyid);
         }
 
+        internal static void WriteMetaSubscriptionProperty(int index, List<KeyValuePair<string, object>> list)
+        {
+            SharedCore.WriteSubscriptionDetailToDict(index, list);
+        }
+
+        internal static void SetSubscriptionDetailsReadyToSerialize(bool ready)
+        {
+            SharedCore.SetSubscriptionDetailsReady(ready);
+        }
+
         #endregion
 
         #region CustomEvent
@@ -240,23 +250,23 @@ namespace Cognitive3D
             switch (requestType)
             {
                 case "event":
-                    url = CognitiveStatics.POSTEVENTDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    url = CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     CustomEvent.CustomEventSendEvent();
                     break;
                 case "sensor":
-                    url = CognitiveStatics.POSTSENSORDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    url = CognitiveStatics.PostSensorData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     SensorRecorder.SensorSendEvent();
                     break;
                 case "dynamic":
-                    url = CognitiveStatics.POSTDYNAMICDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    url = CognitiveStatics.PostDynamicData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     DynamicManager.DynamicObjectSendEvent();
                     break;
                 case "gaze":
-                    url = CognitiveStatics.POSTGAZEDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    url = CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     GazeCore.GazeSendEvent();
                     break;
                 case "fixation":
-                    url = CognitiveStatics.POSTFIXATIONDATA(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    url = CognitiveStatics.PostFixationData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     FixationRecorder.FixationSendEvent();
                     break;
                 default: Util.logDevelopment("Invalid Web Post type"); return;

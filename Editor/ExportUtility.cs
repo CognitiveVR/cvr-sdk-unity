@@ -78,7 +78,8 @@ namespace Cognitive3D
         private enum ExportQuadType
         {
             Canvas = 0,
-            TMPro = 1
+            TMPro = 1,
+            SpriteRenderer = 2
         };
 
         #region Export Scene
@@ -461,7 +462,7 @@ namespace Cognitive3D
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(CognitiveStatics.POSTUPDATESCENE(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
+                EditorNetwork.Post(CognitiveStatics.PostUpdateScene(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
             }
             else //upload as new scene
             {
@@ -474,7 +475,7 @@ namespace Cognitive3D
                         headers[v.Key] = v.Value;
                     }
                 }
-                EditorNetwork.Post(CognitiveStatics.POSTNEWSCENE(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
+                EditorNetwork.Post(CognitiveStatics.PostNewScene(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
             }
 
             UploadComplete = uploadComplete;
@@ -561,6 +562,7 @@ namespace Cognitive3D
             SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsOfType<SkinnedMeshRenderer>();
             Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
             Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
+            SpriteRenderer[] spriteRenderers= UnityEngine.Object.FindObjectsOfType<SpriteRenderer>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
             CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
 #if C3D_TMPRO
@@ -573,6 +575,7 @@ namespace Cognitive3D
                 SkinnedMeshes = rootDynamic.GetComponentsInChildren<SkinnedMeshRenderer>();
                 Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
                 Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
+                spriteRenderers = rootDynamic.GetComponentsInChildren<SpriteRenderer>();
                 foreach (var mf in rootDynamic.GetComponentsInChildren<MeshFilter>())
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
@@ -580,6 +583,9 @@ namespace Cognitive3D
                         ProceduralMeshFilters.Add(mf);
                     }
                 }
+#if C3D_TMPRO
+                TextMeshPros = rootDynamic.GetComponentsInChildren<TextMeshPro>();
+#endif
             }
             else
             {
@@ -594,7 +600,7 @@ namespace Cognitive3D
             }
 
             //count custom render and terrain separately - much heavier
-            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases);
+            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases, spriteRenderers);
             float progressPerSmallTask = 0.1f / numberOfSmallTasks;
 
             int numberOfLargeTasks = CountValidLargeTasks(CustomRenders, Terrains);
@@ -799,6 +805,27 @@ namespace Cognitive3D
             }
 #endif
             currentTask = 0;
+            foreach (var v in spriteRenderers)
+            {
+                currentProgress += progressPerSmallTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake Sprites " + currentTask + "/" + spriteRenderers.Length, currentProgress);
+                //if (!v.isActiveAndEnabled) { continue; }
+                if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
+                {
+                    //spriteRenderers as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && v.GetComponentInParent<DynamicObject>() != rootDynamic)
+                {
+                    //exporting dynamic, found spriteRenderers in some other dynamic
+                    continue;
+                }
+                
+                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.SpriteRenderer, false);
+            }
+
+            currentTask = 0;
             foreach (var v in Canvases)
             {
                 if (v.renderMode == RenderMode.ScreenSpaceOverlay || v.renderMode == RenderMode.ScreenSpaceCamera)
@@ -821,8 +848,45 @@ namespace Cognitive3D
                     continue;
                 }
 
-                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.Canvas, false);
+                BakeCanvasGameObject(v.gameObject, meshes);
             }
+        }
+
+        private static GameObject BakeCanvasGameObject(GameObject v, List<BakeableMesh> meshes)
+        {
+            BakeableMesh bm = new BakeableMesh();
+            bm.tempGo = new GameObject(v.gameObject.name);
+
+            bm.tempGo.transform.parent = v.transform;
+            bm.tempGo.transform.position = v.transform.position;
+            bm.tempGo.transform.localRotation = Quaternion.identity;
+            bm.tempGo.transform.localScale = Vector3.one;
+
+            //remove transform scale
+            float width = 0;
+            float height = 0;
+
+            var rt = v.GetComponent<RectTransform>();
+            width = rt.sizeDelta.x;
+            height = rt.sizeDelta.y;
+
+            bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
+            bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
+            Texture2D screenshot;
+            //bake texture from render
+
+            screenshot = TextureBakeCanvas(v.transform, width, height);
+            screenshot.name = v.gameObject.GetInstanceID().ToString(); //use a unqiue texture name for each canvas - unlikely two will be identical
+            bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
+            bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
+            Mesh mesh;
+            
+            //write simple quad
+            mesh = GenerateQuadMesh(v.gameObject.name, Mathf.Max(width, height), Mathf.Max(width, height));
+            bm.meshFilter.sharedMesh = mesh;
+            meshes.Add(bm);
+
+            return bm.tempGo;
         }
 
         private static GameObject BakeQuadGameObject(GameObject v, List<BakeableMesh> meshes, ExportQuadType type, bool dyn)
@@ -832,7 +896,7 @@ namespace Cognitive3D
             if (type != ExportQuadType.TMPro)
             {
                 bm.tempGo.transform.parent = v.transform;
-            }            
+            }
             bm.tempGo.transform.localScale = Vector3.one;
             bm.tempGo.transform.localRotation = Quaternion.identity;
 
@@ -842,8 +906,9 @@ namespace Cognitive3D
             bm.tempGo.transform.position = v.transform.position;
             if (type == ExportQuadType.Canvas)
             {
-                width = v.GetComponent<RectTransform>().sizeDelta.x;
-                height = v.GetComponent<RectTransform>().sizeDelta.y;
+                var rt = v.GetComponent<RectTransform>();
+                width = rt.sizeDelta.x;
+                height = rt.sizeDelta.y;
                 if (Mathf.Approximately(width, height))
                 {
                     //centered
@@ -864,15 +929,32 @@ namespace Cognitive3D
                 MeshRenderer mr = v.GetComponent<MeshRenderer>();
                 width = mr.bounds.size.x;
                 height = mr.bounds.size.y;
-                bm.tempGo.transform.position = v.GetComponent<MeshRenderer>().bounds.center;
+                bm.tempGo.transform.position = mr.bounds.center;
+            }
+            else if (type == ExportQuadType.SpriteRenderer)
+            {
+                SpriteRenderer sr = v.GetComponent<SpriteRenderer>();
+                width = (sr.bounds.extents.x * 2) / sr.transform.localScale.x;
+                height = (sr.bounds.extents.y * 2) / sr.transform.localScale.y;
+                bm.tempGo.transform.position = sr.bounds.center;
             }
 
             bm.meshRenderer = bm.tempGo.AddComponent<MeshRenderer>();
             bm.meshRenderer.sharedMaterial = new Material(Shader.Find("Hidden/Cognitive/Canvas Export Shader")); //2 sided transparent diffuse
             Texture2D screenshot;
             //bake texture from render
-            screenshot = TextureBake(v.transform, type, width, height);
-            screenshot.name = v.gameObject.name.Replace(' ', '_');
+            if (type == ExportQuadType.SpriteRenderer)
+            {
+                SpriteRenderer sr = v.GetComponent<SpriteRenderer>();
+                screenshot = TextureBake(v.transform, type, sr.bounds.extents.x*2, sr.bounds.extents.y*2);
+                screenshot.name = AssetDatabase.GetAssetPath(sr.sprite).GetHashCode().ToString();
+            }
+            else //text mesh pro. canvas should be handled in a different function
+            {
+                screenshot = TextureBake(v.transform, type, width, height);
+                screenshot.name = v.gameObject.GetInstanceID().ToString();
+            }
+            
             bm.meshRenderer.sharedMaterial.mainTexture = screenshot;
             bm.meshFilter = bm.tempGo.AddComponent<MeshFilter>();
             Mesh mesh;
@@ -880,7 +962,7 @@ namespace Cognitive3D
             if (dyn)
             {
                 mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height) / v.transform.lossyScale.x, Mathf.Max(width, height) / v.transform.lossyScale.y);
-            } 
+            }
             else
             {
                 mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
@@ -895,7 +977,7 @@ namespace Cognitive3D
             return bm.tempGo;
         }
 
-        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases)
+        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases, SpriteRenderer[] spriteRenderers)
         {
             int number = 0;
 
@@ -923,6 +1005,12 @@ namespace Cognitive3D
             {
                 if (!v.isActiveAndEnabled) { continue; }
                 if (v.renderMode != RenderMode.WorldSpace) { continue; }
+                number++;
+            }
+
+            foreach (var v in spriteRenderers)
+            {
+                if (!v.enabled) { continue; }
                 number++;
             }
             return number;
@@ -954,46 +1042,53 @@ namespace Cognitive3D
         public static Mesh GenerateTerrainMesh(Terrain terrain)
         {
             //CONSIDER splitting terrain into different mesh. too many polygons causes issues?
-            float downsample = 4;
+            float downsample = terrain.terrainData.heightmapResolution / 256f;
+            downsample = Mathf.Max(downsample, 1);
+            
+            //sample counts > 256x256 will cause issues because Unity doesn't handle meshes with vertex count > 65536
+            //to automatically work around this, the downsample size is calculated so the resulting mesh will have 65536 vertices
 
             Mesh mesh = new Mesh();
             mesh.name = "temp";
 
-            var w = (int)(terrain.terrainData.heightmapResolution / downsample);
-            var h = (int)(terrain.terrainData.heightmapResolution / downsample);
-            Vector3[] vertices = new Vector3[w * h];
-            Vector2[] uv = new Vector2[w * h];
-            Vector4[] tangents = new Vector4[w * h];
-            Vector2 uvScale = new Vector2(1.0f / (w - 1), 1.0f / (w - 1));
-            Vector3 sizeScale = new Vector3(terrain.terrainData.size.x / (w - 1), 1/*terrain.terrainData.size.y*/, terrain.terrainData.size.z / (h - 1));
+            //distance between each sample point
+            var widthSamplesCount = (int)(terrain.terrainData.heightmapResolution / downsample);
+            var heightSamplesCount = (int)(terrain.terrainData.heightmapResolution / downsample);
+
+            Vector3[] vertices = new Vector3[widthSamplesCount * heightSamplesCount];
+            Vector2[] uv = new Vector2[widthSamplesCount * heightSamplesCount];
+            Vector4[] tangents = new Vector4[widthSamplesCount * heightSamplesCount];
+            Vector2 uvScale = new Vector2(1.0f / (widthSamplesCount - 1), 1.0f / (widthSamplesCount - 1));
+            Vector3 sizeScale = new Vector3(terrain.terrainData.size.x / (widthSamplesCount), 1/*terrain.terrainData.size.y*/, terrain.terrainData.size.z / (heightSamplesCount));
 
             //generate mesh strips + Assign them to the mesh
-            for (int y = 0; y < h; y++)
+            for (int y = 0; y < heightSamplesCount; y++)
             {
-                for (int x = 0; x < w; x++)
+                for (int x = 0; x < widthSamplesCount; x++)
                 {
                     float pixelHeight = terrain.terrainData.GetHeight((int)(x * downsample), (int)(y * downsample));
                     Vector3 vertex = new Vector3(x, pixelHeight, y);
-                    vertices[y * w + x] = Vector3.Scale(sizeScale, vertex);
-                    uv[y * w + x] = Vector2.Scale(new Vector2(x, y), uvScale);
-                    tangents[y * w + x] = new Vector4(1, 1, 1, -1.0f);
+                    vertices[y * widthSamplesCount + x] = Vector3.Scale(sizeScale, vertex);
+                    uv[y * widthSamplesCount + x] = Vector2.Scale(new Vector2(x, y), uvScale);
+                    tangents[y * widthSamplesCount + x] = new Vector4(1, 1, 1, -1.0f);
+                    //Debug.DrawRay(vertices[y * widthSamplesCount + x], Vector3.up * 10, Color.white, 20);
                 }
             }
             mesh.vertices = vertices;
             mesh.uv = uv;
 
-            int[] triangles = new int[(h - 1) * (w - 1) * 6];
+            int[] triangles = new int[(heightSamplesCount - 1) * (widthSamplesCount - 1) * 6];
             int index = 0;
-            for (int y = 0; y < h - 1; y++)
+            for (int y = 0; y < heightSamplesCount - 1; y++)
             {
-                for (int x = 0; x < w - 1; x++)
+                for (int x = 0; x < widthSamplesCount - 1; x++)
                 {
-                    triangles[index++] = (y * w) + x;
-                    triangles[index++] = ((y + 1) * w) + x;
-                    triangles[index++] = (y * w) + x + 1;
-                    triangles[index++] = ((y + 1) * w) + x;
-                    triangles[index++] = ((y + 1) * w) + x + 1;
-                    triangles[index++] = (y * w) + x + 1;
+                    triangles[index++] = (y * widthSamplesCount) + x;
+                    triangles[index++] = ((y + 1) * widthSamplesCount) + x;
+                    triangles[index++] = (y * widthSamplesCount) + x + 1;
+                    triangles[index++] = ((y + 1) * widthSamplesCount) + x;
+                    triangles[index++] = ((y + 1) * widthSamplesCount) + x + 1;
+                    triangles[index++] = (y * widthSamplesCount) + x + 1;
                 }
             }
             mesh.triangles = triangles;
@@ -1342,11 +1437,89 @@ namespace Cognitive3D
             {
                 cameraGo.transform.position = target.gameObject.GetComponent<MeshRenderer>().bounds.center - target.transform.forward * 0.05f;
             }
-
+            else if (type == ExportQuadType.SpriteRenderer)
+            {
+                cameraGo.transform.position = target.gameObject.GetComponent<SpriteRenderer>().bounds.center - target.transform.forward * 0.05f;
+            }
             cam.nearClipPlane = 0.04f;
             cam.farClipPlane = 0.06f;
             cam.orthographic = true;
             cam.orthographicSize = Mathf.Max(width, height) / 2;
+            cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
+            cam.backgroundColor = Color.clear;
+
+            //create render texture and assign to camera
+            RenderTexture rt = RenderTexture.GetTemporary(resolution, resolution, 16);
+            RenderTexture.active = rt;
+            cam.targetTexture = rt;
+
+            Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
+            List<Transform> children = new List<Transform>();
+            EditorCore.RecursivelyGetChildren(children, target);
+
+            //set camera to render unassigned layer
+            int layer = EditorCore.FindUnusedLayer();
+            if (layer == -1) { Debug.LogWarning("TextureBake couldn't find unused layer, texture generation might be incorrect"); }
+
+            if (layer != -1)
+            {
+                cam.cullingMask = 1 << layer;
+            }
+
+            //save all canvas layers. put on unassigned layer then render
+            try
+            {
+                if (layer != -1)
+                {
+                    foreach (var v in children)
+                    {
+                        originallayers.Add(v.gameObject, v.gameObject.layer);
+                        v.gameObject.layer = layer;
+                    }
+                }
+                //render to texture
+                cam.Render();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            //reset dynamic object layers
+            if (layer != -1)
+            {
+                foreach (var v in originallayers)
+                {
+                    v.Key.layer = v.Value;
+                }
+            }
+
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(resolution, resolution);
+            RenderTexture.active = rt;
+            tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
+            tex.Apply();
+            RenderTexture.active = null;
+
+            //delete temporary camera
+            UnityEngine.Object.DestroyImmediate(cameraGo);
+
+            return tex;
+        }
+
+        private static Texture2D TextureBakeCanvas(Transform target, float width, float height, int resolution = 512)
+        {
+            GameObject cameraGo = new GameObject("Temp_Camera " + target.gameObject.name);
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            //snap camera to canvas position
+            cameraGo.transform.rotation = target.rotation;
+            cameraGo.transform.position = target.position - target.forward * 2f;
+
+            cam.nearClipPlane = 1f;
+            cam.farClipPlane = 4f;
+            cam.orthographic = true;
+            cam.orthographicSize = Mathf.Max(width * target.lossyScale.x, height * target.lossyScale.z) / 2;
             cam.clearFlags = CameraClearFlags.Color; //WANT TO CLEAR EVERYTHING FROM THIS CAMERA
             cam.backgroundColor = Color.clear;
 
@@ -1684,7 +1857,7 @@ namespace Cognitive3D
         /// search through files for list of dynamic object meshes. if dynamics.name contains exported folder, upload
         /// can display popup warning. returns false if cancelled
         /// </summary>
-        static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
+        internal static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
 
@@ -1760,7 +1933,7 @@ namespace Cognitive3D
                 }
 
                 var dirname = new DirectoryInfo(subdir).Name;
-                string uploadUrl = CognitiveStatics.POSTDYNAMICOBJECTDATA(settings.SceneId, settings.VersionNumber, dirname);
+                string uploadUrl = CognitiveStatics.PostDynamicObjectData(settings.SceneId, settings.VersionNumber, dirname);
 
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 if (EditorCore.IsDeveloperKeyValid)

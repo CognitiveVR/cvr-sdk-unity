@@ -102,6 +102,16 @@ namespace Cognitive3D
             if (read_reader == null) { Debug.LogError("has content reader null"); }
             if (read_reader.BaseStream == null) { Debug.LogError("has content base stream null"); }
 
+            if (read_reader.BaseStream.Length > 0)
+            {
+                return true;
+            }
+
+            //try to merge if write file has any contents
+            if (numberWriteBatches > 0)
+            {
+                MergeDataFiles();
+            }
             return read_reader.BaseStream.Length > 0;
         }
 
@@ -260,10 +270,40 @@ namespace Cognitive3D
             return true;
         }
 
+        public bool CanWrite(string content)
+        {
+            if (write_filestream == null) { return false; }
+            if (read_filestream == null) { return false; }
+
+            long totalBytes = read_filestream.Length + write_filestream.Length;
+            int newBytes = System.Text.Encoding.UTF8.GetByteCount(content);
+
+            if (newBytes + totalBytes > Cognitive3D.Cognitive3D_Preferences.Instance.LocalDataCacheSize)
+            {
+                if (!displayedSizeWarning)
+                {
+                    displayedSizeWarning = true;
+                    Debug.LogError("[Cognitive3D] Data Cache reached size limit!");
+                }
+                return false;
+            }
+            displayedSizeWarning = false;
+            return true;
+        }
+
         public bool WriteContent(string Destination, string body)
         {
             writer.WriteLine(Destination);
             writer.WriteLine(body);
+            writer.Flush();
+            numberWriteBatches++;
+            return true;
+        }
+
+        public bool WriteContent(string content)
+        {
+            // For content that contains both URL and Body together (used for android plugin)
+            writer.WriteLine(content);
             writer.Flush();
             numberWriteBatches++;
             return true;

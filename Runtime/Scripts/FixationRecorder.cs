@@ -658,8 +658,6 @@ namespace Cognitive3D
         }
 #elif C3D_OCULUS
 
-        OVRFaceExpressions cachedFaceExpressions;
-
         const int CachedEyeCaptures = 30;
         private static OVRPlugin.EyeGazesState _currentEyeGazesState;
         readonly float ConfidenceThreshold = 0.5f;
@@ -671,19 +669,11 @@ namespace Cognitive3D
 
             //EyeGazeState confidence always returns 1 from OVRPlugin. this is possibly a bug and may change in future release
             //use blink expression weight for now to throw out unconfident data
-            if (cachedFaceExpressions == null)
-            {
-                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
-                if (cachedFaceExpressions == null)
-                {
-                    return false;
-                }
-            }
 
             float lblinkweight;
             float rblinkweight;
-            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
-            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+            GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+            GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
 
             var eyeGazeRight = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
             var eyeGazeLeft = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
@@ -724,40 +714,25 @@ namespace Cognitive3D
         {
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
-            if (cachedFaceExpressions == null)
-            {
-                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
-                if (cachedFaceExpressions == null)
-                {
-                    return false;
-                }
-            }
-
+            
             float lblinkweight;
-            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
+            GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedL, out lblinkweight);
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Left];
             if (!eyeGaze.IsValid)
                 return false;
-            return lblinkweight > ConfidenceThreshold;
+            return lblinkweight < ConfidenceThreshold;
         }
         bool RightEyeOpen()
         {
             if (!OVRPlugin.GetEyeGazesState(OVRPlugin.Step.Render, -1, ref _currentEyeGazesState))
                 return false;
-            if (cachedFaceExpressions == null)
-            {
-                cachedFaceExpressions = FindObjectOfType<OVRFaceExpressions>();
-                if (cachedFaceExpressions == null)
-                {
-                    return false;
-                }
-            }
+
             float rblinkweight;
-            cachedFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
+            GameplayReferences.OVRFaceExpressions.TryGetFaceExpressionWeight(OVRFaceExpressions.FaceExpression.EyesClosedR, out rblinkweight);
             var eyeGaze = _currentEyeGazesState.EyeGazes[(int)OVRPlugin.Eye.Right];
             if (!eyeGaze.IsValid)
                 return false;
-            return rblinkweight > ConfidenceThreshold;
+            return rblinkweight < ConfidenceThreshold;
         }
 
         long EyeCaptureTimestamp()
@@ -946,9 +921,6 @@ namespace Cognitive3D
                 gliaBehaviour.OnEyeTracking.RemoveListener(RecordEyeTracking);
                 gliaBehaviour.OnEyeTracking.AddListener(RecordEyeTracking);
             }
-#elif C3D_OCULUS
-            OVRPlugin.StartEyeTracking();
-            OVRPlugin.StartFaceTracking();
 #endif
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
             IsInitialized = true;

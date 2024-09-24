@@ -10,12 +10,55 @@ namespace Cognitive3D
 {
     public static class GameplayReferences
     {
-        public static bool handTrackingEnabled;
+        internal static void Initialize()
+        {
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+        private static void Cognitive3D_Manager_OnPostSessionEnd()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+#region Oculus Eye and Face Tracking
 #if C3D_OCULUS
         //face expressions is cached so it doesn't search every frame, instead just a null check. and only if eyetracking is already marked as supported
         static OVRFaceExpressions cachedOVRFaceExpressions;
-#endif
 
+        /// <summary>
+        /// finds or creates an OVRFaceExpressions component. Used for detecting blinking
+        /// </summary>
+        public static OVRFaceExpressions OVRFaceExpressions
+        {
+            get
+            {
+                if (cachedOVRFaceExpressions == null)
+                {
+                    cachedOVRFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
+                    if (cachedOVRFaceExpressions == null)
+                    {
+                        Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
+                    }
+                }
+                return cachedOVRFaceExpressions;
+            }
+        }
+
+        /// <summary>
+        /// returns if eye tracking and face tracking permissions have been allowed, and eye tracking has been started
+        /// </summary>
+        public static bool EyeTrackingEnabled
+        {
+            get;
+            internal set;
+        }
+
+#endif
+#endregion
+
+#region Hand Tracking
         /// <summary>
         /// Represents participant is using hands, controller, or neither
         /// </summary>
@@ -33,7 +76,7 @@ namespace Cognitive3D
         public static TrackingType GetCurrentTrackedDevice()
         {
 #if C3D_OCULUS
-            var currentTrackedDevice = OVRInput.GetActiveController();
+            var currentTrackedDevice = OVRInput.GetConnectedControllers();
             if (currentTrackedDevice == OVRInput.Controller.None)
             {
                 return TrackingType.None;
@@ -53,6 +96,9 @@ namespace Cognitive3D
 #endif
         }
 
+        #endregion
+
+#region Eye Tracking
         public static bool SDKSupportsEyeTracking
         {
             get
@@ -67,25 +113,17 @@ namespace Cognitive3D
                 return Wave.Essence.Eye.EyeManager.Instance.IsEyeTrackingAvailable();
 #elif C3D_OCULUS
 
-                //attempt to exit early if features nor supported/enabled
-                bool eyeTrackingSupportedAndEnabled = OVRPlugin.eyeTrackingSupported && OVRPlugin.eyeTrackingEnabled;
-                if (!eyeTrackingSupportedAndEnabled)
+                //just check if eye tracking is supported
+                //Cognitive3D_Manager tries to enable Eye/Face tracking to create the fixation recorder component
+
+                bool eyeTrackingSupported = OVRPlugin.eyeTrackingSupported;
+                if (!eyeTrackingSupported)
                 {
                     return false;
                 }
 
-                if (cachedOVRFaceExpressions == null)
-                {
-                    cachedOVRFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
-                    if (cachedOVRFaceExpressions == null)
-                    {
-                        Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
-                    }
-                }
-
-                //this happen after creating the face expression component. seems to return false if this feature has no users
-                bool faceTrackingSupportedAndEnabled = OVRPlugin.faceTrackingSupported && OVRPlugin.faceTrackingEnabled;
-                if (!faceTrackingSupportedAndEnabled)
+                bool faceTrackingSupported = OVRPlugin.faceTrackingSupported;
+                if (!faceTrackingSupported)
                 {
                     return false;
                 }
@@ -100,17 +138,9 @@ namespace Cognitive3D
 #endif
             }
         }
-        public static bool SDKSupportsControllers
-        {
-            get
-            {
-                //hand tracking not currently part of the setup process. may work, but not implemented as fully as other SDKs
-#if C3D_MRTK
-                return false;
-#endif
-                return true;
-            }
-        }
+        #endregion
+
+#region Room
         public static bool SDKSupportsRoomSize
         {
             //should be everything except AR SDKS
@@ -123,42 +153,6 @@ namespace Cognitive3D
             }
         }
 
-        internal static void Initialize()
-        {
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-            Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
-        }
-
-        private static void Cognitive3D_Manager_OnPostSessionEnd()
-        {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
-            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
-        }
-
-        //updates controller and hmd inputdevices to call events when states change
-        private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
-        {
-            var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-            if (head.isValid != HMDDevice.isValid)
-            {
-                InvokeHMDValidityChangeEvent(head.isValid);
-                HMDDevice = head;
-            }
-            var left = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
-            if (left.isValid != controllerDevices[0].isValid)
-            {
-                controllerDevices[0] = left;
-                InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
-            }
-            var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
-            if (right.isValid != controllerDevices[1].isValid)
-            {
-                controllerDevices[1] = right;
-                InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
-            }
-        }
-
-#region Room
 
         //really simple function to a rect from a collection of points
         //IMPROVEMENT support non-rectangular boundaries
@@ -255,9 +249,23 @@ namespace Cognitive3D
 
 #region HMD
 
-        static InputDevice HMDDevice;
-
+        private static InputDevice HMDDevice;
         private static Camera cam;
+        
+        /// <summary>
+        /// A refrence to the hmd pointer (if) instantiated for exitpoll
+        /// </summary>
+        private static GameObject hmdPointer;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static GameObject HMDPointer
+        {
+            get { return hmdPointer; }
+            set { hmdPointer = value; }
+        }
+
         public static Camera HMDCameraComponent
         {
             get
@@ -362,15 +370,82 @@ namespace Cognitive3D
             }
         }
 
-#endregion
+        #endregion
 
 #region Controllers
+
+        /// <summary>
+        ///  A refrence to the controller pointer (if) instantiated for exitpoll
+        /// </summary>
+        private static GameObject controllerPointer;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static GameObject ControllerPointer
+        {
+            get { return controllerPointer; }
+            set { controllerPointer = value; }
+        }
+
+        public static bool SDKSupportsControllers
+        {
+            get
+            {
+                //hand tracking not currently part of the setup process. may work, but not implemented as fully as other SDKs
+#if C3D_MRTK
+                return false;
+#endif
+                return true;
+            }
+        }
+
 
         //dynamic objects set as controllers call 'set controller' on enable passing a reference to that transform. input device isn't guaranteed to be valid at this point
 
         static Transform[] controllerTransforms = new Transform[2];
         static InputDevice[] controllerDevices = new InputDevice[2];
 
+        /// <summary>
+        /// Represents how far down the right trigger is pressed <br/>
+        /// Usually 0 - 1 (0 = not at all, 1 = fully pressed)
+        /// </summary>
+        internal static float rightTriggerValue;
+
+        /// <summary>
+        /// Represents how far down the left trigger is pressed <br/>
+        /// Usually 0 - 1 (0 = not at all, 1 = fully pressed)
+        /// </summary>
+        internal static float leftTriggerValue;
+
+
+        /// <summary>
+        /// Updates hmd and controller device info
+        /// </summary>
+        /// <param name="deltaTime">The time elapsed since the last frame</param>
+        private static void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (head.isValid != HMDDevice.isValid)
+            {
+                InvokeHMDValidityChangeEvent(head.isValid);
+                HMDDevice = head;
+            }
+            var left = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            if (left.isValid != controllerDevices[0].isValid)
+            {
+                controllerDevices[0] = left;
+                InvokeControllerValidityChangeEvent(left, XRNode.LeftHand, left.isValid);
+            }
+            left.TryGetFeatureValue(CommonUsages.trigger, out leftTriggerValue);
+            var right = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            if (right.isValid != controllerDevices[1].isValid)
+            {
+                controllerDevices[1] = right;
+                InvokeControllerValidityChangeEvent(right, XRNode.RightHand, right.isValid);
+            }
+            right.TryGetFeatureValue(CommonUsages.trigger, out rightTriggerValue);
+        }
 
         public delegate void onDeviceValidityChange(InputDevice device, XRNode node, bool isValid);
         /// <summary>
@@ -413,31 +488,11 @@ namespace Cognitive3D
             return isControllerTrackingRef;
         }
 
-        public static IControllerPointer ControllerPointerLeft;
-        public static IControllerPointer ControllerPointerRight;
-
-        public static bool DoesPointerExistInScene()
-        {
-            if (ControllerPointerLeft == null && controllerTransforms[0] != null)
-            {
-                ControllerPointerLeft = controllerTransforms[0].GetComponent<IControllerPointer>();
-            }
-            if (ControllerPointerRight == null && controllerTransforms[1] != null)
-            {
-                ControllerPointerRight = controllerTransforms[1].GetComponent<IControllerPointer>();
-            }
-            if (ControllerPointerRight == null && ControllerPointerLeft == null)
-            {
-                return false;
-            }
-            return true;
-        }
-
         /// <summary>
-        /// this function returns true if the cached data for this node is valid. for head, lefthand and righthand only
+        /// Returns true if the cached data for this node is valid. for head, lefthand and righthand only
         /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
+        /// <param name="node">The XRNode (we only support head, left hand, right hand)</param>
+        /// <returns>True if the device is valid</returns>
         public static bool IsInputDeviceValid(XRNode node)
         {
             switch (node)
@@ -453,6 +508,12 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="right"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public static bool GetControllerInfo(bool right, out InputDevice info)
         {
             if (right)
@@ -467,6 +528,12 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="right"></param>
+        /// <param name="transform"></param>
+        /// <returns></returns>
         public static bool GetControllerTransform(bool right, out Transform transform)
         {
             if (right)
@@ -481,9 +548,9 @@ namespace Cognitive3D
             }
         }
 
-        #endregion
+#endregion
 
-        #region Location
+#region Location
 
 #if C3D_LOCATION
         /// <summary>
@@ -543,6 +610,6 @@ namespace Cognitive3D
         }
 #endif
 
-        #endregion
+#endregion
     }
 }

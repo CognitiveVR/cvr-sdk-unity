@@ -18,6 +18,12 @@
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
         "Normal.Realtime.Shared"
+        "Unity.XR.CoreUtils",
+        "UnityEngine.XR.LegacyInputHelpers",
+        "Unity.XR.PicoXR",
+        "PhotonUnityNetworking",
+        "PhotonRealtime",
+        "meta.xr.mrutilitykit"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -31,6 +37,26 @@
             "name": "com.xrpf.privacyframework",
             "expression": "",
             "define": "XRPF"
+        },
+        {
+            "name": "com.unity.xr.core-utils",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_COREUTILITIES"
+        },
+        {
+            "name": "com.unity.xr.legacyinputhelpers",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
+        },
+        {
+            "name": "com.meta.xr.sdk.core",
+            "expression": "65.0.0",
+            "define": "COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
         }
     ],
     "noEngineReferences": false
