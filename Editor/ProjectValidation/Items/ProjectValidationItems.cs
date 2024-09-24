@@ -125,7 +125,7 @@ namespace Cognitive3D
                                 level: ProjectValidation.ItemLevel.Recommended, 
                                 category: CATEGORY,
                                 actionType: ProjectValidation.ItemAction.Apply,
-                                message: "No latest scene version is used.",
+                                message: "No latest scene version is used. Set to the latest version?",
                                 fixmessage: "Latest scene version is used.",
                                 checkAction: () =>
                                 {
@@ -143,7 +143,7 @@ namespace Cognitive3D
                                 level: ProjectValidation.ItemLevel.Recommended, 
                                 category: CATEGORY,
                                 actionType: ProjectValidation.ItemAction.Apply,
-                                message: "No latest scene version is used.",
+                                message: "No latest scene version is used. Set to the latest version?",
                                 fixmessage: "Latest scene version is used.",
                                 checkAction: () =>
                                 {
