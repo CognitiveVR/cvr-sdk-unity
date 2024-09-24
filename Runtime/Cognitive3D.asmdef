@@ -17,7 +17,7 @@
         "Unity.XR.Management",
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
-        "Normal.Realtime.Shared"
+        "Normal.Realtime.Shared",
         "Unity.XR.CoreUtils",
         "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.PicoXR",
