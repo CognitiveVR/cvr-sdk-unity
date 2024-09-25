@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
+
 #if COGNITIVE3D_INCLUDE_UNITY_NETCODE
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -23,14 +25,29 @@ namespace Cognitive3D.Components
         protected void Awake()
         {
             Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
+            Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
         }
 
         protected void OnSessionBegin()
         {
+            WaitForNetworkManager();
+        }
+
+        private async void WaitForNetworkManager()
+        {
+            // Wait until the NetworkManager singleton is available
+            while (Unity.Netcode.NetworkManager.Singleton == null)
+            {
+                await Task.Yield(); // Wait for the next frame
+            }
+
+            OnNetworkManagerReady();
+        }
+
+        private void OnNetworkManagerReady()
+        {
             if (Unity.Netcode.NetworkManager.Singleton != null)
             {
-                Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
-
                 Unity.Netcode.NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnectedCallback;
                 Unity.Netcode.NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
                 Unity.Netcode.NetworkManager.Singleton.OnServerStarted += OnServerStartedCallback;
@@ -40,11 +57,11 @@ namespace Cognitive3D.Components
 
         private void OnPreSessionEnd()
         {
+            Cognitive3D_Manager.OnSessionBegin -= OnSessionBegin;
+            Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
+
             if (Unity.Netcode.NetworkManager.Singleton != null)
             {
-                Cognitive3D_Manager.OnSessionBegin -= OnSessionBegin;
-                Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
-
                 Unity.Netcode.NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnectedCallback;
                 Unity.Netcode.NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
                 Unity.Netcode.NetworkManager.Singleton.OnServerStarted -= OnServerStartedCallback;
