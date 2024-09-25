@@ -142,7 +142,7 @@ namespace Cognitive3D
             Scene currentScene = SceneManager.GetActiveScene();
             EditorSceneManager.SaveScene(currentScene);
 
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            ProjectValidation.RegenerateItems();
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Cognitive3D
                 ProjectValidationLog.RemoveIgnoreItem(item.message);
             }
             
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            ProjectValidation.RegenerateItems();
         }
 
         /// <summary>
@@ -170,6 +170,61 @@ namespace Cognitive3D
         internal static void SetIgnoredItemsFromLog()
         {
             registry.SetIgnoredItemsFromLog(ProjectValidationLog.GetLogIgnoreItems());
+        }
+
+        /// <summary>
+        /// Removes a <see cref="ProjectValidationItem"/> item from registry
+        /// </summary>
+        internal static void RemoveItem(Hash128 id)
+        {
+            registry.RemoveItem(id);
+        }
+
+        /// <summary>
+        /// Updates the message of a validation item that contain the specified message
+        /// </summary>
+        /// <param name="oldmessage">The message to search for in the validation items</param>
+        /// <param name="newmessage">The new message to replace the old message with</param>
+        public static void UpdateItemMessage(string oldmessage, string newmessage)
+        {
+            var items = registry.GetAllItems();
+            foreach (var item in items)
+            {
+                if (item.message.Contains(oldmessage))
+                {
+                    item.message = newmessage;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reevaluates all validation items and updates their fixed status
+        /// </summary>
+        /// Save this function for later
+        public static void UpdateItemFixedStatus()
+        {
+            var items = registry.GetAllItems();
+            foreach (var item in items)
+            {
+                item.isFixed = item.checkAction();
+            }
+        }
+
+        /// <summary>
+        /// Regenerates the validation item list by clearing the existing items and rebuilding the list
+        /// </summary>
+        public static void RegenerateItems()
+        {
+            Reset();
+            ProjectValidationItems.DelayAndInitializeProjectValidation();
+        }
+
+        /// <summary>
+        /// Resets project validation window GUI
+        /// </summary>
+        internal static void ResetGUI()
+        {
+            ProjectValidationGUI.Reset();
         }
 
         /// <summary>
@@ -191,6 +246,31 @@ namespace Cognitive3D
         internal static void Reset()
         {
             registry.Clear();
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a list of controller names from the active scene.
+        /// If no controllers are found, the function returns false
+        /// </summary>
+        /// <param name="controllerNamesList">An output list of controller names if found</param>
+        /// <returns>Returns true if controllers are found, otherwise false</returns>
+        internal static bool TryGetControllers(out List<String> controllerNamesList)
+        {
+            controllerNamesList = new List<string>();
+            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
+            if (controllers == null)
+            {
+                return false;
+            }
+
+            foreach (var controller in controllers)
+            {
+                if (controller.IsController)
+                {
+                    controllerNamesList.Add(controller.name);
+                }
+            }
+            return true;
         }
 
         /// <summary>

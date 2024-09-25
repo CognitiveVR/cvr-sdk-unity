@@ -31,20 +31,22 @@ namespace Cognitive3D
 
         static ProjectValidationItems()
         {
-            WaitBeforeProjectValidation();
+            DelayAndInitializeProjectValidation();
         }
 
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
-        internal static async void WaitBeforeProjectValidation()
+        internal static async void DelayAndInitializeProjectValidation()
         {
             await Task.Delay((int)(INITIAL_DELAY_IN_SECONDS * 1000));
 
             AddProjectValidationItems();
-            UpdateProjectValidationItemStatus();
             ProjectValidation.SetIgnoredItemsFromLog();
-            ProjectValidationGUI.Reset();
+            ProjectValidation.ResetGUI();
         }
 
+        /// <summary>
+        /// Adds project validation items to the registry
+        /// </summary>
         private static void AddProjectValidationItems()
         {            
             ProjectValidation.AddItem(
@@ -62,6 +64,100 @@ namespace Cognitive3D
                     ProjectSetupWindow.Init(ProjectSetupWindow.Page.SDKSelection);
                 }
                 );
+
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
+            if (currentSettings != null)
+            {
+                string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
+                Dictionary<string, string> headers = new Dictionary<string, string>
+                {
+                    { "Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey }
+                };
+
+                EditorNetwork.Get(url, (responsecode, error, text) => 
+                {
+                    var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+                    if (collection != null)
+                    {
+                        // Required item for non-exist scene on dashboard
+                        if (collection.versions.Find(version => version.versionNumber == currentSettings.VersionNumber) != null)
+                        {
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Required, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Fix,
+                                message: "Current scene version not found on dashboard. Set to the latest version?",
+                                fixmessage: "Current scene version found on dashboard.",
+                                checkAction: () =>
+                                {
+                                    return true;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
+                        }
+                        else
+                        {
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Required, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Fix,
+                                message: "Current scene version not found on dashboard. Set to the latest version?",
+                                fixmessage: "Current scene version found on dashboard.",
+                                checkAction: () =>
+                                {
+                                    return false;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
+                        }
+
+                        // Recommended item for latest version
+                        if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
+                        {
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Recommended, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Apply,
+                                message: "No latest scene version is used. Set to the latest version?",
+                                fixmessage: "Latest scene version is used.",
+                                checkAction: () =>
+                                {
+                                    return false;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
+                        }
+                        else
+                        {
+                            ProjectValidation.AddItem(
+                                level: ProjectValidation.ItemLevel.Recommended, 
+                                category: CATEGORY,
+                                actionType: ProjectValidation.ItemAction.Apply,
+                                message: "No latest scene version is used. Set to the latest version?",
+                                fixmessage: "Latest scene version is used.",
+                                checkAction: () =>
+                                {
+                                    return true;
+                                },
+                                fixAction: () =>
+                                {
+                                    EditorCore.RefreshSceneVersion(null);
+                                }
+                            );
+                        }
+                    }
+                }, headers, true, "Get Scene Version");
+            }
 
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -196,12 +292,12 @@ namespace Cognitive3D
                 {
                     string newMessage;
                     string oldMessage = "The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects.";
-                    if (TryGetControllers(out var _controllerNamesList))
+                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
                     {
                         if (_controllerNamesList.Count > 2)
                         {
                             newMessage = oldMessage + $" The detected controller objects are: {string.Join(", ", _controllerNamesList)}";
-                            UpdateProjectValidationItemMessage(oldMessage, newMessage);
+                            ProjectValidation.UpdateItemMessage(oldMessage, newMessage);
                         }
 
                         return _controllerNamesList.Count <= 2;
@@ -223,7 +319,7 @@ namespace Cognitive3D
                 fixmessage: "Controllers are correctly set up in current scene",
                 checkAction: () =>
                 {
-                    if (TryGetControllers(out var _controllerNamesList))
+                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
                     {
                         return _controllerNamesList.Count >= 2;
                     }
@@ -717,46 +813,6 @@ namespace Cognitive3D
     #endif
 
 #endif
-        }
-
-        public static void UpdateProjectValidationItemStatus()
-        {
-            var items = ProjectValidation.registry.GetAllItems();
-            foreach (var item in items)
-            {
-                item.isFixed = item.checkAction();
-            }
-        }
-
-        public static void UpdateProjectValidationItemMessage(string oldmessage, string newmessage)
-        {
-            var items = ProjectValidation.registry.GetAllItems();
-            foreach (var item in items)
-            {
-                if (item.message.Contains(oldmessage))
-                {
-                    item.message = newmessage;
-                }
-            }
-        }
-
-        internal static bool TryGetControllers(out List<String> controllerNamesList)
-        {
-            controllerNamesList = new List<string>();
-            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
-            if (controllers == null)
-            {
-                return false;
-            }
-
-            foreach (var controller in controllers)
-            {
-                if (controller.IsController)
-                {
-                    controllerNamesList.Add(controller.name);
-                }
-            }
-            return true;
         }
     }
 }
