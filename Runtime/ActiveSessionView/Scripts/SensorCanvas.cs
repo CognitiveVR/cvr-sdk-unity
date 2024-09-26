@@ -101,21 +101,21 @@ namespace Cognitive3D.ActiveSession
             if (RenderDelayFrameCount < 10) { return; }
             RenderDelayFrameCount = 0;
 
-            foreach (var lastSensor in SensorRecorder.sensorData)
+            foreach (var sensor in SensorRecorder.LastSensorValues)
             {
                 for (int i = 0; i < SensorEntries.Length; i++)
                 {
                     if (SensorEntries[i].active == false) { continue; }
-                    if (lastSensor.Key != SensorEntries[i].name) { continue; }
-                    SensorEntries[i].TimesValues.Add(new SensorDataPoint(Util.Timestamp(Time.frameCount), lastSensor.Value.LastSensorValue.value));
-                    if (SensorEntries[i].maxValue < lastSensor.Value.LastSensorValue.value)
+                    if (sensor.Key != SensorEntries[i].name) { continue; }
+                    SensorEntries[i].TimesValues.Add(new SensorDataPoint(Util.Timestamp(Time.frameCount), sensor.Value));
+                    if (SensorEntries[i].maxValue < sensor.Value)
                     {
-                        SensorEntries[i].maxValue = lastSensor.Value.LastSensorValue.value;
+                        SensorEntries[i].maxValue = sensor.Value;
                         SensorEntries[i].MaxValue.text = SensorEntries[i].maxValue.ToString("0.000");
                     }
-                    if (SensorEntries[i].minValue > lastSensor.Value.LastSensorValue.value)
+                    if (SensorEntries[i].minValue > sensor.Value)
                     {
-                        SensorEntries[i].minValue = lastSensor.Value.LastSensorValue.value;
+                        SensorEntries[i].minValue = sensor.Value;
                         SensorEntries[i].MinValue.text = SensorEntries[i].minValue.ToString("0.000");
                     }
                 }

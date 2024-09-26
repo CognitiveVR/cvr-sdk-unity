@@ -10,8 +10,6 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMDOrientation")]
     public class HMDOrientation : AnalyticsComponentBase
     {
-        private readonly float HMDOrientationInterval = 1;
-        private float currentTime;
 
         protected override void OnSessionBegin()
         {
@@ -26,18 +24,13 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (isActiveAndEnabled)
             {
-                currentTime += Time.deltaTime;
-                if (currentTime > HMDOrientationInterval)
+                if (GameplayReferences.HMD == null || Cognitive3D_Manager.Instance.trackingSpace == null)
                 {
-                    currentTime = 0;
-                    if (GameplayReferences.HMD == null || Cognitive3D_Manager.Instance.trackingSpace == null)
-                    {
-                        Util.LogOnce("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.", LogType.Warning);
-                        return;
-                    }
-                    RecordPitch();
-                    RecordYaw();
+                    Util.LogOnce("TrackingSpace and/or HMD not configured correctly. Unable to record HMD Orientation.", LogType.Warning);
+                    return;
                 }
+                RecordPitch();
+                RecordYaw();
             }
             else
             {
