@@ -7,6 +7,11 @@ public class NormcoreSync : RealtimeComponent<NormcoreSyncModel>
 {
     private string lobbyID;
 
+    private void OnDestroy()
+    {
+        ClearLobbyId();
+    }
+
     private void UpdateLobbyId()
     {
         lobbyID = model.lobbyId;
@@ -54,5 +59,11 @@ public class NormcoreSync : RealtimeComponent<NormcoreSyncModel>
         Debug.LogError("Lobby id is already set and is " + lobbyId);
 
         return !string.IsNullOrEmpty(lobbyId);
+    }
+
+    public void ClearLobbyId()
+    {
+        lobbyID = null;
+        model.lobbyId = null;
     }
 }

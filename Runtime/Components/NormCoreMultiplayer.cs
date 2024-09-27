@@ -93,10 +93,7 @@ namespace Cognitive3D
             if (TryInstantiateNormcoreSync(out var normcoreSyncInstance))
             {
                 normcoreSync = normcoreSyncInstance.GetComponent<NormcoreSync>();
-                var normcoreSyncView = normcoreSyncInstance.GetComponent<RealtimeView>();
-                Debug.LogError("Do we have realtime? " + normcoreSyncView.realtime);
-            }
-            
+            }         
             if (normcoreSync == null) return;
 
             if (!normcoreSync.TryGetLobbyId(out var lobbyId))
@@ -127,22 +124,22 @@ namespace Cognitive3D
             var options = new Realtime.InstantiateOptions{
                 ownedByClient = false,
                 preventOwnershipTakeover = false,
-                destroyWhenLastClientLeaves = false
+                destroyWhenLastClientLeaves = true
             };
+            var normcoreSync = FindObjectOfType<NormcoreSync>();
 
-            if (FindObjectOfType<NormcoreSync>() == null)
+            if (normcoreSync == null)
             {
                 normcoreSyncInstance = Realtime.Instantiate(normcoreSyncPrefab.name, 
                 position: transform.position,
                 rotation: transform.rotation,
                 options);
-
-                normcoreSyncInstance.name = "Cognitive3D_NormcoreSync";
             }
             else
             {
-                normcoreSyncInstance = FindObjectOfType<NormcoreSync>().gameObject;
+                normcoreSyncInstance = normcoreSync.gameObject;
             }
+            normcoreSyncInstance.name = "Cognitive3D_NormcoreSync";
 
             return normcoreSyncInstance != null;
         }
