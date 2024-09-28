@@ -9,10 +9,8 @@ namespace Cognitive3D
 {
     public class NormcoreMultiplayer : MonoBehaviour
     {
-        public static string lobbyId;
         RealtimeAvatarManager normcoreAvatarManagerComponent;
         Realtime realtimeComponent;
-        public GameObject normcoreSyncPrefab;
         NormcoreSync normcoreSync;
 
         // Start is called before the first frame update
@@ -98,9 +96,10 @@ namespace Cognitive3D
 
             if (!normcoreSync.TryGetLobbyId(out var lobbyId))
             {
-                normcoreSync.SetLobbyId();
+                lobbyId = normcoreSync.SetLobbyId();
             }
             
+            Debug.LogError("Received lobby ID is " + lobbyId);
             Cognitive3D_Manager.SetLobbyId(lobbyId);
 
             new CustomEvent("c3d.multiplayer.connected_to_room")
@@ -130,7 +129,7 @@ namespace Cognitive3D
 
             if (normcoreSync == null)
             {
-                normcoreSyncInstance = Realtime.Instantiate(normcoreSyncPrefab.name, 
+                normcoreSyncInstance = Realtime.Instantiate("Cognitive3D_NormcoreSync", 
                 position: transform.position,
                 rotation: transform.rotation,
                 options);
@@ -143,9 +142,5 @@ namespace Cognitive3D
 
             return normcoreSyncInstance != null;
         }
-
-#region RPC
-        
-#endregion
     }
 }

@@ -42,21 +42,20 @@ public class NormcoreSync : RealtimeComponent<NormcoreSyncModel>
         UpdateLobbyId();
     }
 
-    public void SetLobbyId()
+    public string SetLobbyId()
     {
         if (string.IsNullOrEmpty(lobbyID))
         {
             lobbyID = System.Guid.NewGuid().ToString();
             model.lobbyId = lobbyID;
-
-            Debug.LogError("New lobby id is " + model.lobbyId);
         }
+
+        return model.lobbyId;
     }
 
     public bool TryGetLobbyId(out string lobbyId)
     {
         lobbyId = model.lobbyId;
-        Debug.LogError("Lobby id is already set and is " + lobbyId);
 
         return !string.IsNullOrEmpty(lobbyId);
     }
