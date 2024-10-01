@@ -26,6 +26,7 @@ namespace Cognitive3D
 {
     [HelpURL("https://docs.cognitive3d.com/unity/minimal-setup-guide/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
+    [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
         public static readonly string SDK_VERSION = "1.5.4";
