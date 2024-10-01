@@ -19,12 +19,15 @@ namespace Cognitive3D.Components
 
         private string serverAddress;
         private int port;
+        private const float NETCODE_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
+        private float currentTime = 0;
 
         private static string lobbyID = string.Empty;
 
         protected void Awake()
         {
             Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
         }
 
@@ -58,6 +61,7 @@ namespace Cognitive3D.Components
         private void OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnSessionBegin -= OnSessionBegin;
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
 
             if (Unity.Netcode.NetworkManager.Singleton != null)
@@ -66,6 +70,27 @@ namespace Cognitive3D.Components
                 Unity.Netcode.NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
                 Unity.Netcode.NetworkManager.Singleton.OnServerStarted -= OnServerStartedCallback;
                 Unity.Netcode.NetworkManager.Singleton.OnServerStopped -= OnServerStoppedCallback;
+            }
+        }
+
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (transport && Unity.Netcode.NetworkManager.Singleton.IsListening)
+            {
+                currentTime += deltaTime;
+                
+                if (currentTime > NETCODE_SENSOR_RECORDING_INTERVAL_IN_SECONDS)
+                {
+                    currentTime = 0;
+                    // Records Round-trip time (RTT) in milliseconds from client to server and receive a response packet back
+                    // Returns 0 When the client is also the host because there's no real network communication. 
+                    //      All requests are handled internally, so there's no delay to measure.
+                    SensorRecorder.RecordDataPoint("c3d.multiplayer.ping", transport.GetCurrentRtt(Unity.Netcode.NetworkManager.ServerClientId));
+                }
             }
         }
 
