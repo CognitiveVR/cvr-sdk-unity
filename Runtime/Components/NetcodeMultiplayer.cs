@@ -75,9 +75,6 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            // We don't want these lines to execute if component disabled
-            // Without this condition, these lines will execute regardless
-            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
             if (!Cognitive3D_Manager.IsInitialized) { return; }
             if (transport && Unity.Netcode.NetworkManager.Singleton.IsListening)
             {
