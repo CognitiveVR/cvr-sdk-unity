@@ -26,6 +26,9 @@ namespace Cognitive3D
 		//returns true if successfully saved, false otherwise
 		bool WriteContent(string Destination, string body);
 
+		// Receives and writes (destination + body) content to the local cache
+		bool WriteContent(string content);
+
 		//removes destination and body
 		//implementation may be at 0, or just after peek content. may write new file before exiting
 		void PopContent();
@@ -35,6 +38,9 @@ namespace Cognitive3D
 		void Close();
 
 		bool CanWrite(string destination, string content);
+
+		// Determines if content (destination + body) can be written to the local cache
+		bool CanWrite(string content);
 
 		//returns 0-1 indicating how much space is available based on the maximum cache size. 1 is full
 		float GetCacheFillAmount();

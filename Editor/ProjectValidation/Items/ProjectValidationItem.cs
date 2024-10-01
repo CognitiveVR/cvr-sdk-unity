@@ -9,7 +9,7 @@ namespace Cognitive3D
         public ProjectValidation.ItemLevel level { get; }
         public ProjectValidation.ItemCategory category { get; }
         public ProjectValidation.ItemAction actionType {get;}
-        public string message { get; }
+        public string message { get; set; }
         public string fixmessage { get; }
         public Func<bool> checkAction;
         public bool isFixed;

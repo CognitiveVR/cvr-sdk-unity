@@ -1042,46 +1042,53 @@ namespace Cognitive3D
         public static Mesh GenerateTerrainMesh(Terrain terrain)
         {
             //CONSIDER splitting terrain into different mesh. too many polygons causes issues?
-            float downsample = 4;
+            float downsample = terrain.terrainData.heightmapResolution / 256f;
+            downsample = Mathf.Max(downsample, 1);
+            
+            //sample counts > 256x256 will cause issues because Unity doesn't handle meshes with vertex count > 65536
+            //to automatically work around this, the downsample size is calculated so the resulting mesh will have 65536 vertices
 
             Mesh mesh = new Mesh();
             mesh.name = "temp";
 
-            var w = (int)(terrain.terrainData.heightmapResolution / downsample);
-            var h = (int)(terrain.terrainData.heightmapResolution / downsample);
-            Vector3[] vertices = new Vector3[w * h];
-            Vector2[] uv = new Vector2[w * h];
-            Vector4[] tangents = new Vector4[w * h];
-            Vector2 uvScale = new Vector2(1.0f / (w - 1), 1.0f / (w - 1));
-            Vector3 sizeScale = new Vector3(terrain.terrainData.size.x / (w - 1), 1/*terrain.terrainData.size.y*/, terrain.terrainData.size.z / (h - 1));
+            //distance between each sample point
+            var widthSamplesCount = (int)(terrain.terrainData.heightmapResolution / downsample);
+            var heightSamplesCount = (int)(terrain.terrainData.heightmapResolution / downsample);
+
+            Vector3[] vertices = new Vector3[widthSamplesCount * heightSamplesCount];
+            Vector2[] uv = new Vector2[widthSamplesCount * heightSamplesCount];
+            Vector4[] tangents = new Vector4[widthSamplesCount * heightSamplesCount];
+            Vector2 uvScale = new Vector2(1.0f / (widthSamplesCount - 1), 1.0f / (widthSamplesCount - 1));
+            Vector3 sizeScale = new Vector3(terrain.terrainData.size.x / (widthSamplesCount), 1/*terrain.terrainData.size.y*/, terrain.terrainData.size.z / (heightSamplesCount));
 
             //generate mesh strips + Assign them to the mesh
-            for (int y = 0; y < h; y++)
+            for (int y = 0; y < heightSamplesCount; y++)
             {
-                for (int x = 0; x < w; x++)
+                for (int x = 0; x < widthSamplesCount; x++)
                 {
                     float pixelHeight = terrain.terrainData.GetHeight((int)(x * downsample), (int)(y * downsample));
                     Vector3 vertex = new Vector3(x, pixelHeight, y);
-                    vertices[y * w + x] = Vector3.Scale(sizeScale, vertex);
-                    uv[y * w + x] = Vector2.Scale(new Vector2(x, y), uvScale);
-                    tangents[y * w + x] = new Vector4(1, 1, 1, -1.0f);
+                    vertices[y * widthSamplesCount + x] = Vector3.Scale(sizeScale, vertex);
+                    uv[y * widthSamplesCount + x] = Vector2.Scale(new Vector2(x, y), uvScale);
+                    tangents[y * widthSamplesCount + x] = new Vector4(1, 1, 1, -1.0f);
+                    //Debug.DrawRay(vertices[y * widthSamplesCount + x], Vector3.up * 10, Color.white, 20);
                 }
             }
             mesh.vertices = vertices;
             mesh.uv = uv;
 
-            int[] triangles = new int[(h - 1) * (w - 1) * 6];
+            int[] triangles = new int[(heightSamplesCount - 1) * (widthSamplesCount - 1) * 6];
             int index = 0;
-            for (int y = 0; y < h - 1; y++)
+            for (int y = 0; y < heightSamplesCount - 1; y++)
             {
-                for (int x = 0; x < w - 1; x++)
+                for (int x = 0; x < widthSamplesCount - 1; x++)
                 {
-                    triangles[index++] = (y * w) + x;
-                    triangles[index++] = ((y + 1) * w) + x;
-                    triangles[index++] = (y * w) + x + 1;
-                    triangles[index++] = ((y + 1) * w) + x;
-                    triangles[index++] = ((y + 1) * w) + x + 1;
-                    triangles[index++] = (y * w) + x + 1;
+                    triangles[index++] = (y * widthSamplesCount) + x;
+                    triangles[index++] = ((y + 1) * widthSamplesCount) + x;
+                    triangles[index++] = (y * widthSamplesCount) + x + 1;
+                    triangles[index++] = ((y + 1) * widthSamplesCount) + x;
+                    triangles[index++] = ((y + 1) * widthSamplesCount) + x + 1;
+                    triangles[index++] = (y * widthSamplesCount) + x + 1;
                 }
             }
             mesh.triangles = triangles;
@@ -1850,7 +1857,7 @@ namespace Cognitive3D
         /// search through files for list of dynamic object meshes. if dynamics.name contains exported folder, upload
         /// can display popup warning. returns false if cancelled
         /// </summary>
-        static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
+        internal static bool UploadDynamicObjects(List<string> dynamicMeshNames, bool ShowPopupWindow = false)
         {
             string fileList = "Upload Files:\n";
 

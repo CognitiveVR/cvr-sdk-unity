@@ -4,6 +4,9 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Collections.Generic;
+using System;
+using Object = UnityEngine.Object;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
@@ -159,7 +162,6 @@ namespace Cognitive3D
                 }
                 );
 
-            // Check this!
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
@@ -172,7 +174,7 @@ namespace Cognitive3D
                     if (c3dScene != null)
                     {
                         // Load the asset at the C3D scene path
-                        UnityEngine.Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
+                        Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
                         return scene != null;
                     }
                     
@@ -183,6 +185,90 @@ namespace Cognitive3D
                     Selection.activeObject = EditorCore.GetPreferences();
                 }
             );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message : "The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects.",
+                fixmessage: "The maximum limit of controllers in the scene has not been exceeded.",
+                checkAction: () =>
+                {
+                    string newMessage;
+                    string oldMessage = "The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects.";
+                    if (TryGetControllers(out var _controllerNamesList))
+                    {
+                        if (_controllerNamesList.Count > 2)
+                        {
+                            newMessage = oldMessage + $" The detected controller objects are: {string.Join(", ", _controllerNamesList)}";
+                            UpdateProjectValidationItemMessage(oldMessage, newMessage);
+                        }
+
+                        return _controllerNamesList.Count <= 2;
+                    }
+                    
+                    return true;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
+                message : "Controllers are not correctly set up. Less than 2 controllers are detected in the scene. You can configure the controllers in Cognitive3D > Scene Setup",
+                fixmessage: "Controllers are correctly set up in current scene",
+                checkAction: () =>
+                {
+                    if (TryGetControllers(out var _controllerNamesList))
+                    {
+                        return _controllerNamesList.Count >= 2;
+                    }
+                    
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Edit,
+                message: "A camera with the 'MainCamera' tag should be included in the scene. If the player rig is spawned or persist from another scene, no action is needed. Edit the player rig?",
+                fixmessage: "Main Camera found in the scene",
+                checkAction: () =>
+                {
+                    return Camera.main != null;
+                },
+                fixAction: () =>
+                {
+                    SceneSetupWindow.Init(SceneSetupWindow.Page.PlayerSetup);
+                }
+            );
+
+#if UNITY_ANDROID
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "The minimum Android API level is below 30. The minimum recommended level is 30 to ensure full support for Cognitive3D android plugin features and functionality.",
+                fixmessage: "The minimum Android API level is 30 or higher.",
+                checkAction: () =>
+                {
+                    return PlayerSettings.Android.minSdkVersion >= AndroidSdkVersions.AndroidApiLevel30;
+                },
+                fixAction: () =>
+                {
+                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
+                }
+            );
+#endif
 
 #if C3D_OCULUS
             ProjectValidation.AddItem(
@@ -233,7 +319,7 @@ namespace Cognitive3D
                 }
             );
 
-            OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
+            OVRProjectConfig projectConfig = OVRProjectConfig.CachedProjectConfig;
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
@@ -640,6 +726,37 @@ namespace Cognitive3D
             {
                 item.isFixed = item.checkAction();
             }
+        }
+
+        public static void UpdateProjectValidationItemMessage(string oldmessage, string newmessage)
+        {
+            var items = ProjectValidation.registry.GetAllItems();
+            foreach (var item in items)
+            {
+                if (item.message.Contains(oldmessage))
+                {
+                    item.message = newmessage;
+                }
+            }
+        }
+
+        internal static bool TryGetControllers(out List<String> controllerNamesList)
+        {
+            controllerNamesList = new List<string>();
+            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
+            if (controllers == null)
+            {
+                return false;
+            }
+
+            foreach (var controller in controllers)
+            {
+                if (controller.IsController)
+                {
+                    controllerNamesList.Add(controller.name);
+                }
+            }
+            return true;
         }
     }
 }

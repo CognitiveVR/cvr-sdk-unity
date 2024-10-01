@@ -50,14 +50,18 @@ namespace Cognitive3D
 
         private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
+
+        private static bool completedUpload = false;
+        internal static bool CompletedUpload { get => completedUpload; set => completedUpload = value; }
+
         internal static void Init()
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.currentPage = Page.Welcome;
+            currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -101,11 +105,11 @@ namespace Cognitive3D
         internal static void Init(Page page)
         {
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.currentPage = page;
+            currentPage = page;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -153,13 +157,25 @@ namespace Cognitive3D
             window.maxSize = new Vector2(500, 550);
             window.position = new Rect(position.x+5, position.y+5, 500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+        }
+
+        /// <summary>
+        /// Instantiates a Cognitive3D_Manager <br/>
+        /// Identifies controller and camera objects <br/>
+        /// Sets them up (for example with dynamic objects) <br/>
+        /// Adds to scene settings
+        /// </summary>
+        internal static void PerformBasicSetup()
+        {
+            Init();
+            PlayerSetupStart();
         }
 
         internal enum Page
@@ -175,8 +191,8 @@ namespace Cognitive3D
             SceneUploadProgress,
             SetupComplete
         };
-        private Page _currentPage;
-        public Page currentPage {
+        private static Page _currentPage;
+        public static Page currentPage {
             get {
                 return _currentPage;
             }
@@ -184,7 +200,7 @@ namespace Cognitive3D
                 _currentPage = value;
             }
         }
-        
+
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -304,20 +320,19 @@ namespace Cognitive3D
 
 #region Controllers
 
-        GameObject leftcontroller;
-        GameObject rightcontroller;
-        GameObject mainCameraObject;
-        GameObject trackingSpace;
+        static GameObject leftcontroller;
+        static GameObject rightcontroller;
+        static GameObject mainCameraObject;
+        static GameObject trackingSpace;
 
         [System.NonSerialized]
-        bool initialPlayerSetup;
+        static bool initialPlayerSetup;
 
         //called once when entering controller update page. finds/sets expected defaults
-        void PlayerSetupStart()
+        static void PlayerSetupStart()
         {
             if (initialPlayerSetup) { return; }
             initialPlayerSetup = true;
-
             var camera = Camera.main;
             if (camera != null)
             {
@@ -713,11 +728,12 @@ namespace Cognitive3D
 
             if (GUI.Button(new Rect(160, 420, 200, 30), new GUIContent("Set up GameObjects","Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
-                SetupControllers(leftcontroller, rightcontroller);
-                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
+                if (mainCameraObject != null)
                 {
-                    trackingSpace.AddComponent<RoomTrackingSpace>();
+                    mainCameraObject.tag = "MainCamera";
                 }
+
+                SetupControllers();
 
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
@@ -807,15 +823,20 @@ namespace Cognitive3D
             }
         }
 
-        public static void SetupControllers(GameObject left, GameObject right)
+        public static void SetupControllers()
         {
-            if (left != null && left.GetComponent<DynamicObject>() == null)
+            if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
             {
-                left.AddComponent<DynamicObject>();
+                trackingSpace.AddComponent<RoomTrackingSpace>();
             }
-            if (right != null && right.GetComponent<DynamicObject>() == null)
+
+            if (leftcontroller != null && leftcontroller.GetComponent<DynamicObject>() == null)
             {
-                right.AddComponent<DynamicObject>();
+                leftcontroller.AddComponent<DynamicObject>();
+            }
+            if (rightcontroller != null && rightcontroller.GetComponent<DynamicObject>() == null)
+            {
+                rightcontroller.AddComponent<DynamicObject>();
             }
 
             if (Cognitive3D_Manager.Instance == null)
@@ -844,18 +865,18 @@ namespace Cognitive3D
                 controllerType = DynamicObject.ControllerType.ViveFocus;
 #endif
             
-            if (left != null)
+            if (leftcontroller != null)
             {
-                var dyn = left.GetComponent<DynamicObject>();
+                var dyn = leftcontroller.GetComponent<DynamicObject>();
                 dyn.IsRight = false;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
                 dyn.FallbackControllerType = controllerType;
                 dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
-            if (right != null)
+            if (rightcontroller != null)
             {
-                var dyn = right.GetComponent<DynamicObject>();
+                var dyn = rightcontroller.GetComponent<DynamicObject>();
                 dyn.IsRight = true;
                 dyn.IsController = true;
                 dyn.SyncWithPlayerGazeTick = true;
@@ -1327,17 +1348,18 @@ namespace Cognitive3D
 
         bool UploadSceneGeometry = true;
         bool UploadThumbnail = true;
-        bool UploadDynamicMeshes = true;
-
+        bool UploadPreviouslyExportedDynamicMeshes = true;
+        bool ExportAndUploadDynamicMeshesInScene = true;
+        static DynamicObject[] dynamicObjectsInScene;
         bool SceneExistsOnDashboard;
         bool SceneHasExportFiles;
 
         void UploadSummaryUpdate()
         {
             GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "These will be uploaded to the Cognitive3D Dashboard:", "normallabel");
 
-            int heightOffset = 120;
+            int heightOffset = 80;
 
             int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
@@ -1353,12 +1375,15 @@ namespace Cognitive3D
 
             SceneHasExportFiles = EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
+            /// ////////////////////////////////////
+            /// UPLOAD SCENE GEOMETRY
+            /// ///////////////////////////////////
             var uploadSceneRect = new Rect(30, heightOffset, 30, 30);
             if (!SceneHasExportFiles)
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadSceneRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+2, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 2, 400, 30), "Scene geometry (no files exported)", "normallabel");
                 UploadSceneGeometry = false;
             }
             else
@@ -1378,12 +1403,12 @@ namespace Cognitive3D
                         UploadSceneGeometry = true;
                     }
                 }
-                string uploadGeometryText = "Upload Scene Geometry";
+                string uploadGeometryText = "Scene geometry";
                 if (SceneExistsOnDashboard)
                 {
-                    uploadGeometryText = "Upload Scene Geometry (Version " + (sceneVersion+1) + ")";
+                    uploadGeometryText = "Scene geometry (version " + (sceneVersion+1) + ")";
                 }
-                GUI.Label(new Rect(60, heightOffset+2, 400, 30), uploadGeometryText, "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 2, 400, 30), uploadGeometryText, "normallabel");
             }
 
             var uploadThumbnailRect = new Rect(30, heightOffset+40, 30, 30);
@@ -1391,7 +1416,7 @@ namespace Cognitive3D
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+42, 340, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 42, 340, 30), "Scene thumbnail (no scene exists)", "normallabel");
             }
             else
             {
@@ -1410,66 +1435,141 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail*", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 42, 300, 30), "Scene thumbnail*", "normallabel");
             }
 
-            //upload dynamics
-            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
-            var uploadDynamicRect = new Rect(30, heightOffset+80, 30, 30);
+            /// ////////////////////////////////////
+            /// EXPORTED DYNAMIC OBJECTS
+            /// ///////////////////////////////////
+            var uploadDynamicRect = new Rect(30, heightOffset + 80, 30, 30);
+            int numExportedDynamicObjects = EditorCore.GetExportedDynamicObjectNames().Count;
 
+            // No scene exists
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
-                //can't upload dynamics
                 GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+82, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30),  numExportedDynamicObjects + " previously exported dynamic meshes (no scene exists)", "normallabel");
+                GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
             else
             {
                 //upload dynamics toggle
-                if (UploadDynamicMeshes)
+                if (UploadPreviouslyExportedDynamicMeshes)
                 {
                     if (GUI.Button(uploadDynamicRect, EditorCore.BoxCheckmark, "image_centered"))
                     {
-                        UploadDynamicMeshes = false;
+                        UploadPreviouslyExportedDynamicMeshes = false;
                     }
                 }
                 else
                 {
                     if (GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered"))
                     {
-                        UploadDynamicMeshes = true;
+                        UploadPreviouslyExportedDynamicMeshes = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
-                GUI.Label(new Rect(200, heightOffset+340, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
+
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30), numExportedDynamicObjects + " previously exported dynamic meshes", "normallabel");
+                GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
-            //scene thumbnail preview
-            var thumbnailRect = new Rect(40, heightOffset+130, 420, 180);
+            /// ////////////////////////////////////
+            /// DYNAMICS IN SCENE BUT NOT EXPORTED
+            /// ///////////////////////////////////
+            var exportDynamicRect = new Rect(30, heightOffset + 120, 30, 30);
+            int dynamicObjectsNotExported = 0;
+            List<string> exportedDynamicObjectNames = EditorCore.GetExportedDynamicObjectNames();
+
+            // Go through all dynamic objects in scene
+            // See if it has been exported already (use mesh name as an identifier)
+            // IGNORE CONTROLLERS
+            dynamicObjectsInScene = FindObjectsOfType<DynamicObject>();
+
+            foreach (var dynamicObject in dynamicObjectsInScene)
+            {
+                bool found = false;
+                if (!dynamicObject.IsController)
+                {
+                    // In case there are NO exported object
+                    if (exportedDynamicObjectNames.Count == 0)
+                    {
+                        dynamicObjectsNotExported++;
+                    }
+                    else
+                    {
+                        foreach (var exportedDynamicObjectName in exportedDynamicObjectNames)
+                        {
+                            if (dynamicObject.MeshName == exportedDynamicObjectName)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            dynamicObjectsNotExported++;
+                        }
+                    }
+                }
+            }
+
+            // No scene exists
+            if (!SceneExistsOnDashboard && !UploadSceneGeometry)
+            {
+                GUI.Button(exportDynamicRect, EditorCore.BoxEmpty, "image_centered");
+                GUI.Label(new Rect(60, heightOffset + 122, 400, 30), dynamicObjectsNotExported + " new dynamic mesh(es) (no scene exists)", "normallabel");
+            }
+            else
+            {
+                // upload dynamics toggle
+                if (ExportAndUploadDynamicMeshesInScene)
+                {
+                    if (GUI.Button(exportDynamicRect, EditorCore.BoxCheckmark, "image_centered"))
+                    {
+                        ExportAndUploadDynamicMeshesInScene = false;
+                    }
+                }
+                else
+                {
+                    if (GUI.Button(exportDynamicRect, EditorCore.BoxEmpty, "image_centered"))
+                    {
+                        ExportAndUploadDynamicMeshesInScene = true;
+                    }
+                }
+
+                GUI.Label(new Rect(60, heightOffset + 122, 300, 30), dynamicObjectsNotExported + " new dynamic mesh(es)", "normallabel");
+            }
+
+
+            /// ////////////////////////////////////
+            /// SCENE THUMBNAIL PREVIEW
+            /// ///////////////////////////////////
+            var thumbnailRect = new Rect(40, heightOffset+170, 420, 180);
             Texture2D savedThumbnail = null;
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(150, heightOffset+312, 200, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset + 312, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
                 else
                     GUI.Box(thumbnailRect, "Scene view not found", "image_centeredboxed");
             }
+            // look for thumbnail image file
             else if (EditorCore.GetSceneThumbnail(settings, ref savedThumbnail, false))
             {
-                //look for thumbnail image file
                 GUI.Label(new Rect(150, heightOffset + 280, 200, 20), "Thumbnail from previous scene version");
                 GUI.Box(thumbnailRect, savedThumbnail, "image_centeredboxed");
             }
+            // scene exists and has been uploaded, but no image to fall back to use
             else if (SceneExistsOnDashboard)
             {
-                //scene exists and has been uploaded, but no image to fall back to use
                 GUI.Box(thumbnailRect, "Fallback thumbnail\nnot available", "image_centeredboxed");
             }
+            // if a new scene version is uploaded, can it use the previous thumbnail?
             else
             {
-                //if a new scene version is uploaded, can it use the previous thumbnail?
                 GUI.Box(thumbnailRect, "Thumbnail not uploaded", "image_centeredboxed");
             }
         }
@@ -1611,105 +1711,8 @@ namespace Cognitive3D
                     buttonAppear = false;
                     break;
                 case Page.SceneUpload:
-                    System.Action completedmanifestupload = delegate
-                    {
-                        if (UploadDynamicMeshes)
-                        {
-                            ExportUtility.UploadAllDynamicObjectMeshes(true);
-                        }
-                        currentPage = Page.SetupComplete;
-                    };
-
-                    //fifth upload manifest
-                    System.Action completedRefreshSceneVersion = delegate
-                    {
-                        if (UploadDynamicMeshes)
-                        {
-                            //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
-                            AggregationManifest manifest = new AggregationManifest();
-                            manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
-                            EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
-                        }
-                        else
-                        {
-                            completedmanifestupload.Invoke();
-                        }
-                    };
-
-                    //fourth upload dynamics
-                    System.Action<int> completeSceneUpload = delegate (int responseCode)
-                    {
-                        if (responseCode == 200 || responseCode == 201)
-                        {
-                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
-                        }
-                        else
-                        {
-                            //ExportUtility displays an error popup, so don't need to do other UI here
-                            currentPage = Page.SceneUpload;
-                        }
-                    };
-
-                    //third upload scene
-                    System.Action completeScreenshot = delegate
-                    {
-                        Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
-                        if (current == null)
-                        {
-                            Debug.LogError("Trying to upload to a scene with no settings");
-                            return;
-                        }
-
-                        if (UploadSceneGeometry)
-                        {
-                            if (string.IsNullOrEmpty(current.SceneId))
-                            {
-                                //new scene
-                                if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
-                                {
-                                    sceneUploadProgress = 0;
-                                    sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                    currentPage = Page.SceneUploadProgress;
-                                    ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
-                                }
-                            }
-                            else
-                            {
-                                //new version
-                                if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel"))
-                                {
-                                    currentPage = Page.SceneUploadProgress;
-                                    sceneUploadProgress = 0;
-                                    sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                    ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            //check to upload the thumbnail (without the scene geo)
-                            if (UploadThumbnail)
-                            {
-                                EditorCore.UploadSceneThumbnail(current);
-                            }
-                            completeSceneUpload.Invoke(200);
-                        }
-                    };
-
-                    //second save screenshot
-                    System.Action completedRefreshSceneVersion1 = delegate
-                    {
-                        if (UploadThumbnail)
-                        {
-                            EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-                        }
-                        else
-                        {
-                            //use the existing screenshot (assuming it exists)
-                            completeScreenshot.Invoke();
-                            completeScreenshot = null;
-                        }
-                    };
+                    // Look below at onclick()
+                    // These all happen after that
 
                     //only do this if uploading new scene files
                     //first refresh scene version
@@ -1721,7 +1724,7 @@ namespace Cognitive3D
                             {
                                 if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
                                 {
-                                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                                    UploadSceneAndDynamics(UploadPreviouslyExportedDynamicMeshes, ExportAndUploadDynamicMeshesInScene, UploadSceneGeometry, UploadThumbnail, true);
                                 }
                                 else
                                 {
@@ -1735,7 +1738,7 @@ namespace Cognitive3D
                         }
                         else
                         {
-                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                            UploadSceneAndDynamics(UploadPreviouslyExportedDynamicMeshes, ExportAndUploadDynamicMeshesInScene, UploadSceneGeometry, UploadThumbnail, true);
                         }
                     };
                     buttonDisabled = !(SceneExistsOnDashboard || (SceneHasExportFiles && UploadSceneGeometry));
@@ -1784,10 +1787,25 @@ namespace Cognitive3D
             }
         }
 
-        float sceneUploadProgress;
-        double sceneUploadStartTime;
+        internal static void ExportAllDynamicsInScene()
+        {
+            List<DynamicObject> dynsInSceneList = new List<DynamicObject>();        
+            
+            // This array HAS TO BE reinitialized here because
+            // this function can be from other places and
+            // we cannot guarantee that it has been initialized
+            dynamicObjectsInScene = FindObjectsOfType<DynamicObject>();
+            foreach (var dyn in dynamicObjectsInScene)
+            {
+                dynsInSceneList.Add(dyn);
+            }
+            ExportUtility.ExportDynamicObjects(dynsInSceneList);
+        }
+
+        static float sceneUploadProgress;
+        static double sceneUploadStartTime;
         //TODO styled UI element to display web request progress instead of built-in unity popup
-        void ReceiveSceneUploadProgress(float progress)
+        static void ReceiveSceneUploadProgress(float progress)
         {
             sceneUploadProgress = progress;
         }
@@ -1845,9 +1863,144 @@ namespace Cognitive3D
             }
         }
 
-        List<DynamicObject> GetDynamicObjectsInScene()
+        static List<DynamicObject> GetDynamicObjectsInScene()
         {
             return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
+        }
+
+        /// <summary>
+        /// Upload exported scene and optionally, dynamics
+        /// </summary>
+        /// <param name="uploadExportedDynamics">If true, upload dynamics from export directory</param>
+        /// <param name="exportAndUploadDynamicsFromScene">If true, exports dynamics from scene, and uploads them</param>
+        /// <param name="uploadSceneGeometry">If true, upload scene geometry</param>
+        /// <param name="uploadThumbnail">If true, upload scene thumbnail</param>
+        /// <param name="showPopups">If true, show popups (use false for automation)</param>
+        internal static void UploadSceneAndDynamics(bool uploadExportedDynamics, bool exportAndUploadDynamicsFromScene, bool uploadSceneGeometry, bool uploadThumbnail, bool showPopups = false)
+        {
+            System.Action completedmanifestupload = delegate
+            {
+                if (uploadExportedDynamics)
+                {
+                    ExportUtility.UploadAllDynamicObjectMeshes(showPopups);
+                }
+                else if (exportAndUploadDynamicsFromScene)
+                {
+                    List<string> dynamicMeshNames = new List<string>();
+                    foreach (var dyn in dynamicObjectsInScene)
+                    {
+                        dynamicMeshNames.Add(dyn.MeshName);
+                    }
+                    ExportUtility.UploadDynamicObjects(dynamicMeshNames, showPopups);
+                }
+                currentPage = Page.SetupComplete;
+                CompletedUpload = true;
+            };
+
+            // Fifth: upload manifest
+            System.Action completedRefreshSceneVersion = delegate
+            {
+                if (uploadExportedDynamics || exportAndUploadDynamicsFromScene)
+                {
+                    //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
+                    AggregationManifest manifest = new AggregationManifest();
+                    manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
+                    EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                }
+                else
+                {
+                    completedmanifestupload.Invoke();
+                }
+            };
+
+            // Fourth upload dynamics
+            System.Action<int> completeSceneUpload = delegate (int responseCode)
+            {
+                if (responseCode == 200 || responseCode == 201)
+                {
+                    if (exportAndUploadDynamicsFromScene)
+                    {
+                        ExportAllDynamicsInScene();
+                    }
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
+                }
+                else
+                {
+                    // ExportUtility displays an error popup, so don't need to do other UI here
+                    currentPage = Page.SceneUpload;
+                }
+            };
+
+            //third upload scene
+            System.Action completeScreenshot = delegate
+            {
+                Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
+                if (current == null)
+                {
+                    Debug.LogError("Trying to upload to a scene with no settings");
+                    return;
+                }
+
+                if (uploadSceneGeometry)
+                {
+                    if (showPopups)
+                    {
+                        if (string.IsNullOrEmpty(current.SceneId))
+                        {
+                            // NEW SCENE
+                            if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
+                            {
+                                sceneUploadProgress = 0;
+                                sceneUploadStartTime = EditorApplication.timeSinceStartup;
+                                currentPage = Page.SceneUploadProgress;
+                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                            }
+                        }
+                        else
+                        {
+                            // NEW SCENE VERSION
+                            if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel"))
+                            {
+                                currentPage = Page.SceneUploadProgress;
+                                sceneUploadProgress = 0;
+                                sceneUploadStartTime = EditorApplication.timeSinceStartup;
+                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                            }
+                        }
+                    }
+                    else // UPLOAD WITHOUT POPUPS
+                    {
+                        ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                    }
+                }
+                else
+                {
+                    //check to upload the thumbnail (without the scene geo)
+                    if (uploadThumbnail)
+                    {
+                        EditorCore.UploadSceneThumbnail(current);
+                    }
+                    completeSceneUpload.Invoke(200);
+                }
+            };
+
+            //second save screenshot
+            System.Action completedRefreshSceneVersion1 = delegate
+            {
+                if (uploadThumbnail)
+                {
+                    EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                }
+                else
+                {
+                    //use the existing screenshot (assuming it exists)
+                    completeScreenshot.Invoke();
+                    completeScreenshot = null;
+                }
+            };
+
+            CompletedUpload = false;
+            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
         }
 
 #if C3D_STEAMVR2
