@@ -107,6 +107,9 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Handles actions when a new avatar is created.
+        /// </summary>
         private void OnAvatarCreated(RealtimeAvatarManager avatarManager, RealtimeAvatar avatar, bool isLocalAvatar)
         {
             int newPlayerId = -1;
@@ -123,6 +126,9 @@ namespace Cognitive3D
                 .Send();
         }
 
+        /// <summary>
+        /// Handles actions when an avatar destroyed.
+        /// </summary>
         private void OnAvatarDestroyed(RealtimeAvatarManager avatarManager, RealtimeAvatar avatar, bool isLocalAvatar)
         {
             new CustomEvent("c3d.multiplayer.avatar_destroyed")
@@ -130,8 +136,13 @@ namespace Cognitive3D
                 .Send();
         }
 
+        /// <summary>
+        /// Handles actions when a client connects to a room: 
+        /// sets session properties, sets lobby ID, and sends a custom event with room name and player ID.
+        /// </summary>
         private void OnDidConnectToRoom(Realtime realtime)
         {
+            SetMultiplayerSessionProperties(realtime);
             clientID = realtime.clientID;
 
             if (TryInstantiateNormcoreSync(out var normcoreSyncInstance))
@@ -153,6 +164,10 @@ namespace Cognitive3D
                 .Send();
         }
 
+        /// <summary>
+        /// Handles actions when a client disconnects from a room: 
+        /// sends a custom event with room name and player ID.
+        /// </summary>
         private void OnDidDisconnectFromRoom(Realtime realtime)
         {
             new CustomEvent("c3d.multiplayer.disconnected_from_room")
@@ -161,6 +176,22 @@ namespace Cognitive3D
                 .Send();
         }
 
+        /// <summary>
+        /// Sets session properties for multiplayer related details
+        /// </summary>
+        private void SetMultiplayerSessionProperties(Realtime realtime)
+        {
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.normcoreAppKey", realtime.normcoreAppSettings.normcoreAppKey);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.clientId", realtime.clientID);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.normocoreRoomName", realtime.room.name);
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.normcoreMatcherURL", realtime.normcoreAppSettings.matcherURL);
+        }
+
+        /// <summary>
+        /// Attempts to find or instantiate the NormcoreSync GameObject (NormcoreSync model). 
+        /// Returns true if the instance is found or created, otherwise false.
+        /// </summary>
+        /// <param name="normcoreSyncInstance">Output GameObject for the NormcoreSync instance.</param>
         private bool TryInstantiateNormcoreSync(out GameObject normcoreSyncInstance)
         {
             var options = new Realtime.InstantiateOptions{

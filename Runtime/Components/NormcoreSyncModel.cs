@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
+    // Represents a model for syncing Normcore data, including a lobby ID.
     [RealtimeModel]
     public partial class NormcoreSyncModel
     {
