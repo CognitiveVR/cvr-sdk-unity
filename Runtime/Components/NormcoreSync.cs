@@ -3,66 +3,69 @@ using System.Collections.Generic;
 using UnityEngine;
 using Normal.Realtime;
 
-public class NormcoreSync : RealtimeComponent<NormcoreSyncModel>
+namespace Cognitive3D
 {
-    private string lobbyID;
-
-    private void OnDestroy()
+    public class NormcoreSync : RealtimeComponent<NormcoreSyncModel>
     {
-        ClearLobbyId();
-    }
+        private string lobbyID;
 
-    private void UpdateLobbyId()
-    {
-        lobbyID = model.lobbyId;
-    }
-
-    protected override void OnRealtimeModelReplaced(NormcoreSyncModel previousModel, NormcoreSyncModel currentModel)
-    {
-        if (previousModel != null)
+        private void OnDestroy()
         {
-            previousModel.lobbyIdDidChange -= DidLobbyIdChange;
+            ClearLobbyId();
         }
 
-        if ( currentModel != null)
+        private void UpdateLobbyId()
         {
-            if (currentModel.isFreshModel)
+            lobbyID = model.lobbyId;
+        }
+
+        protected override void OnRealtimeModelReplaced(NormcoreSyncModel previousModel, NormcoreSyncModel currentModel)
+        {
+            if (previousModel != null)
             {
-                currentModel.lobbyId = lobbyID;
+                previousModel.lobbyIdDidChange -= DidLobbyIdChange;
             }
 
-            UpdateLobbyId();
+            if ( currentModel != null)
+            {
+                if (currentModel.isFreshModel)
+                {
+                    currentModel.lobbyId = lobbyID;
+                }
 
-            currentModel.lobbyIdDidChange += DidLobbyIdChange;
+                UpdateLobbyId();
+
+                currentModel.lobbyIdDidChange += DidLobbyIdChange;
+            }
         }
-    }
 
-    private void DidLobbyIdChange(NormcoreSyncModel model, string value)
-    {
-        UpdateLobbyId();
-    }
-
-    public string SetLobbyId()
-    {
-        if (string.IsNullOrEmpty(lobbyID))
+        private void DidLobbyIdChange(NormcoreSyncModel model, string value)
         {
-            lobbyID = System.Guid.NewGuid().ToString();
-            model.lobbyId = lobbyID;
+            UpdateLobbyId();
         }
 
-        return model.lobbyId;
-    }
+        public string SetLobbyId()
+        {
+            if (string.IsNullOrEmpty(lobbyID))
+            {
+                lobbyID = System.Guid.NewGuid().ToString();
+                model.lobbyId = lobbyID;
+            }
 
-    public bool TryGetLobbyId(out string lobbyId)
-    {
-        lobbyId = model.lobbyId;
+            return model.lobbyId;
+        }
 
-        return !string.IsNullOrEmpty(lobbyId);
-    }
+        public bool TryGetLobbyId(out string lobbyId)
+        {
+            lobbyId = model.lobbyId;
 
-    public void ClearLobbyId()
-    {
-        lobbyID = null;
-        model.lobbyId = null;
+            return !string.IsNullOrEmpty(lobbyId);
+        }
+
+        public void ClearLobbyId()
+        {
+            lobbyID = null;
+            model.lobbyId = null;
+        }
     }
 }

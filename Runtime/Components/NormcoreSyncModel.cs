@@ -2,9 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RealtimeModel]
-public partial class NormcoreSyncModel
+namespace Cognitive3D
 {
-    [RealtimeProperty(1, true, true)] 
-    public string _lobbyId;
+    [RealtimeModel]
+    public partial class NormcoreSyncModel
+    {
+        [RealtimeProperty(1, true, true)] 
+        public string _lobbyId;
+    }
 }

@@ -2,20 +2,40 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Normal.Realtime;
-using System;
 using System.Linq;
+using Cognitive3D.Components;
 
 namespace Cognitive3D
 {
-    public class NormcoreMultiplayer : MonoBehaviour
+    public class NormcoreMultiplayer : AnalyticsComponentBase
     {
         RealtimeAvatarManager normcoreAvatarManagerComponent;
         Realtime realtimeComponent;
         NormcoreSync normcoreSync;
 
-        // Start is called before the first frame update
-        void Start()
+        private int clientID;
+
+        private const float NORMCORE_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
+        private float currentTime = 0;
+
+        [SerializeField] private bool _sendEvent;
+
+        protected override void OnSessionBegin()
         {
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
+            
+            if (Realtime.instances.Count > 0)
+            {
+                realtimeComponent = Realtime.instances.First();
+                realtimeComponent.didConnectToRoom += OnDidConnectToRoom;
+                realtimeComponent.didDisconnectFromRoom += OnDidDisconnectFromRoom;
+            }
+            else
+            {
+                Util.logWarning("No Normcore Realtime component found in scene.");
+            }
+
             normcoreAvatarManagerComponent = FindObjectOfType<RealtimeAvatarManager>();
             if (normcoreAvatarManagerComponent != null)
             {
@@ -26,38 +46,64 @@ namespace Cognitive3D
             {
                 Util.logWarning("No Normcore RealtimeAvatarManager component found in scene.");
             }
-            
-            realtimeComponent = FindObjectOfType<Realtime>();
-            if (realtimeComponent != null)
+        }
+
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        {
+            // We don't want these lines to execute if component disabled
+            // Without this condition, these lines will execute regardless
+            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()
+            if (isActiveAndEnabled)
             {
-                realtimeComponent.didConnectToRoom += OnDidConnectToRoom;
-                realtimeComponent.didDisconnectFromRoom += OnDidDisconnectFromRoom;
+                if (!Cognitive3D_Manager.IsInitialized) { return; }
+                currentTime += deltaTime;
+                if (currentTime > NORMCORE_SENSOR_RECORDING_INTERVAL_IN_SECONDS)
+                {
+                    currentTime = 0;
+                    SensorRecorder.RecordDataPoint("c3d.multiplayer.ping", realtimeComponent.ping);
+                }
+
+                // Check if the realtime component is null, and if so, attempt to retrieve the first active Realtime instance.
+                // If a Realtime instance exists, set up event listeners for room connection and disconnection.
+                // Also, find the RealtimeAvatarManager and attach event listeners for avatar creation and destruction.
+                if (realtimeComponent == null)
+                {
+                    if (Realtime.instances.Count > 0)
+                    {
+                        realtimeComponent = Realtime.instances.First();
+                        realtimeComponent.didConnectToRoom += OnDidConnectToRoom;
+                        realtimeComponent.didDisconnectFromRoom += OnDidDisconnectFromRoom;
+
+                        normcoreAvatarManagerComponent = FindObjectOfType<RealtimeAvatarManager>();
+                        if (normcoreAvatarManagerComponent != null)
+                        {
+                            normcoreAvatarManagerComponent.avatarCreated += OnAvatarCreated;
+                            normcoreAvatarManagerComponent.avatarDestroyed += OnAvatarDestroyed;
+                        }
+                    }
+                }
             }
             else
             {
-                Util.logWarning("No Normcore Realtime component found in scene.");
+                Util.LogOnce("Normcore Multiplayer component is disabled. Please enable in inspector.", LogType.Warning);
             }
         }
 
-        private void Update()
+        private void OnPreSessionEnd()
         {
-            SensorRecorder.RecordDataPoint("c3d.multiplayer.ping", realtimeComponent.ping);
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
 
-            if (realtimeComponent == null)
+            if (normcoreAvatarManagerComponent != null)
             {
-                if (Realtime.instances.Count > 0)
-                {
-                    realtimeComponent = Realtime.instances.First();
-                    realtimeComponent.didConnectToRoom += OnDidConnectToRoom;
-                    realtimeComponent.didDisconnectFromRoom += OnDidDisconnectFromRoom;
+                normcoreAvatarManagerComponent.avatarCreated -= OnAvatarCreated;
+                normcoreAvatarManagerComponent.avatarDestroyed -= OnAvatarDestroyed;
+            }
 
-                    normcoreAvatarManagerComponent = FindObjectOfType<RealtimeAvatarManager>();
-                    if (normcoreAvatarManagerComponent != null)
-                    {
-                        normcoreAvatarManagerComponent.avatarCreated += OnAvatarCreated;
-                        normcoreAvatarManagerComponent.avatarDestroyed += OnAvatarDestroyed;
-                    }
-                }
+            if (realtimeComponent != null)
+            {
+                realtimeComponent.didConnectToRoom -= OnDidConnectToRoom;
+                realtimeComponent.didDisconnectFromRoom -= OnDidDisconnectFromRoom;
             }
         }
 
@@ -71,7 +117,7 @@ namespace Cognitive3D
                     newPlayerId = dict.Key;
                 }
             }
-            new CustomEvent("c3d.multiplayer.A new avatar created")
+            new CustomEvent("c3d.multiplayer.new_avatar_created")
                 .SetProperty("Player ID", newPlayerId)
                 .SetProperty("Number of players", avatarManager.avatars.Count)
                 .Send();
@@ -79,14 +125,14 @@ namespace Cognitive3D
 
         private void OnAvatarDestroyed(RealtimeAvatarManager avatarManager, RealtimeAvatar avatar, bool isLocalAvatar)
         {
-            new CustomEvent("c3d.multiplayer.An avatar was destroyed")
+            new CustomEvent("c3d.multiplayer.avatar_destroyed")
                 .SetProperty("Number of players", avatarManager.avatars.Count)
                 .Send();
         }
 
         private void OnDidConnectToRoom(Realtime realtime)
         {
-            Debug.LogError("Connected to room!");
+            clientID = realtime.clientID;
 
             if (TryInstantiateNormcoreSync(out var normcoreSyncInstance))
             {
@@ -99,22 +145,19 @@ namespace Cognitive3D
                 lobbyId = normcoreSync.SetLobbyId();
             }
             
-            Debug.LogError("Received lobby ID is " + lobbyId);
             Cognitive3D_Manager.SetLobbyId(lobbyId);
 
             new CustomEvent("c3d.multiplayer.connected_to_room")
                 .SetProperty("Room Name", realtime.room.name)
-                .SetProperty("Player ID", realtime.clientID)
+                .SetProperty("Player ID", clientID)
                 .Send();
         }
 
         private void OnDidDisconnectFromRoom(Realtime realtime)
         {
-            Debug.LogError("Disconnected from room!");
-
             new CustomEvent("c3d.multiplayer.disconnected_from_room")
                 .SetProperty("Room Name", realtime.room.name)
-                .SetProperty("Player ID", realtime.clientID)
+                .SetProperty("Player ID", clientID)
                 .Send();
         }
 
