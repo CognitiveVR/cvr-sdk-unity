@@ -813,6 +813,34 @@ namespace Cognitive3D
     #endif
 
 #endif
+
+#if C3D_NETCODE
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "No Network Manager found in current scene. To enable Unity Netcode support, the Network Manager needs to be present in one of the project scenes. Add a Network Manager to current scene? If there's already a Network Manager in one of the project scenes, click \"Ignore\".",
+                fixmessage: "Network Manager found in current scene.",
+                checkAction: () =>
+                {
+                    if (ProjectValidation.FindComponentInActiveScene<Unity.Netcode.NetworkManager>())
+                    {
+                        return true;
+                    }
+
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    GameObject networkManagerObject = new GameObject("NetworkManager");
+
+                    Unity.Netcode.NetworkManager networkManager = networkManagerObject.AddComponent<Unity.Netcode.NetworkManager>();
+                    Unity.Netcode.Transports.UTP.UnityTransport transport = networkManagerObject.AddComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+
+                    networkManager.NetworkConfig.NetworkTransport = transport;
+                }
+            );
+#endif
         }
     }
 }
