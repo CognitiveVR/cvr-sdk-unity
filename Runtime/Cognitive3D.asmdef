@@ -17,6 +17,7 @@
         "Unity.XR.Management",
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
+        "Normal.Realtime.Shared",
         "Unity.XR.CoreUtils",
         "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.PicoXR",
@@ -62,6 +63,11 @@
             "name": "com.unity.netcode.gameobjects",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_UNITY_NETCODE"
+        },
+        {
+            "name": "com.normalvr.normcore",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_NORMCORE"
         }
     ],
     "noEngineReferences": false
