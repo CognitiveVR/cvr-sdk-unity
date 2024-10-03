@@ -63,6 +63,11 @@
             "name": "com.unity.netcode.gameobjects",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_UNITY_NETCODE"
+        },
+        {
+            "name": "com.normalvr.normcore",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_NORMCORE"
         }
     ],
     "noEngineReferences": false

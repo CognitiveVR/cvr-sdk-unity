@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Normal.Realtime;
 using System.Linq;
 using Cognitive3D.Components;
+
+#if COGNITIVE3D_INCLUDE_NORMCORE
+using Normal.Realtime;
 
 namespace Cognitive3D
 {
@@ -17,8 +19,6 @@ namespace Cognitive3D
 
         private const float NORMCORE_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
         private float currentTime = 0;
-
-        [SerializeField] private bool _sendEvent;
 
         protected override void OnSessionBegin()
         {
@@ -216,5 +216,26 @@ namespace Cognitive3D
 
             return normcoreSyncInstance != null;
         }
+
+#region Inspector Utils
+        public override string GetDescription()
+        {
+#if C3D_NORMCORE
+            return "Records Normcore-related data and events, such as room connections, disconnections, and RTT/Ping.";
+#else
+            return "This component is disabled. Enable the Normcore support from project window.";
+#endif
+        }
+
+        public override bool GetWarning()
+        {
+#if C3D_NORMCORE
+            return false;
+#else
+            return true;
+#endif
+        }
+#endregion
     }
 }
+#endif
