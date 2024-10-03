@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if COGNITIVE3D_INCLUDE_NORMCORE
 namespace Cognitive3D
 {
     // Represents a model for syncing Normcore data, including a lobby ID.
@@ -12,3 +13,4 @@ namespace Cognitive3D
         public string _lobbyId;
     }
 }
+#endif

@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if COGNITIVE3D_INCLUDE_NORMCORE
 using Normal.Realtime;
 
 namespace Cognitive3D
@@ -78,3 +80,4 @@ namespace Cognitive3D
         }
     }
 }
+#endif
