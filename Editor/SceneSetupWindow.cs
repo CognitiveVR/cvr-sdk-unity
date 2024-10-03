@@ -23,6 +23,10 @@ using Photon.Pun;
 using Unity.Netcode;
 #endif
 
+#if COGNITIVE3D_INCLUDE_NORMCORE
+using Normal.Realtime;
+#endif
+
 #if C3D_STEAMVR2
 using Valve.VR;
 using System.IO;
@@ -322,6 +326,20 @@ namespace Cognitive3D
             {
                 DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<NetworkObject>());
             }
+    #endif
+#endif
+
+#if COGNITIVE3D_INCLUDE_NORMCORE
+    #if C3D_NORMCORE
+        if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>() == null)
+        {
+            Cognitive3D_Manager.Instance.gameObject.AddComponent<NormcoreMultiplayer>();
+        }
+    #else
+        if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>() != null)
+        {
+            DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>());
+        }
     #endif
 #endif
         }
