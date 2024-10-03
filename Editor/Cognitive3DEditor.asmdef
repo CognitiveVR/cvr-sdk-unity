@@ -23,7 +23,8 @@
         "Unity.XR.OpenXR.Features.MetaQuestSupport",
         "Unity.XR.PICO",
         "Unity.XR.PicoXR",
-        "meta.xr.mrutilitykit"
+        "meta.xr.mrutilitykit",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [
         "Editor"
@@ -74,6 +75,11 @@
             "name": "com.meta.xr.mrutilitykit",
             "expression": "65.0.0",
             "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
+        },
+        {
+            "name": "com.unity.netcode.gameobjects",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_UNITY_NETCODE"
         }
     ],
     "noEngineReferences": false
