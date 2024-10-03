@@ -29,7 +29,7 @@ namespace Cognitive3D
             if (state == PlayModeStateChange.EnteredEditMode)
             {
                 ProjectValidation.SetIgnoredItemsFromLog();
-                ProjectValidationItems.UpdateProjectValidationItemStatus();
+                ProjectValidation.RegenerateItems();
                 Reset();
             }
         }
@@ -73,7 +73,7 @@ namespace Cognitive3D
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Checklists"), EditorCore.styles.IconButton))
                 {
-                    ProjectValidationItems.UpdateProjectValidationItemStatus();
+                    ProjectValidation.RegenerateItems();
                     Reset();
                 }
                 if (GUILayout.Button(new GUIContent(EditorCore.SettingsIcon2, "Additional Actions"), EditorCore.styles.IconButton))
@@ -89,7 +89,7 @@ namespace Cognitive3D
                     {
                         ProjectValidationLog.ClearIgnoreItems();
                         ProjectValidation.ResetIgnoredItems();
-                        ProjectValidationItems.UpdateProjectValidationItemStatus();
+                        ProjectValidation.RegenerateItems();
                         Reset();
                     });
 
