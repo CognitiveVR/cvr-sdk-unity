@@ -814,7 +814,78 @@ namespace Cognitive3D
 
 #endif
 
+#region Multiplayer Support
+#if C3D_PHOTON
+        #if !PHOTON_UNITY_NETWORKING
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Photon plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Photon plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
+        #else
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Photon plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Photon plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return true;
+                },
+                fixAction: () =>
+                {
+
+                }
+            );
+        #endif
+#endif
+
 #if C3D_NETCODE
+        #if !COGNITIVE3D_INCLUDE_UNITY_NETCODE
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Unity Netcode for Gameobjects plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Unity Netcode for Gameobjects plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
+        #else
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Unity Netcode for Gameobjects plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Unity Netcode for Gameobjects plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return true;
+                },
+                fixAction: () =>
+                {
+
+                }
+            );
+        #endif
+
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
                 category: CATEGORY,
@@ -841,6 +912,44 @@ namespace Cognitive3D
                 }
             );
 #endif
+
+#if C3D_NORMCORE
+        #if !COGNITIVE3D_INCLUDE_NORMCORE
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Normcore plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Normcore plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
+        #else
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Normcore plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Normcore plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return true;
+                },
+                fixAction: () =>
+                {
+
+                }
+            );
+        #endif
+#endif
+
+#endregion
         }
     }
 }
