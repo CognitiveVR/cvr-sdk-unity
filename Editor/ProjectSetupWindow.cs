@@ -931,7 +931,7 @@ namespace Cognitive3D
 
             // Normcore
             GUI.Label(new Rect(140, 170, 440, 440), "Normcore", "normallabel");
-            GUI.Label(new Rect(320, 165, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Normcore. Requires Mormal Realtime assemblies."), "image_centered");
+            GUI.Label(new Rect(320, 165, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Normcore. Requires Normal Realtime assemblies."), "image_centered");
 
             if (wantNormcoreSupport)
             {

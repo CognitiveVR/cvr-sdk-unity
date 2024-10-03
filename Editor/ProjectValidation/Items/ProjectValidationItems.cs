@@ -884,7 +884,6 @@ namespace Cognitive3D
 
                 }
             );
-        #endif
 
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended, 
@@ -911,6 +910,7 @@ namespace Cognitive3D
                     networkManager.NetworkConfig.NetworkTransport = transport;
                 }
             );
+        #endif
 #endif
 
 #if C3D_NORMCORE
