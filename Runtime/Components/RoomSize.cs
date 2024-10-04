@@ -80,14 +80,6 @@ namespace Cognitive3D.Components
         bool didViveArenaChange;
 #endif
 
-
-        public GameObject post;
-
-        private GameObject post1;
-        private GameObject post2;
-        private GameObject post3;
-        private GameObject post4;
-
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
@@ -112,26 +104,17 @@ namespace Cognitive3D.Components
 
             // Record initial tracking space pos and rot
             trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-            lastRecordedTrackingSpacePosition = trackingSpace.position;
-            previousTrackingSpaceRotation = trackingSpace.rotation;
-            CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-            CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+            if (trackingSpace)
+            {
+                lastRecordedTrackingSpacePosition = trackingSpace.position;
+                previousTrackingSpaceRotation = trackingSpace.rotation;
+                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+            }
 
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref previousRoomSize);
             WriteRoomSizeAsSessionProperty(previousRoomSize);
-
-            // TEST: INSTANTIATE POSTS
-            post1 = Instantiate(post, Vector3.zero, Quaternion.identity);
-            post2 = Instantiate(post, Vector3.zero, Quaternion.identity);
-            post3 = Instantiate(post, Vector3.zero, Quaternion.identity);
-            post4 = Instantiate(post, Vector3.zero, Quaternion.identity);
-
-            // TEST: PARENT THE POSTS TO TRACKING SPACE
-            post1.transform.parent = trackingSpace;
-            post2.transform.parent = trackingSpace;
-            post3.transform.parent = trackingSpace;
-            post4.transform.parent = trackingSpace;
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -176,19 +159,17 @@ namespace Cognitive3D.Components
 #else
                 currentBoundaryPoints = GetCurrentBoundaryPoints();
 
-                // TEST: SET POSITIONS OF POLES
-                post1.transform.localPosition = currentBoundaryPoints[0];
-                post2.transform.localPosition = currentBoundaryPoints[1];
-                post3.transform.localPosition = currentBoundaryPoints[2];
-                post4.transform.localPosition = currentBoundaryPoints[3];
-
-
-                if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
+                if (currentBoundaryPoints != null)
                 {
-                    previousBoundaryPoints = currentBoundaryPoints;
-                    CalculateAndRecordRoomsize(true, true);
-                    CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+                    if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
+                    {
+                        
+                        previousBoundaryPoints = currentBoundaryPoints;
+                        CalculateAndRecordRoomsize(true, true);
+                        CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+                    }
                 }
+                
                 SendEventIfUserExitsBoundary();
 #endif
             }

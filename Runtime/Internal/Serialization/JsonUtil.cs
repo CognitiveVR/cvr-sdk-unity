@@ -244,6 +244,8 @@ namespace Cognitive3D.Serialization
         /// <returns>The string builder that was written to</returns>
         public static StringBuilder SetArrayOfFloat(float[] array, StringBuilder builder)
         {
+            if (array == null || builder == null) return builder;
+
             builder.Append("[");
             for (int i = 0; i < array.Length; i++)
             {
