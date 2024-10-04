@@ -550,6 +550,8 @@ namespace Cognitive3D.Components
         #endregion
 
 #if C3D_VIVEWAVE
+        Vector3 lastRoomSize = new Vector3();
+        
         /// <summary>
         /// Vive Wave Specific: The function to execute when user changes their boundary
         /// </summary>
