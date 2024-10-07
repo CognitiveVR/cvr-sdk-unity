@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.XR;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
 #if C3D_VIVEWAVE
     using Wave;
     using Wave.Native;
@@ -20,14 +21,61 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Room Size")]
     public class RoomSize : AnalyticsComponentBase
     {
+        /// <summary>
+        /// The previous list of coordinates (local to tracking space) describing the boundary <br/>
+        /// Used for comparison to determine if the boundary changed
+        /// </summary>
         Vector3[] previousBoundaryPoints = new Vector3[0];
-        readonly float BoundaryTrackingInterval = 1;
-        Vector3 lastRoomSize = new Vector3();
+
+        /// <summary>
+        /// The current (this frame) list of coordinates (local to tracking space) describing the boundary
+        /// </summary>
+        Vector3[] currentBoundaryPoints = new Vector3[0];
+
+        /// <summary>
+        /// The last recorded roomsize; used for comparison and roomsize change
+        /// </summary>
+        Vector3 previousRoomSize = new Vector3();
+
+        /// <summary>
+        /// The current roomsize 
+        /// </summary>
         Vector3 roomSize = new Vector3();
+        
+        /// <summary>
+        /// Set to true if the player is outside the guardian
+        /// </summary>
         bool isHMDOutsideBoundary;
 
-        //counts up the deltatime to determine when the interval ends
-        float currentTime;
+        /// <summary>
+        /// A reference to the tracking space of the player's rig
+        /// </summary>
+        Transform trackingSpace = null;
+
+        /// <summary>
+        /// The previous position of the tracking space; used for comparison to detect "moved enough"
+        /// </summary>
+        Vector3 lastRecordedTrackingSpacePosition = new Vector3();
+        
+        /// <summary>
+        /// The previous rotation of the tracking space; used for comparison to detect "rotated enough"
+        /// </summary>
+        Quaternion previousTrackingSpaceRotation = Quaternion.identity;
+
+        /// <summary>
+        /// A 10% overflow buffer added to string builder
+        /// </summary>
+        private readonly float NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
+
+        /// <summary>
+        /// The threshold for minimum position (in metres) change to re-record boundary points
+        /// </summary>
+        private readonly float TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES = 0.01f;
+
+        /// <summary>
+        /// The threshold for minimum rotation (in degrees) change to re-record boundary points
+        /// </summary>
+        private readonly float TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES = 5f;
 
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
@@ -37,28 +85,63 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-            previousBoundaryPoints = GetCurrentBoundaryPoints();
+            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
+
+            // Get initial values of boundary and tracking space
+            currentBoundaryPoints = GetCurrentBoundaryPoints();
+            previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
+
+            // We want to intialize the string builder to a size appropriate for the number of points
+            // This number might change if the participant redraws boundary, so we are adding a grace extension
+            // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
+            // That is expensive, but there is a low probability of this happening
+            if (currentBoundaryPoints != null)
+            {
+                CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * currentBoundaryPoints.Length));
+                // Record initial boundary shape
+                CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+            }
+
+            // Record initial tracking space pos and rot
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+            if (trackingSpace)
+            {
+                lastRecordedTrackingSpacePosition = trackingSpace.position;
+                previousTrackingSpaceRotation = trackingSpace.rotation;
+                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+            }
+
             CalculateAndRecordRoomsize(false, false);
-            GetRoomSize(ref lastRoomSize);
-            WriteRoomSizeAsSessionProperty(lastRoomSize);
+            GetRoomSize(ref previousRoomSize);
+            WriteRoomSizeAsSessionProperty(previousRoomSize);
 
 #if C3D_VIVEWAVE
             SystemEvent.Listen(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
 #endif
         }
 
-        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
+        /// <summary>
+        /// Called 10 times per second; 10Hz
+        /// </summary>
+        private void Cognitive3D_Manager_OnTick()
         {
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
-                currentTime += deltaTime;
-                if (currentTime > BoundaryTrackingInterval)
-                {
-                    currentTime = 0;
+                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+
+                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
+                        || Math.Abs(Vector3.Angle(previousTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES) // if tracking space moved enough
+                { 
+                    CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                    CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+                    lastRecordedTrackingSpacePosition = trackingSpace.position;
+                    previousTrackingSpaceRotation = trackingSpace.rotation;
+                }
+
 
 #if C3D_VIVEWAVE
 
@@ -74,15 +157,21 @@ namespace Cognitive3D.Components
                         isHMDOutsideBoundary = false;
                     }
 #else
-                    var currentBoundaryPoints = GetCurrentBoundaryPoints();
+                currentBoundaryPoints = GetCurrentBoundaryPoints();
+
+                if (currentBoundaryPoints != null)
+                {
                     if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
                     {
+                        
                         previousBoundaryPoints = currentBoundaryPoints;
                         CalculateAndRecordRoomsize(true, true);
+                        CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
                     }
-                    SendEventIfUserExitsBoundary();
-#endif
                 }
+                
+                SendEventIfUserExitsBoundary();
+#endif
             }
             else
             {
@@ -100,7 +189,6 @@ namespace Cognitive3D.Components
         {
             if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
             if (previousBoundary == null && currentBoundary == null) { return false; }
-
 
             // OCULUS SPECIFIC HACK 
             // Going far beyond boundary sometimes causes a pause
@@ -175,14 +263,8 @@ namespace Cognitive3D.Components
             setup.GetWorkingCollisionBoundsInfo(out steamVRBoundaryPoints);
             return ConvertSteamVRToUnityBounds(steamVRBoundaryPoints);
 #elif C3D_PICOXR
-            if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
-            {
-                return Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.PlayArea);
-            }
-            else
-            {
-                return null;
-            }
+            // No support available yet
+            return null
 #else
             // Using Unity's XRInputSubsystem as fallback
             List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
@@ -259,12 +341,12 @@ namespace Cognitive3D.Components
         /// </summary>
         /// <param name="roomSizeRef">A Vector3 representing new roomsize</param>
         private void SendBoundaryChangeEvent(Vector3 roomSizeRef)
-        {     
+        {
             // Chain SetProperty() instead of one SetProperties() to avoid creating dictionary and garbage
             new CustomEvent("c3d.User changed boundary")
-            .SetProperty("Previous Room Size", lastRoomSize.x * lastRoomSize.z)
-            .SetProperty("New Room Size", roomSizeRef.x * roomSizeRef.z)
-            .Send();
+                .SetProperty("Previous Room Size", previousRoomSize.x * previousRoomSize.z)
+                .SetProperty("New Room Size", roomSizeRef.x * roomSizeRef.z)
+                .Send();
         }
 
         /// <summary>
@@ -278,7 +360,6 @@ namespace Cognitive3D.Components
                 isHMDOutsideBoundary = true;
             }
         }
-
 
         /// <summary>
         /// Called at session beginning and when boundary changes.
@@ -295,11 +376,19 @@ namespace Cognitive3D.Components
 #endif
                 {
                     float currentArea = roomSize.x * roomSize.z;
-                    float lastArea = lastRoomSize.x * lastRoomSize.z;
+                    float lastArea = previousRoomSize.x * previousRoomSize.z;
 
                     // We have determined that a recenter causes change in boundary points without chaning the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
+                        // FIX TRACKING AND BOUNDARIES AGAIN
+                        // If recenter, tracking space gets xz pos of camera, and y rotation of camera
+                        CustomTransform recenteredTransform = new CustomTransform(
+                            new Vector3(GameplayReferences.HMD.position.x, trackingSpace.position.y, GameplayReferences.HMD.position.z),
+                            Quaternion.Euler(trackingSpace.rotation.x, GameplayReferences.HMD.rotation.y, trackingSpace.rotation.z));
+                        CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
+                        CoreInterface.RecordBoundaryShape(GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
+
                         if (recordRecenterAsEvent)
                         {
                             SendRecenterEvent();
@@ -313,7 +402,7 @@ namespace Cognitive3D.Components
                         {
                             SendBoundaryChangeEvent(roomSize);
                         }
-                        lastRoomSize = roomSize;
+                        previousRoomSize = roomSize;
                     }
                 }
             }
@@ -455,6 +544,8 @@ namespace Cognitive3D.Components
         #endregion
 
 #if C3D_VIVEWAVE
+        Vector3 lastRoomSize = new Vector3();
+        
         /// <summary>
         /// Vive Wave Specific: The function to execute when user changes their boundary
         /// </summary>
@@ -483,15 +574,15 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
-            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
 
 #if C3D_VIVEWAVE
             SystemEvent.Remove(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
 #endif
         }
 
-    #region Inspector Utils
+        #region Inspector Utils
         public override bool GetWarning()
         {
             return !GameplayReferences.SDKSupportsRoomSize;
@@ -508,7 +599,27 @@ namespace Cognitive3D.Components
                 return "Current platform does not support this component";
             }
         }
-#endregion
+        #endregion
+    }
 
+    /// <summary>
+    /// A custom class to mimic behaviour of UnityEngine.Transform
+    /// We use this so we can construct a Transform from position and rotation
+    /// </summary>
+    internal class CustomTransform
+    {
+        /// <summary>
+        /// Constructor for our custom transform
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        internal CustomTransform(Vector3 position, Quaternion rotation)
+        {
+            this.pos = position;
+            this.rot = rotation;
+        }
+
+        internal Vector3 pos;
+        internal Quaternion rot;
     }
 }

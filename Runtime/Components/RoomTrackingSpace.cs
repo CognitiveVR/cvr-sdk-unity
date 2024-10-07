@@ -48,7 +48,10 @@ namespace Cognitive3D
 
         private void InvokeTrackingSpaceChanged()
         {
-            TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+            if (cachedTrackingSpace != null)
+            {
+                TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+            }
         }
     }
 }
