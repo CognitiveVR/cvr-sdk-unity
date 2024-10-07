@@ -2,6 +2,7 @@
 using UnityEngine.XR;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 #if C3D_VIVEWAVE
     using Wave;
     using Wave.Native;
@@ -265,7 +266,12 @@ namespace Cognitive3D.Components
 #elif C3D_PICOXR
             if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
             {
-                return Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.PlayArea);
+                List<Vector3> PXRPoints = Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.PlayArea).ToList();
+                if (PXRPoints.Count > 0)
+                {
+                    PXRPoints = GetMaxInscribedRectangle(PXRPoints);
+                }
+                return PXRPoints.ToArray();
             }
             else
             {
@@ -606,6 +612,93 @@ namespace Cognitive3D.Components
             }
         }
         #endregion
+
+        List<Vector3> GetConvexHull(List<Vector3> points)
+        {
+            // Sort the points by x, and by z in case of tie
+            points = points.OrderBy(p => p.x).ThenBy(p => p.z).ToList();
+
+            if (points.Count <= 1)
+                return points;
+
+            List<Vector3> lowerHull = new List<Vector3>();
+            List<Vector3> upperHull = new List<Vector3>();
+
+            // Build the lower hull
+            foreach (var p in points)
+            {
+                while (lowerHull.Count >= 2 && Cross(lowerHull[lowerHull.Count - 2], lowerHull[lowerHull.Count - 1], p) <= 0)
+                {
+                    lowerHull.RemoveAt(lowerHull.Count - 1);
+                }
+                lowerHull.Add(p);
+            }
+
+            // Build the upper hull
+            for (int i = points.Count - 1; i >= 0; i--)
+            {
+                Vector3 p = points[i];
+                while (upperHull.Count >= 2 && Cross(upperHull[upperHull.Count - 2], upperHull[upperHull.Count - 1], p) <= 0)
+                {
+                    upperHull.RemoveAt(upperHull.Count - 1);
+                }
+                upperHull.Add(p);
+            }
+
+            // Remove the last point of each half because it’s repeated at the beginning of the other half
+            upperHull.RemoveAt(upperHull.Count - 1);
+            lowerHull.RemoveAt(lowerHull.Count - 1);
+
+            // Combine lower and upper hull to get the convex hull
+            lowerHull.AddRange(upperHull);
+            return lowerHull;
+        }
+
+        // Cross product to determine the orientation of the turn between points
+        float Cross(Vector3 O, Vector3 A, Vector3 B)
+        {
+            return (A.x - O.x) * (B.z - O.z) - (A.z - O.z) * (B.x - O.x);
+        }
+
+        List<Vector3> GetMaxInscribedRectangle(List<Vector3> points)
+        {
+            List<Vector3> convexHullPoints = GetConvexHull(points);
+
+            if (convexHullPoints == null || convexHullPoints.Count < 3)
+            {
+                Debug.LogError("Convex hull points are not valid.");
+                return null;
+            }
+
+            Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+            foreach (var point in convexHullPoints)
+            {
+                if (point.x < min.x) min.x = point.x;
+                if (point.y < min.y) min.y = point.y;
+                if (point.z < min.z) min.z = point.z;
+
+                if (point.x > max.x) max.x = point.x;
+                if (point.y > max.y) max.y = point.y;
+                if (point.z > max.z) max.z = point.z;
+            }
+
+            Vector3 bottomLeft = new Vector3(min.x, min.y, min.z);
+            Vector3 bottomRight = new Vector3(max.x, min.y, min.z);
+            Vector3 topLeft = new Vector3(min.x, min.y, max.z);
+            Vector3 topRight = new Vector3(max.x, min.y, max.z);
+
+            List<Vector3> rectangleCorners = new List<Vector3>
+            {
+                bottomLeft,
+                bottomRight,
+                topRight,
+                topLeft
+            };
+
+            return rectangleCorners;
+        }
 
     }
 
