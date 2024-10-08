@@ -11,6 +11,13 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
     public class PhysicsGaze : GazeBase, IPhysicsGaze
     {
+        public delegate void onGazeTick();
+        /// <summary>
+        /// Called on a 0.1 second interval
+        /// </summary>
+        public static event onGazeTick OnGazeTick;
+        private static void InvokeGazeTickEvent() { if (OnGazeTick != null) { OnGazeTick(); } }
+
         public override void Initialize()
         {
             base.Initialize();
@@ -26,6 +33,7 @@ namespace Cognitive3D
             while (Cognitive3D_Manager.IsInitialized)
             {
                 yield return Cognitive3D_Manager.playerSnapshotInverval;
+                InvokeGazeTickEvent();
 
                 RaycastHit hit;
                 Ray ray = GazeHelper.GetCurrentWorldGazeRay();
@@ -112,7 +120,7 @@ namespace Cognitive3D
                 }
             }
         }
-        
+
         private void OnEndSessionEvent()
         {
             Cognitive3D_Manager.OnPreSessionEnd -= OnEndSessionEvent;
