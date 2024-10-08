@@ -13,14 +13,7 @@ namespace Cognitive3D
     {
         public override void Initialize()
         {
-            // Cognitive3D_Manager.OnSessionBegin += Cognitive3D_Manager_InitEvent;
-            if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Physics Gaze needs a camera to function"); }
-            StartCoroutine(Tick());
-            Cognitive3D_Manager.OnPreSessionEnd += OnEndSessionEvent;
-        }
-
-        private void Cognitive3D_Manager_InitEvent()
-        {
+            base.Initialize();
             if (GameplayReferences.HMD == null) { Cognitive3D.Util.logWarning("HMD is null! Physics Gaze needs a camera to function"); }
             StartCoroutine(Tick());
             Cognitive3D_Manager.OnPreSessionEnd += OnEndSessionEvent;
@@ -119,11 +112,7 @@ namespace Cognitive3D
                 }
             }
         }
-
-        private void OnDestroy()
-        {
-            Cognitive3D_Manager.OnSessionBegin -= Cognitive3D_Manager_InitEvent;
-        }
+        
         private void OnEndSessionEvent()
         {
             Cognitive3D_Manager.OnPreSessionEnd -= OnEndSessionEvent;
