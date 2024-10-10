@@ -43,8 +43,8 @@ namespace Cognitive3D
                 return instance;
             }
         }
-        YieldInstruction playerSnapshotInverval;
-        YieldInstruction automaticSendInterval;
+        internal static YieldInstruction playerSnapshotInverval;
+        internal static YieldInstruction automaticSendInterval;
 
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool BeginSessionAutomatically = true;
@@ -228,7 +228,10 @@ namespace Cognitive3D
             {
                 gazeBase = gameObject.AddComponent<PhysicsGaze>();
             }
-            gazeBase.Initialize();
+
+            // Initializes gaze through physics gaze interface
+            IPhysicsGaze gaze = gameObject.GetComponent<IPhysicsGaze>();
+            gaze.Initialize();
 
 #if C3D_OCULUS
             //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled

@@ -16,7 +16,7 @@ namespace Cognitive3D
         protected bool headsetPresent;
 
         //called immediately after construction
-        internal virtual void Initialize()
+        public virtual void Initialize()
         {
 #if C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;
