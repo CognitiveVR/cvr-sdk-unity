@@ -228,7 +228,10 @@ namespace Cognitive3D
             {
                 gazeBase = gameObject.AddComponent<PhysicsGaze>();
             }
-            gazeBase.Initialize();
+
+            // Initializes gaze through physics gaze interface
+            IPhysicsGaze gaze = gameObject.GetComponent<IPhysicsGaze>();
+            gaze.Initialize();
 
 #if C3D_OCULUS
             //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled
