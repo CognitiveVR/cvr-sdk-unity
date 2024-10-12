@@ -33,7 +33,15 @@ namespace Cognitive3D
             while (Cognitive3D_Manager.IsInitialized)
             {
                 yield return Cognitive3D_Manager.playerSnapshotInverval;
-                InvokeGazeTickEvent();
+                
+                try
+                {
+                    InvokeGazeTickEvent();
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogException(e);
+                }
 
                 RaycastHit hit;
                 Ray ray = GazeHelper.GetCurrentWorldGazeRay();
