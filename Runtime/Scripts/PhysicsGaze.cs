@@ -9,7 +9,7 @@ using Cognitive3D;
 namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
-    public class PhysicsGaze : GazeBase, IPhysicsGaze
+    public class PhysicsGaze : GazeBase, IGazeRecorder
     {
         public delegate void onGazeTick();
         /// <summary>

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public interface IPhysicsGaze
+    public interface IGazeRecorder
     {
         void Initialize();
     }

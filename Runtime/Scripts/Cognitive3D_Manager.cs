@@ -230,7 +230,7 @@ namespace Cognitive3D
             }
 
             // Initializes gaze through physics gaze interface
-            IPhysicsGaze gaze = gameObject.GetComponent<IPhysicsGaze>();
+            IGazeRecorder gaze = gameObject.GetComponent<IGazeRecorder>();
             gaze.Initialize();
 
 #if C3D_OCULUS
