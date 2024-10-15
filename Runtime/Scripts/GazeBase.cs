@@ -59,7 +59,7 @@ namespace Cognitive3D
         /// <param name="distance"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        internal static bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
+        protected virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
         {
             //raycast to dynamic. if failed, spherecast with radius
             //if hit dynamic, return info
