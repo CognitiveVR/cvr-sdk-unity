@@ -88,7 +88,7 @@ namespace Cognitive3D
         }
 
         [System.NonSerialized]
-        public GazeBase gazeBase;
+        public IGazeRecorder gaze;
         [System.NonSerialized]
         public FixationRecorder fixationRecorder;
 
@@ -223,14 +223,12 @@ namespace Cognitive3D
             Util.logDebug("Cognitive3D Initialized");
 
             //TODO support for 360 skysphere media recording
-            gazeBase = gameObject.GetComponent<PhysicsGaze>();
-            if (gazeBase == null)
+            // Initializes gaze through gaze recorder interface
+            gaze = gameObject.GetComponent<PhysicsGaze>();
+            if (gaze == null)
             {
-                gazeBase = gameObject.AddComponent<PhysicsGaze>();
+                gaze = gameObject.AddComponent<PhysicsGaze>();
             }
-
-            // Initializes gaze through physics gaze interface
-            IGazeRecorder gaze = gameObject.GetComponent<IGazeRecorder>();
             gaze.Initialize();
 
 #if C3D_OCULUS
