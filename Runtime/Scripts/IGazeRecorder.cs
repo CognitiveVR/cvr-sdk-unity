@@ -6,6 +6,8 @@ namespace Cognitive3D
 {
     public interface IGazeRecorder
     {
+        CircularBuffer<ThreadGazePoint> DisplayGazePoints { get; }
+
         void Initialize();
     }
 }
