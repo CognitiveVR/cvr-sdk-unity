@@ -8,9 +8,16 @@ using Cognitive3D;
 namespace Cognitive3D
 {
     [AddComponentMenu("")]
-    public class GazeBase : MonoBehaviour
+    public class GazeBase : MonoBehaviour, IGazeRecorder
     {
-        internal CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
+        private CircularBuffer<ThreadGazePoint> displayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
+
+        // Public getter to expose the circular buffer
+        public CircularBuffer<ThreadGazePoint> DisplayGazePoints
+        {
+            get { return displayGazePoints; }
+        }
+
         internal static Vector3 LastGazePoint;
 
         protected bool headsetPresent;
@@ -52,7 +59,7 @@ namespace Cognitive3D
         /// <param name="distance"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        protected virtual bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
+        internal static bool DynamicRaycast(Vector3 pos, Vector3 direction, float distance, float radius, out float hitDistance, out DynamicObject hitDynamic, out Vector3 worldHitPoint, out Vector3 localHitPoint, out Vector2 hitTextureCoord)
         {
             //raycast to dynamic. if failed, spherecast with radius
             //if hit dynamic, return info

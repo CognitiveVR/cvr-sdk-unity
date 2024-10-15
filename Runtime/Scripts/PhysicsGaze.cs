@@ -9,8 +9,9 @@ using Cognitive3D;
 namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
-    public class PhysicsGaze : GazeBase, IGazeRecorder
+    public class PhysicsGaze : GazeBase
     {
+
         public delegate void onGazeTick();
         /// <summary>
         /// Called on a 0.1 second interval
@@ -43,15 +44,9 @@ namespace Cognitive3D
                     Debug.LogException(e);
                 }
 
-                RaycastHit hit;
                 Ray ray = GazeHelper.GetCurrentWorldGazeRay();
 
-                float hitDistance;
-                DynamicObject hitDynamic;
-                Vector3 hitWorld;
-                Vector3 hitLocal;
-                Vector2 hitcoord;
-                if (Cognitive3D_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out hitDistance, out hitDynamic, out hitWorld, out hitLocal, out hitcoord)) //hit dynamic
+                if (Cognitive3D_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out var hitDistance, out var hitDynamic, out var hitWorld, out var hitLocal, out var hitcoord)) //hit dynamic
                 {
                     string ObjectId = hitDynamic.GetId();
                     var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -83,7 +78,7 @@ namespace Cognitive3D
                     yield return null;
                 }
 
-                if (Cognitive3D_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
+                if (Cognitive3D_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out var hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
                 {
                     Vector3 pos = GameplayReferences.HMD.position;
                     Vector3 gazepoint = hit.point;
