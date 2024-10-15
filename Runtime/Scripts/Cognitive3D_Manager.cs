@@ -43,8 +43,17 @@ namespace Cognitive3D
                 return instance;
             }
         }
-        internal static YieldInstruction playerSnapshotInverval;
-        internal static YieldInstruction automaticSendInterval;
+
+        private static YieldInstruction playerSnapshotInverval;
+        internal static YieldInstruction PlayerSnapshotInverval
+        {
+            get
+            {
+                return playerSnapshotInverval;
+            }
+        }
+        
+        private static YieldInstruction automaticSendInterval;
 
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool BeginSessionAutomatically = true;

@@ -11,7 +11,6 @@ namespace Cognitive3D
     [AddComponentMenu("Cognitive3D/Internal/Physics Gaze")]
     public class PhysicsGaze : GazeBase
     {
-
         public delegate void onGazeTick();
         /// <summary>
         /// Called on a 0.1 second interval
@@ -33,7 +32,7 @@ namespace Cognitive3D
 
             while (Cognitive3D_Manager.IsInitialized)
             {
-                yield return Cognitive3D_Manager.playerSnapshotInverval;
+                yield return Cognitive3D_Manager.PlayerSnapshotInverval;
                 
                 try
                 {
