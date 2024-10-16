@@ -1250,7 +1250,7 @@ namespace Cognitive3D.Serialization
         static void ResetGaze()
         {
             gazebuilder = null;
-            gazeJsonPart = 1;
+            gazeJsonPart = 0;
             gazeCount = 0;
         }
 
@@ -1740,7 +1740,7 @@ namespace Cognitive3D.Serialization
 
         static void ResetDynamics()
         {
-            DynamicJsonPart = 1;
+            DynamicJsonPart = 0;
             ReadyToWriteJson = false;
             InterruptThread = false;
             queuedSnapshots.Clear();

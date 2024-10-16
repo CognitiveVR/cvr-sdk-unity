@@ -335,7 +335,7 @@ namespace Cognitive3D
             }
         }
 
-        private static void GetSceneVersionResponse(int responsecode, string error, string text)
+        internal static void GetSceneVersionResponse(int responsecode, string error, string text)
         {
             if (responsecode != 200)
             {

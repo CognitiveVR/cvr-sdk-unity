@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    internal class ThreadGazePoint
+    public class ThreadGazePoint
     {
         public Vector3 WorldPoint;
         public bool IsLocal;

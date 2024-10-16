@@ -17,12 +17,14 @@
         "Unity.XR.Management",
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
+        "Normal.Realtime.Shared",
         "Unity.XR.CoreUtils",
         "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.PicoXR",
         "PhotonUnityNetworking",
         "PhotonRealtime",
-        "meta.xr.mrutilitykit"
+        "meta.xr.mrutilitykit",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -56,6 +58,16 @@
             "name": "com.meta.xr.mrutilitykit",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
+        },
+        {
+            "name": "com.unity.netcode.gameobjects",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_UNITY_NETCODE"
+        },
+        {
+            "name": "com.normalvr.normcore",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_NORMCORE"
         }
     ],
     "noEngineReferences": false
