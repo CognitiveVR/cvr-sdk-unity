@@ -77,7 +77,6 @@ namespace Cognitive3D
 
                 EditorNetwork.Get(url, (responsecode, error, text) => 
                 {
-                    Debug.Log(text);
                     try
                     {
                         var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
