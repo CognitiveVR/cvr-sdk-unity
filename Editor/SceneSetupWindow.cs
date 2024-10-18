@@ -336,6 +336,21 @@ namespace Cognitive3D
             Cognitive3D_Manager.Instance.gameObject.AddComponent<NormcoreMultiplayer>();
         }
 
+        string localPath = "Assets/Resources/Cognitive3D_NormcoreSync.prefab";
+
+        string folderPath = System.IO.Path.GetDirectoryName(localPath);
+        if (!System.IO.Directory.Exists(folderPath))
+        {
+            System.IO.Directory.CreateDirectory(folderPath);
+        }
+
+        if (!Resources.Load<GameObject>("Cognitive3D_NormcoreSync"))
+        {
+            GameObject c3dNormcoreSyncObject = new GameObject("Cognitive3D_NormcoreSync");
+            PrefabUtility.SaveAsPrefabAsset(c3dNormcoreSyncObject, localPath);
+            DestroyImmediate(c3dNormcoreSyncObject);
+        }
+
         GameObject c3dNormcoreSyncPrefab = Resources.Load<GameObject>("Cognitive3D_NormcoreSync");
         if (!c3dNormcoreSyncPrefab.GetComponent<NormcoreSync>())
         {
