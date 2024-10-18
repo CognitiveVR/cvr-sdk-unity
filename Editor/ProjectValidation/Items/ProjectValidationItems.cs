@@ -77,7 +77,7 @@ namespace Cognitive3D
 
                 EditorNetwork.Get(url, (responsecode, error, text) => 
                 {
-                    try
+                    if (responsecode == 200)
                     {
                         var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
                         if (collection != null)
@@ -158,10 +158,6 @@ namespace Cognitive3D
                                 );
                             }
                         }
-                    }
-                    catch (ArgumentException e)
-                    {
-                        Util.logError($"JSON parse error: {e.Message}");
                     }
                 }, headers, true, "Get Scene Version");
             }
