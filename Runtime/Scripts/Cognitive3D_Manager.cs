@@ -26,9 +26,10 @@ namespace Cognitive3D
 {
     [HelpURL("https://docs.cognitive3d.com/unity/minimal-setup-guide/")]
     [AddComponentMenu("Cognitive3D/Common/Cognitive 3D Manager",1)]
+    [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.5.4";
+        public static readonly string SDK_VERSION = "1.6.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -42,8 +43,17 @@ namespace Cognitive3D
                 return instance;
             }
         }
-        YieldInstruction playerSnapshotInverval;
-        YieldInstruction automaticSendInterval;
+
+        private static YieldInstruction playerSnapshotInverval;
+        internal static YieldInstruction PlayerSnapshotInverval
+        {
+            get
+            {
+                return playerSnapshotInverval;
+            }
+        }
+        
+        private static YieldInstruction automaticSendInterval;
 
         [Tooltip("Start recording analytics when this gameobject becomes active (and after the StartupDelayTime has elapsed)")]
         public bool BeginSessionAutomatically = true;
@@ -87,7 +97,7 @@ namespace Cognitive3D
         }
 
         [System.NonSerialized]
-        public GazeBase gazeBase;
+        public IGazeRecorder gaze;
         [System.NonSerialized]
         public FixationRecorder fixationRecorder;
 
@@ -222,12 +232,13 @@ namespace Cognitive3D
             Util.logDebug("Cognitive3D Initialized");
 
             //TODO support for 360 skysphere media recording
-            gazeBase = gameObject.GetComponent<PhysicsGaze>();
-            if (gazeBase == null)
+            // Initializes gaze through gaze recorder interface
+            gaze = gameObject.GetComponent<PhysicsGaze>();
+            if (gaze == null)
             {
-                gazeBase = gameObject.AddComponent<PhysicsGaze>();
+                gaze = gameObject.AddComponent<PhysicsGaze>();
             }
-            gazeBase.Initialize();
+            gaze.Initialize();
 
 #if C3D_OCULUS
             //eye tracking can be enabled successfully here, but there is a delay when calling OVRPlugin.eyeTrackingEnabled

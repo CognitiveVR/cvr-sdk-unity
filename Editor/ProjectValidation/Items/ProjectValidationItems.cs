@@ -31,20 +31,22 @@ namespace Cognitive3D
 
         static ProjectValidationItems()
         {
-            WaitBeforeProjectValidation();
+            DelayAndInitializeProjectValidation();
         }
 
         // Adding a delay before adding and verifying items to ensure the scene is completely loaded in the editor
-        internal static async void WaitBeforeProjectValidation()
+        internal static async void DelayAndInitializeProjectValidation()
         {
             await Task.Delay((int)(INITIAL_DELAY_IN_SECONDS * 1000));
 
             AddProjectValidationItems();
-            UpdateProjectValidationItemStatus();
             ProjectValidation.SetIgnoredItemsFromLog();
-            ProjectValidationGUI.Reset();
+            ProjectValidation.ResetGUI();
         }
 
+        /// <summary>
+        /// Adds project validation items to the registry
+        /// </summary>
         private static void AddProjectValidationItems()
         {            
             ProjectValidation.AddItem(
@@ -62,6 +64,103 @@ namespace Cognitive3D
                     ProjectSetupWindow.Init(ProjectSetupWindow.Page.SDKSelection);
                 }
                 );
+
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
+            if (currentSettings != null)
+            {
+                string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
+                Dictionary<string, string> headers = new Dictionary<string, string>
+                {
+                    { "Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey }
+                };
+
+                EditorNetwork.Get(url, (responsecode, error, text) => 
+                {
+                    if (responsecode == 200)
+                    {
+                        var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+                        if (collection != null)
+                        {
+                            // Required item for non-exist scene on dashboard
+                            if (collection.versions.Find(version => version.versionNumber == currentSettings.VersionNumber) != null)
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Required, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Fix,
+                                    message: "Current scene version not found on dashboard. Set to the latest version?",
+                                    fixmessage: "Current scene version found on dashboard.",
+                                    checkAction: () =>
+                                    {
+                                        return true;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
+                            else
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Required, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Fix,
+                                    message: "Current scene version not found on dashboard. Set to the latest version?",
+                                    fixmessage: "Current scene version found on dashboard.",
+                                    checkAction: () =>
+                                    {
+                                        return false;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
+
+                            // Recommended item for latest version
+                            if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Recommended, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Apply,
+                                    message: "No latest scene version is used. Set to the latest version?",
+                                    fixmessage: "Latest scene version is used.",
+                                    checkAction: () =>
+                                    {
+                                        return false;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
+                            else
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Recommended, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Apply,
+                                    message: "No latest scene version is used. Set to the latest version?",
+                                    fixmessage: "Latest scene version is used.",
+                                    checkAction: () =>
+                                    {
+                                        return true;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
+                        }
+                    }
+                }, headers, true, "Get Scene Version");
+            }
 
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -196,12 +295,12 @@ namespace Cognitive3D
                 {
                     string newMessage;
                     string oldMessage = "The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects.";
-                    if (TryGetControllers(out var _controllerNamesList))
+                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
                     {
                         if (_controllerNamesList.Count > 2)
                         {
                             newMessage = oldMessage + $" The detected controller objects are: {string.Join(", ", _controllerNamesList)}";
-                            UpdateProjectValidationItemMessage(oldMessage, newMessage);
+                            ProjectValidation.UpdateItemMessage(oldMessage, newMessage);
                         }
 
                         return _controllerNamesList.Count <= 2;
@@ -223,7 +322,7 @@ namespace Cognitive3D
                 fixmessage: "Controllers are correctly set up in current scene",
                 checkAction: () =>
                 {
-                    if (TryGetControllers(out var _controllerNamesList))
+                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
                     {
                         return _controllerNamesList.Count >= 2;
                     }
@@ -717,46 +816,143 @@ namespace Cognitive3D
     #endif
 
 #endif
-        }
 
-        public static void UpdateProjectValidationItemStatus()
-        {
-            var items = ProjectValidation.registry.GetAllItems();
-            foreach (var item in items)
-            {
-                item.isFixed = item.checkAction();
-            }
-        }
-
-        public static void UpdateProjectValidationItemMessage(string oldmessage, string newmessage)
-        {
-            var items = ProjectValidation.registry.GetAllItems();
-            foreach (var item in items)
-            {
-                if (item.message.Contains(oldmessage))
+#region Multiplayer Support
+#if C3D_PHOTON
+        #if !PHOTON_UNITY_NETWORKING
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Photon plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Photon plugin is installed in this project.",
+                checkAction: () =>
                 {
-                    item.message = newmessage;
-                }
-            }
-        }
-
-        internal static bool TryGetControllers(out List<String> controllerNamesList)
-        {
-            controllerNamesList = new List<string>();
-            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
-            if (controllers == null)
-            {
-                return false;
-            }
-
-            foreach (var controller in controllers)
-            {
-                if (controller.IsController)
+                    return false;
+                },
+                fixAction: () =>
                 {
-                    controllerNamesList.Add(controller.name);
+                    
                 }
-            }
-            return true;
+            );
+        #else
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Photon plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Photon plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return true;
+                },
+                fixAction: () =>
+                {
+
+                }
+            );
+        #endif
+#endif
+
+#if C3D_NETCODE
+        #if !COGNITIVE3D_INCLUDE_UNITY_NETCODE
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Unity Netcode for Gameobjects plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Unity Netcode for Gameobjects plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
+        #else
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Unity Netcode for Gameobjects plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Unity Netcode for Gameobjects plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return true;
+                },
+                fixAction: () =>
+                {
+
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Recommended, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Apply,
+                message: "No Network Manager found in current scene. To enable Unity Netcode support, the Network Manager needs to be present in one of the project scenes. Add a Network Manager to current scene? If there's already a Network Manager in one of the project scenes, click \"Ignore\".",
+                fixmessage: "Network Manager found in current scene.",
+                checkAction: () =>
+                {
+                    if (ProjectValidation.FindComponentInActiveScene<Unity.Netcode.NetworkManager>())
+                    {
+                        return true;
+                    }
+
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    GameObject networkManagerObject = new GameObject("NetworkManager");
+
+                    Unity.Netcode.NetworkManager networkManager = networkManagerObject.AddComponent<Unity.Netcode.NetworkManager>();
+                    Unity.Netcode.Transports.UTP.UnityTransport transport = networkManagerObject.AddComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+
+                    networkManager.NetworkConfig.NetworkTransport = transport;
+                }
+            );
+        #endif
+#endif
+
+#if C3D_NORMCORE
+        #if !COGNITIVE3D_INCLUDE_NORMCORE
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Normcore plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Normcore plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return false;
+                },
+                fixAction: () =>
+                {
+                    
+                }
+            );
+        #else
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Normcore plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Normcore plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return true;
+                },
+                fixAction: () =>
+                {
+
+                }
+            );
+        #endif
+#endif
+
+#endregion
         }
     }
 }

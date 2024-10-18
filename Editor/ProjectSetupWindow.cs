@@ -63,7 +63,7 @@ namespace Cognitive3D
             Recompile,
             Wave,
             NextSteps,
-            PhotonMultiplayerSetup,
+            MultiplayerSetup,
             DynamicSetup,
         }
         private Page _currentPage;
@@ -115,8 +115,8 @@ namespace Cognitive3D
                 case Page.DynamicSetup:
                     DynamicUpdate();
                     break;
-                case Page.PhotonMultiplayerSetup:
-                    PhotonMultiplayerSetup();
+                case Page.MultiplayerSetup:
+                    MultiplayerSetup();
                     break;
                 default:
                     throw new System.NotSupportedException();
@@ -872,7 +872,19 @@ namespace Cognitive3D
 #else
         bool wantPhotonPunSupport = false;
 #endif
-        void PhotonMultiplayerSetup()
+
+#if C3D_NETCODE
+        bool wantNetcodeSupport = true;
+#else
+        bool wantNetcodeSupport = false;
+#endif
+
+#if C3D_NORMCORE
+        bool wantNormcoreSupport = true;
+#else
+        bool wantNormcoreSupport = false;
+#endif
+        void MultiplayerSetup()
         {
             GUI.Label(steptitlerect, "MUTLIPLAYER SUPPORT", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "You can enable multiplayer support here. Select the package or framework you are using below.", "normallabel");
@@ -881,22 +893,58 @@ namespace Cognitive3D
             GUI.Label(new Rect(140, 90, 440, 440), "Photon PUN 2*", "normallabel");
             GUI.Label(new Rect(30, 420, 440, 440), "*Please ensure that there is only a single instance of Cognitive3D_Manager across your multiplayer scenes", "caption");
             GUI.Label(new Rect(30, 475, 440, 440), "If you require support for other multiplayer frameworks, please get in touch.", "caption");
-            Rect infoRect1 = new Rect(320, 85, 30, 30);
-            GUI.Label(infoRect1, new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
+            GUI.Label(new Rect(320, 85, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
 
-            Rect checkboxRect1 = new Rect(105, 85, 30, 30);
             if (wantPhotonPunSupport)
             {
-                if (GUI.Button(checkboxRect1, EditorCore.BoxCheckmark, "image_centered"))
+                if (GUI.Button(new Rect(105, 85, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
                 {
                     wantPhotonPunSupport = false;
                 }
             }
             else
             {
-                if (GUI.Button(checkboxRect1, EditorCore.BoxEmpty, "image_centered"))
+                if (GUI.Button(new Rect(105, 85, 30, 30), EditorCore.BoxEmpty, "image_centered"))
                 {
                     wantPhotonPunSupport = true;
+                }
+            }
+
+            // Netcode
+            GUI.Label(new Rect(140, 130, 440, 440), "Unity Netcode for Gameobjects", "normallabel");
+            GUI.Label(new Rect(400, 125, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Unity Netcode for Gameobjects. Requires Unity Netcode Runtime assemblies."), "image_centered");
+
+            if (wantNetcodeSupport)
+            {
+                if (GUI.Button(new Rect(105, 125, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantNetcodeSupport = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(105, 125, 30, 30), EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantNetcodeSupport = true;
+                }
+            }
+
+            // Normcore
+            GUI.Label(new Rect(140, 170, 440, 440), "Normcore", "normallabel");
+            GUI.Label(new Rect(320, 165, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Normcore. Requires Normal Realtime assemblies."), "image_centered");
+
+            if (wantNormcoreSupport)
+            {
+                if (GUI.Button(new Rect(105, 165, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantNormcoreSupport = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(105, 165, 30, 30), EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantNormcoreSupport = true;
                 }
             }
         }
@@ -997,7 +1045,7 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.SDKSelection:
-                    onclick = () => currentPage = Page.PhotonMultiplayerSetup;
+                    onclick = () => currentPage = Page.MultiplayerSetup;
                     break;
                 case Page.Recompile:
                     onclick = null;
@@ -1032,7 +1080,7 @@ namespace Cognitive3D
                     break;
                 case Page.Wave:
                     break;
-                case Page.PhotonMultiplayerSetup:
+                case Page.MultiplayerSetup:
                     if (wantPhotonPunSupport)
                     { 
                         if (!selectedsdks.Contains("C3D_PHOTON"))
@@ -1043,6 +1091,30 @@ namespace Cognitive3D
                     else
                     { 
                         selectedsdks.Remove("C3D_PHOTON");
+                    }
+
+                    if (wantNetcodeSupport)
+                    { 
+                        if (!selectedsdks.Contains("C3D_NETCODE"))
+                        {
+                            selectedsdks.Add("C3D_NETCODE");
+                        }
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_NETCODE");
+                    }
+
+                    if (wantNormcoreSupport)
+                    { 
+                        if (!selectedsdks.Contains("C3D_NORMCORE"))
+                        {
+                            selectedsdks.Add("C3D_NORMCORE");
+                        }
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_NORMCORE");
                     }
                     onclick += () => currentPage = Page.Glia;
                     break;
@@ -1088,7 +1160,7 @@ namespace Cognitive3D
                 case Page.SRAnipal:
                 case Page.Wave:
                 case Page.NextSteps:
-                    if (wantPhotonPunSupport) { onclick = () => currentPage = Page.PhotonMultiplayerSetup; }
+                    if (wantPhotonPunSupport || wantNetcodeSupport || wantNormcoreSupport) { onclick = () => currentPage = Page.MultiplayerSetup; }
                     else { onclick = () => currentPage = Page.SDKSelection; }
                     break;
                 case Page.DynamicSetup:
@@ -1100,7 +1172,7 @@ namespace Cognitive3D
                 case Page.Recompile:
                     buttonDisabled = true;
                     break;
-                case Page.PhotonMultiplayerSetup:
+                case Page.MultiplayerSetup:
                     onclick += () => currentPage = Page.SDKSelection;
                     break;
                 default:
