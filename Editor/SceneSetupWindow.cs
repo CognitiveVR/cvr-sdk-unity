@@ -335,6 +335,12 @@ namespace Cognitive3D
         {
             Cognitive3D_Manager.Instance.gameObject.AddComponent<NormcoreMultiplayer>();
         }
+
+        GameObject c3dNormcoreSyncPrefab = Resources.Load<GameObject>("Cognitive3D_NormcoreSync");
+        if (!c3dNormcoreSyncPrefab.GetComponent<NormcoreSync>())
+        {
+            c3dNormcoreSyncPrefab.AddComponent<NormcoreSync>();
+        }
     #else
         if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>() != null)
         {
