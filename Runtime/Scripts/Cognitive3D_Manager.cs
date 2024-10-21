@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.6.0";
+        public static readonly string SDK_VERSION = "1.6.1";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
