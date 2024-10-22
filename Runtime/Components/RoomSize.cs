@@ -95,6 +95,7 @@ namespace Cognitive3D.Components
             // This number might change if the participant redraws boundary, so we are adding a grace extension
             // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
             // That is expensive, but there is a low probability of this happening
+#if C3D_OCULUS || C3D_DEFAULT
             if (currentBoundaryPoints != null)
             {
                 CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * currentBoundaryPoints.Length));
@@ -111,6 +112,7 @@ namespace Cognitive3D.Components
                 CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
                 CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
             }
+#endif
 
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref previousRoomSize);
@@ -131,6 +133,7 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
+# if C3D_OCULUS || C3D_DEFAULT
                 trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
 
                 if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
@@ -141,6 +144,7 @@ namespace Cognitive3D.Components
                     lastRecordedTrackingSpacePosition = trackingSpace.position;
                     previousTrackingSpaceRotation = trackingSpace.rotation;
                 }
+#endif
 
 
 #if C3D_VIVEWAVE
@@ -166,7 +170,9 @@ namespace Cognitive3D.Components
                         
                         previousBoundaryPoints = currentBoundaryPoints;
                         CalculateAndRecordRoomsize(true, true);
+#if C3D_OCULUS || C3D_DEFAULT
                         CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+#endif
                     }
                 }
                 
@@ -381,6 +387,7 @@ namespace Cognitive3D.Components
                     // We have determined that a recenter causes change in boundary points without chaning the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
+#if C3D_OCULUS || C3D_DEFAULT
                         // FIX TRACKING AND BOUNDARIES AGAIN
                         // If recenter, tracking space gets xz pos of camera, and y rotation of camera
                         CustomTransform recenteredTransform = new CustomTransform(
@@ -388,7 +395,7 @@ namespace Cognitive3D.Components
                             Quaternion.Euler(trackingSpace.rotation.x, GameplayReferences.HMD.rotation.y, trackingSpace.rotation.z));
                         CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
                         CoreInterface.RecordBoundaryShape(GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
-
+#endif
                         if (recordRecenterAsEvent)
                         {
                             SendRecenterEvent();
