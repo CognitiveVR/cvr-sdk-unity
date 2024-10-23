@@ -118,10 +118,9 @@ namespace Cognitive3D
 
             while (!operation.isDone)
             {
-                await Task.Yield();  // Yield to keep the main thread responsive while waiting
+                await Task.Yield();
             }
 
-            // Handle the result
             if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
             {
                 Util.logError("Error sending data to Segment: " + request.error);
