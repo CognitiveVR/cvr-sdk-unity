@@ -1,5 +1,4 @@
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.Networking;
 using System.Text;
 using System.Threading.Tasks;
@@ -100,18 +99,13 @@ namespace Cognitive3D
         {
             if (string.IsNullOrEmpty(writeKey)) FetchKey();
 
-            // Create the web request
-            UnityWebRequest request = new UnityWebRequest(trackURL, "POST");
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(data);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-
-            // Set headers
+            var bytes = System.Text.Encoding.UTF8.GetBytes(data);
+            UnityWebRequest request = UnityWebRequest.Put(trackURL, bytes);
+            request.method = "POST";
             request.SetRequestHeader("Content-Type", "application/json");
+            // Segment requires basic auth using a base64-encoded Write Key
             string auth = System.Convert.ToBase64String(Encoding.ASCII.GetBytes(writeKey + ":"));
             request.SetRequestHeader("Authorization", "Basic " + auth);
-
-            // Send the request and wait asynchronously for a response
             var operation = request.SendWebRequest();
 
             while (!operation.isDone)
