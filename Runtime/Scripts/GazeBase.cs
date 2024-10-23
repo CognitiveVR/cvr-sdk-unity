@@ -8,15 +8,22 @@ using Cognitive3D;
 namespace Cognitive3D
 {
     [AddComponentMenu("")]
-    public class GazeBase : MonoBehaviour
+    public class GazeBase : MonoBehaviour, IGazeRecorder
     {
-        internal CircularBuffer<ThreadGazePoint> DisplayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
+        private CircularBuffer<ThreadGazePoint> displayGazePoints = new CircularBuffer<ThreadGazePoint>(256);
+
+        // Public getter to expose the circular buffer
+        public CircularBuffer<ThreadGazePoint> DisplayGazePoints
+        {
+            get { return displayGazePoints; }
+        }
+
         internal static Vector3 LastGazePoint;
 
         protected bool headsetPresent;
 
         //called immediately after construction
-        internal virtual void Initialize()
+        public virtual void Initialize()
         {
 #if C3D_OCULUS
             OVRManager.HMDMounted += OVRManager_HMDMounted;

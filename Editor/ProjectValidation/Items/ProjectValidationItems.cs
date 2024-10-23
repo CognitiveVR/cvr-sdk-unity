@@ -77,83 +77,86 @@ namespace Cognitive3D
 
                 EditorNetwork.Get(url, (responsecode, error, text) => 
                 {
-                    var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
-                    if (collection != null)
+                    if (responsecode == 200)
                     {
-                        // Required item for non-exist scene on dashboard
-                        if (collection.versions.Find(version => version.versionNumber == currentSettings.VersionNumber) != null)
+                        var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+                        if (collection != null)
                         {
-                            ProjectValidation.AddItem(
-                                level: ProjectValidation.ItemLevel.Required, 
-                                category: CATEGORY,
-                                actionType: ProjectValidation.ItemAction.Fix,
-                                message: "Current scene version not found on dashboard. Set to the latest version?",
-                                fixmessage: "Current scene version found on dashboard.",
-                                checkAction: () =>
-                                {
-                                    return true;
-                                },
-                                fixAction: () =>
-                                {
-                                    EditorCore.RefreshSceneVersion(null);
-                                }
-                            );
-                        }
-                        else
-                        {
-                            ProjectValidation.AddItem(
-                                level: ProjectValidation.ItemLevel.Required, 
-                                category: CATEGORY,
-                                actionType: ProjectValidation.ItemAction.Fix,
-                                message: "Current scene version not found on dashboard. Set to the latest version?",
-                                fixmessage: "Current scene version found on dashboard.",
-                                checkAction: () =>
-                                {
-                                    return false;
-                                },
-                                fixAction: () =>
-                                {
-                                    EditorCore.RefreshSceneVersion(null);
-                                }
-                            );
-                        }
+                            // Required item for non-exist scene on dashboard
+                            if (collection.versions.Find(version => version.versionNumber == currentSettings.VersionNumber) != null)
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Required, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Fix,
+                                    message: "Current scene version not found on dashboard. Set to the latest version?",
+                                    fixmessage: "Current scene version found on dashboard.",
+                                    checkAction: () =>
+                                    {
+                                        return true;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
+                            else
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Required, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Fix,
+                                    message: "Current scene version not found on dashboard. Set to the latest version?",
+                                    fixmessage: "Current scene version found on dashboard.",
+                                    checkAction: () =>
+                                    {
+                                        return false;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
 
-                        // Recommended item for latest version
-                        if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
-                        {
-                            ProjectValidation.AddItem(
-                                level: ProjectValidation.ItemLevel.Recommended, 
-                                category: CATEGORY,
-                                actionType: ProjectValidation.ItemAction.Apply,
-                                message: "No latest scene version is used. Set to the latest version?",
-                                fixmessage: "Latest scene version is used.",
-                                checkAction: () =>
-                                {
-                                    return false;
-                                },
-                                fixAction: () =>
-                                {
-                                    EditorCore.RefreshSceneVersion(null);
-                                }
-                            );
-                        }
-                        else
-                        {
-                            ProjectValidation.AddItem(
-                                level: ProjectValidation.ItemLevel.Recommended, 
-                                category: CATEGORY,
-                                actionType: ProjectValidation.ItemAction.Apply,
-                                message: "No latest scene version is used. Set to the latest version?",
-                                fixmessage: "Latest scene version is used.",
-                                checkAction: () =>
-                                {
-                                    return true;
-                                },
-                                fixAction: () =>
-                                {
-                                    EditorCore.RefreshSceneVersion(null);
-                                }
-                            );
+                            // Recommended item for latest version
+                            if (collection.GetLatestVersion().versionNumber > currentSettings.VersionNumber)
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Recommended, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Apply,
+                                    message: "No latest scene version is used. Set to the latest version?",
+                                    fixmessage: "Latest scene version is used.",
+                                    checkAction: () =>
+                                    {
+                                        return false;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
+                            else
+                            {
+                                ProjectValidation.AddItem(
+                                    level: ProjectValidation.ItemLevel.Recommended, 
+                                    category: CATEGORY,
+                                    actionType: ProjectValidation.ItemAction.Apply,
+                                    message: "No latest scene version is used. Set to the latest version?",
+                                    fixmessage: "Latest scene version is used.",
+                                    checkAction: () =>
+                                    {
+                                        return true;
+                                    },
+                                    fixAction: () =>
+                                    {
+                                        EditorCore.RefreshSceneVersion(null);
+                                    }
+                                );
+                            }
                         }
                     }
                 }, headers, true, "Get Scene Version");

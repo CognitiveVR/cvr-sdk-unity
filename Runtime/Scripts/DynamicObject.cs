@@ -271,7 +271,7 @@ namespace Cognitive3D
             }
             if (SyncWithPlayerGazeTick)
             {
-                Cognitive3D_Manager.OnTick += SyncWithGazeTick;
+                PhysicsGaze.OnGazeTick += SyncWithGazeTick;
             }
             hasInitialized = true;
         }
@@ -566,7 +566,7 @@ namespace Cognitive3D
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
 
-            Cognitive3D_Manager.OnTick -= SyncWithGazeTick;
+            PhysicsGaze.OnGazeTick -= SyncWithGazeTick;
 
             DynamicManager.SetTransform(DataId, transform);
 
