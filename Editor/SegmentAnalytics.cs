@@ -99,23 +99,26 @@ namespace Cognitive3D
         {
             if (string.IsNullOrEmpty(writeKey)) FetchKey();
 
-            var bytes = System.Text.Encoding.UTF8.GetBytes(data);
-            UnityWebRequest request = UnityWebRequest.Put(trackURL, bytes);
-            request.method = "POST";
-            request.SetRequestHeader("Content-Type", "application/json");
-            // Segment requires basic auth using a base64-encoded Write Key
-            string auth = System.Convert.ToBase64String(Encoding.ASCII.GetBytes(writeKey + ":"));
-            request.SetRequestHeader("Authorization", "Basic " + auth);
-            var operation = request.SendWebRequest();
-
-            while (!operation.isDone)
+            if (!string.IsNullOrEmpty(writeKey))
             {
-                await Task.Yield();
-            }
+                var bytes = System.Text.Encoding.UTF8.GetBytes(data);
+                UnityWebRequest request = UnityWebRequest.Put(trackURL, bytes);
+                request.method = "POST";
+                request.SetRequestHeader("Content-Type", "application/json");
+                // Segment requires basic auth using a base64-encoded Write Key
+                string auth = System.Convert.ToBase64String(Encoding.ASCII.GetBytes(writeKey + ":"));
+                request.SetRequestHeader("Authorization", "Basic " + auth);
+                var operation = request.SendWebRequest();
 
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Util.logError("Error sending data to Segment: " + request.error);
+                while (!operation.isDone)
+                {
+                    await Task.Yield();
+                }
+
+                if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    Util.logError("Error sending data to Segment: " + request.error);
+                }
             }
         }
 
