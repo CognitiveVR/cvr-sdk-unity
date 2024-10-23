@@ -47,6 +47,11 @@ namespace Cognitive3D.Components
         /// </summary>
         bool isHMDOutsideBoundary;
 
+        readonly float BoundaryTrackingInterval = 1;
+
+        //counts up the deltatime to determine when the interval ends
+        float currentTime;
+
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
 #endif
@@ -55,7 +60,7 @@ namespace Cognitive3D.Components
         {
             base.OnSessionBegin();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
 
             // Get initial values of boundary and tracking space
             currentBoundaryPoints = GetCurrentBoundaryPoints();
@@ -71,17 +76,20 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Called 10 times per second; 10Hz
+        /// Called 1 time per second; 1Hz
         /// </summary>
-        private void Cognitive3D_Manager_OnTick()
+        private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             // We don't want these lines to execute if component disabled
             // Without this condition, these lines will execute regardless
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
+                currentTime += deltaTime;
+                if (currentTime > BoundaryTrackingInterval)
+                {
+                    currentTime = 0;
 #if C3D_VIVEWAVE
-
                     // reset these variables every BoundaryTrackingInterval
                     didViveArenaChange = false;
 
@@ -94,20 +102,21 @@ namespace Cognitive3D.Components
                         isHMDOutsideBoundary = false;
                     }
 #else
-                currentBoundaryPoints = GetCurrentBoundaryPoints();
+                    currentBoundaryPoints = GetCurrentBoundaryPoints();
 
-                if (currentBoundaryPoints != null)
-                {
-                    if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
+                    if (currentBoundaryPoints != null)
                     {
-                        
-                        previousBoundaryPoints = currentBoundaryPoints;
-                        CalculateAndRecordRoomsize(true, true);
+                        if (HasBoundaryChanged(previousBoundaryPoints, currentBoundaryPoints))
+                        {
+                            
+                            previousBoundaryPoints = currentBoundaryPoints;
+                            CalculateAndRecordRoomsize(true, true);
+                        }
                     }
-                }
-                
-                SendEventIfUserExitsBoundary();
+                    
+                    SendEventIfUserExitsBoundary();
 #endif
+                }
             }
             else
             {
@@ -509,7 +518,7 @@ namespace Cognitive3D.Components
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
 
 #if C3D_VIVEWAVE
             SystemEvent.Remove(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
@@ -534,26 +543,5 @@ namespace Cognitive3D.Components
             }
         }
         #endregion
-    }
-
-    /// <summary>
-    /// A custom class to mimic behaviour of UnityEngine.Transform
-    /// We use this so we can construct a Transform from position and rotation
-    /// </summary>
-    internal class CustomTransform
-    {
-        /// <summary>
-        /// Constructor for our custom transform
-        /// </summary>
-        /// <param name="position"></param>
-        /// <param name="rotation"></param>
-        internal CustomTransform(Vector3 position, Quaternion rotation)
-        {
-            this.pos = position;
-            this.rot = rotation;
-        }
-
-        internal Vector3 pos;
-        internal Quaternion rot;
     }
 }
