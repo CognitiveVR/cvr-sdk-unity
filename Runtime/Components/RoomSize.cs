@@ -27,11 +27,6 @@ namespace Cognitive3D.Components
         Vector3[] previousBoundaryPoints = new Vector3[0];
 
         /// <summary>
-        /// The current (this frame) list of coordinates (local to tracking space) describing the boundary
-        /// </summary>
-        Vector3[] currentBoundaryPoints = new Vector3[0];
-
-        /// <summary>
         /// The last recorded roomsize; used for comparison and roomsize change
         /// </summary>
         Vector3 previousRoomSize = new Vector3();
@@ -98,7 +93,7 @@ namespace Cognitive3D.Components
                         isHMDOutsideBoundary = false;
                     }
 #else
-                    currentBoundaryPoints = BoundaryUtil.GetCurrentBoundaryPoints();
+                    var currentBoundaryPoints = BoundaryUtil.GetCurrentBoundaryPoints();
 
                     if (currentBoundaryPoints != null)
                     {
