@@ -47,36 +47,6 @@ namespace Cognitive3D.Components
         /// </summary>
         bool isHMDOutsideBoundary;
 
-        /// <summary>
-        /// A reference to the tracking space of the player's rig
-        /// </summary>
-        Transform trackingSpace = null;
-
-        /// <summary>
-        /// The previous position of the tracking space; used for comparison to detect "moved enough"
-        /// </summary>
-        Vector3 lastRecordedTrackingSpacePosition = new Vector3();
-        
-        /// <summary>
-        /// The previous rotation of the tracking space; used for comparison to detect "rotated enough"
-        /// </summary>
-        Quaternion previousTrackingSpaceRotation = Quaternion.identity;
-
-        /// <summary>
-        /// A 10% overflow buffer added to string builder
-        /// </summary>
-        private readonly float NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER = 0.1f;
-
-        /// <summary>
-        /// The threshold for minimum position (in metres) change to re-record boundary points
-        /// </summary>
-        private readonly float TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES = 0.01f;
-
-        /// <summary>
-        /// The threshold for minimum rotation (in degrees) change to re-record boundary points
-        /// </summary>
-        private readonly float TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES = 5f;
-
 #if C3D_VIVEWAVE
         bool didViveArenaChange;
 #endif
@@ -90,29 +60,6 @@ namespace Cognitive3D.Components
             // Get initial values of boundary and tracking space
             currentBoundaryPoints = GetCurrentBoundaryPoints();
             previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
-
-            // We want to intialize the string builder to a size appropriate for the number of points
-            // This number might change if the participant redraws boundary, so we are adding a grace extension
-            // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
-            // That is expensive, but there is a low probability of this happening
-#if C3D_OCULUS || C3D_DEFAULT
-            if (currentBoundaryPoints != null)
-            {
-                CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * currentBoundaryPoints.Length));
-                // Record initial boundary shape
-                CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
-            }
-
-            // Record initial tracking space pos and rot
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-            if (trackingSpace)
-            {
-                lastRecordedTrackingSpacePosition = trackingSpace.position;
-                previousTrackingSpaceRotation = trackingSpace.rotation;
-                CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-                CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-            }
-#endif
 
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref previousRoomSize);
@@ -133,20 +80,6 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
-# if C3D_OCULUS || C3D_DEFAULT
-                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-
-                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
-                        || Math.Abs(Vector3.Angle(previousTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES) // if tracking space moved enough
-                { 
-                    CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-                    CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-                    lastRecordedTrackingSpacePosition = trackingSpace.position;
-                    previousTrackingSpaceRotation = trackingSpace.rotation;
-                }
-#endif
-
-
 #if C3D_VIVEWAVE
 
                     // reset these variables every BoundaryTrackingInterval
@@ -170,9 +103,6 @@ namespace Cognitive3D.Components
                         
                         previousBoundaryPoints = currentBoundaryPoints;
                         CalculateAndRecordRoomsize(true, true);
-#if C3D_OCULUS || C3D_DEFAULT
-                        CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
-#endif
                     }
                 }
                 
@@ -390,18 +320,9 @@ namespace Cognitive3D.Components
                     float currentArea = roomSize.x * roomSize.z;
                     float lastArea = previousRoomSize.x * previousRoomSize.z;
 
-                    // We have determined that a recenter causes change in boundary points without chaning the roomsize
+                    // We have determined that a recenter causes change in boundary points without changing the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
-#if C3D_OCULUS || C3D_DEFAULT
-                        // FIX TRACKING AND BOUNDARIES AGAIN
-                        // If recenter, tracking space gets xz pos of camera, and y rotation of camera
-                        CustomTransform recenteredTransform = new CustomTransform(
-                            new Vector3(GameplayReferences.HMD.position.x, trackingSpace.position.y, GameplayReferences.HMD.position.z),
-                            Quaternion.Euler(trackingSpace.rotation.x, GameplayReferences.HMD.rotation.y, trackingSpace.rotation.z));
-                        CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
-                        CoreInterface.RecordBoundaryShape(GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
-#endif
                         if (recordRecenterAsEvent)
                         {
                             SendRecenterEvent();
