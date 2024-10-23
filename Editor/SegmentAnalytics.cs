@@ -59,7 +59,6 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="status"></param>
-        /// <param name="buttonName"></param>
         public static async void PageEvent(string pageName, string status = "")
         {
             // Create the data payload in JSON format
@@ -81,7 +80,6 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="buttonName"></param>
-        /// <param name="status"></param>
         public static async void TrackEvent(string eventName, string buttonName = "")
         {
             // Create the data payload in JSON format
