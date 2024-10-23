@@ -61,10 +61,7 @@ namespace Cognitive3D.Components
             base.OnSessionBegin();
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-
-            // Get initial values of boundary and tracking space
-            currentBoundaryPoints = GetCurrentBoundaryPoints();
-            previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
+            previousBoundaryPoints = GetCurrentBoundaryPoints();
 
             CalculateAndRecordRoomsize(false, false);
             GetRoomSize(ref previousRoomSize);
@@ -113,7 +110,6 @@ namespace Cognitive3D.Components
                             CalculateAndRecordRoomsize(true, true);
                         }
                     }
-                    
                     SendEventIfUserExitsBoundary();
 #endif
                 }
@@ -453,7 +449,7 @@ namespace Cognitive3D.Components
             return new Vector3(maxX - minX, 0, maxZ - minZ);
         }
 
-        #region SteamVR Specific Utils
+#region SteamVR Specific Utils
 
 #if C3D_STEAMVR2
         /// <summary>
@@ -484,7 +480,7 @@ namespace Cognitive3D.Components
         }
 #endif
 
-        #endregion
+#endregion
 
 #if C3D_VIVEWAVE
         Vector3 lastRoomSize = new Vector3();
@@ -525,7 +521,7 @@ namespace Cognitive3D.Components
 #endif
         }
 
-        #region Inspector Utils
+#region Inspector Utils
         public override bool GetWarning()
         {
             return !GameplayReferences.SDKSupportsRoomSize;
@@ -542,6 +538,6 @@ namespace Cognitive3D.Components
                 return "Current platform does not support this component";
             }
         }
-        #endregion
+#endregion
     }
 }
