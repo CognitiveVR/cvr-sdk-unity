@@ -231,6 +231,7 @@ namespace Cognitive3D.Components
                     // We have determined that a recenter causes change in boundary points without changing the roomsize
                     if (Mathf.Approximately(currentArea, lastArea))
                     {
+                        Boundary.RecordRecenterBoundary();
                         if (recordRecenterAsEvent)
                         {
                             SendRecenterEvent();

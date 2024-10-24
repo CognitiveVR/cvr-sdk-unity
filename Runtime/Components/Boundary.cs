@@ -24,7 +24,7 @@ namespace Cognitive3D.Components
         /// <summary>
         /// A reference to the tracking space of the player's rig
         /// </summary>
-        Transform trackingSpace = null;
+        static Transform trackingSpace = null;
 
         /// <summary>
         /// The previous position of the tracking space; used for comparison to detect "moved enough"
@@ -119,14 +119,17 @@ namespace Cognitive3D.Components
             }
         }
 
-        //TODO
-        // FIX TRACKING AND BOUNDARIES AGAIN
-        // If recenter, tracking space gets xz pos of camera, and y rotation of camera
-        // CustomTransform recenteredTransform = new CustomTransform(
-        //     new Vector3(GameplayReferences.HMD.position.x, trackingSpace.position.y, GameplayReferences.HMD.position.z),
-        //     Quaternion.Euler(trackingSpace.rotation.x, GameplayReferences.HMD.rotation.y, trackingSpace.rotation.z));
-        // CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
-        // CoreInterface.RecordBoundaryShape(GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
+        internal static void RecordRecenterBoundary()
+        {
+            //TODO
+            // FIX TRACKING AND BOUNDARIES AGAIN
+            // If recenter, tracking space gets xz pos of camera, and y rotation of camera
+            CustomTransform recenteredTransform = new CustomTransform(
+                new Vector3(GameplayReferences.HMD.position.x, trackingSpace.position.y, GameplayReferences.HMD.position.z),
+                Quaternion.Euler(trackingSpace.rotation.x, GameplayReferences.HMD.rotation.y, trackingSpace.rotation.z));
+            CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
+            CoreInterface.RecordBoundaryShape(BoundaryUtil.GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
+        }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
