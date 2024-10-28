@@ -12,12 +12,12 @@ namespace Cognitive3D
         private const string TRACK_URL = "https://api.segment.io/v1/track";
         private const string PAGE_URL = "https://api.segment.io/v1/page";
 
-        private static string writeKey;
-        private static string userId;
+        private static string _writeKey;
+        private static string _anonymousId;
 
         static SegmentAnalytics()
         {
-            userId = System.Guid.NewGuid().ToString();
+            _anonymousId = System.Guid.NewGuid().ToString();
             FetchKey();
         }
 
@@ -26,7 +26,7 @@ namespace Cognitive3D
         /// </summary>
         private static async void FetchKey()
         {
-            writeKey = await GetKeyFromServerAsync();
+            _writeKey = await GetKeyFromServerAsync();
         }
 
         private static async Task<string> GetKeyFromServerAsync()
@@ -55,7 +55,7 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
-                anonymousId = userId,
+                anonymousId = _anonymousId,
                 name = pageName,
                 properties = new SegmentProperties
                 {
@@ -76,7 +76,7 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
-                anonymousId = userId,
+                anonymousId = _anonymousId,
                 @event = eventName,
                 properties = new SegmentProperties
                 {
@@ -89,16 +89,16 @@ namespace Cognitive3D
 
         private static async Task SendTrackingDataAsync(string trackURL, string data)
         {
-            if (string.IsNullOrEmpty(writeKey)) FetchKey();
+            if (string.IsNullOrEmpty(_writeKey)) FetchKey();
 
-            if (!string.IsNullOrEmpty(writeKey))
+            if (!string.IsNullOrEmpty(_writeKey))
             {
                 var bytes = System.Text.Encoding.UTF8.GetBytes(data);
                 UnityWebRequest request = UnityWebRequest.Put(trackURL, bytes);
                 request.method = "POST";
                 request.SetRequestHeader("Content-Type", "application/json");
                 // Segment requires basic auth using a base64-encoded Write Key
-                string auth = System.Convert.ToBase64String(Encoding.ASCII.GetBytes(writeKey + ":"));
+                string auth = System.Convert.ToBase64String(Encoding.ASCII.GetBytes(_writeKey + ":"));
                 request.SetRequestHeader("Authorization", "Basic " + auth);
                 var operation = request.SendWebRequest();
 
