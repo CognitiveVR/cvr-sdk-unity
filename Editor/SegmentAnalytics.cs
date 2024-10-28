@@ -41,15 +41,7 @@ namespace Cognitive3D
                     await Task.Yield();
                 }
 
-                // Check for network or HTTP errors
-                if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-                {
-                    return null;
-                }
-                else
-                {
-                    return request.downloadHandler.text;
-                }
+                return request.downloadHandler.text;
             }
         }
 
@@ -113,11 +105,6 @@ namespace Cognitive3D
                 while (!operation.isDone)
                 {
                     await Task.Yield();
-                }
-
-                if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-                {
-                    Util.logError("Error sending data to Segment: " + request.error);
                 }
             }
         }
