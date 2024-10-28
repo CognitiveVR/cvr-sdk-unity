@@ -978,6 +978,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledOculusSocialSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantSocialEnabled = true;
                 }
             }
@@ -999,6 +1000,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect2, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledMRSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantPassthroughEnabled = true;
                 }
             }
@@ -1020,6 +1022,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect3, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledQProEyeTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantEyeTrackingEnabled = true;
                 }
             }
@@ -1041,6 +1044,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledHandTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantHandTrackingEnabled = true;
                 }
             }
@@ -1062,6 +1066,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect5, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledQ3SceneAPISupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantSceneApiEnabled = true;
                 }
             }
@@ -1353,7 +1358,7 @@ namespace Cognitive3D
                         return;//cancel from 'do you want to save' popup
                     }
                 }
-                
+
                 if (sceneSize < 1)
                 {
                     SegmentAnalytics.TrackEvent("ExportingSceneLess1MB_SceneExportPage", "SceneSetupSceneExportPage");
