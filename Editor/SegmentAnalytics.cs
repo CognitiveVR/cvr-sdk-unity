@@ -47,6 +47,7 @@ namespace Cognitive3D
 
         /// <summary>
         /// Async method to send page data to Segment
+        /// More info about page event: https://segment.com/docs/connections/spec/page/
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="status"></param>
@@ -68,6 +69,7 @@ namespace Cognitive3D
 
         /// <summary>
         /// Async method to send tracking data to Segment
+        /// More info about track event: https://segment.com/docs/connections/spec/track/ 
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="buttonName"></param>
