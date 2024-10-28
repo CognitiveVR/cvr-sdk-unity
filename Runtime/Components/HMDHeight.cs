@@ -56,8 +56,6 @@ namespace Cognitive3D.Components
             yield return new WaitForSeconds(StartDelay);
             YieldInstruction wait = new WaitForSeconds(Interval);
 
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-
             //median
             for (int i = 0; i < SampleCount; i++)
             {
@@ -81,11 +79,13 @@ namespace Cognitive3D.Components
         {
             height = 0;
 
-            if (trackingSpace == null)
+            if (Cognitive3D_Manager.Instance.trackingSpace == null)
             {
                 Debug.LogWarning("Tracking Space not found. Unable to record HMD height.");
                 return false;
             }
+
+            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
 
 #if C3D_OCULUS
             // Calculates height according to camera offset relative to Floor level and rig customization
