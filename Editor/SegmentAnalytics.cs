@@ -13,11 +13,11 @@ namespace Cognitive3D
         private const string PAGE_URL = "https://api.segment.io/v1/page";
 
         private static string writeKey;
-        private static string anonymousId;
+        private static string userId;
 
         static SegmentAnalytics()
         {
-            anonymousId = System.Guid.NewGuid().ToString();
+            userId = System.Guid.NewGuid().ToString();
             FetchKey();
         }
 
@@ -55,7 +55,7 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
-                anonymousId = anonymousId,
+                anonymousId = userId,
                 name = pageName,
                 properties = new SegmentProperties
                 {
@@ -76,7 +76,7 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
-                anonymousId = anonymousId,
+                anonymousId = userId,
                 @event = eventName,
                 properties = new SegmentProperties
                 {
