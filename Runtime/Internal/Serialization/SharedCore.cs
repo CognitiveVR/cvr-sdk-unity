@@ -1566,7 +1566,7 @@ namespace Cognitive3D.Serialization
         /// The part number for the boundary json
         /// 
         /// </summary>
-        static int boundaryJsonPart;
+        static int boundaryJsonPart = 1;
 
         /// <summary>
         /// A dictionary to store the boundary shapes instead of immediately serializing and sending them
@@ -1704,7 +1704,9 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetDouble("time", (int) SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
-            
+            boundarybuilder.Append(",");
+            JsonUtil.SetInt("part", boundaryJsonPart, boundarybuilder);
+
             boundaryJsonPart++;
 
             if (boundarybuilder[boundarybuilder.Length - 1] == ',')
