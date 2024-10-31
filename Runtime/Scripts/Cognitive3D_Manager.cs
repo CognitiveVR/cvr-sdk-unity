@@ -440,7 +440,12 @@ namespace Cognitive3D
             }
 
             //send all immediately. anything on threads will be out of date when looking for what the current tracking scene is
-            FlushData();
+            //flush events, fixations, gaze, boundaries, sensors
+            //DO NOT FLUSH DYNAMICS because dynamics from the next scene are already loaded
+            if (!string.IsNullOrEmpty(TrackingSceneId))
+            {
+                CoreInterface.FlushSceneChange(true);
+            }
 
             // upload session properties to new scene
             ForceWriteSessionMetadata = true;
@@ -471,7 +476,7 @@ namespace Cognitive3D
             // Flush recorded data when scene unloads
             if (TrackingScene != null)
             {
-                FlushData();
+                CoreInterface.FlushSceneChange(true);
             }
 
             // upload session properties to new scene

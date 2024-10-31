@@ -420,10 +420,10 @@ namespace Cognitive3D
 
             OVRProjectConfig projectConfig = OVRProjectConfig.CachedProjectConfig;
             ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Recommended, 
+                level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Apply,
-                message: "Missing some Oculus target devices. Enable all?",
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "Missing some Oculus target devices. Enable all to avoid misidentifying Quest devices.",
                 fixmessage: "All Oculus target devices are enabled",
                 checkAction: () =>
                 {   return projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest2) &&
