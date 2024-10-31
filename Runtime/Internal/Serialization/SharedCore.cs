@@ -1716,6 +1716,7 @@ namespace Cognitive3D.Serialization
             WebPost("boundary", boundarybuilder.ToString(), true);
 
             // Clear and prepare for next batch
+            trackingSpaces.Clear();
             boundarybuilder.Clear();
             boundarybuilder.Append("{\"data\":[");
         }
