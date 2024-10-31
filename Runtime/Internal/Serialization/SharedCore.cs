@@ -21,7 +21,15 @@ namespace Cognitive3D.Serialization
         #endregion
 
 
-        //some shared timer (10 seconds) + data thresholds?
+        internal static void FlushSceneChange(bool copyToCache)
+        {
+            if (!IsInitialized) { return; }
+
+            SerializeEvents(copyToCache);
+            SerializeGaze(copyToCache);
+            SerializeSensors(copyToCache);
+            SerializeFixations(copyToCache);
+        }
 
         internal static void Flush(bool copyToCache)
         {

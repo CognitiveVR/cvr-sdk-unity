@@ -223,6 +223,11 @@ namespace Cognitive3D
         }
         #endregion
 
+        internal static void FlushSceneChange(bool copyToCache)
+        {
+            SharedCore.FlushSceneChange(copyToCache);
+        }
+
         internal static void Flush(bool copyToCache)
         {
             SharedCore.Flush(copyToCache);
