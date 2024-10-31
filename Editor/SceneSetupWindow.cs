@@ -1363,7 +1363,11 @@ namespace Cognitive3D
                 {
                     SegmentAnalytics.TrackEvent("ExportingSceneLess1MB_SceneExportPage", "SceneSetupSceneExportPage");
                 }
-                else if (sceneSize > 500)
+                else if (sceneSize >= 1 && sceneSize <= 500)
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneLessOrEqual500MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+                else // sceneSize > 500
                 {
                     SegmentAnalytics.TrackEvent("ExportingSceneGreater500MB_SceneExportPage", "SceneSetupSceneExportPage");
                 }

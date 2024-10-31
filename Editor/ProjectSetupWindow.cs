@@ -1095,7 +1095,7 @@ namespace Cognitive3D
                         {
                             selectedsdks.Add("C3D_PHOTON");
                         }
-                        SegmentAnalytics.TrackEvent("PhotonPUN2SupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
+                        onclick += () => SegmentAnalytics.TrackEvent("PhotonPUN2SupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 
@@ -1108,7 +1108,7 @@ namespace Cognitive3D
                         {
                             selectedsdks.Add("C3D_NETCODE");
                         }
-                        SegmentAnalytics.TrackEvent("NetcodeSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
+                        onclick += () => SegmentAnalytics.TrackEvent("NetcodeSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 
@@ -1121,7 +1121,7 @@ namespace Cognitive3D
                         {
                             selectedsdks.Add("C3D_NORMCORE");
                         }
-                        SegmentAnalytics.TrackEvent("NormcoreSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
+                        onclick += () => SegmentAnalytics.TrackEvent("NormcoreSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 
