@@ -30,7 +30,7 @@ namespace Cognitive3D.Serialization
             SerializeGaze(copyToCache);
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
-            SerializeBoundaryShapes();
+            SerializeBoundaryShapes(copyToCache);
 
             InterruptThread = true;
             while (queuedSnapshots.Count > 0 || queuedManifest.Count > 0)
@@ -1610,7 +1610,7 @@ namespace Cognitive3D.Serialization
             // Once we have more than threshold, serialize and send request
             if (trackingSpaces.Count > BoundaryThreshold)
             {
-                SerializeBoundaryShapes();
+                SerializeBoundaryShapes(false);
             }
         }
 
@@ -1630,14 +1630,14 @@ namespace Cognitive3D.Serialization
             // Once we have threshold of boundary shapes count, serialize and send request
             if (boundaryShapes.Count > BOUNDARY_SHAPE_COUNT_THRESHOLD)
             {
-                SerializeBoundaryShapes();
+                SerializeBoundaryShapes(false);
             }
         }
 
         /// <summary>
         /// Constructs boundary json from internal lists and sends a web request
         /// </summary>
-        static void SerializeBoundaryShapes()
+        static void SerializeBoundaryShapes(bool writeToCache)
         {
             if (boundarybuilder == null) { return; }
 
@@ -1713,7 +1713,7 @@ namespace Cognitive3D.Serialization
             }
             boundarybuilder.Append("}");
 
-            WebPost("boundary", boundarybuilder.ToString(), true);
+            WebPost("boundary", boundarybuilder.ToString(), writeToCache);
 
             // Clear and prepare for next batch
             trackingSpaces.Clear();
