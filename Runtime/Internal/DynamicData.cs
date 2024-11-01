@@ -7,6 +7,8 @@ namespace Cognitive3D
 {
     internal struct DynamicData
     {
+        public bool decreaseDynamicUpdateRate;
+
         public string Name;
         public string MeshName;
         public Transform Transform;
@@ -61,8 +63,9 @@ namespace Cognitive3D
         public bool IsRightHand;
         public string ControllerType;
 
-        public DynamicData(string name, string customid, string meshname, Transform transform, Vector3 position, Quaternion rotation, Vector3 scale, float posThreshold, float rotThreshold, float scaleThreshold, float updateInterval, bool iscontroller, string controllerType, bool isRightHand)
+        public DynamicData(bool decreaseUpdateRate, string name, string customid, string meshname, Transform transform, Vector3 position, Quaternion rotation, Vector3 scale, float posThreshold, float rotThreshold, float scaleThreshold, float updateInterval, bool iscontroller, string controllerType, bool isRightHand)
         {
+            decreaseDynamicUpdateRate = decreaseUpdateRate;
             if (string.IsNullOrEmpty(customid))
             {
                 Id = Cognitive3D.DynamicManager.GetUniqueObjectId(meshname);

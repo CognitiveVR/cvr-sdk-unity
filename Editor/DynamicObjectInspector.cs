@@ -101,6 +101,7 @@ namespace Cognitive3D
             if (targets.Length == 1)
             {
                 var dyn = targets[0] as DynamicObject;
+                dyn.decreaseDynamicUpdateRate = EditorGUILayout.Toggle(new GUIContent("Decrease Update Rate"),dyn.decreaseDynamicUpdateRate);
                 if (!dyn.UseCustomMesh)
                 {
                     EditorGUI.BeginDisabledGroup(true);

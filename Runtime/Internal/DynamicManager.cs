@@ -741,6 +741,8 @@ namespace Cognitive3D
         static int maxTicks = 128;
         //IMPROVEMENT some function based on the number of dynamic objects to track and the intervals needed. should be as high as possible without causing 'overlap' between this tick and the next
 
+        internal const float DISTANCE_THRESHOLD_FOR_DYNAMIC_OBJECTS = 10f;
+
         //iterate through all dynamic objects
         //alternatively, could go iterate through chunks of dynamics each frame, instead of all at once
         private static void OnUpdate(float deltaTime)
@@ -754,10 +756,27 @@ namespace Cognitive3D
 
             for (; index < ActiveDynamicObjectsArray.Length; index++)
             {
+                // Default desired update rate is what was defined during initialization
+                float desiredUpdateRateBasedOnDistance = ActiveDynamicObjectsArray[index].DesiredUpdateRate;
+                if (ActiveDynamicObjectsArray[index].decreaseDynamicUpdateRate) // if not controller, adjust rate based on distance
+                {
+
+                    // If transform is null, use lastPosition. BTW, what is remove used for?
+                    Vector3 position = ActiveDynamicObjectsArray[index].Transform == null ? ActiveDynamicObjectsArray[index].LastPosition : ActiveDynamicObjectsArray[index].Transform.position;
+
+                    // If further than 20m, downsample
+                    // if (Vector3.SqrMagnitude(GameplayReferences.HMD.position - position) > DISTANCE_THRESHOLD_FOR_DYNAMIC_OBJECTS)
+                    if (Mathf.Abs(GameplayReferences.HMD.position.z - position.z) > DISTANCE_THRESHOLD_FOR_DYNAMIC_OBJECTS)
+                    {
+                        Debug.LogError("Decreased the update rate!");
+                        desiredUpdateRateBasedOnDistance = DynamicObject.NonControllerUpdateRate; // Once every 0.5 seconds, or 2Hz
+                    }
+                }
+                
                 if (!ActiveDynamicObjectsArray[index].active) { continue; }
 
                 //can set dynamic object to dirty to immediately send snapshot. otherwise wait for update interval
-                if (!ActiveDynamicObjectsArray[index].dirty && ActiveDynamicObjectsArray[index].UpdateInterval < ActiveDynamicObjectsArray[index].DesiredUpdateRate) { ActiveDynamicObjectsArray[index].UpdateInterval += deltaTime; continue; }
+                if (!ActiveDynamicObjectsArray[index].dirty && ActiveDynamicObjectsArray[index].UpdateInterval < desiredUpdateRateBasedOnDistance) { ActiveDynamicObjectsArray[index].UpdateInterval += deltaTime; continue; }
                 ActiveDynamicObjectsArray[index].UpdateInterval = 0;
 
                 //used to skip through position and rotation check if one of them has already been set, or if the data was already marked as 'dirty'

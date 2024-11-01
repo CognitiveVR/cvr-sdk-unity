@@ -18,6 +18,9 @@ namespace Cognitive3D
     [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
     public class DynamicObject : MonoBehaviour
     {
+        public bool decreaseDynamicUpdateRate;
+        public static float NonControllerUpdateRate = 1f;
+
         /// <summary>
         /// To know the "ID Source Type" set from inspector
         /// Must follow this order:
@@ -249,6 +252,11 @@ namespace Cognitive3D
                 UpdateRate = 64;
             }
 
+            if (decreaseDynamicUpdateRate)
+            {
+                Debug.LogError("Oh this dynamic update rate is decreased!");
+            }
+
             string registerid = (idSource == IdSourceType.CustomID) ? CustomId : "";
 
             if (idSource == IdSourceType.PoolID && IdPool != null)
@@ -257,7 +265,7 @@ namespace Cognitive3D
                 registerid = CustomId;
             }
 
-            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerDisplayType.ToString(), IsRight);
+            var Data = new DynamicData(decreaseDynamicUpdateRate, gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerDisplayType.ToString(), IsRight);
 
             DataId = Data.Id;
 
