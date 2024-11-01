@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -34,6 +35,17 @@ namespace Cognitive3D
 
         // Default idSource
         public IdSourceType idSource = IdSourceType.CustomID;
+
+        // Defines input types for handling different control methods:
+        // Controller (0), Hand (1), and a placeholder for future simultaneous support of both (ControllerAndHand).
+        public enum InputType
+        {
+            None = 0,
+            Controller = 1,
+            Hand = 2,
+            // For simultaneous controller and hand support
+            // ControllerAndHand = 3,
+        }
         
         //developer facing high level controller type selection
         public enum ControllerType
@@ -47,8 +59,8 @@ namespace Cognitive3D
             PicoNeo3 = 6,
             PicoNeo4 = 7,
             ViveFocus = 8,
+            Hand = 10, //might suggest that this includes skeletal hand tracking, which needs some more design
             //Generic = 0, //basically a non-branded oculus touch controller
-            //Hand = 9, //might suggest that this includes skeletal hand tracking, which needs some more design
         }
         
         //used internally to have a consistent mesh name string
@@ -83,6 +95,7 @@ namespace Cognitive3D
             QuestProTouchRight = 26,
             QuestPlusTouchLeft = 27,
             QuestPlusTouchRight = 28,
+            hand = 29,
         }
 
         //used internally to have a consistent button input image
@@ -110,6 +123,7 @@ namespace Cognitive3D
             quest_pro_touch_right = 20,
             quest_plus_touch_left = 21,
             quest_plus_touch_right = 22,
+            hand = 23,
         }
 
 
@@ -157,6 +171,7 @@ namespace Cognitive3D
         public float ScaleThreshold = 0.1f;
 
         //used to select svg on SE to display button inputs
+        public InputType inputType;
         public bool IsController;
         public bool IsRight;
         public bool IdentifyControllerAtRuntime = true;
@@ -190,6 +205,7 @@ namespace Cognitive3D
             // if current device is hands or null, then use fallback
             if (IsController)
             {
+                Debug.LogError("Is controller? " + IsController + " and input type is " + inputType);
                 GameplayReferences.SetController(this, IsRight);
                 // Special case for hand tracking (particularly when session begins with hand): 
                 //  need this because InputDevice.isValid returns false
@@ -257,11 +273,11 @@ namespace Cognitive3D
                 registerid = CustomId;
             }
 
-            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, controllerDisplayType.ToString(), IsRight);
+            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, inputType.ToString(), controllerDisplayType.ToString(), IsRight);
 
             DataId = Data.Id;
 
-            if (IsController)
+            if (inputType == InputType.Controller || inputType == InputType.Hand)
             {
                 Cognitive3D.DynamicManager.RegisterController(Data);
             }
@@ -392,6 +408,10 @@ namespace Cognitive3D
                         controllerDisplayType = ControllerDisplayType.vive_focus_controller_left;
                         commonDynamicMesh = CommonDynamicMesh.ViveFocusControllerLeft;
                     }
+                    break;
+                case ControllerType.Hand:
+                    controllerDisplayType = ControllerDisplayType.hand;
+                    commonDynamicMesh = CommonDynamicMesh.hand;
                     break;
                 default:
                     controllerDisplayType = ControllerDisplayType.unknown;

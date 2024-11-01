@@ -91,6 +91,29 @@ namespace Cognitive3D
             {
                 return TrackingType.Controller;
             }
+#elif C3D_VIVEWAVE
+            List<InputDevice> devices = new List<InputDevice>();
+            InputDevices.GetDevices(devices);
+            var inputDeviceCharacteristics = Wave.OpenXR.InputDeviceHand.GetCharacteristic(true);
+
+            foreach (var device in devices)
+            {
+                if (device.characteristics.HasFlag(InputDeviceCharacteristics.HandTracking) && (Wave.OpenXR.InputDeviceHand.IsTracked(true) || Wave.OpenXR.InputDeviceHand.IsTracked(false)))
+                {
+                    // Hand tracking is in use
+                    // Debug.LogError("@@@ Hand tracking detected: " + device.name);
+                    return TrackingType.Hand;
+                }
+                else if (device.characteristics.HasFlag(InputDeviceCharacteristics.Controller) && !Wave.OpenXR.InputDeviceHand.IsTracked(true) && !Wave.OpenXR.InputDeviceHand.IsTracked(false))
+                {
+                    // Controller is in use
+                    // Debug.LogError("@@@ Controller detected: " + device.name);
+                    return TrackingType.Controller;
+                }
+            }
+
+            // Debug.LogError("@@@ Nothing detected");
+            return TrackingType.None;
 #else
             return TrackingType.Controller;
 #endif

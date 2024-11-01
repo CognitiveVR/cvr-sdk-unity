@@ -1753,8 +1753,14 @@ namespace Cognitive3D.Serialization
             if (!IsInitialized) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
-            dome.controllerType = data.ControllerType;
-            dome.isController = true;
+            dome.inputType = data.InputType;
+
+            if (data.IsController)
+            {
+                dome.controllerType = data.ControllerType;
+                dome.isController = true;
+            }
+
             if (data.IsRightHand)
             {
                 dome.Properties = "{\"controller\": \"right\"}";
@@ -2135,8 +2141,19 @@ namespace Cognitive3D.Serialization
 
             if (entry.isController)
             {
+                // Debug.LogError(entry.controllerType + " " + entry.inputType);
                 builder.Append(",");
                 JsonUtil.SetString("controllerType", entry.controllerType, builder);
+                // Debug.LogError(entry.controllerType + " " + entry.inputType);
+                // builder.Append(",");
+                // JsonUtil.SetString("inputType", entry.inputType, builder);
+
+                // if (entry.inputType == "Controller")
+                // {
+                //     Debug.LogError(entry.controllerType + " " + entry.inputType);
+                //     builder.Append(",");
+                //     JsonUtil.SetString("controllerType", entry.controllerType, builder);
+                // }
             }
 
             //properties should already be formatted, just need to append them here
