@@ -61,7 +61,7 @@ namespace Cognitive3D.Components
             currentBoundaryPoints = BoundaryUtil.GetCurrentBoundaryPoints();
             previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
 
-            // We want to intialize the string builder to a size appropriate for the number of points
+            // We want to initialize the string builder to a size appropriate for the number of points
             // This number might change if the participant redraws boundary, so we are adding a grace extension
             // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
             // That is expensive, but there is a low probability of this happening
