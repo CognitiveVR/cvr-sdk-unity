@@ -98,6 +98,7 @@ namespace Cognitive3D
 
         internal static void Init()
         {
+            SegmentAnalytics.PageEvent("SceneManageWindow", "Opened");
             // Only search "Assets/" - don't search Packages/
             string[] foldersToSearch = { "Assets/" };
             SceneManagementWindow window = (SceneManagementWindow)EditorWindow.GetWindow(typeof(SceneManagementWindow), true, "Scene Management (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
@@ -299,6 +300,7 @@ namespace Cognitive3D
             ////////////////////////
             if (GUI.Button(new Rect(85, 510, 220, 30), new GUIContent("Export and upload all scenes")))
             {
+                SegmentAnalytics.TrackEvent("ExportAllScenes", "SceneManagement_ExportAndUploadAllScenes");
                 selectedOnly = false;
                 sceneIndex = 0;
                 isExporting = true;
@@ -310,6 +312,7 @@ namespace Cognitive3D
             ///////////////////////
             if (GUI.Button(new Rect(315, 510, 220, 30), new GUIContent("Export and upload selected scenes")))
             {
+                SegmentAnalytics.TrackEvent("ExportSelectedScenes", "SceneManagement_ExportAndUploadSelectedScenes");
                 selectedOnly = true;
                 sceneIndex = 0;
                 isExporting = true;

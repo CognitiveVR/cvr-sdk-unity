@@ -281,6 +281,7 @@ namespace Cognitive3D
         {
             if (responseCode != 200)
             {
+                SegmentAnalytics.TrackEvent("InvalidDevKey_ProjectSetup_" + responseCode, "ProjectSetupAPIPage");
                 Debug.LogError("GetApplicationKeyResponse response code: " + responseCode + " error: " + error);
                 return;
             }
@@ -290,6 +291,7 @@ namespace Cognitive3D
             {
                 JsonUtility.FromJson<ApplicationKeyResponseData>(text);
                 isResponseJsonValid = true;
+                SegmentAnalytics.TrackEvent("ValidDevKey_ProjectSetup", "ProjectSetupAPIPage");
             }
             catch
             {
@@ -303,6 +305,7 @@ namespace Cognitive3D
             //display popup if application key is set but doesn't match the response
             if (!string.IsNullOrEmpty(apikey) && apikey != responseData.apiKey)
             {
+                SegmentAnalytics.TrackEvent("APIKeyMismatch_ProjectSetup", "ProjectSetupAPIPage");
                 var result = EditorUtility.DisplayDialog("Application Key Mismatch", "Do you want to use the latest Application Key available on the Dashboard?", "Ok", "No");
                 if (result)
                 {
@@ -311,6 +314,7 @@ namespace Cognitive3D
             }
             else
             {
+                SegmentAnalytics.TrackEvent("APIKeyFound_ProjectSetup", "ProjectSetupAPIPage");
                 apikey = responseData.apiKey;
             }
         }
@@ -605,11 +609,13 @@ namespace Cognitive3D
                         if (Event.current.shift) //add
                         {
                             selectedsdks.Add(SDKNamesDefines[i].Define);
+                            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage");
                         }
                         else //set
                         {
                             selectedsdks.Clear();
                             selectedsdks.Add(SDKNamesDefines[i].Define);
+                            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage");
                         }
                     }
                 }
@@ -856,6 +862,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(150, 100, 200, 30), "Quick Scene Setup"))
             {
                 SceneSetupWindow.Init(position);
+                SegmentAnalytics.TrackEvent("QuickSceneSetupSelected_ProjectSetupNextStepsPage", "QuickSceneSetup");
                 Close();
             }
 
@@ -863,6 +870,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(150, 320, 200, 30), "Advanced Scene Setup"))
             {
                 //show dynamic page
+                SegmentAnalytics.TrackEvent("AdvancedSceneSetupSelected_ProjectSetupNextStepsPage", "AdvancedSceneSetup");
                 currentPage = Page.DynamicSetup;
             }
         }
@@ -1087,6 +1095,7 @@ namespace Cognitive3D
                         {
                             selectedsdks.Add("C3D_PHOTON");
                         }
+                        onclick += () => SegmentAnalytics.TrackEvent("PhotonPUN2SupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 
@@ -1099,6 +1108,7 @@ namespace Cognitive3D
                         {
                             selectedsdks.Add("C3D_NETCODE");
                         }
+                        onclick += () => SegmentAnalytics.TrackEvent("NetcodeSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 
@@ -1111,6 +1121,7 @@ namespace Cognitive3D
                         {
                             selectedsdks.Add("C3D_NORMCORE");
                         }
+                        onclick += () => SegmentAnalytics.TrackEvent("NormcoreSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 

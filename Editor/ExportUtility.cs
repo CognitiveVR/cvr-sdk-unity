@@ -493,6 +493,7 @@ namespace Cognitive3D
             if (responseCode != 200 && responseCode != 201)
             {
                 Debug.LogError("Scene Upload Error " + error);
+                SegmentAnalytics.TrackEvent("UploadingSceneError" + responseCode + "_SceneUploadPage", "SceneSetupSceneUploadPage");
                 if (responseCode != 100) //ie user cancelled upload
                 {
                     EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
@@ -534,6 +535,7 @@ namespace Cognitive3D
             UploadComplete = null;
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
+            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", "SceneSetupSceneUploadPage");
         }
 
         static Cognitive3D_Preferences.SceneSettings UploadSceneSettings;
