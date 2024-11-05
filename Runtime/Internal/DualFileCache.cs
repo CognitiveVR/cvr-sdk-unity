@@ -102,17 +102,21 @@ namespace Cognitive3D
             if (read_reader == null) { Debug.LogError("has content reader null"); }
             if (read_reader.BaseStream == null) { Debug.LogError("has content base stream null"); }
 
-            if (read_reader.BaseStream.Length > 0)
+            if (read_reader.BaseStream != null && read_reader.BaseStream.CanRead)
             {
-                return true;
-            }
+                if (read_reader.BaseStream.Length > 0)
+                {
+                    return true;
+                }
 
-            //try to merge if write file has any contents
-            if (numberWriteBatches > 0)
-            {
-                MergeDataFiles();
+                //try to merge if write file has any contents
+                if (numberWriteBatches > 0)
+                {
+                    MergeDataFiles();
+                }
+                return read_reader.BaseStream.Length > 0;
             }
-            return read_reader.BaseStream.Length > 0;
+            return false;
         }
 
         public int NumberOfBatches()
