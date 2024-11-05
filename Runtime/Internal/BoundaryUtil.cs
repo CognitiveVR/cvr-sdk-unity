@@ -76,7 +76,11 @@ namespace Cognitive3D.Components
 #else
             // Using Unity's XRInputSubsystem as fallback
             List<XRInputSubsystem> subsystems = new List<XRInputSubsystem>();
+#if UNITY_6000_0_OR_NEWER
+            SubsystemManager.GetSubsystems<XRInputSubsystem>(subsystems);
+#else
             SubsystemManager.GetInstances<XRInputSubsystem>(subsystems);
+#endif
 
             // Handling case of multiple subsystems to find the first one that "works"
             foreach (XRInputSubsystem subsystem in subsystems)
