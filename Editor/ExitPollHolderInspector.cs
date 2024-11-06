@@ -18,7 +18,7 @@ namespace Cognitive3D
                     _camera = Camera.main;
                     if (_camera == null)
                     {
-                        _camera = FindObjectOfType<Camera>();
+                        _camera = FindFirstObjectByType<Camera>();
                     }
                 }
                 return _camera;

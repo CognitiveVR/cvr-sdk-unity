@@ -72,7 +72,7 @@ namespace Cognitive3D
             sb.AppendLine("*****************************");
             sb.AppendLine("***********PROJECT***********");
             sb.AppendLine("*****************************");
-            string s = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            string s = PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup));
             sb.AppendLine("Scripting Define Symbols: " + s);
             sb.AppendLine("Packages:");
             foreach (var package in PackageList)
@@ -196,7 +196,7 @@ namespace Cognitive3D
                 sb.AppendLine("No Main Camera in scene");
             }
 
-            var manager = FindObjectOfType<Cognitive3D_Manager>();
+            var manager = FindFirstObjectByType<Cognitive3D_Manager>();
             if (manager != null)
             {
                 sb.AppendLine("Manager Initialize On Start: " + manager.BeginSessionAutomatically);
@@ -214,7 +214,7 @@ namespace Cognitive3D
             sb.AppendLine("****CURRENT SCENE OBJECTS****");
             sb.AppendLine("*****************************");
 
-            var sceneDynamics = FindObjectsOfType<DynamicObject>();
+            var sceneDynamics = FindObjectsByType<DynamicObject>(FindObjectsSortMode.None);
             sb.AppendLine("Dynamic Object Count: " + sceneDynamics.Length);
 
             for(int i = 0; i< sceneDynamics.Length;i++)

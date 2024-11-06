@@ -47,7 +47,7 @@ namespace Cognitive3D.ActiveSession
                 }
                 if (eventSystem == null)
                 {
-                    eventSystem = FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+                    eventSystem = FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
                 }
                 if (eventSystem == null)
                 {

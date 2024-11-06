@@ -605,7 +605,14 @@ namespace Cognitive3D
                 if (_cachedDynamics == null || _cachedDynamics.Length == 0)
                 {
 #if UNITY_2020_1_OR_NEWER
-                    _cachedDynamics = FindObjectsOfType<DynamicObject>(Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects);
+                    if (Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects)
+                    {
+                        _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    }
+                    else
+                    {
+                        _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                    }
 #else
                     _cachedDynamics = FindObjectsOfType<DynamicObject>();
 #endif
@@ -619,7 +626,14 @@ namespace Cognitive3D
         private void OnFocus()
         {
 #if UNITY_2020_1_OR_NEWER
-            _cachedDynamics = FindObjectsOfType<DynamicObject>(Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects);
+            if (Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects)
+            {
+                _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            }
+            else
+            {
+                _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            }
 #else
             _cachedDynamics = FindObjectsOfType<DynamicObject>();
 #endif
