@@ -441,8 +441,11 @@ namespace Cognitive3D
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+#if UNITY_6000_0_OR_NEWER
+            await request.SendWebRequest();
+#else
             request.SendWebRequest();
-
+#endif
             activeRequests.Add(request);
             await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true);
 

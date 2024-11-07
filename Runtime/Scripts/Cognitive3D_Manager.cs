@@ -38,7 +38,7 @@ namespace Cognitive3D
             {
                 if (instance == null)
                 {
-                    instance = FindObjectOfType<Cognitive3D_Manager>();
+                    instance = FindFirstObjectByType<Cognitive3D_Manager>();
                 }
                 return instance;
             }
