@@ -36,7 +36,7 @@ namespace Cognitive3D
             {
                 if (cachedOVRFaceExpressions == null)
                 {
-                    cachedOVRFaceExpressions = UnityEngine.Object.FindObjectOfType<OVRFaceExpressions>();
+                    cachedOVRFaceExpressions = UnityEngine.Object.FindFirstObjectByType<OVRFaceExpressions>();
                     if (cachedOVRFaceExpressions == null)
                     {
                         Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
@@ -289,7 +289,7 @@ namespace Cognitive3D
             {
                 if (_cameraRig == null)
                 {
-                    _cameraRig = GameObject.FindObjectOfType<OVRCameraRig>();
+                    _cameraRig = GameObject.FindFirstObjectByType<OVRCameraRig>();
                 }
                 return _cameraRig;
             }

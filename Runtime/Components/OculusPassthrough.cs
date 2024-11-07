@@ -73,7 +73,7 @@ namespace Cognitive3D.Components
 
         private bool GetPassthroughLayer(out OVRPassthroughLayer layer)
         {
-            layer = GameObject.FindObjectOfType<OVRPassthroughLayer>();
+            layer = GameObject.FindFirstObjectByType<OVRPassthroughLayer>();
             if (layer != null)
             {
                 return true;

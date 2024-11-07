@@ -29,7 +29,7 @@ namespace Cognitive3D.Components
             yield return wait;
 
             currentActiveSubsystem = GetActiveDisplaySubsystem();
-            if (currentActiveSubsystem != null && currentActiveSubsystem.SubsystemDescriptor.id.Contains("oculus"))
+            if (currentActiveSubsystem != null && currentActiveSubsystem.subsystemDescriptor.id.Contains("oculus"))
             {
                 while (Cognitive3D.Cognitive3D_Manager.IsInitialized)
                 {
@@ -37,7 +37,7 @@ namespace Cognitive3D.Components
                     RecordOculusStats();
                 }
             }
-            else if (currentActiveSubsystem != null && currentActiveSubsystem.SubsystemDescriptor.id.Contains("OpenXR"))
+            else if (currentActiveSubsystem != null && currentActiveSubsystem.subsystemDescriptor.id.Contains("OpenXR"))
             {
                 Debug.LogWarning("Oculus Hardware sensors cannot be accessed while using OpenXR plugin");
             }
