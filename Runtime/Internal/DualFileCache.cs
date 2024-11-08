@@ -140,7 +140,7 @@ namespace Cognitive3D
             return i / 2;
         }
 
-        //manually keep track of how many write batches there are, instead of constantly opening/closing file streams
+        //manually keep track of how many write batches there are, instead of constantly opening/closing filestreams
         int numberWriteBatches = 0;
 
         public bool PeekContent(ref string Destination, ref string body)
