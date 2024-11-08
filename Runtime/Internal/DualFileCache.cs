@@ -140,7 +140,38 @@ namespace Cognitive3D
             return i / 2;
         }
 
-        //manually keep track of how many write batches there are, insted of constantly opening/closing filestreams
+        /// <summary>
+        /// Attempts to read two lines of content from the 'read' file, starting from the last valid offset.
+        /// Skips over empty or whitespace-only lines and ensures that both destination and body lines are non-empty.
+        /// Returns true if both lines are successfully read and valid, otherwise false.
+        /// </summary>
+        /// <param name="dest">The destination content line read from the file.</param>
+        /// <param name="bod">The body content line read from the file.</param>
+        /// <returns>True if both lines are valid and non-empty, otherwise false.</returns>
+        bool TryReadContent(out string dest, out string bod)
+        {
+            dest = string.Empty;
+            bod = string.Empty;
+
+            int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length * 2;
+            read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
+
+            try
+            {
+                // Start at destination line and ensure it's non-empty
+                dest = read_reader.ReadLine();
+                bod = read_reader.ReadLine();
+
+                // Ensure neither line is empty or whitespace
+                return !string.IsNullOrWhiteSpace(dest) && !string.IsNullOrWhiteSpace(bod);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        //manually keep track of how many write batches there are, instead of constantly opening/closing file streams
         int numberWriteBatches = 0;
 
         public bool PeekContent(ref string Destination, ref string body)
@@ -149,20 +180,15 @@ namespace Cognitive3D
             //otherwise, if there's content in write, merge files
             //else nothing to do
 
+            string tempDest, tempBody;
+
             if (HasContent()) //content in read file
             {
-                int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length + eol_char.Length;
-                read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
-                try
+                if (TryReadContent(out tempDest, out tempBody))
                 {
-                    //start at destination line
-                    Destination = read_reader.ReadLine();
-                    body = read_reader.ReadLine();
+                    Destination = tempDest;
+                    body = tempBody;
                     return true;
-                }
-                catch
-                {
-                    return false;
                 }
             }
             else if (numberWriteBatches > 0)
@@ -171,25 +197,16 @@ namespace Cognitive3D
                 //merge write file into read file. then read as normal
                 MergeDataFiles();
 
-                int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length + eol_char.Length;
-                read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
-                try
+                if (TryReadContent(out tempDest, out tempBody))
                 {
-                    //start at destination line
-                    Destination = read_reader.ReadLine();
-                    body = read_reader.ReadLine();
+                    Destination = tempDest;
+                    body = tempBody;
                     return true;
                 }
-                catch
-                {
-                    return false;
-                }
             }
-            else
-            {
-                //no data saved locally, do nothing
-                return false;
-            }
+            
+            // No data saved locally, or failed to read valid lines
+            return false;
         }
 
         void MergeDataFiles()
@@ -203,7 +220,11 @@ namespace Cognitive3D
             {
                 var s = write_reader.ReadLine();
                 if (s == null) { break; }
-                read_writer.WriteLine(s);
+                // Skip empty or whitespace-only lines
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    read_writer.WriteLine(s);
+                }
             }
             read_writer.Flush();
             //disposing write_reader or read_writer here will close the filestreams
