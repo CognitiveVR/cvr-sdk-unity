@@ -9,7 +9,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary")]
     public class Boundary : AnalyticsComponentBase
     {
-#if (C3D_OCULUS || C3D_DEFAULT) && UNITY_ANDROID && !UNITY_EDITOR
+// #if (C3D_OCULUS || C3D_DEFAULT) && UNITY_ANDROID && !UNITY_EDITOR
         /// <summary>
         /// The previous list of coordinates (local to tracking space) describing the boundary <br/>
         /// Used for comparison to determine if the boundary changed
@@ -54,6 +54,15 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            StartCoroutine(DelayedSessionStart());
+        }
+
+        private IEnumerator DelayedSessionStart()
+        {
+            // Wait for 2 seconds
+            yield return new WaitForSeconds(2);
+
+            // The rest of your original OnSessionBegin code
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
 
@@ -61,10 +70,7 @@ namespace Cognitive3D.Components
             currentBoundaryPoints = BoundaryUtil.GetCurrentBoundaryPoints();
             previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
 
-            // We want to initialize the string builder to a size appropriate for the number of points
-            // This number might change if the participant redraws boundary, so we are adding a grace extension
-            // In cases where even that isn't enough, like boundary point goes from 200 to 300, the string builder will just double in size
-            // That is expensive, but there is a low probability of this happening
+            // Initialize the string builder to an appropriate size based on boundary points
             if (currentBoundaryPoints != null)
             {
                 CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * currentBoundaryPoints.Length));
@@ -72,7 +78,7 @@ namespace Cognitive3D.Components
                 CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
             }
 
-            // Record initial tracking space pos and rot
+            // Record initial tracking space position and rotation
             trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             if (trackingSpace)
             {
@@ -116,6 +122,10 @@ namespace Cognitive3D.Components
                         CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
                     }
                 }
+                else
+                {
+                    Debug.LogError("@@@ Boundary points are null");
+                }
             }
         }
 
@@ -136,7 +146,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
         }
-#endif
+// #endif
 
 #region Inspector Utils
         public override bool GetWarning()
