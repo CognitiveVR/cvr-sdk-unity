@@ -27,6 +27,7 @@ namespace Cognitive3D
             SharedCore.InitializeSettings(sessionId,
                 Cognitive3D_Preferences.Instance.EventDataThreshold,
                 Cognitive3D_Preferences.Instance.GazeSnapshotCount,
+                Cognitive3D_Preferences.Instance.BoundarySnapshotCount,
                 Cognitive3D_Preferences.Instance.DynamicSnapshotCount,
                 Cognitive3D_Preferences.Instance.SensorSnapshotCount,
                 Cognitive3D_Preferences.Instance.FixationSnapshotCount,
@@ -171,6 +172,37 @@ namespace Cognitive3D
         }
         #endregion
 
+        #region Boundary
+
+        /// <summary>
+        /// This is a wrapper for SharedCore.InitializeBoundary() <br/>
+        /// SharedCore.InitializeBoundary() should ideally be called in SharedCore.InitializeSettings() <br/>
+        /// But we are calling from here so we can pass in the number of boundary points from RoomSize.cs to appropriately size the string builder
+        /// </summary>
+        internal static void InitializeBoundary(int numBoundaryPoints)
+        {
+            SharedCore.InitializeBoundary(numBoundaryPoints);
+        }
+        internal static void RecordBoundaryShape(Vector3[] points, double time)
+        {
+            SharedCore.RecordBoundaryShape(
+                points,
+                time);
+        }
+
+        /// <summary>
+        /// Adds the transform of the tracking space and associated timestamp to an internal list <br/>
+        /// We will later serialize contents and populate the json
+        /// </summary>
+        /// <param name="transform">The transform of the tracking space</param>
+        /// <param name="timestamp">The time at which the transform was recorded</param>
+        internal static void RecordTrackingSpaceTransform(Cognitive3D.Components.CustomTransform transform, double timestamp)
+        {
+            SharedCore.RecordTrackingSpaceTransform(transform, timestamp);
+        }
+
+        #endregion
+
         #region Fixation
 
         internal static void FixationSettings(int maxBlinkMS, int preBlinkDiscardMS, int blinkEndWarmupMS, int minFixationMS, int maxConsecutiveDiscardMS, float maxfixationAngle, int maxConsecutiveOffDynamic, float dynamicFixationSizeMultiplier, AnimationCurve focusSizeFromCenter, int saccadefixationEndMS)
@@ -200,8 +232,6 @@ namespace Cognitive3D
         }
 
         #endregion
-
-        
 
         #region Sensors
         internal static void InitializeSensor(string name, float rate)
@@ -273,6 +303,9 @@ namespace Cognitive3D
                 case "fixation":
                     url = CognitiveStatics.PostFixationData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     FixationRecorder.FixationSendEvent();
+                    break;
+                case "boundary":
+                    url = CognitiveStatics.PostBoundaryData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
                     break;
                 default: Util.logDevelopment("Invalid Web Post type"); return;
             }

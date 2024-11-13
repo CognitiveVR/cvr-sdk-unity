@@ -37,6 +37,7 @@ namespace Cognitive3D
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                     S_EventDataThreshold = instance.EventDataThreshold;
                     S_SensorSnapshotCount = instance.SensorSnapshotCount;
+                    S_BoundarySnapshotCount = instance.BoundarySnapshotCount;
                 }
                 return instance;
             }
@@ -55,6 +56,7 @@ namespace Cognitive3D
         public static int S_EventDataThreshold;
         public static int S_SensorSnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
+        public static int S_BoundarySnapshotCount;
 
         public string Protocol = "https";
         public string Gateway = "data.cognitive3d.com";
@@ -103,6 +105,7 @@ namespace Cognitive3D
         public int DynamicSnapshotCount = 512;
         public int EventDataThreshold = 256;
         public int FixationSnapshotCount = 256;
+        public int BoundarySnapshotCount = 64;
 
         public int AutomaticSendTimer = 10;
 

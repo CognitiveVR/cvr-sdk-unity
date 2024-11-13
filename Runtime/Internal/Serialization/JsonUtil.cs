@@ -236,11 +236,36 @@ namespace Cognitive3D.Serialization
             return builder;
         }
 
+        /// <summary>
+        /// Writes an array of floats in the stringbuilder
+        /// </summary>
+        /// <param name="array">The array to write</param>
+        /// <param name="builder">A reference to the strinbuilder to write to</param>
+        /// <returns>The string builder that was written to</returns>
+        public static StringBuilder SetArrayOfFloat(float[] array, StringBuilder builder)
+        {
+            if (array == null || builder == null) return builder;
+
+            builder.Append("[");
+            for (int i = 0; i < array.Length; i++)
+            {
+                builder.Append(array[i]);
+                builder.Append(",");
+            }
+            if (builder[builder.Length - 1] == ',')
+            {
+                builder.Remove(builder.Length - 1, 1); // remove comma
+            }
+            builder.Append("]");
+            return builder;
+        }
+
         //escapes linebreaks in strings
         static string EscapeString(string input)
         {
             if (!input.Contains("\n")) { return input; }
             return input.Replace("\n", "\\n");
+
         }
     }
 }
