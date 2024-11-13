@@ -9,7 +9,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary")]
     public class Boundary : AnalyticsComponentBase
     {
-// #if (C3D_OCULUS || C3D_DEFAULT) && UNITY_ANDROID && !UNITY_EDITOR
+#if (C3D_OCULUS || C3D_DEFAULT) && UNITY_ANDROID && !UNITY_EDITOR
         /// <summary>
         /// The previous list of coordinates (local to tracking space) describing the boundary <br/>
         /// Used for comparison to determine if the boundary changed
@@ -54,13 +54,13 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            StartCoroutine(DelayedSessionStart());
+            StartCoroutine(InitializeBoundaryRecordWithDelay());
         }
 
-        private IEnumerator DelayedSessionStart()
+        private IEnumerator InitializeBoundaryRecordWithDelay()
         {
             // Wait for 2 seconds
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(1);
 
             // The rest of your original OnSessionBegin code
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
@@ -82,10 +82,10 @@ namespace Cognitive3D.Components
             trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
             if (trackingSpace)
             {
-                lastRecordedTrackingSpacePosition = trackingSpace.position;
-                previousTrackingSpaceRotation = trackingSpace.rotation;
                 CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
                 CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+                lastRecordedTrackingSpacePosition = trackingSpace.position;
+                previousTrackingSpaceRotation = trackingSpace.rotation;
             }
         }
 
@@ -146,7 +146,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
         }
-// #endif
+#endif
 
 #region Inspector Utils
         public override bool GetWarning()
