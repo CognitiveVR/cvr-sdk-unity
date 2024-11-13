@@ -140,7 +140,7 @@ namespace Cognitive3D
             return i / 2;
         }
 
-        //manually keep track of how many write batches there are, insted of constantly opening/closing filestreams
+        //manually keep track of how many write batches there are, instead of constantly opening/closing filestreams
         int numberWriteBatches = 0;
 
         public bool PeekContent(ref string Destination, ref string body)
@@ -149,47 +149,100 @@ namespace Cognitive3D
             //otherwise, if there's content in write, merge files
             //else nothing to do
 
-            if (HasContent()) //content in read file
+            string tempDest = string.Empty;
+            string tempBody = string.Empty;
+
+            if (HasContent())
             {
-                int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length + eol_char.Length;
-                read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
-                try
+                if (readLineLengths.Count > 1)
                 {
-                    //start at destination line
-                    Destination = read_reader.ReadLine();
-                    body = read_reader.ReadLine();
-                    return true;
+                    int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length * 2;
+                    read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
+
+                    try
+                    {
+                        tempDest = read_reader.ReadLine();
+                        tempBody = read_reader.ReadLine();
+
+                        if (!string.IsNullOrWhiteSpace(tempDest) && !string.IsNullOrWhiteSpace(tempBody))
+                        {
+                            Destination = tempDest;
+                            body = tempBody;
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
                 }
-                catch
+                else
                 {
+                    // If there aren't enough lines in readLineLengths, return false
                     return false;
                 }
             }
             else if (numberWriteBatches > 0)
             {
-                //there's only ever 1 request from the cache at once. don't have to worry about merging write data onto read data and popping wrong lines from end
-                //merge write file into read file. then read as normal
                 MergeDataFiles();
 
-                int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length + eol_char.Length;
-                read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
-                try
+                // Retry reading the content after merging
+                if (readLineLengths.Count > 1)
                 {
-                    //start at destination line
-                    Destination = read_reader.ReadLine();
-                    body = read_reader.ReadLine();
-                    return true;
+                    int offset = readLineLengths[readLineLengths.Count - 1] + readLineLengths[readLineLengths.Count - 2] + eol_char.Length * 2;
+                    read_reader.BaseStream.Seek(-offset, SeekOrigin.End);
+
+                    try
+                    {
+                        tempDest = read_reader.ReadLine();
+                        tempBody = read_reader.ReadLine();
+
+                        if (!string.IsNullOrWhiteSpace(tempDest) && !string.IsNullOrWhiteSpace(tempBody))
+                        {
+                            Destination = tempDest;
+                            body = tempBody;
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
                 }
-                catch
+                else
                 {
                     return false;
                 }
             }
-            else
+
+            // Return false if no valid data could be read
+            return false;
+        }
+
+        public void RemoveEmptyLinesFromFile()
+        {
+            // Read all lines from the read file
+            List<string> lines = new List<string>();
+            string line;
+            while ((line = read_reader.ReadLine()) != null)
             {
-                //no data saved locally, do nothing
-                return false;
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    lines.Add(line);
+                }
             }
+
+            // Reset the file stream to the beginning before writing back
+            read_writer.BaseStream.SetLength(0);
+            read_writer.BaseStream.Seek(0, SeekOrigin.Begin);
+
+            // Write the non-empty lines back into the file
+            foreach (var nonEmptyLine in lines)
+            {
+                read_writer.WriteLine(nonEmptyLine);
+            }
+
+            read_writer.Flush();
         }
 
         void MergeDataFiles()
@@ -203,12 +256,13 @@ namespace Cognitive3D
             {
                 var s = write_reader.ReadLine();
                 if (s == null) { break; }
-                read_writer.WriteLine(s);
+                // Skip empty or whitespace-only lines
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    read_writer.WriteLine(s);
+                }
             }
             read_writer.Flush();
-            //disposing write_reader or read_writer here will close the filestreams
-
-            //clear write file
             write_filestream.SetLength(0);
             write_filestream.Flush();
             numberWriteBatches = 0;
@@ -216,13 +270,9 @@ namespace Cognitive3D
             readLineLengths.Clear();
             readLineLengthTotal = 0;
             read_reader.BaseStream.Position = 0;
-            while (true)
-            {
-                var s = read_reader.ReadLine();
-                if (s == null) { break; }
-                readLineLengths.Add(s.Length);
-                readLineLengthTotal += s.Length + eol_char.Length;
-            }
+
+            // Remove empty lines from the file after merging
+            RemoveEmptyLinesFromFile();
         }
 
         public void PopContent()

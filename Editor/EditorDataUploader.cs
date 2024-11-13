@@ -31,7 +31,7 @@ namespace Cognitive3D
 				string content = string.Empty;
 				if (cacheSource.PeekContent(ref destination, ref content))
 				{
-					if (!string.IsNullOrEmpty(destination))
+					if (!string.IsNullOrEmpty(destination) && !string.IsNullOrEmpty(content))
 					{
 						//wait for post response
 						var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
