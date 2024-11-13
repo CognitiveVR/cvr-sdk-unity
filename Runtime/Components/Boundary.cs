@@ -50,6 +50,9 @@ namespace Cognitive3D.Components
         /// The threshold for minimum rotation (in degrees) change to re-record boundary points
         /// </summary>
         private readonly float TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES = 5f;
+
+        private const float INITIALIZATION_DELAY_SECONDS = 1;
+
         // Start is called before the first frame update
         protected override void OnSessionBegin()
         {
@@ -59,8 +62,7 @@ namespace Cognitive3D.Components
 
         private IEnumerator InitializeBoundaryRecordWithDelay()
         {
-            // Wait for 2 seconds
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(INITIALIZATION_DELAY_SECONDS);
 
             // The rest of your original OnSessionBegin code
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
