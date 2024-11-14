@@ -1601,7 +1601,7 @@ namespace Cognitive3D.Serialization
         internal static void InitializeBoundary(int numBoundaryPoints)
         {
             // Approximately 70 characters per snapshot, 1200 characters extra room
-            boundarybuilder = new StringBuilder(70 * numBoundaryPoints * Cognitive3D_Preferences.S_BoundarySnapshotCount + 1200);
+            boundarybuilder = new StringBuilder(70 * numBoundaryPoints * Cognitive3D_Preferences.Instance.BoundarySnapshotCount + 1200);
             boundarybuilder.Append("{\"data\":[");
         }
 
