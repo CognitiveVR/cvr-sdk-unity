@@ -7,6 +7,15 @@ namespace Cognitive3D
 {
     public class Cognitive3D_Preferences : ScriptableObject
     {
+        //static for faster access
+        public const float SnapshotInterval = 0.1f;
+        public static int S_GazeSnapshotCount;
+        public static int S_DynamicSnapshotCount;
+        public static int S_EventDataThreshold;
+        public static int S_SensorSnapshotCount;
+        public static bool S_DynamicObjectSearchInParent;
+        public static int S_BoundarySnapshotCount;
+        
         static bool IsSet = false;
         static Cognitive3D_Preferences instance;
         public static Cognitive3D_Preferences Instance
@@ -48,15 +57,6 @@ namespace Cognitive3D
         {
             return Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences") ? true : false;
         }
-
-        //static for faster access
-        public const float SnapshotInterval = 0.1f;
-        public static int S_GazeSnapshotCount;
-        public static int S_DynamicSnapshotCount;
-        public static int S_EventDataThreshold;
-        public static int S_SensorSnapshotCount;
-        public static bool S_DynamicObjectSearchInParent;
-        public static int S_BoundarySnapshotCount;
 
         public string Protocol = "https";
         public string Gateway = "data.cognitive3d.com";
