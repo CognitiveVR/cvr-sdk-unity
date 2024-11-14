@@ -18,7 +18,7 @@ namespace Cognitive3D.Components
             if ((previousBoundary == null && currentBoundary != null) || (previousBoundary != null && currentBoundary == null)) { return true; }
             if (previousBoundary == null && currentBoundary == null) { return false; }
 
-            // OCULUS SPECIFIC HACK 
+            // OCULUS SPECIFIC SPECIAL CASE HANDLING 
             // Going far beyond boundary sometimes causes a pause
             // which causes GetBoundaryPoints() to return empty array and hence fires "fake recenter" events
             // Better to have false negative than a false positive
