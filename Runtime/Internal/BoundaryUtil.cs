@@ -27,7 +27,8 @@ namespace Cognitive3D.Components
 
             if (previousBoundary.Length != currentBoundary.Length) { return true; }
 
-            for (int i = 0; i < previousBoundary.Length; i++)
+            int minLength = Mathf.Min(previousBoundary.Length, currentBoundary.Length);
+            for (int i = 0; i < minLength; i++)
             {
                 // Check whether x or z coordinate changed significantly
                 // Ignore y because y is "up" and boundary is infinitely high

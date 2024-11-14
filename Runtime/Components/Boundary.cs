@@ -101,15 +101,19 @@ namespace Cognitive3D.Components
             //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
             if (isActiveAndEnabled)
             {
-                trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
+                trackingSpace = Cognitive3D_Manager.Instance?.trackingSpace;
 
-                if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
+                if (trackingSpace != null)
+                {
+                    if (Vector3.SqrMagnitude(trackingSpace.position - lastRecordedTrackingSpacePosition) > TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES * TRACKING_SPACE_POSITION_THRESHOLD_IN_METRES
                         || Math.Abs(Vector3.Angle(previousTrackingSpaceRotation.eulerAngles, trackingSpace.rotation.eulerAngles)) > TRACKING_SPACE_ROTATION_THRESHOLD_IN_DEGREES) // if tracking space moved enough
-                { 
-                    CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
-                    CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
-                    lastRecordedTrackingSpacePosition = trackingSpace.position;
-                    previousTrackingSpaceRotation = trackingSpace.rotation;
+                    {                     
+                        CustomTransform customTransform = new CustomTransform(trackingSpace.position, trackingSpace.rotation);
+                        CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
+                        
+                        lastRecordedTrackingSpacePosition = trackingSpace.position;
+                        previousTrackingSpaceRotation = trackingSpace.rotation;
+                    }
                 }
 
                 currentBoundaryPoints = BoundaryUtil.GetCurrentBoundaryPoints();
@@ -120,13 +124,8 @@ namespace Cognitive3D.Components
                     {
                         
                         previousBoundaryPoints = currentBoundaryPoints;
-                        // CalculateAndRecordRoomsize(true, true);
                         CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
                     }
-                }
-                else
-                {
-                    Debug.LogError("@@@ Boundary points are null");
                 }
             }
         }
