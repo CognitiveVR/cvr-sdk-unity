@@ -55,7 +55,7 @@ namespace Cognitive3D
         public static int S_DynamicSnapshotCount;
         public static int S_EventDataThreshold;
         public static int S_SensorSnapshotCount;
-        public static int S_BoundarySnapshotCount;
+        private static int S_BoundarySnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
 
         public string Protocol = "https";
