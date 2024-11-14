@@ -7,7 +7,7 @@ using Cognitive3D;
 
 //dynamic component registers/removes itself from this centrally managed dynamicData array. manager handles sending manifest when
 //MANAGER holds array of data and puts contents into CORE queues. this iterates through the array (128/frame) - checks for changes to submit to core
-    //checking for delta should stay on engine side - engine specific checks that aren't as easily generalized
+//checking for delta should stay on engine side - engine specific checks that aren't as easily generalized
 namespace Cognitive3D
 {
     //used to update and record all dynamic object changes

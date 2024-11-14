@@ -19,7 +19,7 @@ namespace Cognitive3D
         /// <summary>
         /// Set tracking space when the RoomTrackingSpace is enabled
         /// </summary>
-        private void OnEnable()
+        private void Start()
         {
             if (Cognitive3D_Manager.Instance != null)
             {
@@ -39,7 +39,7 @@ namespace Cognitive3D
         /// <summary>
         /// Reset tracking space to null
         /// </summary>
-        private void OnDisable()
+        private void OnDestroy()
         {
             cachedTrackingSpace = null;
             InvokeTrackingSpaceChanged();
@@ -48,7 +48,10 @@ namespace Cognitive3D
 
         private void InvokeTrackingSpaceChanged()
         {
-            TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+            if (cachedTrackingSpace != null)
+            {
+                TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+            }
         }
     }
 }

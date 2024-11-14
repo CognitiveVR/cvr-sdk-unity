@@ -32,11 +32,7 @@ namespace Cognitive3D
                         instance = CreateInstance<Cognitive3D_Preferences>();
                     }
                     IsSet = true;
-                    S_GazeSnapshotCount = instance.GazeSnapshotCount;
-                    S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
                     S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
-                    S_EventDataThreshold = instance.EventDataThreshold;
-                    S_SensorSnapshotCount = instance.SensorSnapshotCount;
                 }
                 return instance;
             }
@@ -50,10 +46,6 @@ namespace Cognitive3D
 
         //static for faster access
         public const float SnapshotInterval = 0.1f;
-        public static int S_GazeSnapshotCount;
-        public static int S_DynamicSnapshotCount;
-        public static int S_EventDataThreshold;
-        public static int S_SensorSnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
 
         public string Protocol = "https";
@@ -103,6 +95,7 @@ namespace Cognitive3D
         public int DynamicSnapshotCount = 512;
         public int EventDataThreshold = 256;
         public int FixationSnapshotCount = 256;
+        public int BoundarySnapshotCount = 64;
 
         public int AutomaticSendTimer = 10;
 
