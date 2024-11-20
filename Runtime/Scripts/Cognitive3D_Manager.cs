@@ -733,8 +733,6 @@ namespace Cognitive3D
         void OnApplicationPause(bool paused)
         {
             if (!IsInitialized) { return; }
-            CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
-            pauseEvent.Send();
             FlushData();
         }
         bool hasCanceled = false;
