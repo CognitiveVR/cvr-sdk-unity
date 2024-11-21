@@ -228,11 +228,6 @@ namespace Cognitive3D
             }
         }
 
-        internal static void WantsToQuit()
-        {
-            plugininstance.Call("sendEndSessionEvents");
-        }
-
         void OnApplicationPause(bool paused)
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
@@ -247,6 +242,11 @@ namespace Cognitive3D
                 CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
                 pauseEvent.Send();
             }
+        }
+
+        void OnApplicationQuit()
+        {
+            plugininstance.Call("sendEndSessionEvents");
         }
 #endif   
 

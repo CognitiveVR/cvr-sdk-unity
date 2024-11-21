@@ -748,11 +748,7 @@ namespace Cognitive3D
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             // if android plugin is initialized or Android platform is used, send end session event from plugin. Otherwise, send it from unity
-            if (AndroidPlugin.isInitialized)
-            {
-                AndroidPlugin.WantsToQuit();
-            }
-            else
+            if (!AndroidPlugin.isInitialized)
 #endif
             {
                 new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
