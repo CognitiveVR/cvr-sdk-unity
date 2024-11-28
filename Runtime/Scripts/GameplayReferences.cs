@@ -94,26 +94,38 @@ namespace Cognitive3D
 #elif C3D_VIVEWAVE
             List<InputDevice> devices = new List<InputDevice>();
             InputDevices.GetDevices(devices);
-            var inputDeviceCharacteristics = Wave.OpenXR.InputDeviceHand.GetCharacteristic(true);
 
             foreach (var device in devices)
             {
-                if (device.characteristics.HasFlag(InputDeviceCharacteristics.HandTracking) && (Wave.OpenXR.InputDeviceHand.IsTracked(true) || Wave.OpenXR.InputDeviceHand.IsTracked(false)))
+                bool isHandTracked = Wave.OpenXR.InputDeviceHand.IsTracked(true) || Wave.OpenXR.InputDeviceHand.IsTracked(false);
+                if (device.characteristics.HasFlag(InputDeviceCharacteristics.HandTracking) && isHandTracked)
                 {
                     // Hand tracking is in use
-                    // Debug.LogError("@@@ Hand tracking detected: " + device.name);
                     return TrackingType.Hand;
                 }
-                else if (device.characteristics.HasFlag(InputDeviceCharacteristics.Controller) && !Wave.OpenXR.InputDeviceHand.IsTracked(true) && !Wave.OpenXR.InputDeviceHand.IsTracked(false))
+
+                if (device.characteristics.HasFlag(InputDeviceCharacteristics.Controller) && !isHandTracked)
                 {
                     // Controller is in use
-                    // Debug.LogError("@@@ Controller detected: " + device.name);
                     return TrackingType.Controller;
                 }
             }
 
-            // Debug.LogError("@@@ Nothing detected");
             return TrackingType.None;
+#elif C3D_PICOXR
+            Unity.XR.PXR.ActiveInputDevice currentTrackedInputDevice = Unity.XR.PXR.PXR_HandTracking.GetActiveInputDevice();
+            if (currentTrackedInputDevice == Unity.XR.PXR.ActiveInputDevice.HandTrackingActive)
+            {
+                return TrackingType.Hand;
+            }
+            else if (currentTrackedInputDevice == Unity.XR.PXR.ActiveInputDevice.ControllerActive)
+            {
+                return TrackingType.Controller;
+            }
+            else // if neither hand nor controller, it's head (Technically none)
+            {
+                return TrackingType.None;
+            }
 #else
             return TrackingType.Controller;
 #endif
