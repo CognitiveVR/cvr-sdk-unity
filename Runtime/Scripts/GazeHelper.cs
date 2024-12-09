@@ -150,6 +150,7 @@ namespace Cognitive3D
         static Vector3 GetLookDirection()
         {
             Wave.Essence.Eye.EyeManager.Instance.GetCombindedEyeDirectionNormalized(out lastDirection);
+            lastDirection = GameplayReferences.HMD.TransformDirection(lastDirection);
             return lastDirection;
         }
 #elif C3D_OCULUS
