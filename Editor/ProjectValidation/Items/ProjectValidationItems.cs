@@ -551,9 +551,9 @@ namespace Cognitive3D
             );
 
             ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Recommended, 
+                level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Apply,
+                actionType: ProjectValidation.ItemAction.Fix,
                 message: "No Eye Manager found in current scene.",
                 fixmessage: "Eye Manager found in current scene.",
                 checkAction: () =>
