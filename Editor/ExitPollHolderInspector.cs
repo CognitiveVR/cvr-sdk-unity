@@ -37,7 +37,7 @@ namespace Cognitive3D
             {
                 if (p.BoolPanelOverride == null)
                 {
-                    boolPanelPrefab = ExitPoll.ExitPollTrueFalse;
+                    boolPanelPrefab = ExitPollManager.ExitPollTrueFalse;
                     
                 }
                 else
@@ -53,7 +53,7 @@ namespace Cognitive3D
                     panelScale = collider.size;
             }
 
-            if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.World)
             {
                 if (p.UseAttachTransform && p.AttachTransform != null)
                     Handles.DrawDottedLine(t.transform.position, p.AttachTransform.position,5);
@@ -118,7 +118,7 @@ namespace Cognitive3D
             EditorGUILayout.LabelField("Controller Tracking", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
-            p.PointerType = (ExitPoll.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
+            p.PointerType = (ExitPollManager.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
 
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
             EditorGUI.indentLevel--;
@@ -127,9 +127,9 @@ namespace Cognitive3D
             EditorGUILayout.LabelField("Tracking Space", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
-            p.ExitpollSpawnType = (ExitPoll.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
+            p.ExitpollSpawnType = (ExitPollManager.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
             
-            if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.World)
             {
                 GUILayout.BeginHorizontal();
                 p.UseAttachTransform = EditorGUILayout.Toggle(new GUIContent("Use Attach Transform","Attach ExitPoll Panels to this transform in your scene"), p.UseAttachTransform);
@@ -195,11 +195,11 @@ namespace Cognitive3D
 
         private string GetPointerDescription(ExitPollParameters parameters)
         {
-            if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer)
+            if (parameters.PointerType == ExitPollManager.PointerType.LeftControllerPointer)
             {
                 return "Users will interact with the buttons by using the left controller and/or left hand, if available.";
             }
-            else if (parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            else if (parameters.PointerType == ExitPollManager.PointerType.RightControllerPointer)
             {
                 return "Users will interact with the buttons by using the right controller and/or right hand, if available.";
             }
