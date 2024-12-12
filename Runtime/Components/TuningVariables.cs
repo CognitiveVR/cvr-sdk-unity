@@ -7,8 +7,12 @@ using UnityEngine.XR;
 /// gets variables from the cognitive3d backend to configure your app
 /// </summary>
 
-//TODO debug startup flow
-//TODO delay for some amount of time - if no participantId set, it should fetch using deviceId
+//fetches the variables immediately if the participantId is already set at session start
+//if not, it will wait 5 seconds for a participantId to be set
+//if the timer elapses, use the deviceId as the argument
+//if fetchVariablesAutomatically is false, call Cognitive3D.TuningVariables.FetchVariables
+
+//CONSIDER custom editor to display tuning variables
 
 //set session properties DONE
 //static generic funciton to get values DONE
@@ -19,7 +23,7 @@ namespace Cognitive3D.Components
 {
     #region Json
     [System.Serializable]
-    internal class TuningVariableItem
+    public class TuningVariableItem
     {
         public string name;
         public string description;
@@ -57,23 +61,51 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Tuning Variables")]
     public class TuningVariables : AnalyticsComponentBase
     {
-        bool hasFetchedVariables;
-        public float timeout = 3;
+        static bool hasFetchedVariables;
+        const float requestTimeoutSeconds = 3;
+        const float maximumAutomaticDelay = 5;
+
+
+        public bool fetchVariablesAutomatically = true;
 
         static Dictionary<string, TuningVariableItem> tuningVariables = new Dictionary<string, TuningVariableItem>();
 
-        public delegate void onTuninVariablesAvailable();
+        public delegate void onTuningVariablesAvailable();
         /// <summary>
         /// Called after tuning variables are available (also called after a delay if no response)
         /// </summary>
-        public static event onTuninVariablesAvailable OnTuninVariablesAvailable;
-        private static void InvokeOnTuninVariablesAvailable() { if (OnTuninVariablesAvailable != null) { OnTuninVariablesAvailable.Invoke(); } }
+        public static event onTuningVariablesAvailable OnTuningVariablesAvailable;
+        private static void InvokeOnTuningVariablesAvailable() { if (OnTuningVariablesAvailable != null) { OnTuningVariablesAvailable.Invoke(); } }
 
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            Cognitive3D_Manager.OnParticipantIdSet += Cognitive3D_Manager_OnParticipantIdSet;
             Cognitive3D_Manager.OnPostSessionEnd += Cognitive3D_Manager_OnPostSessionEnd;
+
+            if (fetchVariablesAutomatically)
+            {
+                //get variables if participant id is already set
+                if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
+                {
+                    FetchVariables(Cognitive3D_Manager.ParticipantId);
+                }
+                else
+                {
+                    //listen for event
+                    Cognitive3D_Manager.OnParticipantIdSet += Cognitive3D_Manager_OnParticipantIdSet;
+                    //also start a timer
+                    StartCoroutine(DelayFetch());
+                }
+            }
+        }
+
+        IEnumerator DelayFetch()
+        {
+            yield return new WaitForSeconds(maximumAutomaticDelay);
+            if (!hasFetchedVariables)
+            {
+                FetchVariables(Cognitive3D_Manager.DeviceId);
+            }
         }
 
         private void Cognitive3D_Manager_OnParticipantIdSet(string participantId)
@@ -81,12 +113,17 @@ namespace Cognitive3D.Components
             FetchVariables(participantId);
         }
 
-        void FetchVariables(string participantId)
+        public static void FetchVariables()
         {
-            NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, timeout);
+            NetworkManager.GetTuningVariables(Cognitive3D_Manager.DeviceId, TuningVariableResponse, requestTimeoutSeconds);
         }
 
-        void TuningVariableResponse(int responsecode, string error, string text)
+        public static void FetchVariables(string participantId)
+        {
+            NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, requestTimeoutSeconds);
+        }
+
+        static void TuningVariableResponse(int responsecode, string error, string text)
         {
             if (hasFetchedVariables)
             {
@@ -98,7 +135,7 @@ namespace Cognitive3D.Components
             try
             {
                 var tvc = JsonUtility.FromJson<TuningVariableCollection>(text);
-                if (tvc == null)
+                if (tvc != null)
                 {
                     tuningVariables.Clear();
                     foreach (var entry in tvc.tuningVariables)
@@ -113,11 +150,15 @@ namespace Cognitive3D.Components
                         {
                             Cognitive3D_Manager.SetSessionProperty(entry.name, entry.valueInt);
                         }
-                        else if (entry.type == "bool")
+                        else if (entry.type == "boolean")
                         {
                             Cognitive3D_Manager.SetSessionProperty(entry.name, entry.valueBool);
                         }
                     }
+                }
+                else
+                {
+                    Util.logDevelopment("TuningVariableCollection is null");
                 }
             }
             catch (System.Exception e)
@@ -126,10 +167,16 @@ namespace Cognitive3D.Components
             }
 
             hasFetchedVariables = true;
-            InvokeOnTuninVariablesAvailable();
+            InvokeOnTuningVariablesAvailable();
         }
 
-        //bool onboardingType2 = TuningVariables.GetValue<bool>(variableName: "onboarding_type", defaultValue: false);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="variableName"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
         public static T GetValue<T>(string variableName, T defaultValue)
         {
             TuningVariableItem returnItem;
@@ -151,6 +198,11 @@ namespace Cognitive3D.Components
             return defaultValue;
         }
 
+        public static Dictionary<string, TuningVariableItem> GetAllTuningVariables()
+        {
+            return tuningVariables;
+        }
+
         private void Cognitive3D_Manager_OnPostSessionEnd()
         {
             hasFetchedVariables = false;
@@ -166,6 +218,17 @@ namespace Cognitive3D.Components
         public override bool GetWarning()
         {
             return false;
+        }
+
+        [ContextMenu("Test Fetch with DeviceId")]
+        void TestFetch()
+        {
+            FetchVariables(Cognitive3D_Manager.DeviceId);
+        }
+        [ContextMenu("Test Fetch with Random GUID")]
+        void TestFetchGUID()
+        {
+            FetchVariables(System.Guid.NewGuid().ToString());
         }
     }
 }
