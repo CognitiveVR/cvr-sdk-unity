@@ -143,6 +143,12 @@ namespace Cognitive3D
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }
 
+        //GET request question set
+        internal static string GetTuningVariableURL(string userId)
+        {
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/tuningvariables?identifier=", userId);
+        }
+
         /// <summary>
         /// Creates the GET request endpoint with access token and search parameters
         /// </summary>
