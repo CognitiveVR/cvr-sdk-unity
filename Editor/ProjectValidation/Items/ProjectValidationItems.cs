@@ -545,8 +545,26 @@ namespace Cognitive3D
                 fixAction: () =>
                 {
                     var waverig = new GameObject();
-                    waverig.name = "Wave Rig";
+                    waverig.name = "WaveRig";
                     waverig.AddComponent<Wave.Essence.WaveRig>();
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No Eye Manager found in current scene.",
+                fixmessage: "Eye Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<Wave.Essence.Eye.EyeManager>();
+                },
+                fixAction: () =>
+                {
+                    var eyeManager = new GameObject();
+                    eyeManager.name = "EyeManager";
+                    eyeManager.AddComponent<Wave.Essence.Eye.EyeManager>();
                 }
             );
 
