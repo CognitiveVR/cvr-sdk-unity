@@ -119,9 +119,21 @@ namespace Cognitive3D.Components
     public class TuningVariablesComponent : AnalyticsComponentBase
     {
         static bool hasFetchedVariables;
-        const float requestTimeoutSeconds = 3;
-        const float maximumAutomaticDelay = 5;
+        /// <summary>
+        /// the delay to hear a response from our backend. If there is no response in this time, try to use a local cache of variables
+        /// </summary>
+        const float requestTuningVariablesTimeout = 3;
+        /// <summary>
+        /// the delay waiting for participant id to be set (if not already set at the start of the session)
+        /// </summary>
+        public float waitForParticipantIdTimeout = 5;
+        /// <summary>
+        /// if true, uses the participant id (possibly with a delay) to get tuning variables. Otherwise, use the device id
+        /// </summary>
         public bool useParticipantId = true;
+        /// <summary>
+        /// if true, sends identifying data to retrieve variables as soon as possible
+        /// </summary>
         public bool fetchVariablesAutomatically = true;
 
         protected override void OnSessionBegin()
@@ -155,7 +167,7 @@ namespace Cognitive3D.Components
 
         IEnumerator DelayFetch()
         {
-            yield return new WaitForSeconds(maximumAutomaticDelay);
+            yield return new WaitForSeconds(waitForParticipantIdTimeout);
             FetchVariables(Cognitive3D_Manager.DeviceId);
         }
 
@@ -168,7 +180,7 @@ namespace Cognitive3D.Components
         {
             if (!hasFetchedVariables)
             {
-                NetworkManager.GetTuningVariables(Cognitive3D_Manager.DeviceId, TuningVariableResponse, requestTimeoutSeconds);
+                NetworkManager.GetTuningVariables(Cognitive3D_Manager.DeviceId, TuningVariableResponse, requestTuningVariablesTimeout);
             }
         }
 
@@ -176,7 +188,7 @@ namespace Cognitive3D.Components
         {
             if (!hasFetchedVariables)
             {
-                NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, requestTimeoutSeconds);
+                NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, requestTuningVariablesTimeout);
             }
         }
 
