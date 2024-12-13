@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.XR;
 
 /// <summary>
 /// gets variables from the cognitive3d backend to configure your app
@@ -19,9 +18,62 @@ using UnityEngine.XR;
 //locally cache in network class DONE
 //read from local cache if it fails DONE
 
-namespace Cognitive3D.Components
+namespace Cognitive3D
 {
-    #region Json
+    public static class TuningVariables
+    {
+        static Dictionary<string, Cognitive3D.TuningVariableItem> tuningVariables = new Dictionary<string, Cognitive3D.TuningVariableItem>();
+
+        public delegate void onTuningVariablesAvailable();
+        /// <summary>
+        /// Called after tuning variables are available (also called after a delay if no response)
+        /// </summary>
+        public static event onTuningVariablesAvailable OnTuningVariablesAvailable;
+        internal static void InvokeOnTuningVariablesAvailable() { if (OnTuningVariablesAvailable != null) { OnTuningVariablesAvailable.Invoke(); } }
+
+        internal static void Reset()
+        {
+            tuningVariables.Clear();
+        }
+        internal static void SetVariable(TuningVariableItem entry)
+        {
+            tuningVariables.Add(entry.name, entry);
+        }
+
+        /// <summary>
+        /// Returns a variable of a type using the variableName. Returns the default value if no variable is found
+        /// </summary>
+        /// <typeparam name="T">The expected type of variable</typeparam>
+        /// <param name="variableName">The name of the variable to read</param>
+        /// <param name="defaultValue">The value to return if no variable is found</param>
+        /// <returns>The value of the tuning varible, or the defaultValue if not found</returns>
+        public static T GetValue<T>(string variableName, T defaultValue)
+        {
+            Cognitive3D.TuningVariableItem returnItem;
+            if (tuningVariables.TryGetValue(variableName, out returnItem))
+            {
+                if (typeof(T) == typeof(string))
+                {
+                    return (T)(object)returnItem.valueString;
+                }
+                if (typeof(T) == typeof(bool))
+                {
+                    return (T)(object)returnItem.valueBool;
+                }
+                if (typeof(T) == typeof(int) || typeof(T) == typeof(long) || typeof(T) == typeof(float) || typeof(T) == typeof(double))
+                {
+                    return (T)(object)returnItem.valueInt;
+                }
+            }
+            return defaultValue;
+        }
+
+        public static Dictionary<string, Cognitive3D.TuningVariableItem> GetAllTuningVariables()
+        {
+            return tuningVariables;
+        }
+    }
+
     [System.Serializable]
     public class TuningVariableItem
     {
@@ -36,21 +88,26 @@ namespace Cognitive3D.Components
         {
             if (type == "string")
             {
-                return string.Format("name:{0}, description:{1}, type:{2}, value:{3}", name, description, type,valueString);
+                return string.Format("name:{0}, description:{1}, type:{2}, value:{3}", name, description, type, valueString);
             }
             if (type == "int")
             {
-                return string.Format("name:{0}, description:{1}, type:{2}, value:{3}", name, description, type,valueInt);
+                return string.Format("name:{0}, description:{1}, type:{2}, value:{3}", name, description, type, valueInt);
             }
             if (type == "bool")
             {
-                return string.Format("name:{0}, description:{1}, type:{2}, value:{3}", name, description, type,valueBool);
+                return string.Format("name:{0}, description:{1}, type:{2}, value:{3}", name, description, type, valueBool);
             }
 
             return string.Format("name:{0}, description:{1}, type:{2}", name, description, type);
         }
     }
+}
 
+
+namespace Cognitive3D.Components
+{
+    #region Json
     internal class TuningVariableCollection
     {
         public List<TuningVariableItem> tuningVariables = new List<TuningVariableItem>();
@@ -58,8 +115,8 @@ namespace Cognitive3D.Components
     #endregion
 
     [DisallowMultipleComponent]
-    [AddComponentMenu("Cognitive3D/Components/Tuning Variables")]
-    public class TuningVariables : AnalyticsComponentBase
+    [AddComponentMenu("Cognitive3D/Components/Tuning Variables Component")]
+    public class TuningVariablesComponent : AnalyticsComponentBase
     {
         static bool hasFetchedVariables;
         const float requestTimeoutSeconds = 3;
@@ -67,15 +124,6 @@ namespace Cognitive3D.Components
 
 
         public bool fetchVariablesAutomatically = true;
-
-        static Dictionary<string, TuningVariableItem> tuningVariables = new Dictionary<string, TuningVariableItem>();
-
-        public delegate void onTuningVariablesAvailable();
-        /// <summary>
-        /// Called after tuning variables are available (also called after a delay if no response)
-        /// </summary>
-        public static event onTuningVariablesAvailable OnTuningVariablesAvailable;
-        private static void InvokeOnTuningVariablesAvailable() { if (OnTuningVariablesAvailable != null) { OnTuningVariablesAvailable.Invoke(); } }
 
         protected override void OnSessionBegin()
         {
@@ -102,10 +150,7 @@ namespace Cognitive3D.Components
         IEnumerator DelayFetch()
         {
             yield return new WaitForSeconds(maximumAutomaticDelay);
-            if (!hasFetchedVariables)
-            {
-                FetchVariables(Cognitive3D_Manager.DeviceId);
-            }
+            FetchVariables(Cognitive3D_Manager.DeviceId);
         }
 
         private void Cognitive3D_Manager_OnParticipantIdSet(string participantId)
@@ -115,12 +160,18 @@ namespace Cognitive3D.Components
 
         public static void FetchVariables()
         {
-            NetworkManager.GetTuningVariables(Cognitive3D_Manager.DeviceId, TuningVariableResponse, requestTimeoutSeconds);
+            if (!hasFetchedVariables)
+            {
+                NetworkManager.GetTuningVariables(Cognitive3D_Manager.DeviceId, TuningVariableResponse, requestTimeoutSeconds);
+            }
         }
 
         public static void FetchVariables(string participantId)
         {
-            NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, requestTimeoutSeconds);
+            if (!hasFetchedVariables)
+            {
+                NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, requestTimeoutSeconds);
+            }
         }
 
         static void TuningVariableResponse(int responsecode, string error, string text)
@@ -137,10 +188,10 @@ namespace Cognitive3D.Components
                 var tvc = JsonUtility.FromJson<TuningVariableCollection>(text);
                 if (tvc != null)
                 {
-                    tuningVariables.Clear();
+                    TuningVariables.Reset();
                     foreach (var entry in tvc.tuningVariables)
                     {
-                        tuningVariables.Add(entry.name, entry);
+                        TuningVariables.SetVariable(entry);
 
                         if (entry.type == "string")
                         {
@@ -167,40 +218,7 @@ namespace Cognitive3D.Components
             }
 
             hasFetchedVariables = true;
-            InvokeOnTuningVariablesAvailable();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="variableName"></param>
-        /// <param name="defaultValue"></param>
-        /// <returns></returns>
-        public static T GetValue<T>(string variableName, T defaultValue)
-        {
-            TuningVariableItem returnItem;
-            if (tuningVariables.TryGetValue(variableName,out returnItem))
-            {
-                if (typeof(T) == typeof(string))
-                {
-                    return (T)(object)returnItem.valueString;
-                }
-                if (typeof(T) == typeof(bool))
-                {
-                    return (T)(object)returnItem.valueBool;
-                }
-                if (typeof(T) == typeof(int) || typeof(T) == typeof(long) || typeof(T) == typeof(float) || typeof(T) == typeof(double))
-                {
-                    return (T)(object)returnItem.valueInt;
-                }
-            }
-            return defaultValue;
-        }
-
-        public static Dictionary<string, TuningVariableItem> GetAllTuningVariables()
-        {
-            return tuningVariables;
+            TuningVariables.InvokeOnTuningVariablesAvailable();
         }
 
         private void Cognitive3D_Manager_OnPostSessionEnd()
