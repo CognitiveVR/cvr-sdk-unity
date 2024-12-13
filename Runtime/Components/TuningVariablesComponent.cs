@@ -121,8 +121,7 @@ namespace Cognitive3D.Components
         static bool hasFetchedVariables;
         const float requestTimeoutSeconds = 3;
         const float maximumAutomaticDelay = 5;
-
-
+        public bool useParticipantId = true;
         public bool fetchVariablesAutomatically = true;
 
         protected override void OnSessionBegin()
@@ -132,17 +131,24 @@ namespace Cognitive3D.Components
 
             if (fetchVariablesAutomatically)
             {
-                //get variables if participant id is already set
-                if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
+                if (useParticipantId)
                 {
-                    FetchVariables(Cognitive3D_Manager.ParticipantId);
+                    //get variables if participant id is already set
+                    if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
+                    {
+                        FetchVariables(Cognitive3D_Manager.ParticipantId);
+                    }
+                    else
+                    {
+                        //listen for event
+                        Cognitive3D_Manager.OnParticipantIdSet += Cognitive3D_Manager_OnParticipantIdSet;
+                        //also start a timer
+                        StartCoroutine(DelayFetch());
+                    }
                 }
-                else
+                else //just use the hardware id to identify the user
                 {
-                    //listen for event
-                    Cognitive3D_Manager.OnParticipantIdSet += Cognitive3D_Manager_OnParticipantIdSet;
-                    //also start a timer
-                    StartCoroutine(DelayFetch());
+                    FetchVariables(Cognitive3D_Manager.DeviceId);
                 }
             }
         }
