@@ -12,14 +12,6 @@ namespace Cognitive3D
         /// </summary>
         public string HookName;
 
-        //main properties to consider is 'question'. 'type' is useful for choosing which prefab to spawn
-        //multiple choice questions are pipe-separated in 'csvanswers' as 'my answer one|my answer two'
-        //see ExitPollPanel.cs for examples of initializing prefabs with these values
-        /// <summary>
-        /// //The returned list of questions with properties for each
-        /// </summary>
-        public List<Dictionary<string, string>> QuestionProperties = new List<Dictionary<string, string>>();
-
         /// <summary>
         /// called when getting the questions fails for any reason
         /// </summary>
@@ -47,10 +39,11 @@ namespace Cognitive3D
 
 #region Internal Variables
         private double StartTime;
+        private ExitPollData currentExitpollData;
 
-        //dictionaries for user answers
-        Dictionary<int, ExitPollSet.ResponseContext> responseProperties = new Dictionary<int, ExitPollSet.ResponseContext>();
-        Dictionary<string, object> eventProperties = new Dictionary<string, object>();
+        //User answers
+        List<ExitPollSet.ResponseContext> exitpollResponseProperties = new List<ExitPollSet.ResponseContext>();
+        Dictionary<string, object> exitpollEventProperties = new Dictionary<string, object>();
 #endregion
         
         // This function should be called during OnSessionBegin if the user wants to immediately enable the exit poll upon Awake or OnEnable.
@@ -103,6 +96,12 @@ namespace Cognitive3D
                 return null;
             }
 
+            for (int i = 0; i < _exitPollData.questions.Length; i++)
+            {
+                exitpollResponseProperties.Add(new ExitPollSet.ResponseContext(_exitPollData.questions[i].type));
+            }
+
+            currentExitpollData = _exitPollData;
             OnSetupComplete.Invoke();
             StartTime = Util.Timestamp();
 
@@ -121,23 +120,101 @@ namespace Cognitive3D
         {
             string key = "Answer" + questionIndex;
 
-            if (eventProperties.ContainsKey(key))
+            if (exitpollEventProperties.ContainsKey(key))
             {
-                eventProperties[key] = answerValue;
+                exitpollEventProperties[key] = answerValue;
             }
             else
             {
-                Debug.LogError("Exitpoll expected response not defined for question index " + questionIndex);
+                exitpollEventProperties.Add(key, answerValue);
             }
 
-            if (responseProperties.ContainsKey(questionIndex))
+            if (questionIndex < exitpollResponseProperties.Count)
             {
-                responseProperties[questionIndex].ResponseValue = answerValue;
+                exitpollResponseProperties[questionIndex].ResponseValue = answerValue;
             }
             else
             {
-                Debug.LogError("Exitpoll expected response not defined for question index " + questionIndex);
+                Util.logError("Exitpoll expected response not defined for question index " + questionIndex);
             }
+        }
+
+        /// <summary>
+        /// Records a user's answer, to be submitted later
+        /// Use with CompleteMicrophoneRecording to get the audioclip format
+        /// </summary>
+        /// <param name="questionIndex"></param>
+        /// <param name="base64voice"></param>
+        public void RecordMicrophoneAnswer(int questionIndex, string base64voice)
+        {
+            string key = "Answer" + questionIndex;
+
+            if (exitpollEventProperties.ContainsKey(key))
+            {
+                exitpollEventProperties[key] = 0;
+            }
+            else
+            {
+                exitpollEventProperties.Add(key, 0);
+            }
+
+            if (questionIndex < exitpollResponseProperties.Count)
+            {
+                exitpollResponseProperties[questionIndex].ResponseValue = base64voice;
+            }
+            else
+            {
+                Util.logError("Exitpoll expected response not defined for question index " + questionIndex);
+            }
+        }
+
+        /// <summary>
+        /// When all questions are answered, can call this to submit everything, formatted correctly
+        /// Clears QuestionProperties
+        /// </summary>
+        public void SubmitAllAnswers(ExitPollData questionSet)
+        {
+            SendResponsesAsCustomEvents(questionSet);
+
+            string responseBody = CoreInterface.SerializeExitpollAnswers(exitpollResponseProperties, questionSet.id, HookName);
+            NetworkManager.PostExitpollAnswers(responseBody, questionSet.name, questionSet.version);
+        }
+
+        private void SubmitAllAnswers()
+        {
+            if (currentExitpollData != null)
+            {
+                SendResponsesAsCustomEvents(currentExitpollData);
+
+                string responseBody = CoreInterface.SerializeExitpollAnswers(exitpollResponseProperties, currentExitpollData.id, HookName);
+                NetworkManager.PostExitpollAnswers(responseBody, currentExitpollData.name, currentExitpollData.version);
+            }
+        }
+
+        void SendResponsesAsCustomEvents(ExitPollData questionSet)
+        {
+            var exitpollEvent = new CustomEvent("cvr.exitpoll");
+            exitpollEvent.SetProperty("userId", Cognitive3D_Manager.DeviceId);
+            if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
+            {
+                exitpollEvent.SetProperty("participantId", Cognitive3D_Manager.ParticipantId);
+            }
+            exitpollEvent.SetProperty("questionSetId", questionSet.id);
+            exitpollEvent.SetProperty("hook", HookName);
+            exitpollEvent.SetProperty("duration", Util.Timestamp() - StartTime);
+
+            var scenesettings = Cognitive3D_Manager.TrackingScene;
+            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
+            {
+                exitpollEvent.SetProperty("sceneId", scenesettings.SceneId);
+            }
+
+            foreach (var property in exitpollEventProperties)
+            {
+                exitpollEvent.SetProperty(property.Key, property.Value);
+            }
+            exitpollEvent.Send();
+            Cognitive3D_Manager.FlushData();
         }
     }
 }
