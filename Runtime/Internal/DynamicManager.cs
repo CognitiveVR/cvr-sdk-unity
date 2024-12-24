@@ -614,6 +614,7 @@ namespace Cognitive3D
                 }
             }
             if (!found) { Util.logDebug("Dynamic Object ID " + id + " not found"); return; }
+            if (!ActiveDynamicObjectsArray[i].Transform) return;
 
             ActiveDynamicObjectsArray[i].dirty = true;
 
