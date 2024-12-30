@@ -64,6 +64,7 @@ namespace Cognitive3D
 
         internal static void Init()
         {
+            SegmentAnalytics.PageEvent("SceneSetupWindow", "Opened");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
@@ -112,6 +113,7 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
+            SegmentAnalytics.PageEvent("SceneSetupWindow", "Opened");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             currentPage = page;
             window.minSize = new Vector2(500, 550);
@@ -160,6 +162,7 @@ namespace Cognitive3D
 
         internal static void Init(Rect position)
         {
+            SegmentAnalytics.PageEvent("SceneSetupWindow", "Opened");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
