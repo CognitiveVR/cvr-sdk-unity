@@ -420,10 +420,10 @@ namespace Cognitive3D
 
             OVRProjectConfig projectConfig = OVRProjectConfig.CachedProjectConfig;
             ProjectValidation.AddItem(
-                level: ProjectValidation.ItemLevel.Recommended, 
+                level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
-                actionType: ProjectValidation.ItemAction.Apply,
-                message: "Missing some Oculus target devices. Enable all?",
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "Missing some Oculus target devices. Enable all to avoid misidentifying Quest devices.",
                 fixmessage: "All Oculus target devices are enabled",
                 checkAction: () =>
                 {   return projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest2) &&
@@ -545,8 +545,26 @@ namespace Cognitive3D
                 fixAction: () =>
                 {
                     var waverig = new GameObject();
-                    waverig.name = "Wave Rig";
+                    waverig.name = "WaveRig";
                     waverig.AddComponent<Wave.Essence.WaveRig>();
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No Eye Manager found in current scene.",
+                fixmessage: "Eye Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<Wave.Essence.Eye.EyeManager>();
+                },
+                fixAction: () =>
+                {
+                    var eyeManager = new GameObject();
+                    eyeManager.name = "EyeManager";
+                    eyeManager.AddComponent<Wave.Essence.Eye.EyeManager>();
                 }
             );
 

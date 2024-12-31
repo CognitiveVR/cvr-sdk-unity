@@ -228,7 +228,23 @@ namespace Cognitive3D
             }
         }
 
-        internal static void WantsToQuit()
+        void OnApplicationPause(bool paused)
+        {
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+
+            if (plugininstance != null)
+            {
+                plugininstance.Call("sendPauseEvent", paused);
+            }
+            else
+            {
+                // If the plugin isn't initialized for any reason, send the pause event from the Unity side.
+                CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
+                pauseEvent.Send();
+            }
+        }
+
+        void OnApplicationQuit()
         {
             plugininstance.Call("sendEndSessionEvents");
         }

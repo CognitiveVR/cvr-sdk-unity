@@ -64,6 +64,7 @@ namespace Cognitive3D
 
         internal static void Init()
         {
+            SegmentAnalytics.PageEvent("SceneSetupWindow", "Opened");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
@@ -112,6 +113,7 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
+            SegmentAnalytics.PageEvent("SceneSetupWindow", "Opened");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             currentPage = page;
             window.minSize = new Vector2(500, 550);
@@ -160,6 +162,7 @@ namespace Cognitive3D
 
         internal static void Init(Rect position)
         {
+            SegmentAnalytics.PageEvent("SceneSetupWindow", "Opened");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -978,6 +981,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledOculusSocialSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantSocialEnabled = true;
                 }
             }
@@ -999,6 +1003,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect2, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledMRSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantPassthroughEnabled = true;
                 }
             }
@@ -1020,6 +1025,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect3, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledQProEyeTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantEyeTrackingEnabled = true;
                 }
             }
@@ -1041,6 +1047,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledHandTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantHandTrackingEnabled = true;
                 }
             }
@@ -1062,6 +1069,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect5, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledQ3SceneAPISupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantSceneApiEnabled = true;
                 }
             }
@@ -1307,10 +1315,10 @@ namespace Cognitive3D
             //draw example scene image
             GUI.Box(new Rect(150, 130, 200, 150), isoSceneImage, "image_centered");
 
+            float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
+            string displayString;
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
-                float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
-                string displayString;
                 if (sceneSize < 1)
                 {
                     displayString = "Exported File Size: <1 MB";
@@ -1353,6 +1361,20 @@ namespace Cognitive3D
                         return;//cancel from 'do you want to save' popup
                     }
                 }
+
+                if (sceneSize < 1)
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneLess1MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+                else if (sceneSize >= 1 && sceneSize <= 500)
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneLessOrEqual500MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+                else // sceneSize > 500
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneGreater500MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+
                 ExportUtility.ExportGLTFScene();
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
@@ -1723,13 +1745,21 @@ namespace Cognitive3D
                 case Page.Welcome:
                     break;
                 case Page.PlayerSetup:
+                    if (AllSetupComplete)
+                    {
+                        onclick += () => SegmentAnalytics.TrackEvent("PlayerGOComplete_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+                    }
+                    else
+                    {
+                        onclick += () => SegmentAnalytics.TrackEvent("PlayerGOIncomplete_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+                    }
 #if C3D_STEAMVR2
                     appearDisabled = !AllSetupComplete;
                     if (!AllSetupComplete)
                     {
                         if (appearDisabled)
                         {
-                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
+                            onclick += () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
                         }
                     }
                     else
@@ -1739,7 +1769,7 @@ namespace Cognitive3D
                         {
                             if (appearDisabled)
                             {
-                                onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary SteamVR Input Action Set files?", "Yes", "No")) { currentPage++; } };
+                                onclick += () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary SteamVR Input Action Set files?", "Yes", "No")) { currentPage++; } };
                             }
                         }
                     }
@@ -1750,7 +1780,7 @@ namespace Cognitive3D
                     {
                         if (appearDisabled)
                         {
-                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
+                            onclick += () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
                         }
                     }
 #endif
