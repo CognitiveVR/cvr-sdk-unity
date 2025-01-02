@@ -15,7 +15,7 @@ namespace Cognitive3D
 
     internal class TuningVariablesLocalDataHandler : ILocalTuningVariables
     {
-        string localTuningVariablePath;
+        readonly string localTuningVariablePath;
 
         public TuningVariablesLocalDataHandler(string path)
         {

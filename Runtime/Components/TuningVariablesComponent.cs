@@ -200,7 +200,11 @@ namespace Cognitive3D.Components
                 return;
             }
 
-            Util.logDevelopment("Tuning Variable reponse code " + responsecode);
+            if (responsecode != 200)
+            {
+                Util.logDevelopment("Tuning Variable reponse code " + responsecode + "  " + error);
+            }
+            
             try
             {
                 var tvc = JsonUtility.FromJson<TuningVariableCollection>(text);
