@@ -128,7 +128,7 @@ namespace Cognitive3D
             }
 #elif C3D_DEFAULT
     #if COGNITIVE3D_INCLUDE_XR_HANDS
-            UnityEngine.XR.Hands.XRHandSubsystem activeSubsystem = null;
+            UnityEngine.XR.Hands.XRHandSubsystem activeHandSubsystem = null;
 
             // Fetch all available XRHandSubsystems
             var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
@@ -138,14 +138,14 @@ namespace Cognitive3D
             {
                 if (subsystem.running)
                 {
-                    activeSubsystem = subsystem;
+                    activeHandSubsystem = subsystem;
                     break;
                 }
             }
 
-            if (activeSubsystem != null)
+            if (activeHandSubsystem != null)
             {
-                if (activeSubsystem.leftHand.isTracked || activeSubsystem.rightHand.isTracked)
+                if (activeHandSubsystem.leftHand.isTracked || activeHandSubsystem.rightHand.isTracked)
                 {
                     return TrackingType.Hand;
                 }
