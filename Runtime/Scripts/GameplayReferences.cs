@@ -126,6 +126,43 @@ namespace Cognitive3D
             {
                 return TrackingType.None;
             }
+#elif C3D_DEFAULT
+    #if COGNITIVE3D_INCLUDE_XR_HANDS
+            UnityEngine.XR.Hands.XRHandSubsystem activeSubsystem = null;
+
+            // Fetch all available XRHandSubsystems
+            var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
+            SubsystemManager.GetSubsystems(subsystems);
+
+            foreach (var subsystem in subsystems)
+            {
+                if (subsystem.running)
+                {
+                    activeSubsystem = subsystem;
+                    break;
+                }
+            }
+
+            if (activeSubsystem != null)
+            {
+                if (activeSubsystem.leftHand.isTracked || activeSubsystem.rightHand.isTracked)
+                {
+                    return TrackingType.Hand;
+                }
+            }
+    #endif
+
+            List<InputDevice> devices = new List<InputDevice>();
+            InputDevices.GetDevices(devices);
+            foreach (var device in devices)
+            {
+                if (device.characteristics.HasFlag(InputDeviceCharacteristics.Controller))
+                {
+                    return TrackingType.Controller;
+                }
+            }
+
+            return TrackingType.None;
 #else
             return TrackingType.Controller;
 #endif
