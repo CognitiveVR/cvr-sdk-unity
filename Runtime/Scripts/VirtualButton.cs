@@ -245,6 +245,18 @@ namespace Cognitive3D
                 fillImage.color = fillStartingColor;
         }
 
+        [ExecuteAlways]
+        /// <summary>
+        /// Resets the button's image color to the default color
+        /// </summary>
+        private void OnValidate()
+        {
+            if (buttonImage != null)
+            {
+                buttonImage.color = defaultColor;
+            }
+        }
+
         /// <summary>
         /// Sets the buttons "selection" state
         /// </summary>
