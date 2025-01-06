@@ -620,6 +620,136 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Attempts to retrieve the world-space position of a controller/hand based on the specified XRNode.
+        /// Transforms the local position to world-space using the HMD's parent transform.
+        /// </summary>
+        /// <param name="node">The XRNode representing the controller (e.g., LeftHand or RightHand).</param>
+        /// <param name="position">The resulting world-space position of the controller.</param>
+        /// <returns>True if a valid position is obtained, false if the position is (0,0,0).</returns>
+        public static bool TryGetControllerPosition(XRNode node, out Vector3 position)
+        {
+            position = GetNodePosition(node);
+            position = HMD.transform.parent.TransformPoint(position);
+            return position != Vector3.zero;
+        }
+
+
+        /// <summary>
+        /// Retrieves the position of a specified XR node (e.g., hand or controller) based on the current tracking type.
+        /// Returns Vector3.zero if the node position cannot be determined or if the tracking type is unsupported.
+        /// </summary>
+        /// <param name="node">The XRNode (e.g., XRNode.LeftHand, XRNode.RightHand) to get the position for.</param>
+        private static Vector3 GetNodePosition(XRNode node)
+        {
+            TrackingType currentTracking = GetCurrentTrackedDevice();
+
+#if C3D_OCULUS
+            var targetNode = currentTracking switch
+            {
+                TrackingType.Controller => node == XRNode.RightHand ? OVRPlugin.Node.ControllerRight : OVRPlugin.Node.ControllerLeft,
+                TrackingType.Hand => node == XRNode.RightHand ? OVRPlugin.Node.HandRight : OVRPlugin.Node.HandLeft,
+                _ => OVRPlugin.Node.None,
+            };
+
+            if (targetNode != OVRPlugin.Node.None)
+            {
+                return OVRPlugin.GetNodePose(targetNode, OVRPlugin.Step.Physics).ToOVRPose().position;
+            }
+#elif C3D_PICOXR
+            switch (currentTracking)
+            {
+                case TrackingType.Controller:
+                    var controllerNode = node == XRNode.RightHand ? Unity.XR.PXR.PXR_Input.Controller.RightController : Unity.XR.PXR.PXR_Input.Controller.LeftController;
+                    return Unity.XR.PXR.PXR_Input.GetControllerPredictPosition(controllerNode, 0);
+                case TrackingType.Hand:
+                    var handNode = node == XRNode.RightHand ? Unity.XR.PXR.HandType.HandRight : Unity.XR.PXR.HandType.HandLeft;
+
+                    Unity.XR.PXR.HandJointLocations handJointLocations = new Unity.XR.PXR.HandJointLocations();
+
+                    if (Unity.XR.PXR.PXR_HandTracking.GetJointLocations(handNode, ref handJointLocations) && handJointLocations.isActive != 0U)
+                    {
+                        int wristIndex = (int)Unity.XR.PXR.HandJoint.JointWrist;
+                        if (wristIndex < handJointLocations.jointLocations.Length)
+                        {
+                            return handJointLocations.jointLocations[wristIndex].pose.Position.ToVector3();
+                        }
+                    }
+                    break;
+            }
+#elif C3D_VIVEWAVE
+            var position = Vector3.zero;
+            switch (currentTracking)
+            {
+                case TrackingType.Controller:
+                    var controller = node == XRNode.RightHand ? Wave.OpenXR.InputDeviceControl.ControlDevice.Right : Wave.OpenXR.InputDeviceControl.ControlDevice.Left;
+                    Wave.OpenXR.InputDeviceControl.GetPosition(controller, out position);
+                    return position;
+
+                case TrackingType.Hand:
+                    if (Wave.Essence.Hand.HandManager.Instance != null)
+                    {
+                        var isRightHand = node == XRNode.RightHand;
+                        Wave.Essence.Hand.HandManager.Instance.GetJointPosition(Wave.Essence.Hand.HandManager.HandJoint.Wrist, ref position, isRightHand);
+                        return position;
+                    }
+                    break;
+            }
+#elif C3D_DEFAULT
+            switch (currentTracking)
+            {
+                case TrackingType.Controller:
+                    return GetDefaultNodePosition(node);
+
+    #if COGNITIVE3D_INCLUDE_XR_HANDS
+                case TrackingType.Hand:
+                    var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
+                    SubsystemManager.GetSubsystems(subsystems);
+
+                    foreach (var subsystem in subsystems)
+                    {
+                        if (!subsystem.running) continue;
+
+                        var hand = node == XRNode.RightHand ? subsystem.rightHand : subsystem.leftHand;
+                        if (hand.isTracked)
+                        {
+                            var wrist = hand.GetJoint(UnityEngine.XR.Hands.XRHandJointID.Wrist);
+                            if (wrist.TryGetPose(out var pose))
+                            {
+                                return pose.position;
+                            }
+                        }
+                    }
+                    break;
+    #endif
+            }
+#endif
+            // Default fallback for retrieving controller positions
+            // Compatible with all XR SDKs but does not return hand positions
+            return GetDefaultNodePosition(node);
+        }
+
+        /// <summary>
+        /// Default fallback for retrieving the position of an XRNode when no specific SDK is defined.
+        /// </summary>
+        /// <param name="node">The XRNode to retrieve the position for (e.g., LeftController, RightController, Head).</param>
+        /// <returns>The position of the specified XRNode, or Vector3.zero if not found.</returns>
+        internal static Vector3 GetDefaultNodePosition(XRNode node)
+        {
+            List<XRNodeState> nodeStates = new List<XRNodeState>();
+            InputTracking.GetNodeStates(nodeStates);
+
+            foreach (XRNodeState nodeState in nodeStates)
+            {
+                if (nodeState.nodeType == node && nodeState.TryGetPosition(out var position))
+                {
+                    return position;
+                }
+            }
+
+            return Vector3.zero;
+        }
+
 #endregion
 
 #region Location

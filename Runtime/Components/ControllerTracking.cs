@@ -154,20 +154,18 @@ namespace Cognitive3D.Components
             {
                 currentTime += deltaTime;
                 UpdateCooldownClock(deltaTime);
-                Transform leftControllerTransform;
-                Transform rightControllerTransform;
-                bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
-                bool wasRightControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
+                bool wasLeftControllerFound = GameplayReferences.TryGetControllerPosition(XRNode.LeftHand, out var leftHandPosition);
+                bool wasRightControllerFound = GameplayReferences.TryGetControllerPosition(XRNode.RightHand, out var rightHandPosition);
                 
                 if (wasLeftControllerFound)
                 {
-                    leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
+                    leftControllerToHMD = leftHandPosition - GameplayReferences.HMD.position;
                     leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
                 }
 
                 if (wasRightControllerFound)
                 {
-                    rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
+                    rightControllerToHMD = rightHandPosition - GameplayReferences.HMD.position;
                     rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
                 }
 
