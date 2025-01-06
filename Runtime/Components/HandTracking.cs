@@ -6,7 +6,10 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Hand Tracking")]
     public class HandTracking : AnalyticsComponentBase
     {
-#if C3D_OCULUS || C3D_VIVEWAVE
+        internal delegate void onInputChanged(GameplayReferences.TrackingType currentTrackedDevice);
+        internal static event onInputChanged OnInputChanged;
+        
+#if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
         private GameplayReferences.TrackingType lastTrackedDevice = GameplayReferences.TrackingType.None;
 
         protected override void OnSessionBegin()
@@ -46,6 +49,8 @@ namespace Cognitive3D.Components
                     .SetProperty("Now Tracking", currentTrackedDevice)
                     .Send();
                 lastTrackedDevice = currentTrackedDevice;
+
+                OnInputChanged?.Invoke(currentTrackedDevice);
             }
         }
 
@@ -59,7 +64,7 @@ namespace Cognitive3D.Components
         #region Inspector Utils
         public override bool GetWarning()
         {
-#if C3D_OCULUS
+#if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
             return false;
 #else
             return true;
@@ -68,10 +73,10 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-#if C3D_OCULUS
+#if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
             return "Collects and sends data pertaining to Hand Tracking";
 #else
-            return "This component can only be used on the Oculus platform";
+            return "This component is compatible with Oculus, Wave (Vive), PicoXR, and OpenXR platforms";
 #endif
         }
 #endregion
