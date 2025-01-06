@@ -46,7 +46,12 @@ namespace Cognitive3D
         Dictionary<string, object> exitpollEventProperties = new Dictionary<string, object>();
 #endregion
         
-        // This function should be called during OnSessionBegin if the user wants to immediately enable the exit poll upon Awake or OnEnable.
+        /// <summary>
+        /// Asynchronously fetches the exit poll question sets. 
+        /// This function should be called during OnSessionBegin if the user wants to immediately enable the exit poll upon Awake or OnEnable.
+        /// Returns the exit poll data after waiting for the network response.
+        /// </summary>
+        /// <returns>Task<ExitPollData> - Returns the exit poll data once the asynchronous request is complete.</returns>
         public async Task<ExitPollData> GetExitPollQuestionSets()
         {
             if (Cognitive3D_Manager.Instance == null)
@@ -66,46 +71,6 @@ namespace Cognitive3D
 
             // Waiting for the result to be available and return it
             return await tcs.Task;
-        }
-
-        private ExitPollData ProcessExitPollResponse(int responseCode, string error, string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                Debug.LogError("C3D Exitpoll returned empty text");
-                OnSetupFailed.Invoke();
-                return null;
-            }
-
-            ExitPollData _exitPollData;
-            try
-            {
-                _exitPollData = JsonUtility.FromJson<ExitPollData>(text);
-            }
-            catch
-            {
-                Debug.LogError("C3D Exitpoll questions not formatted correctly");
-                OnSetupFailed.Invoke();
-                return null;
-            }
-
-            if (_exitPollData.questions == null || _exitPollData.questions.Length == 0)
-            {
-                Debug.LogError("C3D Exitpoll has no questions");
-                OnSetupFailed.Invoke();
-                return null;
-            }
-
-            for (int i = 0; i < _exitPollData.questions.Length; i++)
-            {
-                exitpollResponseProperties.Add(new ExitPollSet.ResponseContext(_exitPollData.questions[i].type));
-            }
-
-            currentExitpollData = _exitPollData;
-            OnSetupComplete.Invoke();
-            StartTime = Util.Timestamp();
-
-            return _exitPollData;
         }
 
         /// <summary>
@@ -169,9 +134,10 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// When all questions are answered, can call this to submit everything, formatted correctly
-        /// Clears QuestionProperties
+        /// Submits all the answers collected for an exit poll, formatted correctly for transmission.
+        /// It also clears the QuestionProperties after submission to prepare for any future responses.
         /// </summary>
+        /// <param name="questionSet">The exit poll data containing the questions and poll details.</param>
         public void SubmitAllAnswers(ExitPollData questionSet)
         {
             SendResponsesAsCustomEvents(questionSet);
@@ -180,7 +146,12 @@ namespace Cognitive3D
             NetworkManager.PostExitpollAnswers(responseBody, questionSet.name, questionSet.version);
         }
 
-        private void SubmitAllAnswers()
+        /// <summary>
+        /// Submits all the answers collected for the current exit poll, formatted correctly for transmission.
+        /// If no specific question set is provided, it uses the currentExitpollData stored in memory.
+        /// It also clears the QuestionProperties after submission to prepare for any future responses.
+        /// </summary>
+        public void SubmitAllAnswers()
         {
             if (currentExitpollData != null)
             {
@@ -191,7 +162,56 @@ namespace Cognitive3D
             }
         }
 
-        void SendResponsesAsCustomEvents(ExitPollData questionSet)
+        /// <summary>
+        /// Processes the response from the exit poll request, parsing the JSON data and checking for errors.
+        /// If the data is valid, it stores the parsed exit poll data and invokes the setup completion events.
+        /// If there are any issues, it logs an error and invokes the setup failure event.
+        /// </summary>
+        private ExitPollData ProcessExitPollResponse(int responseCode, string error, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                Debug.LogError("C3D Exitpoll returned empty text");
+                OnSetupFailed.Invoke();
+                return null;
+            }
+
+            ExitPollData _exitPollData;
+            try
+            {
+                _exitPollData = JsonUtility.FromJson<ExitPollData>(text);
+            }
+            catch
+            {
+                Debug.LogError("C3D Exitpoll questions not formatted correctly");
+                OnSetupFailed.Invoke();
+                return null;
+            }
+
+            if (_exitPollData.questions == null || _exitPollData.questions.Length == 0)
+            {
+                Debug.LogError("C3D Exitpoll has no questions");
+                OnSetupFailed.Invoke();
+                return null;
+            }
+
+            for (int i = 0; i < _exitPollData.questions.Length; i++)
+            {
+                exitpollResponseProperties.Add(new ExitPollSet.ResponseContext(_exitPollData.questions[i].type));
+            }
+
+            currentExitpollData = _exitPollData;
+            OnSetupComplete.Invoke();
+            StartTime = Util.Timestamp();
+
+            return _exitPollData;
+        }
+
+        /// <summary>
+        /// Sends the collected exit poll responses as custom events.
+        /// </summary>
+        /// <param name="questionSet">The exit poll data containing the questions and poll details to be sent with the custom event.</param>
+        private void SendResponsesAsCustomEvents(ExitPollData questionSet)
         {
             var exitpollEvent = new CustomEvent("cvr.exitpoll");
             exitpollEvent.SetProperty("userId", Cognitive3D_Manager.DeviceId);
