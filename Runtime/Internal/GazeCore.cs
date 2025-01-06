@@ -46,6 +46,12 @@ namespace Cognitive3D
         static Transform cameraRoot;
         internal static bool GetFloorPosition(ref Vector3 floorPos)
         {
+            if (Cognitive3D_Manager.Instance.trackingSpace!= null)
+            {
+                floorPos = Cognitive3D_Manager.Instance.trackingSpace.position;
+                return true;
+            }
+            
             if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
                 if (cameraRoot == null)
