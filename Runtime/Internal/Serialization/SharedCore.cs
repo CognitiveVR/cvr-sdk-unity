@@ -1957,11 +1957,11 @@ namespace Cognitive3D.Serialization
 
             if (data.IsRightHand)
             {
-                dome.Properties = "{\"controller\": \"right\"}";
+                dome.Properties = "\"controller\": \"right\"";
             }
             else
             {
-                dome.Properties = "{\"controller\": \"left\"}";
+                dome.Properties = "\"controller\": \"left\"";
             }
             dome.HasProperties = true;
 
@@ -2335,27 +2335,16 @@ namespace Cognitive3D.Serialization
 
             if (entry.isController)
             {
-                // Debug.LogError(entry.controllerType + " " + entry.inputType);
                 builder.Append(",");
                 JsonUtil.SetString("controllerType", entry.controllerType, builder);
-                // Debug.LogError(entry.controllerType + " " + entry.inputType);
-                // builder.Append(",");
-                // JsonUtil.SetString("inputType", entry.inputType, builder);
-
-                // if (entry.inputType == "Controller")
-                // {
-                //     Debug.LogError(entry.controllerType + " " + entry.inputType);
-                //     builder.Append(",");
-                //     JsonUtil.SetString("controllerType", entry.controllerType, builder);
-                // }
             }
 
             //properties should already be formatted, just need to append them here
             if (!string.IsNullOrEmpty(entry.Properties))
             {
-                builder.Append(",\"properties\":[");
+                builder.Append(",\"properties\":{");
                 builder.Append(entry.Properties);
-                builder.Append("]");
+                builder.Append("}");
             }
 
             builder.Append("}"); //close manifest entry
