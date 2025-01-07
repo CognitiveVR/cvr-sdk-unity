@@ -14,13 +14,15 @@ namespace Cognitive3D
         /// <summary>
         /// The image that will fill when focused (if slowFill is true)
         /// </summary>
-        public Image fillImage;
+        [SerializeField]
+        internal Image fillImage;
 
         /// <summary>
         /// The Image for the UI of the button <br/>
         /// Used to update colour
         /// </summary>
-        public Image buttonImage;
+        [SerializeField]
+        internal Image buttonImage;
 
         /// <summary>
         /// How long to fill button before invoking confirm
@@ -31,13 +33,13 @@ namespace Cognitive3D
         /// The default color of the button <br/>
         /// Grey
         /// </summary>
-        public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        private Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
         /// <summary>
         /// The color to set button to when "selected" <br/>
         /// Green
         /// </summary>
-        public Color selectedColor = new Color(0, 1, 0.05f, 1);
+        private Color selectedColor = new Color(0, 1, 0.05f, 1);
 
         /// <summary>
         /// Events/function to execute once the button is clicked
@@ -45,24 +47,31 @@ namespace Cognitive3D
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         public UnityEngine.Events.UnityEvent OnConfirm;
 
-        /// <summary>
-        /// Set to true if you want buttons to resize
-        /// </summary>
-        public bool dynamicallyResize;
 
-        /// <summary>
-        /// A reference to the collider for this button <br/>
-        /// We need this to adjust collisions while resizing buttons <br/>
-        /// Consider using GetComponent instead of keeping as a public var
-        /// </summary>
-        public BoxCollider boxCollider;
+        [System.Serializable]
+        public struct ResizeSettings
+        {
+            /// <summary>
+            /// Set to true if you want buttons to resize
+            /// </summary>
+            public bool dynamicallyResize;
 
-        /// <summary>
-        /// A reference to the rect for this button <br/>
-        /// We need this to adjust the UI while resizing buttons <br/>
-        /// Consider using GetComponent instead of keeping as a public var
-        /// </summary>
-        public RectTransform rectTransform;
+            /// <summary>
+            /// A reference to the collider for this button <br/>
+            /// We need this to adjust collisions while resizing buttons <br/>
+            /// Consider using GetComponent instead of keeping as a public var
+            /// </summary>
+            public BoxCollider boxCollider;
+
+            /// <summary>
+            /// A reference to the rect for this button <br/>
+            /// We need this to adjust the UI while resizing buttons <br/>
+            /// Consider using GetComponent instead of keeping as a public var
+            /// </summary>
+            public RectTransform rectTransform;
+        }
+
+        public ResizeSettings resizeSettings;
 
         /// <summary>
         /// Don't consider clicks on button if this is false
@@ -133,7 +142,7 @@ namespace Cognitive3D
         IEnumerator WaitOneFrame()
         {
             yield return new WaitForEndOfFrame();
-            if (dynamicallyResize)
+            if (resizeSettings.dynamicallyResize)
             {
                 DynamicallyResize();
             }
@@ -245,18 +254,6 @@ namespace Cognitive3D
                 fillImage.color = fillStartingColor;
         }
 
-        [ExecuteAlways]
-        /// <summary>
-        /// Resets the button's image color to the default color
-        /// </summary>
-        private void OnValidate()
-        {
-            if (buttonImage != null)
-            {
-                buttonImage.color = defaultColor;
-            }
-        }
-
         /// <summary>
         /// Sets the buttons "selection" state
         /// </summary>
@@ -283,8 +280,8 @@ namespace Cognitive3D
         /// </summary>
         private void DynamicallyResize()
         {
-            var rect = rectTransform.rect;
-            boxCollider.size = rect.size;
+            var rect = resizeSettings.rectTransform.rect;
+            resizeSettings.boxCollider.size = rect.size;
         }
     }
 }
