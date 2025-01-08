@@ -12,22 +12,29 @@ namespace Cognitive3D
     public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
     {
         /// <summary>
+        /// Don't consider clicks on button if this is false
+        /// </summary>
+        [Tooltip("If false, button clicks will be ignored.")]
+        public bool isEnabled = true;
+
+        /// <summary>
         /// The image that will fill when focused (if slowFill is true)
         /// </summary>
         [SerializeField]
-        internal Image fillImage;
+        protected Image fillImage;
 
         /// <summary>
         /// The Image for the UI of the button <br/>
         /// Used to update colour
         /// </summary>
         [SerializeField]
-        internal Image buttonImage;
+        protected Image buttonImage;
 
         /// <summary>
         /// How long to fill button before invoking confirm
         /// </summary>
-        public float FillDuration = 1;
+        [SerializeField]
+        protected float FillDuration = 1;
 
         /// <summary>
         /// The default color of the button <br/>
@@ -45,38 +52,31 @@ namespace Cognitive3D
         /// Events/function to execute once the button is clicked
         /// </summary>
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
-        public UnityEngine.Events.UnityEvent OnConfirm;
-
-
-        [System.Serializable]
-        public struct ResizeSettings
-        {
-            /// <summary>
-            /// Set to true if you want buttons to resize
-            /// </summary>
-            public bool dynamicallyResize;
-
-            /// <summary>
-            /// A reference to the collider for this button <br/>
-            /// We need this to adjust collisions while resizing buttons <br/>
-            /// Consider using GetComponent instead of keeping as a public var
-            /// </summary>
-            public BoxCollider boxCollider;
-
-            /// <summary>
-            /// A reference to the rect for this button <br/>
-            /// We need this to adjust the UI while resizing buttons <br/>
-            /// Consider using GetComponent instead of keeping as a public var
-            /// </summary>
-            public RectTransform rectTransform;
-        }
-
-        public ResizeSettings resizeSettings;
+        [SerializeField]
+        protected UnityEngine.Events.UnityEvent OnConfirm;
 
         /// <summary>
-        /// Don't consider clicks on button if this is false
+        /// Set to true if you want buttons to resize
         /// </summary>
-        public bool isEnabled = true;
+        [Header("Resize Settings")]
+        [SerializeField]
+        private bool dynamicallyResize;
+
+        /// <summary>
+        /// A reference to the collider for this button <br/>
+        /// We need this to adjust collisions while resizing buttons <br/>
+        /// Consider using GetComponent instead of keeping as a public var
+        /// </summary>
+        [SerializeField]
+        private BoxCollider boxCollider;
+
+        /// <summary>
+        /// A reference to the rect for this button <br/>
+        /// We need this to adjust the UI while resizing buttons <br/>
+        /// Consider using GetComponent instead of keeping as a public var
+        /// </summary>
+        [SerializeField]
+        private RectTransform rectTransform;
 
         /// <summary>
         /// Float value representing how much the button has "filled"
@@ -148,7 +148,7 @@ namespace Cognitive3D
         IEnumerator WaitOneFrame()
         {
             yield return new WaitForEndOfFrame();
-            if (resizeSettings.dynamicallyResize)
+            if (dynamicallyResize)
             {
                 DynamicallyResize();
             }
@@ -286,8 +286,8 @@ namespace Cognitive3D
         /// </summary>
         private void DynamicallyResize()
         {
-            var rect = resizeSettings.rectTransform.rect;
-            resizeSettings.boxCollider.size = rect.size;
+            var rect = rectTransform.rect;
+            boxCollider.size = rect.size;
         }
     }
 }
