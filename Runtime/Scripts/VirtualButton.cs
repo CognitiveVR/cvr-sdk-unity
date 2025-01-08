@@ -124,8 +124,14 @@ namespace Cognitive3D
         /// </summary>
         protected virtual void Start()
         {
+            if (buttonImage != null)
+            {
+                defaultColor = buttonImage.color;
+            }
+
             if (fillImage != null)
             {
+                selectedColor = fillImage.color;
                 fillStartingColor = fillImage.color;
             }
 
