@@ -35,6 +35,7 @@ namespace Cognitive3D
 
         [Header("Scale Settings")]
         [Tooltip("Apply a gradient to the buttons")]
+        public bool useGradientColor = false;
         public Gradient IntegerGradient;
         public Image[] ColorableImages;
         public Text MinLabel;
@@ -171,6 +172,8 @@ namespace Cognitive3D
                 mic.SetExitPollQuestionSet(questionset);
             }
 
+            ApplyGradient();
+
             _isclosing = false;
 
             StartCoroutine(_SetVisible(true));
@@ -215,6 +218,32 @@ namespace Cognitive3D
                 if (group != null)
                 {
                     group.spacing = Mathf.Lerp(MaximumSpacing, MinimumSpacing, (maxValue - minValue + 1) / (maxValue + 1f));
+                }
+            }
+        }
+
+        void ApplyGradient()
+        {
+            if (useGradientColor)
+            {
+                List<Image> enabledButtons = new List<Image>();
+
+                // Store only enabled buttons in the list
+                for (int i = 0; i < ColorableImages.Length; i++)
+                {
+                    if (ColorableImages[i].transform.parent.gameObject.activeInHierarchy)
+                    {
+                        enabledButtons.Add(ColorableImages[i]);
+                    }
+                }
+
+                Debug.LogError("Number of enabled buttons are: " + enabledButtons.Count);
+
+                // Apply the gradient color based on the number of enabled buttons
+                for (int i = 0; i < enabledButtons.Count; i++)
+                {
+                    float t = Mathf.InverseLerp(0, enabledButtons.Count - 1, i);
+                    enabledButtons[i].color = IntegerGradient.Evaluate(t);
                 }
             }
         }
