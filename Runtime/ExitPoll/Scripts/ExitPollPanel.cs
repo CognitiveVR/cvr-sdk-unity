@@ -237,8 +237,6 @@ namespace Cognitive3D
                     }
                 }
 
-                Debug.LogError("Number of enabled buttons are: " + enabledButtons.Count);
-
                 // Apply the gradient color based on the number of enabled buttons
                 for (int i = 0; i < enabledButtons.Count; i++)
                 {
