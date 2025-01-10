@@ -267,5 +267,18 @@ namespace Cognitive3D.Serialization
             return input.Replace("\n", "\\n");
 
         }
+
+        public static T[] FromJsonArray<T>(string json)
+        {
+            string wrappedJson = $"{{\"Array\":{json}}}";
+            Wrapper<T> wrapper = UnityEngine.JsonUtility.FromJson<Wrapper<T>>(wrappedJson);
+            return wrapper.Array;
+        }
+
+        [System.Serializable]
+        private class Wrapper<T>
+        {
+            public T[] Array;
+        }
     }
 }
