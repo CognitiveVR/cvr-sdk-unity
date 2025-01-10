@@ -82,7 +82,6 @@ namespace Cognitive3D
             fixationUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/fixations/");
             boundaryUrl = string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/boundary/");
             ApplicationKey = "APIKEY:DATA " + Cognitive3D_Preferences.Instance.ApplicationKey;
-            DeveloperKey = "APIKEY:DEVELOPER " + Cognitive3D_Preferences.Instance.DeveloperKey;
         }
         private static string dynamicUrl;
         private static string gazeUrl;
@@ -90,7 +89,6 @@ namespace Cognitive3D
         private static string sensorUrl;
         private static string fixationUrl;
         private static string boundaryUrl;
-        internal static string DeveloperKey;
         internal static string ApplicationKey;
         //POST dynamics json data to scene explorer
         

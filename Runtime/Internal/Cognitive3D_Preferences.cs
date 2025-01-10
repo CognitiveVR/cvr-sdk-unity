@@ -67,7 +67,6 @@ namespace Cognitive3D
             }
         }
 
-        internal string DeveloperKey = string.Empty;
         public string ApplicationKey = string.Empty;
         public string AttributionKey;
 
