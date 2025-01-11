@@ -883,6 +883,57 @@ namespace Cognitive3D
 
 #endregion
 
+#region ExitPoll
+        /// <summary>
+        /// This method retrieves the ExitPoll hooks. It checks if the developer key is valid.
+        /// If successful, it sends a request to fetch the ExitPoll hooks and processes the response.
+        /// </summary>
+        public static void RefreshExitPollHooks()
+        {
+            Debug.Log("Refresh exitpoll hooks");
+            //gets the scene version from api and sets it to the current scene
+
+            if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
+
+            string url = CognitiveStatics.GetExitpollHooks();
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            EditorNetwork.Get(url, GetExitPollHooksResponse, headers, true);//AUTH
+        }
+
+        /// <summary>
+        /// Handles the response from the GetExitPollHooks API request.
+        /// </summary>
+        private static void GetExitPollHooksResponse(int responsecode, string error, string text)
+        {
+            if (responsecode != 200)
+            {
+                RefreshSceneVersionComplete = null;
+                //internal server error
+                Debug.LogError("GetExitPollHooksResponse Error [CODE] " + responsecode + " [ERROR] " + error);
+                return;
+            }
+
+            ExitPollHookData[] hooks = Util.GetJsonArray<ExitPollHookData>(text);
+            Util.logDevelopment("Response contains " + hooks.Length + " exitpoll hooks");
+            if (hooks.Length > 0)
+            {
+                ExitPollHooks = hooks;
+            }
+        }
+
+        [System.Serializable]
+        internal class ExitPollHookData
+        {
+            public bool active;
+            public string description;
+            public string name;
+            public string questionSetId;
+        }
+
+        public static ExitPollHookData[] ExitPollHooks = new ExitPollHookData[] { };
+#endregion
+
 #region Media
 
         /// <summary>

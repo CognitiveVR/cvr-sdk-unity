@@ -45,13 +45,4 @@ namespace Cognitive3D
             }
         }
     }
-
-    [System.Serializable]
-    internal class ExitPollHookData
-    {
-        internal bool active;
-        internal string description;
-        internal string name;
-        internal string questionSetId;
-    }
 }

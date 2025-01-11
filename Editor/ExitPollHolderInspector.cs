@@ -53,7 +53,7 @@ namespace Cognitive3D
                     panelScale = collider.size;
             }
 
-            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
             {
                 if (p.UseAttachTransform && p.AttachTransform != null)
                     Handles.DrawDottedLine(t.transform.position, p.AttachTransform.position,5);
@@ -83,6 +83,10 @@ namespace Cognitive3D
             }
         }
 
+        int _choiceIndex = 0;
+        private string[] displayOptions;
+        private bool hasRefreshedExitpollHooks;
+
         public override void OnInspectorGUI()
         {
             //TODO editor properties - allow multiple selection
@@ -96,18 +100,45 @@ namespace Cognitive3D
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
-            if (string.IsNullOrEmpty(p.Hook))
+            if (displayOptions == null || displayOptions.Length == 0)
             {
-                EditorGUI.indentLevel++;
-                p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
-                var rect = GUILayoutUtility.GetLastRect();
-                rect.width = 16;
-                GUI.Label(rect, new GUIContent(EditorCore.Error, "Hook should not be empty!"));
-                EditorGUI.indentLevel--;
+
+                EditorCore.RefreshExitPollHooks();
+                if (EditorCore.ExitPollHooks != null)
+                {
+                    displayOptions = new string[EditorCore.ExitPollHooks.Length];
+                    for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
+                    {
+                        displayOptions[i] = EditorCore.ExitPollHooks[i].name;
+                    }
+                }
             }
-            else
+
+            //drop down button
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUI.BeginDisabledGroup(EditorCore.ExitPollHooks.Length == 0);
+            _choiceIndex = EditorGUILayout.Popup("Question Set Hook", _choiceIndex, displayOptions);
+            EditorGUI.EndDisabledGroup();
+
+            //gui style that has less border so the refresh icon is more clear
+            int border = 2;
+            GUIStyle minimalPaddingButton = new GUIStyle("button");
+            minimalPaddingButton.padding = new RectOffset(border, border, border, border);
+            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Media"),minimalPaddingButton, GUILayout.Width(19),
+                    GUILayout.Height(19)))
             {
-                p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
+                EditorCore.RefreshExitPollHooks();
+                hasRefreshedExitpollHooks = true;
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            if (hasRefreshedExitpollHooks && EditorCore.ExitPollHooks.Length == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No ExitPoll hooks found for this project. Have you set them up on the dashboard yet?",
+                    MessageType.Warning);
             }
 
             t.ActivateOnEnable = EditorGUILayout.Toggle("Activate on Enable", t.ActivateOnEnable);
@@ -129,7 +160,7 @@ namespace Cognitive3D
             EditorGUI.indentLevel++;
             p.ExitpollSpawnType = (ExitPollManager.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
             
-            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
             {
                 GUILayout.BeginHorizontal();
                 p.UseAttachTransform = EditorGUILayout.Toggle(new GUIContent("Use Attach Transform","Attach ExitPoll Panels to this transform in your scene"), p.UseAttachTransform);
@@ -195,13 +226,9 @@ namespace Cognitive3D
 
         private string GetPointerDescription(ExitPollParameters parameters)
         {
-            if (parameters.PointerType == ExitPollManager.PointerType.LeftControllerPointer)
+            if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
-                return "Users will interact with the buttons by using the left controller and/or left hand, if available.";
-            }
-            else if (parameters.PointerType == ExitPollManager.PointerType.RightControllerPointer)
-            {
-                return "Users will interact with the buttons by using the right controller and/or right hand, if available.";
+                return "Users will interact with the buttons by using controllers and/or hands, if available.";
             }
             else
             {
