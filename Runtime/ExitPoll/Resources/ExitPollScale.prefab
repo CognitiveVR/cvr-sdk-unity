@@ -456,11 +456,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000012978789138}
   buttonImage: {fileID: 114000013956967526}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -491,7 +490,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65382676934240712
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1346,11 +1344,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000012519720114}
   buttonImage: {fileID: 114000013935989476}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1381,7 +1378,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65398270624636696
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1627,11 +1623,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000013173300692}
   buttonImage: {fileID: 114000012619502296}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -1662,7 +1657,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65826568392159164
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2345,11 +2339,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000013455045184}
   buttonImage: {fileID: 114000011988263194}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2380,7 +2373,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65849689894047348
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2783,11 +2775,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000011959087848}
   buttonImage: {fileID: 114000010337902332}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2818,7 +2809,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65111870606590022
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2912,11 +2902,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000010903319096}
   buttonImage: {fileID: 114000010118185538}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -2947,7 +2936,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65903823759928784
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3196,11 +3184,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000010495086454}
   buttonImage: {fileID: 114000014260571288}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -3231,7 +3218,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65291448246191188
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3617,11 +3603,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000010144993356}
   buttonImage: {fileID: 114000011620437588}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -3640,7 +3625,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &6552692340279045518
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4012,11 +3996,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000012830324012}
   buttonImage: {fileID: 114000013577878796}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -4047,7 +4030,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65970980944856552
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4217,11 +4199,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000010794226332}
   buttonImage: {fileID: 114000011031269730}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -4252,7 +4233,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65945384424822856
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4500,11 +4480,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000013757738654}
   buttonImage: {fileID: 114000011978751812}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -4535,7 +4514,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65008323479996484
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4784,11 +4762,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 1
   fillImage: {fileID: 114000011096605798}
   buttonImage: {fileID: 114000010784584976}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -4819,7 +4796,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 1
 --- !u!65 &65045910813697602
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4954,7 +4930,7 @@ MonoBehaviour:
       outWeight: 0.33333334
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 0
+    m_RotationOrder: 4
   YScale:
     serializedVersion: 2
     m_Curve:
@@ -4996,7 +4972,7 @@ MonoBehaviour:
       outWeight: 0.33333334
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 0
+    m_RotationOrder: 4
   positiveButton: {fileID: 0}
   negativeButton: {fileID: 0}
   AnswerButtons:
@@ -5012,6 +4988,7 @@ MonoBehaviour:
   - {fileID: 1000012549231880}
   - {fileID: 1000013122619948}
   ContentRoot: {fileID: 224000012441058100}
+  useGradientColor: 0
   IntegerGradient:
     serializedVersion: 2
     key0: {r: 1, g: 0, b: 0, a: 1}
@@ -5551,11 +5528,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isEnabled: 0
   fillImage: {fileID: 8608337283860367446}
   buttonImage: {fileID: 8056820449966306384}
   FillDuration: 1.5
-  defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-  selectedColor: {r: 0, g: 1, b: 0.05, a: 1}
   OnConfirm:
     m_PersistentCalls:
       m_Calls:
@@ -5574,7 +5550,6 @@ MonoBehaviour:
   dynamicallyResize: 0
   boxCollider: {fileID: 0}
   rectTransform: {fileID: 0}
-  isEnabled: 0
 --- !u!65 &6216670223522373144
 BoxCollider:
   m_ObjectHideFlags: 0
