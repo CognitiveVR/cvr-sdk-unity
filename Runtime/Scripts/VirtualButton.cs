@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace Cognitive3D
 {
     [AddComponentMenu("Cognitive3D/Internal/Virtual Button")]
-    public class VirtualButton : MonoBehaviour, IPointerFocus, IGazeFocus
+    public class VirtualButton : MonoBehaviour, IPointerFocus
     {
         /// <summary>
         /// Don't consider clicks on button if this is false

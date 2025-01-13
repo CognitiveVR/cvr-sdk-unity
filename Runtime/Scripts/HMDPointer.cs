@@ -29,17 +29,17 @@ namespace Cognitive3D
             }
         }
 
-        IGazeFocus UpdateDrawLine(Ray ray)
+        IPointerFocus UpdateDrawLine(Ray ray)
         {
-            IGazeFocus button = null;
+            IPointerFocus button = null;
 
             RaycastHit hit = new RaycastHit();
             if (Physics.Raycast(ray, out hit, 10)) //hit a button
             {
-                button = hit.collider.GetComponent<IGazeFocus>();
+                button = hit.collider.GetComponent<IPointerFocus>();
                 if (button != null)
                 {
-                    button.SetGazeFocus();
+                    button.SetPointerFocus(true, true);
                 }
             }
             return button;
