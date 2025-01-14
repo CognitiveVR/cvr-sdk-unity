@@ -43,11 +43,7 @@ namespace Cognitive3D
             }
             else if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
-                SetupControllerAsPointer(false);
-            }
-            else if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
-            {
-                SetupControllerAsPointer(true);
+                SetupControllerAsPointer();
             }
             
             //this should take all previously set variables (from functions) and create an exitpoll parameters object
@@ -87,7 +83,7 @@ namespace Cognitive3D
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             // Increment counter if controller pointer exists and tracking type is none
-            if (GameplayReferences.ControllerPointer != null && GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
+            if (GameplayReferences.PointerController != null && GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
             {
                 noTrackingCountdown += deltaTime;
                 
@@ -95,7 +91,7 @@ namespace Cognitive3D
                 if (noTrackingCountdown >= NO_TRACKING_COUNTDOWN_LIMIT)
                 {
                     noTrackingCountdown = 0;
-                    GameObject.Destroy(GameplayReferences.ControllerPointer);
+                    GameObject.Destroy(GameplayReferences.PointerController);
                     SetUpHMDAsPointer();
                     DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
                 }
@@ -116,32 +112,20 @@ namespace Cognitive3D
         /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
         /// If no controller is found, it creates an HMDPointer
         /// </summary>
-        /// <param name="isRight">True if right hand; false if left</param>
-        private void SetupControllerAsPointer(bool isRight)
+        private void SetupControllerAsPointer()
         {
-            GameObject prefab = Resources.Load<GameObject>("ControllerPointer");
+            GameObject prefab = Resources.Load<GameObject>("PointerController");
             if (prefab != null)
                 pointerInstance = GameObject.Instantiate(prefab);
             else
-                Debug.LogError("Spawning Exitpoll Controller Pointer, but cannot find prefab \"ControllerPointer\" in Resources!");
+                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
 
-            Transform t = null;
             if (pointerInstance != null)
             {
-                GameplayReferences.ControllerPointer = pointerInstance;
-                if (GameplayReferences.GetControllerTransform(isRight, out t))
-                {
-                    pointerInstance.transform.localPosition = Vector3.zero;
-                    pointerInstance.transform.localRotation = Quaternion.identity;
-                    pointerInstance.GetComponent<ControllerPointer>().ConstructDefaultLineRenderer(t);
-                    pointerInstance.GetComponent<ControllerPointer>().isRightHand = isRight;
-                }
-                else
-                {
-                    myparameters.PointerType = ExitPollManager.PointerType.HMD;
-                    SetUpHMDAsPointer();
-                    Debug.LogError("Controller not found, falling back to HMD Pointer");
-                }
+                GameplayReferences.PointerController = pointerInstance;
+                pointerInstance.transform.localPosition = Vector3.zero;
+                pointerInstance.transform.localRotation = Quaternion.identity;
+                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer();
             }
         }
 

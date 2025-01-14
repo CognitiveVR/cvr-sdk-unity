@@ -377,15 +377,15 @@ namespace Cognitive3D
         /// <summary>
         ///  A refrence to the controller pointer (if) instantiated for exitpoll
         /// </summary>
-        private static GameObject controllerPointer;
+        private static GameObject pointerController;
 
         /// <summary>
         /// 
         /// </summary>
-        public static GameObject ControllerPointer
+        public static GameObject PointerController
         {
-            get { return controllerPointer; }
-            set { controllerPointer = value; }
+            get { return pointerController; }
+            set { pointerController = value; }
         }
 
         public static bool SDKSupportsControllers
