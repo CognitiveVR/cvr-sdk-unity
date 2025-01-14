@@ -11,7 +11,7 @@ namespace Cognitive3D
         public string Hook;
 
         //hides irrelevent options in inspector
-        public ExitPollManager.SpawnType ExitpollSpawnType = ExitPollManager.SpawnType.PlayerRelative;
+        public ExitPollManager.SpawnType ExitpollSpawnType = ExitPollManager.SpawnType.PlayerRelativeSpace;
 
         //parenting pointer
         public Transform PointerParentOverride;
@@ -46,10 +46,6 @@ namespace Cognitive3D
 
         public bool StickWindow;
 
-        [System.Obsolete]
-        public bool UseTimeout = false;
-        [System.Obsolete]
-        public float Timeout = 3;
         public LayerMask PanelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
         //the prefered distance to display an exit 
         public float DisplayDistance = 3;
@@ -57,113 +53,5 @@ namespace Cognitive3D
 
         //the minimum distance to display an exit poll. below this value will cancel the exit poll and continue with gameplay
         public float MinimumDisplayDistance = 0.2f;
-
-
-        #region Functions
-
-        public ExitPollParameters SetEndAction(System.Action<bool> endAction)
-        {
-            EndAction = endAction;
-            return this;
-        }
-
-        public ExitPollParameters AddEndAction(System.Action<bool> endAction)
-        {
-            if (EndAction == null)
-            {
-                EndAction = endAction;
-            }
-            else
-            {
-                EndAction += endAction;
-            }
-            return this;
-        }
-
-        /// <summary>
-        /// set a maximum time that a question will be displayed. if this is passed, the question closes automatically
-        /// </summary>
-        /// <param name="allowTimeout"></param>
-        /// <param name="secondsUntilTimeout"></param>
-        /// <returns></returns>
-        [System.Obsolete]
-        public ExitPollParameters SetTimeout(bool allowTimeout, float secondsUntilTimeout)
-        {
-            return this;
-        }
-
-        public ExitPollParameters SetDisplayDistance(float preferedDistance, float minimumDistance)
-        {
-            MinimumDisplayDistance = Mathf.Max(minimumDistance, 0);
-            DisplayDistance = Mathf.Max(minimumDistance, preferedDistance);
-
-            return this;
-        }
-
-        /// <summary>
-        /// Set the layers the Exit Poll panel will avoid
-        /// </summary>
-        /// <param name="layers"></param>
-        /// <returns></returns>
-        public ExitPollParameters SetPanelLayerMask(params string[] layers)
-        {
-            PanelLayerMask = LayerMask.GetMask(layers);
-            return this;
-        }
-        
-        /// <summary>
-        /// Use to HMD Y position instead of spawning the poll directly ahead of the player
-        /// </summary>
-        /// <param name="useLockYPosition"></param>
-        /// <returns></returns>
-        public ExitPollParameters SetLockYPosition(bool useLockYPosition)
-        {
-            LockYPosition = useLockYPosition;
-            return this;
-        }
-        
-        /// <summary>
-        /// If this window is not in the player's line of sight, rotate around the player toward their facing
-        /// </summary>
-        /// <param name="useRotateToOnscreen"></param>
-        /// <returns></returns>
-        public ExitPollParameters SetRotateToStayOnScreen(bool useRotateToOnscreen)
-        {
-            RotateToStayOnScreen = useRotateToOnscreen;
-            return this;
-        }
-
-        public ExitPollParameters SetPosition(Vector3 overridePosition)
-        {
-            OverridePosition = overridePosition;
-            return this;
-        }
-
-        public ExitPollParameters SetRotation(Quaternion overrideRotation)
-        {
-            OverrideRotation = overrideRotation;
-            return this;
-        }
-
-        /// <summary>
-        /// Update the position of the Exit Poll prefab if the player teleports
-        /// </summary>
-        /// <param name="useStickyWindow"></param>
-        /// <returns></returns>
-        public ExitPollParameters SetStickyWindow(bool useStickyWindow)
-        {
-            StickWindow = useStickyWindow;
-            return this;
-        }
-
-        #endregion
-
-        [System.Obsolete]
-        public ExitPollSet Begin()
-        {
-            var exitpollset = new ExitPollSet();
-            exitpollset.BeginExitPoll(this);
-            return exitpollset;
-        }
     }
 }

@@ -46,7 +46,7 @@ namespace Cognitive3D
         public void Activate()
         {
             ExitPollParameters poll = ExitPollManager.NewExitPoll(Parameters.Hook, Parameters);
-            if (poll.ExitpollSpawnType == ExitPollManager.SpawnType.World)
+            if (poll.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
             {
                 poll.UseOverridePosition = true;
                 poll.OverridePosition = transform.position;

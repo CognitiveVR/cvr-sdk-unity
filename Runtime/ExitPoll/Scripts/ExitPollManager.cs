@@ -10,14 +10,13 @@ namespace Cognitive3D
     {
         public enum SpawnType
         {
-            World,
-            PlayerRelative
+            WorldSpace,
+            PlayerRelativeSpace
         }
         public enum PointerType
         {
-            HMDPointer,
-            RightControllerPointer,
-            LeftControllerPointer,
+            HMD,
+            ControllersAndHands,
         }
         public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
         {

@@ -37,15 +37,15 @@ namespace Cognitive3D
             
             myparameters = parameters;
             noTrackingCountdown = 0;
-            if (parameters.PointerType == ExitPollManager.PointerType.HMDPointer)
+            if (parameters.PointerType == ExitPollManager.PointerType.HMD)
             {
                 SetUpHMDAsPointer();
             }
-            else if (parameters.PointerType == ExitPollManager.PointerType.LeftControllerPointer)
+            else if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
                 SetupControllerAsPointer(false);
             }
-            else if (parameters.PointerType == ExitPollManager.PointerType.RightControllerPointer)
+            else if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
                 SetupControllerAsPointer(true);
             }
@@ -138,7 +138,7 @@ namespace Cognitive3D
                 }
                 else
                 {
-                    myparameters.PointerType = ExitPollManager.PointerType.HMDPointer;
+                    myparameters.PointerType = ExitPollManager.PointerType.HMD;
                     SetUpHMDAsPointer();
                     Debug.LogError("Controller not found, falling back to HMD Pointer");
                 }
@@ -172,10 +172,9 @@ namespace Cognitive3D
         /// <param name="xrNodeState">Information on the node that was lost</param>
         public void OnTrackingLost(XRNodeState xrNodeState)
         {
-            if (!xrNodeState.tracked)
+            if (!xrNodeState.tracked && myparameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
-                if (xrNodeState.nodeType == XRNode.RightHand && myparameters.PointerType == ExitPollManager.PointerType.RightControllerPointer
-                    || xrNodeState.nodeType == XRNode.LeftHand && myparameters.PointerType == ExitPollManager.PointerType.LeftControllerPointer)
+                if (xrNodeState.nodeType == XRNode.RightHand || xrNodeState.nodeType == XRNode.LeftHand)
                 {
                     DisplayControllerError(true, CONTROLLER_NOT_FOUND);
                     trackingWasLost = true;
@@ -404,9 +403,9 @@ namespace Cognitive3D
                 if (currentPanelIndex == 0)
                 {
                     //figure out world spawn position
-                    if (myparameters.UseOverridePosition || myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.World)
+                    if (myparameters.UseOverridePosition || myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
                         spawnPosition = myparameters.OverridePosition;
-                    if (myparameters.UseOverrideRotation || myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.World)
+                    if (myparameters.UseOverrideRotation || myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
                         spawnRotation = myparameters.OverrideRotation;
                 }
 
@@ -451,7 +450,7 @@ namespace Cognitive3D
                 }
                 CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this, questionSet.questions.Length);
 
-                if (myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.World && myparameters.UseAttachTransform)
+                if (myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace && myparameters.UseAttachTransform)
                 {
                     if (myparameters.AttachTransform != null)
                     {

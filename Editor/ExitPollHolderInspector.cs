@@ -125,7 +125,7 @@ namespace Cognitive3D
             int border = 2;
             GUIStyle minimalPaddingButton = new GUIStyle("button");
             minimalPaddingButton.padding = new RectOffset(border, border, border, border);
-            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Media"),minimalPaddingButton, GUILayout.Width(19),
+            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Hooks"),minimalPaddingButton, GUILayout.Width(19),
                     GUILayout.Height(19)))
             {
                 EditorCore.RefreshExitPollHooks();
