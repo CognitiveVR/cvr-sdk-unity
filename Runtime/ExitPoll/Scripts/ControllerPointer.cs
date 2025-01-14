@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 
 namespace Cognitive3D
@@ -54,14 +56,6 @@ namespace Cognitive3D
         /// </summary>
         private bool fillActivate = true;
 
-#if C3D_OCULUS
-        /// <summary>
-        /// A reference to the OVRHand component of this controller anchor
-        /// </summary>
-        private OVRHand hand;
-#endif
-
-
         /// <summary>
         /// Creates and sets up a line renderer to visualize where user is pointing
         /// </summary>
@@ -82,6 +76,11 @@ namespace Cognitive3D
             controllerAnchor = transform;
         }
 
+#if C3D_OCULUS
+        List<OVRHand> hands = new List<OVRHand>();
+        OVRHand activeHand;
+#endif
+
         void Update()
         {
             Vector3 raycastStartPos = Vector3.zero;
@@ -95,35 +94,76 @@ namespace Cognitive3D
             // User using hands: set up to use hands
             if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
             {
-                #if C3D_OCULUS
-
-                    if (hand == null)
+#if C3D_OCULUS
+                if (hands.Count() == 0)
+                {
+                    hands = FindObjectsOfType<OVRHand>().ToList();
+                }
+                else
+                {
+                    foreach (OVRHand hand in hands)
                     {
-                        hand = controllerAnchor.GetComponentInChildren<OVRHand>();
+                        if (hand.GetFingerPinchStrength(OVRHand.HandFinger.Index) >= 1.0f && hand.HandConfidence == OVRHand.TrackingConfidence.High)
+                        {
+                            activeHand = hand;
+                        }
                     }
-                    if (hand != null)
+
+                    if (activeHand != null)
                     {
-                        pointsArray[0] = OVRManager.instance.transform.TransformPoint(hand.PointerPose.position);
-                        pointsArray[1] = (OVRManager.instance.transform.rotation * hand.PointerPose.rotation) * Vector3.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
+                        pointsArray[0] = OVRManager.instance.transform.TransformPoint(activeHand.PointerPose.position);
+                        pointsArray[1] = (OVRManager.instance.transform.rotation * activeHand.PointerPose.rotation) * Vector3.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
                         raycastStartPos = pointsArray[0];
                         raycastDir = pointsArray[1];
                         pointsArray[1] += pointsArray[0]; // Adjusting line renderer end position for rigs that move
                         lr.SetPositions(pointsArray);
-                        activation = (hand.GetFingerPinchStrength(OVRHand.HandFinger.Index) == 1) && (hand.HandConfidence == OVRHand.TrackingConfidence.High);
+                        activation = (activeHand.GetFingerPinchStrength(OVRHand.HandFinger.Index) == 1) && (activeHand.HandConfidence == OVRHand.TrackingConfidence.High);
                         fillActivate = true;
                     }
-                #endif
+                }
+#endif
             }
             // User using controller
             else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
             {
-                float currentControllerTrigger = isRightHand ? GameplayReferences.rightTriggerValue : GameplayReferences.leftTriggerValue;
-                activation = currentControllerTrigger > 0.5;
+                // Check trigger values for both controllers
+                float rightTriggerValue = GameplayReferences.rightTriggerValue;
+                float leftTriggerValue = GameplayReferences.leftTriggerValue;
+
+                // Determine which controller is active based on trigger press
+                if (rightTriggerValue > 0.5f)
+                {
+                    isRightHand = true; // Switch to right controller
+                }
+                else if (leftTriggerValue > 0.5f)
+                {
+                    isRightHand = false; // Switch to left controller
+                }
+
+                // Set activation and other properties based on the active controller
+                float currentControllerTrigger = isRightHand ? rightTriggerValue : leftTriggerValue;
+                activation = currentControllerTrigger > 0.5f;
                 fillActivate = false;
-                pointsArray[0] = controllerAnchor.position;
-                pointsArray[1] = pointsArray[0] + controllerAnchor.forward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
-                raycastStartPos = controllerAnchor.position;
-                raycastDir = controllerAnchor.forward;
+
+                Vector3 controllerPosition;
+                Quaternion controllerRotation;
+                Vector3 controllerForward;
+                if (isRightHand)
+                {
+                    GameplayReferences.TryGetControllerPosition(UnityEngine.XR.XRNode.RightHand, out controllerPosition);
+                    GameplayReferences.TryGetControllerRotation(UnityEngine.XR.XRNode.RightHand, out controllerRotation);
+                }
+                else
+                {
+                    GameplayReferences.TryGetControllerPosition(UnityEngine.XR.XRNode.LeftHand, out controllerPosition);
+                    GameplayReferences.TryGetControllerRotation(UnityEngine.XR.XRNode.LeftHand, out controllerRotation);
+                }
+
+                controllerForward = controllerRotation * Vector3.forward;
+                pointsArray[0] = controllerPosition;
+                pointsArray[1] = pointsArray[0] + controllerForward * DEFAULT_LENGTH_FOR_LINE_RENDERER;
+                raycastStartPos = controllerPosition;
+                raycastDir = controllerForward;
                 lr.SetPositions(pointsArray);
             }
 
