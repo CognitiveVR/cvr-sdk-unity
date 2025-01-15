@@ -100,11 +100,11 @@ namespace Cognitive3D
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
-            EditorGUILayout.LabelField("Question Set Hook Name",p.Hook);
+            EditorGUILayout.LabelField("Current Question Set Hook",p.Hook);
+            
 
             if (displayOptions == null || displayOptions.Length == 0)
             {
-
                 EditorCore.RefreshExitPollHooks();
                 if (EditorCore.ExitPollHooks != null)
                 {
@@ -116,14 +116,14 @@ namespace Cognitive3D
                 }
             }
 
-            //drop down button
+            // Drop down button
             EditorGUILayout.BeginHorizontal();
 
             EditorGUI.BeginDisabledGroup(EditorCore.ExitPollHooks.Length == 0);
-            _choiceIndex = EditorGUILayout.Popup("Question Set Hook", _choiceIndex, displayOptions);
+            _choiceIndex = EditorGUILayout.Popup("Question Set Hooks", _choiceIndex, displayOptions);
             EditorGUI.EndDisabledGroup();
 
-            //save button
+            // Save button
             if (EditorCore.ExitPollHooks.Length > 0)
             {
                 bool isSameHook = p.Hook == EditorCore.ExitPollHooks[_choiceIndex].name;
@@ -134,16 +134,17 @@ namespace Cognitive3D
                     p.Hook = EditorCore.ExitPollHooks[_choiceIndex].name;
                 }
 
-                GUI.enabled = true;  // Re-enable GUI after the button
+                GUI.enabled = true;
             }
             else
             {
                 EditorGUI.BeginDisabledGroup(true);
                 GUILayout.Button("Save", GUILayout.Width(40));
                 EditorGUI.EndDisabledGroup();
+                displayOptions = null;
             }
 
-            //gui style that has less border so the refresh icon is more clear
+            // GUI style that has less border so the refresh icon is more clear
             int border = 2;
             GUIStyle minimalPaddingButton = new GUIStyle("button");
             minimalPaddingButton.padding = new RectOffset(border, border, border, border);
