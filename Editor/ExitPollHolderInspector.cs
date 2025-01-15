@@ -84,8 +84,8 @@ namespace Cognitive3D
         }
 
         int _choiceIndex = 0;
-        private string[] displayOptions;
-        private bool hasRefreshedExitpollHooks;
+        private bool hasRefreshedExitPollHooks;
+        private bool hasInitExitPollHooks;
 
         public override void OnInspectorGUI()
         {
@@ -102,18 +102,28 @@ namespace Cognitive3D
 
             EditorGUILayout.LabelField("Current Question Set Hook",p.Hook);
             
-
-            if (displayOptions == null || displayOptions.Length == 0)
+            if (!hasInitExitPollHooks)
             {
                 EditorCore.RefreshExitPollHooks();
-                if (EditorCore.ExitPollHooks != null)
+                hasInitExitPollHooks = true;
+            }
+
+            string[] displayOptions = new string[EditorCore.ExitPollHooks.Length];
+            if (!string.IsNullOrEmpty(p.Hook) && _choiceIndex == 0 && displayOptions.Length > 0)
+            {
+                // Try once to select the correct hook
+                for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
                 {
-                    displayOptions = new string[EditorCore.ExitPollHooks.Length];
-                    for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
+                    if (EditorCore.ExitPollHooks[i].name == p.Hook)
                     {
-                        displayOptions[i] = EditorCore.ExitPollHooks[i].name;
+                        _choiceIndex = i;
                     }
                 }
+            }
+            
+            for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
+            {
+                displayOptions[i] = EditorCore.ExitPollHooks[i].name;
             }
 
             // Drop down button
@@ -141,7 +151,6 @@ namespace Cognitive3D
                 EditorGUI.BeginDisabledGroup(true);
                 GUILayout.Button("Save", GUILayout.Width(40));
                 EditorGUI.EndDisabledGroup();
-                displayOptions = null;
             }
 
             // GUI style that has less border so the refresh icon is more clear
@@ -152,13 +161,12 @@ namespace Cognitive3D
                     GUILayout.Height(19)))
             {
                 EditorCore.RefreshExitPollHooks();
-                displayOptions = null;
-                hasRefreshedExitpollHooks = true;
+                hasRefreshedExitPollHooks = true;
             }
 
             EditorGUILayout.EndHorizontal();
 
-            if (hasRefreshedExitpollHooks && EditorCore.ExitPollHooks.Length == 0)
+            if (hasRefreshedExitPollHooks && EditorCore.ExitPollHooks.Length == 0)
             {
                 EditorGUILayout.HelpBox(
                     "No ExitPoll hooks found for this project. Have you set them up on the dashboard yet?",
