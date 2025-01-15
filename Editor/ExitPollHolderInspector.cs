@@ -152,6 +152,7 @@ namespace Cognitive3D
                     GUILayout.Height(19)))
             {
                 EditorCore.RefreshExitPollHooks();
+                displayOptions = null;
                 hasRefreshedExitpollHooks = true;
             }
 
