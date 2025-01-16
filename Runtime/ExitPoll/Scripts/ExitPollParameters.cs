@@ -10,14 +10,12 @@ namespace Cognitive3D
     {
         public string Hook;
 
-        //hides irrelevent options in inspector
+        // Tracking Space
         public ExitPollManager.SpawnType ExitpollSpawnType = ExitPollManager.SpawnType.PlayerRelativeSpace;
 
-        //parenting pointer
-        public Transform PointerParentOverride;
-
-        //spawning or setting pointer
+        // Pointer Settings
         public ExitPollManager.PointerType PointerType;
+        public Transform PointerParentOverride;
         public GameObject PointerOverride;
         public float PointerLineWidth = 0.01f;
         public bool UseDefaultGradient = true;
