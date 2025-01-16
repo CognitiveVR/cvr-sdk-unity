@@ -12,12 +12,9 @@ namespace Cognitive3D
 
         public ExitPollParameters myparameters;
 
-        GameObject pointerInstance = null;
         double StartTime;
-        private bool trackingWasLost;
         private float noTrackingCountdown;
         private const float NO_TRACKING_COUNTDOWN_LIMIT = 35;
-        private const string CONTROLLER_NOT_FOUND = "Controller not found!";
         private readonly string FALLBACK_TO_HMD_POINTER = $"Controller or hands not found for {NO_TRACKING_COUNTDOWN_LIMIT}! Using HMD Pointer.";
 
 #region Begin, End, Update
@@ -32,23 +29,23 @@ namespace Cognitive3D
 
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            InputTracking.trackingLost += OnTrackingLost;
-            InputTracking.trackingAcquired += OnTrackingRegained;
+            InputTracking.trackingLost += ExitPollPointer.OnTrackingLost;
+            InputTracking.trackingAcquired += ExitPollPointer.OnTrackingRegained;
             
-            myparameters = parameters;
+            myparameters = ExitPollPointer.currentExitPollParameters = parameters;
             noTrackingCountdown = 0;
             switch (parameters.PointerType)
             {
                 case ExitPollManager.PointerType.HMD:
-                    SetUpHMDAsPointer();
+                    ExitPollPointer.SetUpHMDAsPointer();
                     break;
 
                 case ExitPollManager.PointerType.ControllersAndHands:
-                    SetupControllerAsPointer(parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerGradient);
+                    ExitPollPointer.SetupControllerAsPointer(parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerGradient);
                     break;
 
                 case ExitPollManager.PointerType.Custom:
-                    SetupCustomPointer(parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerOverride, parameters.PointerGradient);
+                    ExitPollPointer.SetupCustomPointer(parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerOverride, parameters.PointerGradient);
                     break;
             }
             
@@ -98,8 +95,8 @@ namespace Cognitive3D
                 {
                     noTrackingCountdown = 0;
                     GameObject.Destroy(GameplayReferences.PointerController);
-                    SetUpHMDAsPointer();
-                    DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
+                    ExitPollPointer.SetUpHMDAsPointer();
+                    ExitPollPointer.DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
                 }
             }
         }
@@ -108,123 +105,10 @@ namespace Cognitive3D
         {
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
-            InputTracking.trackingLost -= OnTrackingLost;
-            InputTracking.trackingAcquired -= OnTrackingRegained;
+            InputTracking.trackingLost -= ExitPollPointer.OnTrackingLost;
+            InputTracking.trackingAcquired -= ExitPollPointer.OnTrackingRegained;
         }
 #endregion
-
-#region Controllers and Pointers
-        
-        /// <summary>
-        /// Creates an HMDPointer and attaches it to the HMD
-        /// </summary>
-        public void SetUpHMDAsPointer()
-        {
-            GameObject prefab = Resources.Load<GameObject>("HMDPointer");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
-            else
-                Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
-
-            if (pointerInstance != null)
-            {
-                //parent to hmd and zero position
-                GameplayReferences.HMDPointer = pointerInstance;
-                pointerInstance.transform.SetParent(GameplayReferences.HMD);
-                pointerInstance.transform.localPosition = Vector3.zero;
-                pointerInstance.transform.localRotation = Quaternion.identity;
-            }
-        }
-
-        /// <summary>
-        /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
-        /// If no controller is found, it creates an HMDPointer
-        /// </summary>
-        private void SetupControllerAsPointer(ExitPollManager.PointerInputButton inputButton, float pointerWidth, bool useDefaultGradient, Gradient pointerGradient)
-        {
-            GameObject prefab = Resources.Load<GameObject>("PointerController");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
-            else
-                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
-
-            if (pointerInstance != null)
-            {
-                GameplayReferences.PointerController = pointerInstance;
-                pointerInstance.transform.localPosition = Vector3.zero;
-                pointerInstance.transform.localRotation = Quaternion.identity;
-                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.ControllersAndHands, inputButton);
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
-            }
-        }
-
-        private void SetupCustomPointer(float pointerWidth, bool useDefaultGradient, GameObject customPointer, Gradient pointerGradient)
-        {
-            GameObject prefab = Resources.Load<GameObject>("PointerController");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
-            else
-                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
-
-            if (pointerInstance != null)
-            {
-                GameplayReferences.PointerController = pointerInstance;
-                pointerInstance.transform.localPosition = Vector3.zero;
-                pointerInstance.transform.localRotation = Quaternion.identity;
-                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.Custom, customPointer);
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
-            }
-        }
-
-        /// <summary>
-        /// Function to execute when tracking is lost
-        /// </summary>
-        /// <param name="xrNodeState">Information on the node that was lost</param>
-        public void OnTrackingLost(XRNodeState xrNodeState)
-        {
-            if (!xrNodeState.tracked && myparameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
-            {
-                if (xrNodeState.nodeType == XRNode.RightHand || xrNodeState.nodeType == XRNode.LeftHand)
-                {
-                    DisplayControllerError(true, CONTROLLER_NOT_FOUND);
-                    trackingWasLost = true;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Function to execute when tracking is regained
-        /// </summary>
-        /// <param name="xrNodeState">Information on the node that was regained</param>
-        public void OnTrackingRegained(XRNodeState xrNodeState)
-        {
-            if (xrNodeState.tracked && trackingWasLost)
-            {
-                DisplayControllerError(false);
-                trackingWasLost = false;
-            }
-        }
-
-        /// <summary>
-        /// Toggle the display of the error message on the exit poll panel
-        /// </summary>
-        /// <param name="display">True if you want to display an error message; false to hide</param>
-        public void DisplayControllerError(bool display)
-        {
-            CurrentExitPollPanel.DisplayError(display);
-        }
-
-        /// <summary>
-        /// Set the display of the error message on the exit poll panel
-        /// </summary>
-        /// <param name="display">True if you want to display an error message; false to hide</param>
-        /// <param name="errorText">The error message to display</param>
-        public void DisplayControllerError(bool display, string errorText)
-        {
-            CurrentExitPollPanel.DisplayError(display, errorText);
-        }
-
-        #endregion
 
         /// <summary>
         /// A list containing information on each panel <br/>
@@ -449,7 +333,7 @@ namespace Cognitive3D
 #endif
 
                 var newPanelGo = GameObject.Instantiate<GameObject>(prefab,spawnPosition,spawnRotation);
-                CurrentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
+                CurrentExitPollPanel = ExitPollPointer.currentExitPollPanel = newPanelGo.GetComponent<ExitPollPanel>();
 
                 if (CurrentExitPollPanel == null)
                 {
@@ -650,9 +534,9 @@ namespace Cognitive3D
         //destroys spawned pointers
         void Cleanup(bool completedSuccessfully)
         {
-            if (pointerInstance != null)
+            if (ExitPollPointer.pointerInstance != null)
             {
-                GameObject.Destroy(pointerInstance);
+                GameObject.Destroy(ExitPollPointer.pointerInstance);
             }
 
             if (myparameters.OnComplete != null && completedSuccessfully == true)
