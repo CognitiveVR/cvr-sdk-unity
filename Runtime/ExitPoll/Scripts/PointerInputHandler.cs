@@ -130,7 +130,21 @@ namespace Cognitive3D
             if (pointerOverride)
             {
                 Vector3 direction = pointerOverride.transform.rotation * Vector3.forward;
-                UpdatePointer(pointerOverride.transform.position, direction, true, true);
+                UpdatePointer(pointerOverride.transform.position, direction);
+            }
+        }
+
+        private void UpdatePointer(Vector3 start, Vector3 direction)
+        {
+            Vector3 end = start + direction * DEFAULT_LENGTH_FOR_POINTER;
+
+            if (Physics.Raycast(start, direction, out RaycastHit hit, DEFAULT_LENGTH_FOR_POINTER, LayerMask.GetMask("UI")))
+            {
+                PointerVisualizer.Instance.UpdatePointer(start, hit.point);
+            }
+            else
+            {
+                PointerVisualizer.Instance.UpdatePointer(start, end);
             }
         }
 
