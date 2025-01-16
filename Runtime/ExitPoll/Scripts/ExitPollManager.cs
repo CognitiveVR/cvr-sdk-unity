@@ -17,6 +17,7 @@ namespace Cognitive3D
         {
             HMD,
             ControllersAndHands,
+            Custom
         }
         public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
         {

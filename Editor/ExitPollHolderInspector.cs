@@ -101,7 +101,7 @@ namespace Cognitive3D
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.LabelField("Current Question Set Hook",p.Hook);
-            
+
             if (!hasInitExitPollHooks)
             {
                 EditorCore.RefreshExitPollHooks();
@@ -178,12 +178,40 @@ namespace Cognitive3D
             //EditorGUILayout.HelpBox("Customize ExitPoll parameters\nCall public 'Activate' function to create exitpoll", MessageType.Info);
 
             GUILayout.Space(10);
-            EditorGUILayout.LabelField("Controller Tracking", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Pointer Settings", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
             p.PointerType = (ExitPollManager.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
-
+            if (p.PointerType == ExitPollManager.PointerType.Custom)
+            {
+                p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Custom Pointer", p.PointerOverride, typeof(GameObject), true);
+            }
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
+
+             // Add a toggle button to switch between custom and default gradient
+            p.UseDefaultGradient = EditorGUILayout.Toggle("Use Default Gradient", p.UseDefaultGradient);
+
+            EditorGUI.BeginDisabledGroup(p.UseDefaultGradient);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Pointer Gradient Color");
+            if (p.UseDefaultGradient)
+            {
+                Gradient defaultGradient = new Gradient();
+                defaultGradient.colorKeys = new GradientColorKey[]
+                {
+                    new GradientColorKey(EditorCore.GetColorFromHex("#0E6A9F"), 0f),  // Blue
+                    new GradientColorKey(EditorCore.GetColorFromHex("#491BA1"), 0.5f), // Purple
+                    new GradientColorKey(EditorCore.GetColorFromHex("#0A8E42"), 1f)   // Green
+                };
+                EditorGUILayout.GradientField(defaultGradient);
+            }
+            else
+            {
+                p.PointerGradient = EditorGUILayout.GradientField(p.PointerGradient);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
+
             EditorGUI.indentLevel--;
 
             GUILayout.Space(10);
@@ -261,6 +289,10 @@ namespace Cognitive3D
             if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
                 return "Users will interact with the buttons by using controllers and/or hands, if available.";
+            }
+            else if (parameters.PointerType == ExitPollManager.PointerType.Custom)
+            {
+                return "Users will interact with the buttons by using custom pointer.";
             }
             else
             {

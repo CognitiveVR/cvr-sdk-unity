@@ -21,22 +21,42 @@ namespace Cognitive3D
         /// </summary>
         private bool isRightHand;
 
+        private ExitPollManager.PointerType pointerType;
+        private GameObject pointerOverride;
+
 #if C3D_OCULUS
         private List<OVRHand> hands = new List<OVRHand>();
         private OVRHand activeHand;
 #endif
 
+        internal void SetPointerType(ExitPollManager.PointerType pointer, GameObject customPointer = null)
+        {
+            pointerType = pointer;
+
+            if (customPointer)
+            {
+                pointerOverride = customPointer;
+            }
+        }
+
         void Update()
         {
-            var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+            if (pointerType == ExitPollManager.PointerType.ControllersAndHands)
+            {
+                var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
 
-            if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
-            {
-                HandleHandInput();
+                if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
+                {
+                    HandleHandInput();
+                }
+                else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
+                {
+                    HandleControllerInput();
+                }
             }
-            else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
+            else // Custom pointer
             {
-                HandleControllerInput();
+                HandleCustomPointer();
             }
         }
 
@@ -103,6 +123,15 @@ namespace Cognitive3D
             bool activation = (isRightHand ? rightTriggerValue : leftTriggerValue) > 0.5f;
 
             UpdatePointer(controllerPosition, direction, activation, false);
+        }
+
+        private void HandleCustomPointer()
+        {
+            if (pointerOverride)
+            {
+                Vector3 direction = pointerOverride.transform.rotation * Vector3.forward;
+                UpdatePointer(pointerOverride.transform.position, direction, true, true);
+            }
         }
 
         private void UpdatePointer(Vector3 start, Vector3 direction, bool activation, bool fillActivate)

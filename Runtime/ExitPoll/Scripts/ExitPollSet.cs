@@ -37,13 +37,19 @@ namespace Cognitive3D
             
             myparameters = parameters;
             noTrackingCountdown = 0;
-            if (parameters.PointerType == ExitPollManager.PointerType.HMD)
+            switch (parameters.PointerType)
             {
-                SetUpHMDAsPointer();
-            }
-            else if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
-            {
-                SetupControllerAsPointer();
+                case ExitPollManager.PointerType.HMD:
+                    SetUpHMDAsPointer();
+                    break;
+
+                case ExitPollManager.PointerType.ControllersAndHands:
+                    SetupControllerAsPointer(parameters.UseDefaultGradient, parameters.PointerGradient);
+                    break;
+
+                case ExitPollManager.PointerType.Custom:
+                    SetupCustomPointer(parameters.UseDefaultGradient, parameters.PointerOverride, parameters.PointerGradient);
+                    break;
             }
             
             //this should take all previously set variables (from functions) and create an exitpoll parameters object
@@ -108,27 +114,7 @@ namespace Cognitive3D
 #endregion
 
 #region Controllers and Pointers
-        /// <summary>
-        /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
-        /// If no controller is found, it creates an HMDPointer
-        /// </summary>
-        private void SetupControllerAsPointer()
-        {
-            GameObject prefab = Resources.Load<GameObject>("PointerController");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
-            else
-                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
-
-            if (pointerInstance != null)
-            {
-                GameplayReferences.PointerController = pointerInstance;
-                pointerInstance.transform.localPosition = Vector3.zero;
-                pointerInstance.transform.localRotation = Quaternion.identity;
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer();
-            }
-        }
-
+        
         /// <summary>
         /// Creates an HMDPointer and attaches it to the HMD
         /// </summary>
@@ -147,6 +133,46 @@ namespace Cognitive3D
                 pointerInstance.transform.SetParent(GameplayReferences.HMD);
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
+            }
+        }
+
+        /// <summary>
+        /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
+        /// If no controller is found, it creates an HMDPointer
+        /// </summary>
+        private void SetupControllerAsPointer(bool useDefaultGradient, Gradient pointerGradient)
+        {
+            GameObject prefab = Resources.Load<GameObject>("PointerController");
+            if (prefab != null)
+                pointerInstance = GameObject.Instantiate(prefab);
+            else
+                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
+
+            if (pointerInstance != null)
+            {
+                GameplayReferences.PointerController = pointerInstance;
+                pointerInstance.transform.localPosition = Vector3.zero;
+                pointerInstance.transform.localRotation = Quaternion.identity;
+                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.ControllersAndHands);
+                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(useDefaultGradient, pointerGradient);
+            }
+        }
+
+        private void SetupCustomPointer(bool useDefaultGradient, GameObject customPointer, Gradient pointerGradient)
+        {
+            GameObject prefab = Resources.Load<GameObject>("PointerController");
+            if (prefab != null)
+                pointerInstance = GameObject.Instantiate(prefab);
+            else
+                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
+
+            if (pointerInstance != null)
+            {
+                GameplayReferences.PointerController = pointerInstance;
+                pointerInstance.transform.localPosition = Vector3.zero;
+                pointerInstance.transform.localRotation = Quaternion.identity;
+                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.Custom, customPointer);
+                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(useDefaultGradient, pointerGradient);
             }
         }
 
