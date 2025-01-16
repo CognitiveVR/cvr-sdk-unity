@@ -186,6 +186,10 @@ namespace Cognitive3D
             {
                 p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Custom Pointer", p.PointerOverride, typeof(GameObject), true);
             }
+            if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
+            {
+                p.PointerActivationButton = (ExitPollManager.PointerInputButton)EditorGUILayout.EnumPopup("Pointer Input Button", p.PointerActivationButton);
+            }
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
 
             if (p.PointerType == ExitPollManager.PointerType.Custom || p.PointerType == ExitPollManager.PointerType.ControllersAndHands)

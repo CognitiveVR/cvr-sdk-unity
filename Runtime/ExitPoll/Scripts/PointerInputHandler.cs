@@ -22,12 +22,19 @@ namespace Cognitive3D
         private bool isRightHand;
 
         private ExitPollManager.PointerType pointerType;
+        private ExitPollManager.PointerInputButton pointerInputButton;
         private GameObject pointerOverride;
 
 #if C3D_OCULUS
         private List<OVRHand> hands = new List<OVRHand>();
         private OVRHand activeHand;
 #endif
+
+        internal void SetPointerType(ExitPollManager.PointerType pointer, ExitPollManager.PointerInputButton inputButton)
+        {
+            pointerType = pointer;
+            pointerInputButton = inputButton;
+        }
 
         internal void SetPointerType(ExitPollManager.PointerType pointer, GameObject customPointer = null)
         {
@@ -92,35 +99,28 @@ namespace Cognitive3D
 
         private void HandleControllerInput()
         {
-            float rightTriggerValue = GameplayReferences.rightTriggerValue;
-            float leftTriggerValue = GameplayReferences.leftTriggerValue;
+            // Determine which hand is active based on button press
+            bool isRightHandActive = ExitPollUtil.GetButtonState(UnityEngine.XR.XRNode.RightHand, ExitPollUtil.GetButtonFeature(pointerInputButton));
+            bool isLeftHandActive = ExitPollUtil.GetButtonState(UnityEngine.XR.XRNode.LeftHand, ExitPollUtil.GetButtonFeature(pointerInputButton));
 
-            // Determine which controller is active based on trigger press
-            if (rightTriggerValue > 0.5f)
+            if (isRightHandActive && !isRightHand)
             {
-                isRightHand = true; // Switch to right controller
+                isRightHand = true; // Switch to right hand
             }
-            else if (leftTriggerValue > 0.5f)
+            else if (isLeftHandActive && isRightHand)
             {
-                isRightHand = false; // Switch to left controller
+                isRightHand = false; // Switch to left hand
             }
 
+            // Set active controller based on which button was pressed
+            UnityEngine.XR.XRNode activeController = isRightHand ? UnityEngine.XR.XRNode.RightHand : UnityEngine.XR.XRNode.LeftHand;
             Vector3 controllerPosition;
             Quaternion controllerRotation;
-
-            if (isRightHand)
-            {
-                GameplayReferences.TryGetControllerPosition(UnityEngine.XR.XRNode.RightHand, out controllerPosition);
-                GameplayReferences.TryGetControllerRotation(UnityEngine.XR.XRNode.RightHand, out controllerRotation);
-            }
-            else
-            {
-                GameplayReferences.TryGetControllerPosition(UnityEngine.XR.XRNode.LeftHand, out controllerPosition);
-                GameplayReferences.TryGetControllerRotation(UnityEngine.XR.XRNode.LeftHand, out controllerRotation);
-            }
+            GameplayReferences.TryGetControllerPosition(activeController, out controllerPosition);
+            GameplayReferences.TryGetControllerRotation(activeController, out controllerRotation);
 
             Vector3 direction = controllerRotation * Vector3.forward;
-            bool activation = (isRightHand ? rightTriggerValue : leftTriggerValue) > 0.5f;
+            bool activation = ExitPollUtil.GetButtonState(activeController, ExitPollUtil.GetButtonFeature(pointerInputButton));
 
             UpdatePointer(controllerPosition, direction, activation, false);
         }

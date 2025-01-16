@@ -19,6 +19,14 @@ namespace Cognitive3D
             ControllersAndHands,
             Custom
         }
+        public enum PointerInputButton
+        {
+            Trigger,
+            Grip,
+            PrimaryButton,
+            SecondaryButton,
+            Primary2DAxisClick
+        }
         public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
         {
             parameters.Hook = hookName;

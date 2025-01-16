@@ -44,7 +44,7 @@ namespace Cognitive3D
                     break;
 
                 case ExitPollManager.PointerType.ControllersAndHands:
-                    SetupControllerAsPointer(parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerGradient);
+                    SetupControllerAsPointer(parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerGradient);
                     break;
 
                 case ExitPollManager.PointerType.Custom:
@@ -140,7 +140,7 @@ namespace Cognitive3D
         /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
         /// If no controller is found, it creates an HMDPointer
         /// </summary>
-        private void SetupControllerAsPointer(float pointerWidth, bool useDefaultGradient, Gradient pointerGradient)
+        private void SetupControllerAsPointer(ExitPollManager.PointerInputButton inputButton, float pointerWidth, bool useDefaultGradient, Gradient pointerGradient)
         {
             GameObject prefab = Resources.Load<GameObject>("PointerController");
             if (prefab != null)
@@ -153,7 +153,7 @@ namespace Cognitive3D
                 GameplayReferences.PointerController = pointerInstance;
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
-                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.ControllersAndHands);
+                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.ControllersAndHands, inputButton);
                 pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
             }
         }
