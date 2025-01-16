@@ -44,11 +44,11 @@ namespace Cognitive3D
                     break;
 
                 case ExitPollManager.PointerType.ControllersAndHands:
-                    SetupControllerAsPointer(parameters.UseDefaultGradient, parameters.PointerGradient);
+                    SetupControllerAsPointer(parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerGradient);
                     break;
 
                 case ExitPollManager.PointerType.Custom:
-                    SetupCustomPointer(parameters.UseDefaultGradient, parameters.PointerOverride, parameters.PointerGradient);
+                    SetupCustomPointer(parameters.PointerLineWidth, parameters.UseDefaultGradient, parameters.PointerOverride, parameters.PointerGradient);
                     break;
             }
             
@@ -140,7 +140,7 @@ namespace Cognitive3D
         /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
         /// If no controller is found, it creates an HMDPointer
         /// </summary>
-        private void SetupControllerAsPointer(bool useDefaultGradient, Gradient pointerGradient)
+        private void SetupControllerAsPointer(float pointerWidth, bool useDefaultGradient, Gradient pointerGradient)
         {
             GameObject prefab = Resources.Load<GameObject>("PointerController");
             if (prefab != null)
@@ -154,11 +154,11 @@ namespace Cognitive3D
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
                 pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.ControllersAndHands);
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(useDefaultGradient, pointerGradient);
+                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
             }
         }
 
-        private void SetupCustomPointer(bool useDefaultGradient, GameObject customPointer, Gradient pointerGradient)
+        private void SetupCustomPointer(float pointerWidth, bool useDefaultGradient, GameObject customPointer, Gradient pointerGradient)
         {
             GameObject prefab = Resources.Load<GameObject>("PointerController");
             if (prefab != null)
@@ -172,7 +172,7 @@ namespace Cognitive3D
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
                 pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.Custom, customPointer);
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(useDefaultGradient, pointerGradient);
+                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
             }
         }
 

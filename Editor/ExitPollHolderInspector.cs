@@ -188,29 +188,37 @@ namespace Cognitive3D
             }
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
 
-             // Add a toggle button to switch between custom and default gradient
-            p.UseDefaultGradient = EditorGUILayout.Toggle("Use Default Gradient", p.UseDefaultGradient);
+            if (p.PointerType == ExitPollManager.PointerType.Custom || p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
+            {
+                p.PointerLineWidth = EditorGUILayout.FloatField(
+                    new GUIContent("Pointer Line Width Multiplier","Adjusts the overall scaling factor applied to the LineRenderer.widthCurve, determining the final width of the pointer line."), 
+                    p.PointerLineWidth
+                );
 
-            EditorGUI.BeginDisabledGroup(p.UseDefaultGradient);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Pointer Gradient Color");
-            if (p.UseDefaultGradient)
-            {
-                Gradient defaultGradient = new Gradient();
-                defaultGradient.colorKeys = new GradientColorKey[]
+                // Add a toggle button to switch between custom and default gradient
+                p.UseDefaultGradient = EditorGUILayout.Toggle("Use Default Gradient", p.UseDefaultGradient);
+
+                EditorGUI.BeginDisabledGroup(p.UseDefaultGradient);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField("Pointer Gradient Color");
+                if (p.UseDefaultGradient)
                 {
-                    new GradientColorKey(EditorCore.GetColorFromHex("#0E6A9F"), 0f),  // Blue
-                    new GradientColorKey(EditorCore.GetColorFromHex("#491BA1"), 0.5f), // Purple
-                    new GradientColorKey(EditorCore.GetColorFromHex("#0A8E42"), 1f)   // Green
-                };
-                EditorGUILayout.GradientField(defaultGradient);
+                    Gradient defaultGradient = new Gradient();
+                    defaultGradient.colorKeys = new GradientColorKey[]
+                    {
+                        new GradientColorKey(EditorCore.GetColorFromHex("#491BA1"), 0f),  // Purple
+                        new GradientColorKey(EditorCore.GetColorFromHex("#0E6A9F"), 0.5f), // Blue
+                        new GradientColorKey(EditorCore.GetColorFromHex("#0A8E42"), 1f)   // Green
+                    };
+                    EditorGUILayout.GradientField(defaultGradient);
+                }
+                else
+                {
+                    p.PointerGradient = EditorGUILayout.GradientField(p.PointerGradient);
+                }
+                EditorGUILayout.EndHorizontal();
+                EditorGUI.EndDisabledGroup();
             }
-            else
-            {
-                p.PointerGradient = EditorGUILayout.GradientField(p.PointerGradient);
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUI.EndDisabledGroup();
 
             EditorGUI.indentLevel--;
 

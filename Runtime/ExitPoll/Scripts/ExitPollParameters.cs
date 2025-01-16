@@ -19,6 +19,7 @@ namespace Cognitive3D
         //spawning or setting pointer
         public ExitPollManager.PointerType PointerType;
         public GameObject PointerOverride;
+        public float PointerLineWidth = 0.01f;
         public bool UseDefaultGradient = true;
         public Gradient PointerGradient;
 
