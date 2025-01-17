@@ -259,6 +259,14 @@ namespace Cognitive3D
             EditorGUI.indentLevel--;
 
             GUILayout.Space(10);
+            EditorGUILayout.LabelField("Panel UI Settings", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            p.PanelTextMaterial = (Material)EditorGUILayout.ObjectField("Panel Text Material", p.PanelTextMaterial, typeof(Material), true);
+            p.PanelErrorTextMaterial = (Material)EditorGUILayout.ObjectField("Panel Error Text Material", p.PanelErrorTextMaterial, typeof(Material), true);
+            p.PanelBackgroundMaterial = (Material)EditorGUILayout.ObjectField("Panel Background Material", p.PanelBackgroundMaterial, typeof(Material), true);
+            EditorGUI.indentLevel--;
+
+            GUILayout.Space(10);
             var onbegin = serializedObject.FindProperty("Parameters").FindPropertyRelative("OnBegin");
             EditorGUILayout.PropertyField(onbegin);
             var eventRect = GUILayoutUtility.GetLastRect();

@@ -34,6 +34,10 @@ namespace Cognitive3D
         public GameObject ScalePanelOverride;
         public GameObject VoicePanelOverride;
 
+        public Material PanelTextMaterial;
+        public Material PanelErrorTextMaterial;
+        public Material PanelBackgroundMaterial;
+
         public UnityEngine.Events.UnityEvent OnBegin; //called when the exitpoll starts and a valid question set is displayed
         public UnityEngine.Events.UnityEvent OnComplete; //called when all the questions are answered or skipped
         public UnityEngine.Events.UnityEvent OnClose; //called when the panel closes, regardless of reason
