@@ -39,7 +39,7 @@ namespace Cognitive3D
         /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
         /// If no controller is found, it creates an HMDPointer
         /// </summary>
-        internal static void SetupControllerAsPointer(ExitPollManager.PointerInputButton inputButton, float pointerWidth, bool useDefaultGradient, Gradient pointerGradient)
+        internal static void SetupControllerAsPointer(ExitPollManager.PointerInputButton inputButton, float pointerWidth, Gradient pointerGradient)
         {
             GameObject prefab = Resources.Load<GameObject>("PointerController");
             if (prefab != null)
@@ -52,26 +52,14 @@ namespace Cognitive3D
                 GameplayReferences.PointerController = pointerInstance;
                 pointerInstance.transform.localPosition = Vector3.zero;
                 pointerInstance.transform.localRotation = Quaternion.identity;
-                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.ControllersAndHands, inputButton);
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
-            }
-        }
-
-        internal static void SetupCustomPointer(float pointerWidth, bool useDefaultGradient, GameObject customPointer, Gradient pointerGradient)
-        {
-            GameObject prefab = Resources.Load<GameObject>("PointerController");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
-            else
-                Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
-
-            if (pointerInstance != null)
-            {
-                GameplayReferences.PointerController = pointerInstance;
-                pointerInstance.transform.localPosition = Vector3.zero;
-                pointerInstance.transform.localRotation = Quaternion.identity;
-                pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(ExitPollManager.PointerType.Custom, customPointer);
-                pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, useDefaultGradient, pointerGradient);
+                if (pointerInstance.GetComponent<PointerInputHandler>())
+                {
+                    pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(inputButton);
+                }
+                if (pointerInstance.GetComponent<PointerVisualizer>())
+                {
+                    pointerInstance.GetComponent<PointerVisualizer>().ConstructDefaultLineRenderer(pointerWidth, pointerGradient);
+                }
             }
         }
 

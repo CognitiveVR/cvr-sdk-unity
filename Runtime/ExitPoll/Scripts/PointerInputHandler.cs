@@ -20,50 +20,30 @@ namespace Cognitive3D
         /// True if right hand; false otherwise
         /// </summary>
         private bool isRightHand;
-
-        private ExitPollManager.PointerType pointerType;
+        
         private ExitPollManager.PointerInputButton pointerInputButton;
-        private GameObject pointerOverride;
 
 #if C3D_OCULUS
         private List<OVRHand> hands = new List<OVRHand>();
         private OVRHand activeHand;
 #endif
 
-        internal void SetPointerType(ExitPollManager.PointerType pointer, ExitPollManager.PointerInputButton inputButton)
+        internal void SetPointerType(ExitPollManager.PointerInputButton inputButton)
         {
-            pointerType = pointer;
             pointerInputButton = inputButton;
-        }
-
-        internal void SetPointerType(ExitPollManager.PointerType pointer, GameObject customPointer = null)
-        {
-            pointerType = pointer;
-
-            if (customPointer)
-            {
-                pointerOverride = customPointer;
-            }
         }
 
         void Update()
         {
-            if (pointerType == ExitPollManager.PointerType.ControllersAndHands)
-            {
-                var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+            var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
 
-                if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
-                {
-                    HandleHandInput();
-                }
-                else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
-                {
-                    HandleControllerInput();
-                }
-            }
-            else // Custom pointer
+            if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
             {
-                HandleCustomPointer();
+                HandleHandInput();
+            }
+            else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
+            {
+                HandleControllerInput();
             }
         }
 
@@ -125,29 +105,6 @@ namespace Cognitive3D
             UpdatePointer(controllerPosition, direction, activation, false);
         }
 
-        private void HandleCustomPointer()
-        {
-            if (pointerOverride)
-            {
-                Vector3 direction = pointerOverride.transform.rotation * Vector3.forward;
-                UpdatePointer(pointerOverride.transform.position, direction);
-            }
-        }
-
-        private void UpdatePointer(Vector3 start, Vector3 direction)
-        {
-            Vector3 end = start + direction * DEFAULT_LENGTH_FOR_POINTER;
-
-            if (Physics.Raycast(start, direction, out RaycastHit hit, DEFAULT_LENGTH_FOR_POINTER, LayerMask.GetMask("UI")))
-            {
-                PointerVisualizer.Instance.UpdatePointer(start, hit.point);
-            }
-            else
-            {
-                PointerVisualizer.Instance.UpdatePointer(start, end);
-            }
-        }
-
         private void UpdatePointer(Vector3 start, Vector3 direction, bool activation, bool fillActivate)
         {
             Vector3 end = start + direction * DEFAULT_LENGTH_FOR_POINTER;
@@ -159,11 +116,18 @@ namespace Cognitive3D
                 {
                     button.SetPointerFocus(activation, fillActivate);
                 }
-                PointerVisualizer.Instance.UpdatePointer(start, hit.point);
+
+                if (gameObject.GetComponent<PointerVisualizer>())
+                {
+                    gameObject.GetComponent<PointerVisualizer>().UpdatePointer(start, hit.point);
+                }
             }
             else
             {
-                PointerVisualizer.Instance.UpdatePointer(start, end);
+                if (gameObject.GetComponent<PointerVisualizer>())
+                {
+                    gameObject.GetComponent<PointerVisualizer>().UpdatePointer(start, end);
+                }
             }
         }
     }

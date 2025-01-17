@@ -522,25 +522,6 @@ namespace Cognitive3D
             GUILayout.Space(size);
         }
 
-        /// <summary>
-        /// Helper method to convert hex to Color
-        /// </summary>
-        /// <param name="hex"></param>
-        /// <returns></returns>
-        public static Color GetColorFromHex(string hex)
-        {
-            Color color;
-            if (ColorUtility.TryParseHtmlString(hex, out color))
-            {
-                return color;
-            }
-            else
-            {
-                // Default color in case the hex is invalid
-                return Color.white;
-            }
-        }
-
         #endregion
 
         #region Icons and Textures

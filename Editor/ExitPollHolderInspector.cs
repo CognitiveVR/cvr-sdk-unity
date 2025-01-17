@@ -182,46 +182,23 @@ namespace Cognitive3D
 
             EditorGUI.indentLevel++;
             p.PointerType = (ExitPollManager.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
-            if (p.PointerType == ExitPollManager.PointerType.Custom)
-            {
-                p.PointerOverride = (GameObject)EditorGUILayout.ObjectField("Custom Pointer", p.PointerOverride, typeof(GameObject), true);
-            }
             if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
                 p.PointerActivationButton = (ExitPollManager.PointerInputButton)EditorGUILayout.EnumPopup("Pointer Input Button", p.PointerActivationButton);
             }
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
 
-            if (p.PointerType == ExitPollManager.PointerType.Custom || p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
+            if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
                 p.PointerLineWidth = EditorGUILayout.FloatField(
                     new GUIContent("Pointer Line Width Multiplier","Adjusts the overall scaling factor applied to the LineRenderer.widthCurve, determining the final width of the pointer line."), 
                     p.PointerLineWidth
                 );
-
-                // Add a toggle button to switch between custom and default gradient
-                p.UseDefaultGradient = EditorGUILayout.Toggle("Use Default Gradient", p.UseDefaultGradient);
-
-                EditorGUI.BeginDisabledGroup(p.UseDefaultGradient);
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Pointer Gradient Color");
-                if (p.UseDefaultGradient)
-                {
-                    Gradient defaultGradient = new Gradient();
-                    defaultGradient.colorKeys = new GradientColorKey[]
-                    {
-                        new GradientColorKey(EditorCore.GetColorFromHex("#491BA1"), 0f),  // Purple
-                        new GradientColorKey(EditorCore.GetColorFromHex("#0E6A9F"), 0.5f), // Blue
-                        new GradientColorKey(EditorCore.GetColorFromHex("#0A8E42"), 1f)   // Green
-                    };
-                    EditorGUILayout.GradientField(defaultGradient);
-                }
-                else
-                {
-                    p.PointerGradient = EditorGUILayout.GradientField(p.PointerGradient);
-                }
-                EditorGUILayout.EndHorizontal();
-                EditorGUI.EndDisabledGroup();
+                
+                p.PointerGradient = EditorGUILayout.GradientField(
+                    new GUIContent("Pointer Gradient Color","Defines the gradient color of the pointer line. Customize this to set how the pointer visually transitions between colors."), 
+                    p.PointerGradient
+                );
             }
 
             EditorGUI.indentLevel--;

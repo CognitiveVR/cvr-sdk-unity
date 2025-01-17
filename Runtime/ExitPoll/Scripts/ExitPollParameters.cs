@@ -19,8 +19,13 @@ namespace Cognitive3D
         public Transform PointerParentOverride;
         public GameObject PointerOverride;
         public float PointerLineWidth = 0.01f;
-        public bool UseDefaultGradient = true;
-        public Gradient PointerGradient;
+        public Gradient PointerGradient = new Gradient { colorKeys = new GradientColorKey[] 
+            { 
+                new GradientColorKey(new Color(0.286f, 0.106f, 0.631f, 1f), 0f), // Purple
+                new GradientColorKey(new Color(0.055f, 0.416f, 0.624f, 1f), 0.5f), // Blue
+                new GradientColorKey(new Color(0.039f, 0.557f, 0.259f, 1f), 1f) // Green
+            } 
+        };
 
         public GameObject BoolPanelOverride;
         public GameObject HappyPanelOverride;
