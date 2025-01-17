@@ -253,8 +253,8 @@ namespace Cognitive3D
             p.BoolPanelOverride = (GameObject)EditorGUILayout.ObjectField("Bool Panel", p.BoolPanelOverride, typeof(GameObject), true);
             p.HappyPanelOverride = (GameObject)EditorGUILayout.ObjectField("Happy Panel", p.HappyPanelOverride, typeof(GameObject), true);
             p.ThumbsPanelOverride = (GameObject)EditorGUILayout.ObjectField("Thumbs Panel", p.ThumbsPanelOverride, typeof(GameObject), true);
-            p.MultiplePanelOverride = (GameObject)EditorGUILayout.ObjectField("Multiple Pane", p.MultiplePanelOverride, typeof(GameObject), true);
-            p.ScalePanelOverride = (GameObject)EditorGUILayout.ObjectField("Scale Pane", p.ScalePanelOverride, typeof(GameObject), true);
+            p.MultiplePanelOverride = (GameObject)EditorGUILayout.ObjectField("Multiple Panel", p.MultiplePanelOverride, typeof(GameObject), true);
+            p.ScalePanelOverride = (GameObject)EditorGUILayout.ObjectField("Scale Panel", p.ScalePanelOverride, typeof(GameObject), true);
             p.VoicePanelOverride = (GameObject)EditorGUILayout.ObjectField("Voice Panel", p.VoicePanelOverride, typeof(GameObject), true);
             EditorGUI.indentLevel--;
 
