@@ -12,27 +12,30 @@ namespace Cognitive3D
     public class VirtualButton : MonoBehaviour, IPointerFocus
     {
         /// <summary>
-        /// Don't consider clicks on button if this is false
+        /// By default, this is set to false for the confirm button and becomes enabled after an answer is selected.
         /// </summary>
-        [Tooltip("If false, button clicks will be ignored.")]
+        [Tooltip("Set to true to allow the button to be clickable.")]
         public bool isEnabled = true;
 
         /// <summary>
-        /// The image that will fill when focused (if slowFill is true)
+        /// The image component that fills up when the button is focused, if slowFill is enabled.
         /// </summary>
+        [Tooltip("The image that will visually fill when the button is focused, applicable only if slowFill is enabled.")]
         [SerializeField]
         protected Image fillImage;
 
         /// <summary>
-        /// The Image for the UI of the button <br/>
-        /// Used to update colour
+        /// The image component for the button's UI. <br/>
+        /// Used to update the button's color.
         /// </summary>
+        [Tooltip("The image used for the button's UI. Allows updating the button's color.")]
         [SerializeField]
         protected Image buttonImage;
 
         /// <summary>
-        /// How long to fill button before invoking confirm
+        /// Duration in seconds for the button to fill before confirming the action. 
         /// </summary>
+        [Tooltip("Time in seconds for the button to fill before invoking the confirm action.")]
         [SerializeField]
         protected float FillDuration = 1;
 
@@ -49,16 +52,18 @@ namespace Cognitive3D
         private Color selectedColor = new Color(0, 1, 0.05f, 1);
 
         /// <summary>
-        /// Events/function to execute once the button is clicked
+        /// Event or function to be executed when the button is clicked and confirmed.
         /// </summary>
+        [Tooltip("Event/function triggered when the button is clicked and the fill is completed.")]
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         [SerializeField]
         protected UnityEngine.Events.UnityEvent OnConfirm;
 
         /// <summary>
-        /// Set to true if you want buttons to resize
+        /// Set to true if you want the buttons to resize dynamically.
         /// </summary>
         [Header("Resize Settings")]
+        [Tooltip("Enable this to allow the button to resize dynamically.")]
         [SerializeField]
         private bool dynamicallyResize;
 
@@ -67,6 +72,7 @@ namespace Cognitive3D
         /// We need this to adjust collisions while resizing buttons <br/>
         /// Consider using GetComponent instead of keeping as a public var
         /// </summary>
+        [Tooltip("Collider reference used for adjusting button collision during resizing.")]
         [SerializeField]
         private BoxCollider boxCollider;
 
@@ -75,6 +81,7 @@ namespace Cognitive3D
         /// We need this to adjust the UI while resizing buttons <br/>
         /// Consider using GetComponent instead of keeping as a public var
         /// </summary>
+        [Tooltip("RectTransform reference used for adjusting button size and position during resizing.")]
         [SerializeField]
         private RectTransform rectTransform;
 
@@ -189,54 +196,54 @@ namespace Cognitive3D
         /// </summary>
         protected virtual void LateUpdate()
         {
-            if (isEnabled && !isSelected)
-            {
-                if (!gameObject.activeInHierarchy) { return; }
+            if (isSelected) { return; }
+            if (!isEnabled) { return; }
 
-                // Button interactable and focused
-                if (canActivate && focusThisFrame)
+            if (!gameObject.activeInHierarchy) { return; }
+
+            // Button interactable and focused
+            if (canActivate && focusThisFrame)
+            {
+                // Immediately "click": usually used by controller
+                if (!slowFill)
                 {
-                    // Immediately "click": usually used by controller
-                    if (!slowFill)
+                    StartCoroutine(FilledEvent());
+                    OnConfirm.Invoke();
+                }
+                else // Increment the gradual fill: usually used by hand and hmd gaze
+                {
+                    FillAmount += Time.deltaTime;
+                    // Fill complete, thus "click"
+                    if (FillAmount > FillDuration)
                     {
+                        canActivate = false;
                         StartCoroutine(FilledEvent());
                         OnConfirm.Invoke();
                     }
-                    else // Increment the gradual fill: usually used by hand and hmd gaze
-                    {
-                        FillAmount += Time.deltaTime;
-                        // Fill complete, thus "click"
-                        if (FillAmount > FillDuration)
-                        {
-                            canActivate = false;
-                            StartCoroutine(FilledEvent());
-                            OnConfirm.Invoke();
-                        }
-                    }
                 }
-
-                // Make it interactable again
-                if (!canActivate && FillAmount <= 0f && slowFill)
-                {
-                    canActivate = true; 
-                }
-
-
-                // Button interactable and not focused: unfill the fill
-                if (!focusThisFrame && canActivate)
-                {
-                    FillAmount -= Time.deltaTime;
-                    FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
-                }
-
-                // Update the button image
-                if (fillImage != null && slowFill)
-                {
-                    fillImage.fillAmount = FillAmount / FillDuration;
-                }
-
-                focusThisFrame = false;
             }
+
+            // Make it interactable again
+            if (!canActivate && FillAmount <= 0f && slowFill)
+            {
+                canActivate = true; 
+            }
+
+
+            // Button interactable and not focused: unfill the fill
+            if (!focusThisFrame && canActivate)
+            {
+                FillAmount -= Time.deltaTime;
+                FillAmount = Mathf.Clamp(FillAmount, 0, FillDuration);
+            }
+
+            // Update the button image
+            if (fillImage != null && slowFill)
+            {
+                fillImage.fillAmount = FillAmount / FillDuration;
+            }
+
+            focusThisFrame = false;
         }
 
         /// <summary>

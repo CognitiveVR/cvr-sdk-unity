@@ -10,7 +10,13 @@ namespace Cognitive3D
 {
     public interface IPointerFocus
     {
-        void SetPointerFocus(bool activation, bool fill);
+        /// <summary>
+        /// Sets the focus state for the pointer when it hovers over the button.
+        /// If the hover is true, the button will begin to slowly fill, and once the fill is complete, the button is considered selected.
+        /// </summary>
+        /// <param name="activation">Indicates if the button is being clicked (true) or not (false).</param>
+        /// <param name="hover">Indicates whether the button should visually start filling (true for fill, false to stop the fill).</param>
+        void SetPointerFocus(bool activation, bool hover);
         MonoBehaviour MonoBehaviour { get; }
     }
 }
