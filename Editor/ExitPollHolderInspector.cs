@@ -188,13 +188,26 @@ namespace Cognitive3D
             }
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
 
+            if (p.PointerType == ExitPollManager.PointerType.HMD)
+            {
+                p.HMDPointerPrefab = (GameObject)EditorGUILayout.ObjectField(
+                    new GUIContent("HMD Pointer Prefab","Prefab responsible for managing pointer input and visualizing the pointer."), 
+                    p.HMDPointerPrefab, typeof(GameObject), true
+                );
+            }
+
             if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
+                p.PointerControllerPrefab = (GameObject)EditorGUILayout.ObjectField(
+                    new GUIContent("Pointer Controller Prefab","Prefab responsible for managing pointer input and visualizing the pointer."), 
+                    p.PointerControllerPrefab, typeof(GameObject), true
+                );
+
                 p.PointerLineWidth = EditorGUILayout.FloatField(
                     new GUIContent("Pointer Line Width Multiplier","Adjusts the overall scaling factor applied to the LineRenderer.widthCurve, determining the final width of the pointer line."), 
                     p.PointerLineWidth
                 );
-                
+
                 p.PointerGradient = EditorGUILayout.GradientField(
                     new GUIContent("Pointer Gradient Color","Defines the gradient color of the pointer line. Customize this to set how the pointer visually transitions between colors."), 
                     p.PointerGradient
@@ -235,14 +248,14 @@ namespace Cognitive3D
 
 
             GUILayout.Space(10);
-            EditorGUILayout.LabelField("Panel Overrides", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Panel Prefabs", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
-            p.BoolPanelOverride = (GameObject)EditorGUILayout.ObjectField("Bool Panel Override", p.BoolPanelOverride, typeof(GameObject), true);
-            p.HappyPanelOverride = (GameObject)EditorGUILayout.ObjectField("Happy Panel Override", p.HappyPanelOverride, typeof(GameObject), true);
-            p.ThumbsPanelOverride = (GameObject)EditorGUILayout.ObjectField("Thumbs Panel Override", p.ThumbsPanelOverride, typeof(GameObject), true);
-            p.MultiplePanelOverride = (GameObject)EditorGUILayout.ObjectField("Multiple Panel Override", p.MultiplePanelOverride, typeof(GameObject), true);
-            p.ScalePanelOverride = (GameObject)EditorGUILayout.ObjectField("Scale Panel Override", p.ScalePanelOverride, typeof(GameObject), true);
-            p.VoicePanelOverride = (GameObject)EditorGUILayout.ObjectField("Voice Panel Override", p.VoicePanelOverride, typeof(GameObject), true);
+            p.BoolPanelOverride = (GameObject)EditorGUILayout.ObjectField("Bool Panel", p.BoolPanelOverride, typeof(GameObject), true);
+            p.HappyPanelOverride = (GameObject)EditorGUILayout.ObjectField("Happy Panel", p.HappyPanelOverride, typeof(GameObject), true);
+            p.ThumbsPanelOverride = (GameObject)EditorGUILayout.ObjectField("Thumbs Panel", p.ThumbsPanelOverride, typeof(GameObject), true);
+            p.MultiplePanelOverride = (GameObject)EditorGUILayout.ObjectField("Multiple Pane", p.MultiplePanelOverride, typeof(GameObject), true);
+            p.ScalePanelOverride = (GameObject)EditorGUILayout.ObjectField("Scale Pane", p.ScalePanelOverride, typeof(GameObject), true);
+            p.VoicePanelOverride = (GameObject)EditorGUILayout.ObjectField("Voice Panel", p.VoicePanelOverride, typeof(GameObject), true);
             EditorGUI.indentLevel--;
 
             GUILayout.Space(10);

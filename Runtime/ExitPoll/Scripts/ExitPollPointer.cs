@@ -17,11 +17,10 @@ namespace Cognitive3D
         /// <summary>
         /// Creates an HMDPointer and attaches it to the HMD
         /// </summary>
-        internal static void SetUpHMDAsPointer()
+        internal static void SetUpHMDAsPointer(GameObject pointerPrefab)
         {
-            GameObject prefab = Resources.Load<GameObject>("HMDPointer");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
+            if (pointerPrefab != null)
+                pointerInstance = GameObject.Instantiate(pointerPrefab);
             else
                 Debug.LogError("Spawning Exitpoll HMD Pointer, but cannot find prefab \"HMDPointer\" in Resources!");
 
@@ -39,11 +38,10 @@ namespace Cognitive3D
         /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
         /// If no controller is found, it creates an HMDPointer
         /// </summary>
-        internal static void SetupControllerAsPointer(ExitPollManager.PointerInputButton inputButton, float pointerWidth, Gradient pointerGradient)
+        internal static void SetupControllerAsPointer(GameObject pointerPrefab, ExitPollManager.PointerInputButton inputButton, float pointerWidth, Gradient pointerGradient)
         {
-            GameObject prefab = Resources.Load<GameObject>("PointerController");
-            if (prefab != null)
-                pointerInstance = GameObject.Instantiate(prefab);
+            if (pointerPrefab != null)
+                pointerInstance = GameObject.Instantiate(pointerPrefab);
             else
                 Debug.LogError("Spawning Exitpoll Pointer Controller, but cannot find prefab \"PointerController\" in Resources!");
 

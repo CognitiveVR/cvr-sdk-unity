@@ -16,8 +16,8 @@ namespace Cognitive3D
         // Pointer Settings
         public ExitPollManager.PointerType PointerType;
         public ExitPollManager.PointerInputButton PointerActivationButton;
-        public Transform PointerParentOverride;
-        public GameObject PointerOverride;
+        public GameObject HMDPointerPrefab;
+        public GameObject PointerControllerPrefab;
         public float PointerLineWidth = 0.01f;
         public Gradient PointerGradient = new Gradient { colorKeys = new GradientColorKey[] 
             { 

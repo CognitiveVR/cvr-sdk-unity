@@ -37,11 +37,11 @@ namespace Cognitive3D
             switch (parameters.PointerType)
             {
                 case ExitPollManager.PointerType.HMD:
-                    ExitPollPointer.SetUpHMDAsPointer();
+                    ExitPollPointer.SetUpHMDAsPointer(parameters.HMDPointerPrefab);
                     break;
 
                 case ExitPollManager.PointerType.ControllersAndHands:
-                    ExitPollPointer.SetupControllerAsPointer(parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.PointerGradient);
+                    ExitPollPointer.SetupControllerAsPointer(parameters.PointerControllerPrefab, parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.PointerGradient);
                     break;
 
                 case ExitPollManager.PointerType.Custom:
@@ -95,7 +95,7 @@ namespace Cognitive3D
                 {
                     noTrackingCountdown = 0;
                     GameObject.Destroy(GameplayReferences.PointerController);
-                    ExitPollPointer.SetUpHMDAsPointer();
+                    ExitPollPointer.SetUpHMDAsPointer(myparameters.HMDPointerPrefab);
                     ExitPollPointer.DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
                 }
             }
