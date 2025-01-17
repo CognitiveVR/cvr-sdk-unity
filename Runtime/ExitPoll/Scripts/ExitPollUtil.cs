@@ -7,6 +7,54 @@ namespace Cognitive3D
 {
 	internal static class ExitPollUtil
     {
+        internal static GameObject GetPrefab(ExitPollParameters parameters, Dictionary<string, string> properties)
+        {
+            if (!properties.ContainsKey("type")) { return null; }
+
+            GameObject prefab = null;
+            switch (properties["type"])
+            {
+                case "HAPPYSAD":
+                    if (parameters.HappyPanelOverride != null)
+                    {
+                        prefab = parameters.HappyPanelOverride;
+                    }
+                    break;
+                case "SCALE":
+                    if (parameters.ScalePanelOverride != null)
+                    {
+                        prefab = parameters.ScalePanelOverride;
+                    }
+                    break;
+                case "MULTIPLE":
+                    if (parameters.MultiplePanelOverride != null)
+                    {
+                        prefab = parameters.MultiplePanelOverride;
+                    }
+                    break;
+                case "VOICE":
+                    if (parameters.VoicePanelOverride != null)
+                    {
+                        prefab = parameters.VoicePanelOverride;
+                    }
+                    break;
+                case "THUMBS":
+                    if (parameters.ThumbsPanelOverride != null)
+                    {
+                        prefab = parameters.ThumbsPanelOverride;
+                    }
+                    break;
+                case "BOOLEAN":
+                    if (parameters.BoolPanelOverride != null)
+                    {
+                        prefab = parameters.BoolPanelOverride;
+                    }
+                    break;
+                default: Util.logDebug("Unknown Exitpoll panel type: " + properties["type"]);break;
+            }
+            return prefab;
+        }
+
         internal static InputFeatureUsage<bool> GetButtonFeature(ExitPollManager.PointerInputButton button)
         {
             switch (button)

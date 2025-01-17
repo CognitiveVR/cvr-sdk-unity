@@ -35,12 +35,7 @@ namespace Cognitive3D
             Vector3 panelScale = new Vector3(2, 1.2f, 0.1f);
             if (boolPanelPrefab == null)
             {
-                if (p.BoolPanelOverride == null)
-                {
-                    boolPanelPrefab = ExitPollManager.ExitPollTrueFalse;
-                    
-                }
-                else
+                if (p.BoolPanelOverride != null)
                 {
                     boolPanelPrefab = p.BoolPanelOverride;
                 }

@@ -283,7 +283,7 @@ namespace Cognitive3D
             if (panelProperties.Count > 0 && currentPanelIndex < panelProperties.Count)
             {
                 //DisplayPanel(panelProperties[currentPanelIndex], panelCount, lastPanelPosition);
-                var prefab = GetPrefab(panelProperties[currentPanelIndex]);
+                var prefab = ExitPollUtil.GetPrefab(myparameters, panelProperties[currentPanelIndex]);
                 if (prefab == null)
                 {
                     Util.logError("couldn't find prefab " + panelProperties[currentPanelIndex]);
@@ -397,78 +397,6 @@ namespace Cognitive3D
 
             exitpollEvent.Send(position);
             Cognitive3D_Manager.FlushData();
-        }
-
-        GameObject GetPrefab(Dictionary<string, string> properties)
-        {
-            if (!properties.ContainsKey("type")) { return null; }
-
-            GameObject prefab = null;
-            switch (properties["type"])
-            {
-                case "HAPPYSAD":
-                    if (myparameters.HappyPanelOverride != null)
-                    {
-                        prefab = myparameters.HappyPanelOverride;
-                    }
-                    else
-                    {
-                        prefab = ExitPollManager.ExitPollHappySad;
-                    }
-                    break;
-                case "SCALE":
-                    if (myparameters.ScalePanelOverride != null)
-                    {
-                        prefab = myparameters.ScalePanelOverride;
-                    }
-                    else
-                    {
-                        prefab = ExitPollManager.ExitPollScale;
-                    }
-                    break;
-                case "MULTIPLE":
-                    if (myparameters.MultiplePanelOverride != null)
-                    {
-                        prefab = myparameters.MultiplePanelOverride;
-                    }
-                    else
-                    {
-                        prefab = ExitPollManager.ExitPollMultiple;
-                    }
-                    break;
-                case "VOICE":
-                    if (myparameters.VoicePanelOverride != null)
-                    {
-                        prefab = myparameters.VoicePanelOverride;
-                    }
-                    else
-                    {
-                        prefab = ExitPollManager.ExitPollVoice;
-                    }
-                    break;
-                case "THUMBS":
-                    if (myparameters.ThumbsPanelOverride != null)
-                    {
-                        prefab = myparameters.ThumbsPanelOverride;
-                    }
-                    else
-                    {
-                        prefab = ExitPollManager.ExitPollThumbs;
-                    }
-                    break;
-                case "BOOLEAN":
-                    if (myparameters.BoolPanelOverride != null)
-                    {
-                        prefab = myparameters.BoolPanelOverride;
-                    }
-                    else
-                    {
-                        prefab = ExitPollManager.ExitPollTrueFalse;
-                    }
-                    break;
-                default: Util.logDebug("Unknown Exitpoll panel type: " + properties["type"]);break;
-            }
-            return prefab;
         }
 
         /// <summary>
