@@ -211,11 +211,11 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4283561230926666850}
-        m_MethodName: AnswerBoolPositive
-        m_Mode: 2
+        m_MethodName: AnswerInt
+        m_Mode: 6
         m_Arguments:
-          m_ObjectArgument: {fileID: 4243910523508639850}
-          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -456,11 +456,11 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4283561230926666850}
-        m_MethodName: AnswerBoolNegative
-        m_Mode: 2
+        m_MethodName: AnswerInt
+        m_Mode: 6
         m_Arguments:
-          m_ObjectArgument: {fileID: 4245306455835454582}
-          m_ObjectArgumentAssemblyTypeName: Cognitive3D.VirtualButton, Cognitive3D
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -1886,7 +1886,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4283561230926666850}
-        m_MethodName: ConfirmBoolAnswer
+        m_MethodName: ConfirmIntAnswer
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

@@ -404,15 +404,6 @@ namespace Cognitive3D
         private bool lastBoolAnswer;
         private int lastIntAnswer;
         private string lastRecordedVoice;
-        //answer from boolean, thumbs up/down, happy/sad buttons
-        private void AnswerBool(bool positive)
-        {
-            if (_isclosing) { return; }
-            int responseValue = 0;
-            if (positive)
-                responseValue = 1;
-            StartCoroutine(CloseAfterWaitForSpecifiedTime(1, responseValue));
-        }
 
         //called directly from MicrophoneButton when recording is complete
         public void AnswerMicrophone(string base64wav)
@@ -443,34 +434,21 @@ namespace Cognitive3D
             errorMessage.gameObject.SetActive(display);
         }
 
-        // This will be called from the editor	
-        // We have separate functions for positive and negative	
-        //      because we can only pass in one argument, and we need to know the image to modify	
-        // DO NOT DELETE
-        public void AnswerBoolPositive(VirtualButton button)
+        public void AnswerInt(bool value)
         {
-            positiveButton.SetSelect(true);
-            negativeButton.SetSelect(false);
-            lastBoolAnswer = true;
+            if (_isclosing) { return; }
+            if (value)
+            {
+                negativeButton.SetSelect(false);
+                positiveButton.SetSelect(true);
+            }
+            else
+            {
+                negativeButton.SetSelect(true);
+                positiveButton.SetSelect(false);
+            }
             confirmButton.SetConfirmEnabled();
-        }
-
-        // This will be called from the editor	
-        // We have separate functions for positive and negative	
-        //      because we can only pass in one argument, and we need to know the image to modify
-        // DO NOT DELETE
-        public void AnswerBoolNegative(VirtualButton button)
-        {
-            negativeButton.SetSelect(true);
-            positiveButton.SetSelect(false);
-            lastBoolAnswer = false;
-            confirmButton.SetConfirmEnabled();
-        }
-
-        // DO NOT DELETE
-        public void ConfirmBoolAnswer()
-        {
-            AnswerBool(lastBoolAnswer);
+            lastIntAnswer = value ? 1 : 0;
         }
 
         // from scale, multiple choice buttons
