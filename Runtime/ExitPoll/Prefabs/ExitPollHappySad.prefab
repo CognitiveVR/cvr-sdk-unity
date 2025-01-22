@@ -1495,7 +1495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b52272e03d51f9940a53a2a3a84fea7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isEnabled: 1
+  isEnabled: 0
   fillImage: {fileID: 2813787036099160311}
   buttonImage: {fileID: 7169652950290939371}
   FillDuration: 1.5
