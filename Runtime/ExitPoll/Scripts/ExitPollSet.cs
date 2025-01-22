@@ -17,7 +17,7 @@ namespace Cognitive3D
         private const float NO_TRACKING_COUNTDOWN_LIMIT = 35;
         private readonly string FALLBACK_TO_HMD_POINTER = $"Controller or hands not found for {NO_TRACKING_COUNTDOWN_LIMIT}! Using HMD Pointer.";
 
-#region Begin, End, Update
+#region Begin
         public void BeginExitPoll(ExitPollParameters parameters)
         {
             if (!Cognitive3D_Manager.IsInitialized)
@@ -68,21 +68,9 @@ namespace Cognitive3D
                 Cleanup(false);
             }
         }
+#endregion
 
-        /// <summary>
-        /// When you manually need to close the Exit Poll question set manually OR <br/>
-        /// when requesting a new exit poll question set when one is already active
-        /// </summary>
-        public void EndQuestionSet(int timeToWait)
-        {
-            panelProperties.Clear();
-            if (CurrentExitPollPanel != null)
-            {
-                CurrentExitPollPanel.CloseError(timeToWait);
-            }
-            OnPanelError();
-        }
-
+#region Update
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             // Increment counter if controller pointer exists and tracking type is none
@@ -99,6 +87,22 @@ namespace Cognitive3D
                     ExitPollPointer.DisplayControllerError(true, FALLBACK_TO_HMD_POINTER);
                 }
             }
+        }
+#endregion
+
+#region End
+        /// <summary>
+        /// When you manually need to close the Exit Poll question set manually OR <br/>
+        /// when requesting a new exit poll question set when one is already active
+        /// </summary>
+        public void EndQuestionSet(int timeToWait)
+        {
+            panelProperties.Clear();
+            if (CurrentExitPollPanel != null)
+            {
+                CurrentExitPollPanel.CloseError(timeToWait);
+            }
+            OnPanelError();
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
