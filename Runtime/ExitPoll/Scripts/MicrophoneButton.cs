@@ -74,7 +74,7 @@ namespace Cognitive3D
                     Cognitive3D.MicrophoneUtility.Save(clip, out bytes);
                     string encodedWav = MicrophoneUtility.EncodeWav(bytes);
                     questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
-                    buttonPrompt.text = "Recording saved\nPress again to re-record";
+                    buttonPrompt.text = "Recording saved";
                     _finishedRecording = true;
                 }
             }
