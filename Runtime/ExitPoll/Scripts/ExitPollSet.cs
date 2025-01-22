@@ -9,13 +9,29 @@ namespace Cognitive3D
 {
     public class ExitPollSet
     {
+        /// <summary>
+        /// The current exit poll panel being displayed
+        /// </summary>
         public ExitPollPanel CurrentExitPollPanel;
 
+        /// <summary>
+        /// Parameters related to the exit poll
+        /// </summary>
         public ExitPollParameters myparameters;
 
-        double StartTime;
+        /// <summary>
+        /// A countdown timer used to track when tracking data is lost (e.g., controllers not detected).
+        /// </summary>
         private float noTrackingCountdown;
+
+        /// <summary>
+        /// The maximum duration in seconds before fallback is triggered when tracking is lost.
+        /// </summary>
         private const float NO_TRACKING_COUNTDOWN_LIMIT = 35;
+
+        /// <summary>
+        /// The message displayed when fallback to the HMD pointer is triggered due to missing controller or hand tracking.
+        /// </summary>
         private readonly string FALLBACK_TO_HMD_POINTER = $"Controller or hands not found for {NO_TRACKING_COUNTDOWN_LIMIT}! Using HMD Pointer.";
 
         /// <summary>
@@ -23,6 +39,10 @@ namespace Cognitive3D
         /// The kv pairs in the dictionary are the keys and values of each of the fields on the panel
         /// </summary>
         private List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
+
+        /// <summary>
+        /// The set of questions for the exit poll,
+        /// </summary>
         private ExitPollData questionSet;
 
         // A temporary dictionary to store answers for each panel
@@ -145,8 +165,6 @@ namespace Cognitive3D
             }
 
             myparameters.OnBegin?.Invoke();
-
-            StartTime = Util.Timestamp();
             IterateToNextQuestion();
         }
 

@@ -13,17 +13,38 @@ namespace Cognitive3D
         /// </summary>
         public static string HookName;
 
+        /// <summary>
+        /// Representing the different spawn types for exit poll panels:
+        /// - <c>WorldSpace</c>: Spawned in the world space.
+        /// - <c>PlayerRelativeSpace</c>: Spawned relative to the player's position.
+        /// </summary>
         public enum SpawnType
         {
             WorldSpace,
             PlayerRelativeSpace
         }
+
+        /// <summary>
+        /// Representing the different pointer types for user interaction:
+        /// - <c>HMD</c>: HMD or gaze for pointing.
+        /// - <c>ControllersAndHands</c>: Interaction with controllers and hands for pointing.
+        /// - <c>Custom</c>: Custom pointer interaction defined by the user.
+        /// </summary>
         public enum PointerType
         {
             HMD,
             ControllersAndHands,
             Custom
         }
+
+        /// <summary>
+        /// Representing the input buttons available for user interaction:
+        /// - <c>Trigger</c>: The trigger button on the controller.
+        /// - <c>Grip</c>: The grip button on the controller.
+        /// - <c>PrimaryButton</c>: The primary action button (e.g., A or X).
+        /// - <c>SecondaryButton</c>: The secondary action button (e.g., B or Y).
+        /// - <c>Primary2DAxisClick</c>: The click action on the 2D axis of the controller.
+        /// </summary>
         public enum PointerInputButton
         {
             Trigger,
@@ -171,6 +192,8 @@ namespace Cognitive3D
 
             string responseBody = CoreInterface.SerializeExitpollAnswers(exitpollResponseProperties, questionSet.id, HookName);
             NetworkManager.PostExitpollAnswers(responseBody, questionSet.name, questionSet.version);
+
+            Cleanup();
         }
 
         /// <summary>
@@ -186,6 +209,8 @@ namespace Cognitive3D
 
                 string responseBody = CoreInterface.SerializeExitpollAnswers(exitpollResponseProperties, currentExitpollData.id, HookName);
                 NetworkManager.PostExitpollAnswers(responseBody, currentExitpollData.name, currentExitpollData.version);
+
+                Cleanup();
             }
         }
 
@@ -263,6 +288,13 @@ namespace Cognitive3D
             }
             exitpollEvent.Send();
             Cognitive3D_Manager.FlushData();
+        }
+
+        private static void Cleanup()
+        {
+            currentExitpollData = null;
+            exitpollResponseProperties.Clear();
+            exitpollEventProperties.Clear();
         }
 
         //after a panel has been answered, the responses from each panel in a format to be sent to exitpoll microservice
