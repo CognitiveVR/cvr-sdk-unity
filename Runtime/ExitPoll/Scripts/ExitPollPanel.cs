@@ -189,10 +189,11 @@ namespace Cognitive3D
         /// <param name="tempAnswers">A dictionary containing temporary answers keyed by panel IDs.</param>
         IEnumerator SetPanelAnswers(int panelId, Dictionary<int, object> tempAnswers)
         {
-            yield return new WaitForEndOfFrame();
-
             // Activate backButton if panelId is not 0 (first panel)
             backButton.gameObject.SetActive(panelId != 0);
+            yield return new WaitForSeconds(0.2f);
+            // Enable back button with delay to prevent multiple clicks in panels
+            backButton.isEnabled = true;
 
             // Validate answer
             if (!tempAnswers.TryGetValue(panelId, out var answer) || answer == null) yield break;
