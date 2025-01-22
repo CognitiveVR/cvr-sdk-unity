@@ -262,5 +262,16 @@ namespace Cognitive3D
             exitpollEvent.Send();
             Cognitive3D_Manager.FlushData();
         }
+
+        //after a panel has been answered, the responses from each panel in a format to be sent to exitpoll microservice
+        public class ResponseContext
+        {
+            public string QuestionType;
+            public object ResponseValue;
+            public ResponseContext(string questionType)
+            {
+                QuestionType = questionType;
+            }
+        }
     }
 }

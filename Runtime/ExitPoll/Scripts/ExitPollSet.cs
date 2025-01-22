@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.XR;
+using System.Threading.Tasks;
 
 
 namespace Cognitive3D
@@ -60,7 +61,8 @@ namespace Cognitive3D
 
             if (Cognitive3D_Manager.Instance != null)
             {
-                Cognitive3D.NetworkManager.GetExitPollQuestions(myparameters.Hook, QuestionSetResponse, 3);
+                GetQuestionSet();
+                // Cognitive3D.NetworkManager.GetExitPollQuestions(myparameters.Hook, QuestionSetResponse, 3);
             }
             else
             {
@@ -125,102 +127,74 @@ namespace Cognitive3D
         string QuestionSetId; //questionsetname:questionsetversion
         ExitPollData questionSet;
 
-        //IMPROVEMENT this should grab a question received and cached on Cognitive3DManager Init
-        //build a collection of panel properties from the response
-        void QuestionSetResponse(int responsecode, string error,string text)
+        async void GetQuestionSet()
         {
-            if (string.IsNullOrEmpty(text))
-            {
-                //question timeout or not found
-                Cleanup(false);
-                return;
-            }
+            Task<ExitPollData> exitPollDataTask = ExitPollManager.GetExitPollQuestionSets();
 
-            //build all the panel properties
-            try
-            {
-                questionSet = JsonUtility.FromJson<ExitPollData>(text);
-            }
-            catch
-            {
-                Util.logDebug("Exit poll Question response not formatted correctly! invoke end action");
-                Cleanup(false);
-                return;
-            }
-
-            if (questionSet.questions == null || questionSet.questions.Length == 0)
-            {
-                Util.logDebug("Exit poll Question response empty! invoke end action");
-                Cleanup(false);
-                return;
-            }
+            // To get the actual data, you would need to await it like this:
+            questionSet = await exitPollDataTask;
+            Debug.LogError("@@@ number of questions are " + questionSet.questions.Length + " and the title is " + questionSet.title);
 
             QuestionSetId = questionSet.id;
             QuestionSetName = questionSet.name;
             questionSetVersion = questionSet.version;
 
-            for (int i = 0; i < questionSet.questions.Length; i++)
+            // Process each question
+            foreach (var question in questionSet.questions)
             {
-                Dictionary<string, string> questionVariables = new Dictionary<string, string>();
-                if (!questionVariables.ContainsKey("title"))
-                {
-                    questionVariables.Add("title", questionSet.title);
-                }
-                questionVariables.Add("question", questionSet.questions[i].title);
-                questionVariables.Add("type", questionSet.questions[i].type);
-                responseProperties.Add(new ResponseContext(questionSet.questions[i].type));
-                questionVariables.Add("maxResponseLength", questionSet.questions[i].maxResponseLength.ToString());
-
-                if (!string.IsNullOrEmpty(questionSet.questions[i].minLabel))
-                    questionVariables.Add("minLabel", questionSet.questions[i].minLabel);
-                if (!string.IsNullOrEmpty(questionSet.questions[i].maxLabel))
-                    questionVariables.Add("maxLabel", questionSet.questions[i].maxLabel);
-
-                if (questionSet.questions[i].range != null) //range question
-                {
-                    questionVariables.Add("start", questionSet.questions[i].range.start.ToString());
-                    questionVariables.Add("end", questionSet.questions[i].range.end.ToString());
-                }
-
-                string csvMultipleAnswers = "";
-                if (questionSet.questions[i].answers != null) //multiple choice question
-                {
-                    for (int j = 0; j < questionSet.questions[i].answers.Length; j++)
-                    {
-                        if (questionSet.questions[i].answers[j].answer.Length == 0) { continue; }
-                        //IMPROVEMENT include support for custom icons on multiple choice answers. requires dashboard feature + sending png data
-                        csvMultipleAnswers += questionSet.questions[i].answers[j].answer + "|";
-                    }
-                }
-                if (csvMultipleAnswers.Length > 0)
-                {
-                    csvMultipleAnswers = csvMultipleAnswers.Remove(csvMultipleAnswers.Length - 1); //last pipe
-                    questionVariables.Add("csvanswers", csvMultipleAnswers);
-                }
+                var questionVariables = BuildQuestionVariables(questionSet.title, question);
                 panelProperties.Add(questionVariables);
             }
 
-            if (myparameters.OnBegin != null)
-                myparameters.OnBegin.Invoke();
+            myparameters.OnBegin?.Invoke();
 
             StartTime = Util.Timestamp();
             IterateToNextQuestion();
         }
 
-        //after a panel has been answered, the responses from each panel in a format to be sent to exitpoll microservice
-        public class ResponseContext
+        private Dictionary<string, string> BuildQuestionVariables(string title, ExitPollData.ExitPollDataEntry question)
         {
-            public string QuestionType;
-            public object ResponseValue;
-            public ResponseContext(string questionType)
+            var variables = new Dictionary<string, string>
             {
-                QuestionType = questionType;
-            }
-        }
-        List<ResponseContext> responseProperties = new List<ResponseContext>();
+                { "title", title },
+                { "question", question.title },
+                { "type", question.type },
+                { "maxResponseLength", question.maxResponseLength.ToString() }
+            };
 
-        //these go to personalization api
-        Dictionary<string, object> eventProperties = new Dictionary<string, object>();
+            if (!string.IsNullOrEmpty(question.minLabel))
+                variables["minLabel"] = question.minLabel;
+
+            if (!string.IsNullOrEmpty(question.maxLabel))
+                variables["maxLabel"] = question.maxLabel;
+
+            if (question.range != null)
+            {
+                variables["start"] = question.range.start.ToString();
+                variables["end"] = question.range.end.ToString();
+            }
+
+            if (question.answers != null)
+            {
+                string csvAnswers = "";
+                foreach (var answer in question.answers)
+                {
+                    if (!string.IsNullOrEmpty(answer.answer))
+                    {
+                        csvAnswers += answer.answer + "|";
+                    }
+                }
+
+                if (csvAnswers.Length > 0)
+                {
+                    // Remove the trailing pipe
+                    csvAnswers = csvAnswers.Substring(0, csvAnswers.Length - 1);
+                    variables["csvanswers"] = csvAnswers;
+                }
+            }
+
+            return variables;
+        }
 
         // A temporary dictionary to store answers for each panel
         // This is used to keep track of the user's progress and pre-fill their answers if they revisit a panel.
@@ -239,17 +213,7 @@ namespace Cognitive3D
                 tempAnswers.Add(panelId, objectValue);
             }
 
-            // Update or add value in eventProperties
-            if (eventProperties.ContainsKey(key))
-            {
-                eventProperties[key] = objectValue;
-            }
-            else
-            {
-                eventProperties.Add(key, objectValue);
-            }
-
-            responseProperties[panelId].ResponseValue = objectValue;
+            ExitPollManager.RecordAnswer(panelId, objectValue);
             currentPanelIndex++;
             IterateToNextQuestion();
         }
@@ -265,17 +229,8 @@ namespace Cognitive3D
             {
                 tempAnswers.Add(panelId, base64voice);
             }
-            
-            // Update or add value in eventProperties
-            if (eventProperties.ContainsKey(key))
-            {
-                eventProperties[key] = 0; // Assuming 0 is intentional here
-            }
-            else
-            {
-                eventProperties.Add(key, 0);
-            }
-            responseProperties[panelId].ResponseValue = base64voice;
+
+            ExitPollManager.RecordMicrophoneAnswer(panelId, base64voice);
             currentPanelIndex++;
             IterateToNextQuestion();
         }
@@ -417,48 +372,10 @@ namespace Cognitive3D
             }
             else //finished everything format and send
             {
-                SendResponsesAsCustomEvents(); //for personalization api
-                //var responses = FormatResponses();
-
-                string responseBody = CoreInterface.SerializeExitpollAnswers(responseProperties, QuestionSetId, myparameters.Hook);
-
-
-                NetworkManager.PostExitpollAnswers(responseBody, QuestionSetName, questionSetVersion); //for exitpoll microservice
+                ExitPollManager.SubmitAllAnswers(questionSet);
                 CurrentExitPollPanel = null;
                 Cleanup(true);
             }
-        }
-
-        void SendResponsesAsCustomEvents()
-        {
-            var exitpollEvent = new CustomEvent("cvr.exitpoll");
-            exitpollEvent.SetProperty("userId", Cognitive3D_Manager.DeviceId);
-            if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
-            {
-                exitpollEvent.SetProperty("participantId", Cognitive3D_Manager.ParticipantId);
-            }
-            exitpollEvent.SetProperty("questionSetId", QuestionSetId);
-            exitpollEvent.SetProperty("hook", myparameters.Hook);
-            exitpollEvent.SetProperty("duration", Util.Timestamp() - StartTime);
-
-            var scenesettings = Cognitive3D_Manager.TrackingScene;
-            if (scenesettings != null && !string.IsNullOrEmpty(scenesettings.SceneId))
-            {
-                exitpollEvent.SetProperty("sceneId", scenesettings.SceneId);
-            }
-
-            foreach (var property in eventProperties)
-            {
-                exitpollEvent.SetProperty(property.Key, property.Value);
-            }
-
-            //use vector3.zero if CurrentExitPollPanel was never set
-            Vector3 position = Vector3.zero;
-            if (CurrentExitPollPanel != null)
-                position = CurrentExitPollPanel.transform.position;
-
-            exitpollEvent.Send(position);
-            Cognitive3D_Manager.FlushData();
         }
 
         /// <summary>
