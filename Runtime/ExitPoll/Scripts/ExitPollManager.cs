@@ -8,6 +8,11 @@ namespace Cognitive3D
 {
     public static class ExitPollManager
     {
+        /// <summary>
+        /// The hook (set on the dashboard) to access
+        /// </summary>
+        public static string HookName;
+
         public enum SpawnType
         {
             WorldSpace,
@@ -27,48 +32,44 @@ namespace Cognitive3D
             SecondaryButton,
             Primary2DAxisClick
         }
+
+        /// <summary>
+        /// called when getting the questions fails for any reason
+        /// </summary>
+        public static UnityEngine.Events.UnityEvent OnSetupFailed = new UnityEngine.Events.UnityEvent();
+
+        /// <summary>
+        /// called when questions returned and parsed. Accessible in QuestionProperties
+        /// </summary>
+        public static UnityEngine.Events.UnityEvent OnSetupComplete = new UnityEngine.Events.UnityEvent();
+
+        /// <summary>
+        /// called when the answers are recorded and sent
+        /// </summary>
+        public static UnityEngine.Events.UnityEvent OnSurveyComplete = new UnityEngine.Events.UnityEvent();
+
+        /// <summary>
+        /// called when the microphone begins recording
+        /// </summary>
+        public static UnityEngine.Events.UnityEvent OnMicrophoneRecordingBegin = new UnityEngine.Events.UnityEvent();
+
+        /// <summary>
+        /// called when the microphone recording time has expired
+        /// </summary>
+        public static UnityEngine.Events.UnityEvent OnMicrophoneRecordingTimeUp = new UnityEngine.Events.UnityEvent();
+
         public static ExitPollParameters NewExitPoll(string hookName, ExitPollParameters parameters)
         {
             parameters.Hook = hookName;
             return parameters;
         }
 
-        /// <summary>
-        /// The hook (set on the dashboard) to access
-        /// </summary>
-        public static string HookName;
-
-        /// <summary>
-        /// called when getting the questions fails for any reason
-        /// </summary>
-        public static UnityEngine.Events.UnityEvent OnSetupFailed;
-
-        /// <summary>
-        /// called when questions returned and parsed. Accessible in QuestionProperties
-        /// </summary>
-        public static UnityEngine.Events.UnityEvent OnSetupComplete;
-
-        /// <summary>
-        /// called when the answers are recorded and sent
-        /// </summary>
-        public static UnityEngine.Events.UnityEvent OnSurveyComplete;
-
-        /// <summary>
-        /// called when the microphone begins recording
-        /// </summary>
-        public static UnityEngine.Events.UnityEvent OnMicrophoneRecordingBegin;
-
-        /// <summary>
-        /// called when the microphone recording time has expired
-        /// </summary>
-        public static UnityEngine.Events.UnityEvent OnMicrophoneRecordingTimeUp;
-
 #region Internal Variables
         private static double StartTime;
         private static ExitPollData currentExitpollData;
 
         //User answers
-        static List<ExitPollSet.ResponseContext> exitpollResponseProperties = new List<ExitPollSet.ResponseContext>();
+        static List<ResponseContext> exitpollResponseProperties = new List<ResponseContext>();
         static Dictionary<string, object> exitpollEventProperties = new Dictionary<string, object>();
 #endregion
         
@@ -166,7 +167,7 @@ namespace Cognitive3D
         /// <param name="questionSet">The exit poll data containing the questions and poll details.</param>
         public static void SubmitAllAnswers(ExitPollData questionSet)
         {
-            SendResponsesAsCustomEvents(questionSet);
+            SendResponsesAsCustomEvents(HookName, questionSet);
 
             string responseBody = CoreInterface.SerializeExitpollAnswers(exitpollResponseProperties, questionSet.id, HookName);
             NetworkManager.PostExitpollAnswers(responseBody, questionSet.name, questionSet.version);
@@ -181,7 +182,7 @@ namespace Cognitive3D
         {
             if (currentExitpollData != null)
             {
-                SendResponsesAsCustomEvents(currentExitpollData);
+                SendResponsesAsCustomEvents(HookName, currentExitpollData);
 
                 string responseBody = CoreInterface.SerializeExitpollAnswers(exitpollResponseProperties, currentExitpollData.id, HookName);
                 NetworkManager.PostExitpollAnswers(responseBody, currentExitpollData.name, currentExitpollData.version);
@@ -198,7 +199,7 @@ namespace Cognitive3D
             if (string.IsNullOrEmpty(text))
             {
                 Debug.LogError("C3D Exitpoll returned empty text");
-                OnSetupFailed.Invoke();
+                OnSetupFailed?.Invoke();
                 return null;
             }
 
@@ -210,24 +211,25 @@ namespace Cognitive3D
             catch
             {
                 Debug.LogError("C3D Exitpoll questions not formatted correctly");
-                OnSetupFailed.Invoke();
+                OnSetupFailed?.Invoke();
                 return null;
             }
 
             if (_exitPollData.questions == null || _exitPollData.questions.Length == 0)
             {
                 Debug.LogError("C3D Exitpoll has no questions");
-                OnSetupFailed.Invoke();
+                OnSetupFailed?.Invoke();
                 return null;
             }
 
             for (int i = 0; i < _exitPollData.questions.Length; i++)
             {
-                exitpollResponseProperties.Add(new ExitPollSet.ResponseContext(_exitPollData.questions[i].type));
+                exitpollResponseProperties.Add(new ResponseContext(_exitPollData.questions[i].type));
             }
 
             currentExitpollData = _exitPollData;
-            OnSetupComplete.Invoke();
+
+            OnSetupComplete?.Invoke();
             StartTime = Util.Timestamp();
 
             return _exitPollData;
@@ -237,7 +239,7 @@ namespace Cognitive3D
         /// Sends the collected exit poll responses as custom events.
         /// </summary>
         /// <param name="questionSet">The exit poll data containing the questions and poll details to be sent with the custom event.</param>
-        private static void SendResponsesAsCustomEvents(ExitPollData questionSet)
+        internal static void SendResponsesAsCustomEvents(string hookName, ExitPollData questionSet)
         {
             var exitpollEvent = new CustomEvent("cvr.exitpoll");
             exitpollEvent.SetProperty("userId", Cognitive3D_Manager.DeviceId);
@@ -246,7 +248,7 @@ namespace Cognitive3D
                 exitpollEvent.SetProperty("participantId", Cognitive3D_Manager.ParticipantId);
             }
             exitpollEvent.SetProperty("questionSetId", questionSet.id);
-            exitpollEvent.SetProperty("hook", HookName);
+            exitpollEvent.SetProperty("hook", hookName);
             exitpollEvent.SetProperty("duration", Util.Timestamp() - StartTime);
 
             var scenesettings = Cognitive3D_Manager.TrackingScene;

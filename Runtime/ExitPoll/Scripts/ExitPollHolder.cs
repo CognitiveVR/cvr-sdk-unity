@@ -45,6 +45,7 @@ namespace Cognitive3D
         /// </summary>
         public void Activate()
         {
+            ExitPollManager.HookName = Parameters.Hook;
             ExitPollParameters poll = ExitPollManager.NewExitPoll(Parameters.Hook, Parameters);
             if (poll.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
             {

@@ -121,23 +121,17 @@ namespace Cognitive3D
         /// The kv pairs in the dictionary are the keys and values of each of the fields on the panel
         /// </summary>
         List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
-
-        int questionSetVersion;
-        string QuestionSetName;
-        string QuestionSetId; //questionsetname:questionsetversion
         ExitPollData questionSet;
 
+        /// <summary>
+        /// Retrieves a set of questions for the exit poll, processes each question, and prepares the required data for display.
+        /// </summary>
         async void GetQuestionSet()
         {
             Task<ExitPollData> exitPollDataTask = ExitPollManager.GetExitPollQuestionSets();
 
             // To get the actual data, you would need to await it like this:
             questionSet = await exitPollDataTask;
-            Debug.LogError("@@@ number of questions are " + questionSet.questions.Length + " and the title is " + questionSet.title);
-
-            QuestionSetId = questionSet.id;
-            QuestionSetName = questionSet.name;
-            questionSetVersion = questionSet.version;
 
             // Process each question
             foreach (var question in questionSet.questions)
@@ -152,6 +146,11 @@ namespace Cognitive3D
             IterateToNextQuestion();
         }
 
+        /// <summary>
+        /// Constructs a dictionary of variables (properties) for a given question, containing its attributes and optional properties.
+        /// </summary>
+        /// <param name="title">The title of the question set.</param>
+        /// <param name="question">The question data entry containing details about the question.</param>
         private Dictionary<string, string> BuildQuestionVariables(string title, ExitPollData.ExitPollDataEntry question)
         {
             var variables = new Dictionary<string, string>
