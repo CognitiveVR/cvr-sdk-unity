@@ -195,10 +195,11 @@ namespace Cognitive3D
             backButton.gameObject.SetActive(panelId != 0);
 
             // Validate answer
-            if (!tempAnswers.TryGetValue(panelId, out var answer) || answer == null)
-                yield break;
+            if (!tempAnswers.TryGetValue(panelId, out var answer) || answer == null) yield break;
+            if (answer is int && ((int)answer == -1 || (int)answer == short.MinValue)) yield break;
+            if (answer is string && string.IsNullOrEmpty((string)answer)) yield break;
 
-            if (answer is int && ((int)answer != -1 || (int)answer != short.MinValue))
+            if (answer is int)
             {
                 // Enable the confirm button as there is an answer
                 confirmButton.SetConfirmEnabled();
@@ -218,7 +219,7 @@ namespace Cognitive3D
                     SelectOption(AnswerButtons[lastIntAnswer].GetComponentInChildren<VirtualButton>());
                 }
             }
-            else if (answer is string && !string.IsNullOrEmpty((string)answer)) // For voice panel
+            else if (answer is string) // For voice panel
             {
                 // Enable the confirm button as there is an answer
                 confirmButton.SetConfirmEnabled();
