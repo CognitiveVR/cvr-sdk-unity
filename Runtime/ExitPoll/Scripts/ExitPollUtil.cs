@@ -7,6 +7,9 @@ namespace Cognitive3D
 {
 	internal static class ExitPollUtil
     {
+        /// <summary>
+        /// Retrieves the appropriate prefab based on the question type.
+        /// </summary>
         internal static GameObject GetPrefab(ExitPollParameters parameters, Dictionary<string, string> properties)
         {
             if (!properties.ContainsKey("type")) { return null; }
@@ -55,6 +58,65 @@ namespace Cognitive3D
             return prefab;
         }
 
+        /// <summary>
+        /// Determines if a valid spawn position exists.
+        /// </summary>
+        internal static bool GetSpawnPosition(out Vector3 pos, ExitPollParameters parameters)
+        {
+            pos = Vector3.zero;
+            if (GameplayReferences.HMD == null) //no hmd? fail
+            {
+                return false;
+            }
+
+            //set position and rotation
+            Vector3 spawnPosition = GameplayReferences.HMD.position + GameplayReferences.HMD.forward * parameters.DisplayDistance;
+
+            if (parameters.LockYPosition)
+            {
+                Vector3 modifiedForward = GameplayReferences.HMD.forward;
+                modifiedForward.y = 0;
+                modifiedForward.Normalize();
+
+                spawnPosition = GameplayReferences.HMD.position + modifiedForward * parameters.DisplayDistance;
+            }
+
+            RaycastHit hit = new RaycastHit();
+
+            if (parameters.PanelLayerMask.value != 0)
+            {
+                //test slightly in front of the player's hmd
+                Collider[] colliderHits = Physics.OverlapSphere(GameplayReferences.HMD.position + Vector3.forward * 0.5f, 0.5f, parameters.PanelLayerMask);
+                if (colliderHits.Length > 0)
+                {
+                    Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
+                    //too close! just fail the popup and keep playing the game
+                    return false;
+                }
+
+                //ray from player's hmd position
+                if (Physics.SphereCast(GameplayReferences.HMD.position, 0.5f, spawnPosition - GameplayReferences.HMD.position, out hit, parameters.DisplayDistance, parameters.PanelLayerMask))
+                {
+                    if (hit.distance < parameters.MinimumDisplayDistance)
+                    {
+                        Util.logDebug("ExitPoll.Initialize hit collider " + hit.collider.gameObject.name + " too close to player. Skip exit poll");
+                        //too close! just fail the popup and keep playing the game
+                        return false;
+                    }
+                    else
+                    {
+                        spawnPosition = GameplayReferences.HMD.position + (spawnPosition - GameplayReferences.HMD.position).normalized * (hit.distance);
+                    }
+                }
+            }
+
+            pos = spawnPosition;
+            return true;
+        }
+
+        /// <summary>
+        /// Maps the specified input button to its corresponding XR input feature usage.
+        /// </summary>
         internal static InputFeatureUsage<bool> GetButtonFeature(ExitPollManager.PointerInputButton button)
         {
             switch (button)
@@ -74,6 +136,9 @@ namespace Cognitive3D
             }
         }
 
+        /// <summary>
+        /// Checks the state of a specific input button for a given XRNode (controller).
+        /// </summary>
         internal static bool GetButtonState(XRNode hand, InputFeatureUsage<bool> button)
         {
             InputDevice device = InputDevices.GetDeviceAtXRNode(hand);

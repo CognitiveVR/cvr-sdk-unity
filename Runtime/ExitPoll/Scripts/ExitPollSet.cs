@@ -45,6 +45,11 @@ namespace Cognitive3D
         /// </summary>
         private ExitPollData questionSet;
 
+        /// <summary>
+        /// Tracks the index of the currently active panel in the exit poll sequence.
+        /// </summary>
+        private int currentPanelIndex = 0;
+
         // A temporary dictionary to store answers for each panel
         // This is used to keep track of the user's progress and pre-fill their answers if they revisit a panel.
         private Dictionary<int, object> tempAnswers = new Dictionary<int, object>();
@@ -77,11 +82,10 @@ namespace Cognitive3D
                     break;
 
                 case ExitPollManager.PointerType.Custom:
-                    // Check docs for best practices
+                    // Refer to the documentation for best practices
                     break;
             }
-            
-            //this should take all previously set variables (from functions) and create an exitpoll parameters object
+
             currentPanelIndex = 0;
             if (string.IsNullOrEmpty(myparameters.Hook))
             {
@@ -93,7 +97,6 @@ namespace Cognitive3D
             if (Cognitive3D_Manager.Instance != null)
             {
                 GetQuestionSet();
-                // Cognitive3D.NetworkManager.GetExitPollQuestions(myparameters.Hook, QuestionSetResponse, 3);
             }
             else
             {
@@ -154,7 +157,6 @@ namespace Cognitive3D
         {
             Task<ExitPollData> exitPollDataTask = ExitPollManager.GetExitPollQuestionSets();
 
-            // To get the actual data, you would need to await it like this:
             questionSet = await exitPollDataTask;
 
             // Process each question
@@ -217,10 +219,12 @@ namespace Cognitive3D
             return variables;
         }
 
-        //called from panel when a panel closes (after timeout, on close or on answer)
-        public void OnPanelClosed(int panelId, string key, int objectValue)
+        /// <summary>
+        /// Handles the event when a panel closes, triggered by timeout, manual close, or answering.
+        /// Updates the temporary answers dictionary, records the answer, and proceeds to the next question.
+        /// </summary>
+        public void OnPanelClosed(int panelId, int objectValue)
         {
-            // Update or add value in tempAnswers
             if (tempAnswers.ContainsKey(panelId))
             {
                 tempAnswers[panelId] = objectValue;
@@ -235,9 +239,12 @@ namespace Cognitive3D
             IterateToNextQuestion();
         }
 
-        public void OnPanelClosedVoice(int panelId, string key, string base64voice)
+        /// <summary>
+        /// Handles the event when a voice response panel closes.
+        /// Updates the temporary answers dictionary with the base64-encoded voice response, records the response, and proceeds to the next question.
+        /// </summary>
+        public void OnPanelClosedVoice(int panelId, string base64voice)
         {
-            // Update or add value in tempAnswers
             if (tempAnswers.ContainsKey(panelId))
             {
                 tempAnswers[panelId] = base64voice;
@@ -285,7 +292,9 @@ namespace Cognitive3D
             Util.logDebug("Exit poll OnPanelError - HMD is null, manually closing question set or new exit poll while one is active");
         }
 
-        int currentPanelIndex = 0;
+        /// <summary>
+        /// Advances to the next question in the exit poll sequence, handling panel transitions and completion logic.
+        /// </summary>
         void IterateToNextQuestion()
         {
             if (GameplayReferences.HMD == null)
@@ -309,7 +318,7 @@ namespace Cognitive3D
 
             if (!useLastPanelPosition)
             {
-                if (!GetSpawnPosition(out lastPanelPosition))
+                if (!ExitPollUtil.GetSpawnPosition(out lastPanelPosition, myparameters))
                 {
                     Cognitive3D.Util.logDebug("no last position set. invoke endaction");
                     Cleanup(false);
@@ -347,7 +356,7 @@ namespace Cognitive3D
                 if (currentPanelProperties["type"].Equals("VOICE"))
                 {
                     int tempPanelID = currentPanelIndex; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use currentPanelIndex
-                                                  // because that is what PanelID gets set to
+                                                         // because that is what PanelID gets set to
                     new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
@@ -358,11 +367,11 @@ namespace Cognitive3D
                 if (currentPanelProperties["type"].Equals("VOICE") && Microphone.devices.Length == 0)
                 {
                     int tempPanelID = currentPanelIndex; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use currentPanelIndex
-                                                  // because that is what PanelID gets set to
+                                                         // because that is what PanelID gets set to
                     new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
-                    OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
+                    OnPanelClosed(tempPanelID, short.MinValue);
                     return;
                 }
 #endif
@@ -393,64 +402,6 @@ namespace Cognitive3D
                 CurrentExitPollPanel = null;
                 Cleanup(true);
             }
-        }
-
-        /// <summary>
-        /// returns true if there's a valid position
-        /// </summary>
-        /// <param name=""></param>
-        /// <returns></returns>
-        bool GetSpawnPosition(out Vector3 pos)
-        {
-            pos = Vector3.zero;
-            if (GameplayReferences.HMD == null) //no hmd? fail
-            {
-                return false;
-            }
-
-            //set position and rotation
-            Vector3 spawnPosition = GameplayReferences.HMD.position + GameplayReferences.HMD.forward * myparameters.DisplayDistance;
-
-            if (myparameters.LockYPosition)
-            {
-                Vector3 modifiedForward = GameplayReferences.HMD.forward;
-                modifiedForward.y = 0;
-                modifiedForward.Normalize();
-
-                spawnPosition = GameplayReferences.HMD.position + modifiedForward * myparameters.DisplayDistance;
-            }
-
-            RaycastHit hit = new RaycastHit();
-
-            if (myparameters.PanelLayerMask.value != 0)
-            {
-                //test slightly in front of the player's hmd
-                Collider[] colliderHits = Physics.OverlapSphere(GameplayReferences.HMD.position + Vector3.forward * 0.5f, 0.5f, myparameters.PanelLayerMask);
-                if (colliderHits.Length > 0)
-                {
-                    Util.logDebug("ExitPoll.Initialize hit collider " + colliderHits[0].gameObject.name + " too close to player. Skip exit poll");
-                    //too close! just fail the popup and keep playing the game
-                    return false;
-                }
-
-                //ray from player's hmd position
-                if (Physics.SphereCast(GameplayReferences.HMD.position, 0.5f, spawnPosition - GameplayReferences.HMD.position, out hit, myparameters.DisplayDistance, myparameters.PanelLayerMask))
-                {
-                    if (hit.distance < myparameters.MinimumDisplayDistance)
-                    {
-                        Util.logDebug("ExitPoll.Initialize hit collider " + hit.collider.gameObject.name + " too close to player. Skip exit poll");
-                        //too close! just fail the popup and keep playing the game
-                        return false;
-                    }
-                    else
-                    {
-                        spawnPosition = GameplayReferences.HMD.position + (spawnPosition - GameplayReferences.HMD.position).normalized * (hit.distance);
-                    }
-                }
-            }
-
-            pos = spawnPosition;
-            return true;
         }
 
         //calls end actions

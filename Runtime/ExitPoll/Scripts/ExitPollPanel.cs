@@ -129,7 +129,7 @@ namespace Cognitive3D
                 if (resultend == 0)
                 {
                     Cognitive3D.Util.logDebug("ExitPoll Panel number of integer buttons to display == 0. skip this question");
-                    QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, short.MinValue);
+                    QuestionSet.OnPanelClosed(PanelId, short.MinValue);
                     Destroy(gameObject);
                     return;
                 }
@@ -355,7 +355,7 @@ namespace Cognitive3D
         {
             PanelRoot.gameObject.SetActive(false);
             yield return new WaitForSeconds(seconds);
-            QuestionSet.OnPanelClosed(PanelId, "Answer" + PanelId, value);
+            QuestionSet.OnPanelClosed(PanelId, value);
             Close();
         }        
         
@@ -551,7 +551,7 @@ namespace Cognitive3D
         {
             PanelRoot.gameObject.SetActive(false);
             yield return new WaitForSeconds(seconds);
-            QuestionSet.OnPanelClosedVoice(PanelId, "Answer" + PanelId, base64);
+            QuestionSet.OnPanelClosedVoice(PanelId, base64);
             Close();
         }
 
