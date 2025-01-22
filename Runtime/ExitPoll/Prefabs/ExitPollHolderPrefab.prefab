@@ -46,11 +46,11 @@ MonoBehaviour:
   Parameters:
     Hook: 
     ExitpollSpawnType: 1
-    PointerType: 0
+    PointerType: 1
     PointerActivationButton: 0
-    HMDPointerPrefab: {fileID: 1519450223153822, guid: 39f5fc3ee60bbb240b1596106877619b,
+    HMDPointerPrefab: {fileID: 1519450223153822, guid: a294e1928a0a665449041210b7e563b9,
       type: 3}
-    PointerControllerPrefab: {fileID: 8777217466836023694, guid: 6c0a4493f35d57c4daec66a7549dbb88,
+    PointerControllerPrefab: {fileID: 8777217466836023694, guid: ee8c90e88cb2e6743b3f1745e91f71d2,
       type: 3}
     PointerLineWidth: 0.01
     PointerGradient:
