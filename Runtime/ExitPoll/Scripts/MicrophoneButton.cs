@@ -26,7 +26,6 @@ namespace Cognitive3D
 
         [Header("Visuals")]
         public Image MicrophoneImage;
-        public Text TipText;
         public Text buttonPrompt;
         ExitPollSet questionSet;
 
@@ -75,6 +74,7 @@ namespace Cognitive3D
                     Cognitive3D.MicrophoneUtility.Save(clip, out bytes);
                     string encodedWav = MicrophoneUtility.EncodeWav(bytes);
                     questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
+                    buttonPrompt.text = "Recording saved\nPress again to re-record";
                     _finishedRecording = true;
                 }
             }
@@ -126,7 +126,7 @@ namespace Cognitive3D
             _currentRecordTime = RecordTime;
             _finishedRecording = false;
             _recording = true;
-            TipText.text = "Recording...";
+            buttonPrompt.text = "Recording...";
         }
 
         //increases the fill image if confirming selection with a pointer. lowers as recording time increases
