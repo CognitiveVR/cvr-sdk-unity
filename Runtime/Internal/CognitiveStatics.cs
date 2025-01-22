@@ -14,49 +14,57 @@ namespace Cognitive3D
 
         //editor urls
         //GET dynamic object manifest
+        //https://data.cognitive3d.com/v0/objects
         internal static string GetDynamicManifest(int versionid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/versions/", versionid, "/objects");
         }
 
-        //POST dynamic object manifest
+        //POST dynamic object aggregation manifest
+        //https://data.cognitive3d.com/v0/objects/[sceneId]?version=[sceneVersionNumber]
         internal static string PostDynamicManifest(string sceneid, int versionnumber)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"?version=", versionnumber);
         }
         //POST dynamic object mesh data
+        //https://data.cognitive3d.com/v0/objects/[sceneId]/[dynamicName]?version=[sceneVersionNumber]
         internal static string PostDynamicObjectData(string sceneid, int versionnumber, string exportdirectory)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/objects/", sceneid,"/",exportdirectory,"?version=", versionnumber);
         }
 
         //GET scene settings and read scene version
+        //https://data.cognitive3d.com/v0/scenes/[sceneId]
         internal static string GetSceneVersions(string sceneid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
 
         //POST scene screenshot
+        //https://data.cognitive3d.com/v0/scenes/[sceneId]/screenshot?version=[sceneVersionNumber]
         internal static string PostScreenshot(string sceneid, int versionnumber)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid,"/screenshot?version=", versionnumber);
         }
 
         //POST upload decimated scene
+        //https://data.cognitive3d.com/v0/scenes/
         internal static string PostNewScene()
         {
             return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes";
         }
 
         //POST upload and replace existing scene
+        //https://data.cognitive3d.com/v0/scenes/[sceneId]
         internal static string PostUpdateScene(string sceneid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
 
-        internal static string GetSceneUrl(string sceneid, int versionNumber)
+        //https://app.cognitive3d.com/v3/scenes/[sceneId]/v/[sceneVersionNumber]/viewer
+        internal static string GetSceneUrl(string sceneid, int sceneVersionNumber)
         {
-            return "https://app.cognitive3d.com/scenes/" + sceneid + "/v/" + versionNumber + "/insights";
+            return "https://app.cognitive3d.com/v3/scenes/" + sceneid + "/v/" + sceneVersionNumber + "/viewer";
         }
 
         //GET github api to get latest release data
@@ -66,6 +74,7 @@ namespace Cognitive3D
         internal const string GITHUB_RELEASES = "https://github.com/CognitiveVR/cvr-sdk-unity/releases";
 
         //GET media source list
+        //https://data.cognitive3d.com/v0/media
         internal static string GetMediaSourceList()
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/media");
@@ -133,6 +142,7 @@ namespace Cognitive3D
         }
 
         //GET request question set
+        //https://data.cognitive3d.com/v0/scenes/questionSetHooks/[hookName]/questionSet
         internal static string GetExitpollQuestionSet(string hookname)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
@@ -145,6 +155,7 @@ namespace Cognitive3D
         }
 
         //POST question set responses
+        //https://data.cognitive3d.com/v0/scenes/questionSets/[questionSetName]/[questionSetVersion]/responses
         internal static string PostExitpollResponses(string questionsetname, int questionsetversion)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
