@@ -18,6 +18,17 @@ namespace Cognitive3D
         private const float NO_TRACKING_COUNTDOWN_LIMIT = 35;
         private readonly string FALLBACK_TO_HMD_POINTER = $"Controller or hands not found for {NO_TRACKING_COUNTDOWN_LIMIT}! Using HMD Pointer.";
 
+        /// <summary>
+        /// A list containing information on each panel <br/>
+        /// The kv pairs in the dictionary are the keys and values of each of the fields on the panel
+        /// </summary>
+        private List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
+        private ExitPollData questionSet;
+
+        // A temporary dictionary to store answers for each panel
+        // This is used to keep track of the user's progress and pre-fill their answers if they revisit a panel.
+        private Dictionary<int, object> tempAnswers = new Dictionary<int, object>();
+
 #region Begin
         public void BeginExitPoll(ExitPollParameters parameters)
         {
@@ -117,13 +128,6 @@ namespace Cognitive3D
 #endregion
 
         /// <summary>
-        /// A list containing information on each panel <br/>
-        /// The kv pairs in the dictionary are the keys and values of each of the fields on the panel
-        /// </summary>
-        List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
-        ExitPollData questionSet;
-
-        /// <summary>
         /// Retrieves a set of questions for the exit poll, processes each question, and prepares the required data for display.
         /// </summary>
         async void GetQuestionSet()
@@ -194,10 +198,6 @@ namespace Cognitive3D
 
             return variables;
         }
-
-        // A temporary dictionary to store answers for each panel
-        // This is used to keep track of the user's progress and pre-fill their answers if they revisit a panel.
-        Dictionary<int, object> tempAnswers = new Dictionary<int, object>();
 
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, int objectValue)
