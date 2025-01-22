@@ -218,10 +218,33 @@ namespace Cognitive3D
         //these go to personalization api
         Dictionary<string, object> eventProperties = new Dictionary<string, object>();
 
+        // A temporary dictionary to store answers for each panel
+        // This is used to keep track of the user's progress and pre-fill their answers if they revisit a panel.
+        Dictionary<int, object> tempAnswers = new Dictionary<int, object>();
+
         //called from panel when a panel closes (after timeout, on close or on answer)
         public void OnPanelClosed(int panelId, string key, int objectValue)
         {
-            eventProperties.Add(key, objectValue);
+            // Update or add value in tempAnswers
+            if (tempAnswers.ContainsKey(panelId))
+            {
+                tempAnswers[panelId] = objectValue;
+            }
+            else
+            {
+                tempAnswers.Add(panelId, objectValue);
+            }
+
+            // Update or add value in eventProperties
+            if (eventProperties.ContainsKey(key))
+            {
+                eventProperties[key] = objectValue;
+            }
+            else
+            {
+                eventProperties.Add(key, objectValue);
+            }
+
             responseProperties[panelId].ResponseValue = objectValue;
             currentPanelIndex++;
             IterateToNextQuestion();
@@ -229,9 +252,49 @@ namespace Cognitive3D
 
         public void OnPanelClosedVoice(int panelId, string key, string base64voice)
         {
-            eventProperties.Add(key, 0);
+            // Update or add value in tempAnswers
+            if (tempAnswers.ContainsKey(panelId))
+            {
+                tempAnswers[panelId] = base64voice;
+            }
+            else
+            {
+                tempAnswers.Add(panelId, base64voice);
+            }
+            
+            // Update or add value in eventProperties
+            if (eventProperties.ContainsKey(key))
+            {
+                eventProperties[key] = 0; // Assuming 0 is intentional here
+            }
+            else
+            {
+                eventProperties.Add(key, 0);
+            }
             responseProperties[panelId].ResponseValue = base64voice;
             currentPanelIndex++;
+            IterateToNextQuestion();
+        }
+
+        /// <summary>
+        /// This method is called when a panel is being closed. It updates or adds the answer (objectValue) for current panel
+        /// in the tempAnswers dictionary. The current panel index is decremented and the function proceeds to the previous question.
+        /// </summary>
+        /// <param name="panelId">The ID of the panel being closed.</param>
+        /// <param name="objectValue">The answer value to be stored for the panel.</param>
+        public void OnPanelReopen(int panelId, object objectValue)
+        {
+            // Update or add value in tempAnswers
+            if (tempAnswers.ContainsKey(panelId))
+            {
+                tempAnswers[panelId] = objectValue;
+            }
+            else
+            {
+                tempAnswers.Add(panelId, objectValue);
+            }
+            
+            currentPanelIndex--;
             IterateToNextQuestion();
         }
 
@@ -247,7 +310,6 @@ namespace Cognitive3D
         }
 
         int currentPanelIndex = 0;
-        int panelCount = 0;
         void IterateToNextQuestion()
         {
             if (GameplayReferences.HMD == null)
@@ -282,7 +344,6 @@ namespace Cognitive3D
             //if next question, display that
             if (panelProperties.Count > 0 && currentPanelIndex < panelProperties.Count)
             {
-                //DisplayPanel(panelProperties[currentPanelIndex], panelCount, lastPanelPosition);
                 var prefab = ExitPollUtil.GetPrefab(myparameters, panelProperties[currentPanelIndex]);
                 if (prefab == null)
                 {
@@ -309,9 +370,8 @@ namespace Cognitive3D
                 //skip voice questions on webgl - microphone is not supported
                 if (currentPanelProperties["type"].Equals("VOICE"))
                 {
-                    int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
+                    int tempPanelID = currentPanelIndex; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use currentPanelIndex
                                                   // because that is what PanelID gets set to
-                    panelCount++;
                     new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
@@ -321,9 +381,8 @@ namespace Cognitive3D
 #else
                 if (currentPanelProperties["type"].Equals("VOICE") && Microphone.devices.Length == 0)
                 {
-                    int tempPanelID = panelCount; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use panelCount
+                    int tempPanelID = currentPanelIndex; // OnPanelClosed takes in PanelID, but since panel isn't initialized yet, we use currentPanelIndex
                                                   // because that is what PanelID gets set to
-                    panelCount++;
                     new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
@@ -342,7 +401,7 @@ namespace Cognitive3D
                     Cleanup(false);
                     return;
                 }
-                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], panelCount, this, questionSet.questions.Length);
+                CurrentExitPollPanel.Initialize(panelProperties[currentPanelIndex], currentPanelIndex, this, questionSet.questions.Length, tempAnswers);
 
                 if (myparameters.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace && myparameters.UseAttachTransform)
                 {
@@ -364,7 +423,6 @@ namespace Cognitive3D
                 CurrentExitPollPanel = null;
                 Cleanup(true);
             }
-            panelCount++;
         }
 
         void SendResponsesAsCustomEvents()
@@ -462,6 +520,8 @@ namespace Cognitive3D
         //destroys spawned pointers
         void Cleanup(bool completedSuccessfully)
         {
+            tempAnswers.Clear();
+
             if (ExitPollPointer.pointerInstance != null)
             {
                 GameObject.Destroy(ExitPollPointer.pointerInstance);

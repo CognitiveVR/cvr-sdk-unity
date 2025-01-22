@@ -18,6 +18,7 @@ namespace Cognitive3D
         //used when scaling and rotating
         public Transform PanelRoot;
         public VirtualButton confirmButton;
+        public VirtualButton backButton;
 
         [Header("Display")]
         public AnimationCurve XScale;
@@ -78,7 +79,7 @@ namespace Cognitive3D
         /// <param name="closeAction">called when the player answers or the question is skipped/timed out</param>
         /// <param name="position">where to instantiate the exitpoll window</param>
         /// <param name="exitpollType">what kind of window to instantiate. microphone will automatically appear last</param>
-        public void Initialize(Dictionary<string,string> properties,int panelId, ExitPollSet questionset, int numQuestionsInSet)
+        public void Initialize(Dictionary<string,string> properties,int panelId, ExitPollSet questionset, int numQuestionsInSet, Dictionary<int, object> tempAnswers)
         {
             QuestionSet = questionset;
             PanelId = panelId;
@@ -176,7 +177,55 @@ namespace Cognitive3D
 
             _isclosing = false;
 
+            StartCoroutine(SetPanelAnswers(panelId, tempAnswers));
             StartCoroutine(_SetVisible(true));
+        }
+
+        /// <summary>
+        /// Sets up the answers for the panel based on the user's previous responses stored in the tempAnswers dictionary. 
+        /// If the user has already answered, it enables the appropriate buttons and selects the corresponding option.
+        /// </summary>
+        /// <param name="panelId">The ID of the panel to configure.</param>
+        /// <param name="tempAnswers">A dictionary containing temporary answers keyed by panel IDs.</param>
+        IEnumerator SetPanelAnswers(int panelId, Dictionary<int, object> tempAnswers)
+        {
+            yield return new WaitForEndOfFrame();
+
+            // Activate backButton if panelId is not 0 (first panel)
+            backButton.gameObject.SetActive(panelId != 0);
+
+            // Validate answer
+            if (!tempAnswers.TryGetValue(panelId, out var answer) || answer == null)
+                yield break;
+
+            if (answer is int && ((int)answer != -1 || (int)answer != short.MinValue))
+            {
+                // Enable the confirm button as there is an answer
+                confirmButton.SetConfirmEnabled();
+
+                lastIntAnswer = (int)answer;
+
+                // Handle positive/negative buttons if they exist
+                if (positiveButton && negativeButton)
+                {
+                    SelectOption(lastIntAnswer == 1 ? positiveButton : negativeButton);
+                    yield break;
+                }
+
+                // Handle AnswerButtons if available
+                if (AnswerButtons.Length > 0 && lastIntAnswer >= 0 && lastIntAnswer < AnswerButtons.Length)
+                {
+                    SelectOption(AnswerButtons[lastIntAnswer].GetComponentInChildren<VirtualButton>());
+                }
+            }
+            else if (answer is string && !string.IsNullOrEmpty((string)answer)) // For voice panel
+            {
+                // Enable the confirm button as there is an answer
+                confirmButton.SetConfirmEnabled();
+
+                lastRecordedVoice = (string)answer;
+                gameObject.GetComponentInChildren<MicrophoneButton>().buttonPrompt.text = "Recording saved\nPress again to re-record";
+            }
         }
 
         void SetIntegerCount(int minValue, int maxValue)
@@ -401,8 +450,7 @@ namespace Cognitive3D
 
         #region Button Actions
 
-        private bool lastBoolAnswer;
-        private int lastIntAnswer;
+        private int lastIntAnswer = -1;
         private string lastRecordedVoice;
 
         //called directly from MicrophoneButton when recording is complete
@@ -411,6 +459,20 @@ namespace Cognitive3D
             if (_isclosing) { return; }
             confirmButton.SetConfirmEnabled();
             lastRecordedVoice = base64wav;
+        }
+
+        public void BackButtonMicrophone()
+        {
+            PanelRoot.gameObject.SetActive(false);
+            Close();
+            QuestionSet.OnPanelReopen(PanelId, lastRecordedVoice);
+        }
+
+        public void BackButton()
+        {
+            PanelRoot.gameObject.SetActive(false);
+            Close();
+            QuestionSet.OnPanelReopen(PanelId, lastIntAnswer);
         }
 
         //called from exitpoll when this panel needs to be cleaned up. does not set response in question set
