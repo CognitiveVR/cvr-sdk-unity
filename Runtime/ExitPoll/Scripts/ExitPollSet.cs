@@ -38,7 +38,7 @@ namespace Cognitive3D
         /// A list containing information on each panel <br/>
         /// The kv pairs in the dictionary are the keys and values of each of the fields on the panel
         /// </summary>
-        private List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
+        private readonly List<Dictionary<string, string>> panelProperties = new List<Dictionary<string, string>>();
 
         /// <summary>
         /// The set of questions for the exit poll,
@@ -48,11 +48,11 @@ namespace Cognitive3D
         /// <summary>
         /// Tracks the index of the currently active panel in the exit poll sequence.
         /// </summary>
-        private int currentPanelIndex = 0;
+        private int currentPanelIndex;
 
         // A temporary dictionary to store answers for each panel
         // This is used to keep track of the user's progress and pre-fill their answers if they revisit a panel.
-        private Dictionary<int, object> tempAnswers = new Dictionary<int, object>();
+        private readonly Dictionary<int, object> tempAnswers = new Dictionary<int, object>();
 
 #region Begin
         public void BeginExitPoll(ExitPollParameters parameters)
@@ -83,6 +83,8 @@ namespace Cognitive3D
 
                 case ExitPollManager.PointerType.Custom:
                     // Refer to the documentation for best practices
+                    break;
+                default:
                     break;
             }
 
@@ -313,7 +315,6 @@ namespace Cognitive3D
                 lastPanelPosition = CurrentExitPollPanel.transform.position;
                 lastPanelRotation = CurrentExitPollPanel.transform.rotation;
                 useLastPanelPosition = true;
-                //CurrentExitPollPanel = null;
             }
 
             if (!useLastPanelPosition)

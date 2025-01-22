@@ -931,7 +931,7 @@ namespace Cognitive3D
             public string questionSetId;
         }
 
-        public static ExitPollHookData[] ExitPollHooks = new ExitPollHookData[] { };
+        internal static ExitPollHookData[] ExitPollHooks = new ExitPollHookData[] { };
 #endregion
 
 #region Media

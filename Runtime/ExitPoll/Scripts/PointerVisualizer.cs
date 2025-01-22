@@ -26,7 +26,7 @@ namespace Cognitive3D
         /// <summary>
         /// Holds the start and end points of the pointer ray for the LineRenderer to visualize
         /// </summary>
-        private Vector3[] pointsArray = new Vector3[2];
+        private readonly Vector3[] pointsArray = new Vector3[2];
 
         /// <summary>
         /// Creates and sets up a line renderer to visualize where user is pointing

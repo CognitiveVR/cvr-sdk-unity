@@ -36,7 +36,7 @@ namespace Cognitive3D
 
         [Header("Scale Settings")]
         [Tooltip("Apply a gradient to the buttons")]
-        public bool useGradientColor = false;
+        public bool useGradientColor;
         public Gradient IntegerGradient;
         public Image[] ColorableImages;
         public Text MinLabel;

@@ -48,16 +48,16 @@ namespace Cognitive3D
         public System.Action<bool> EndAction;
 
         public bool RotateToStayOnScreen = true;
-        public bool UseOverridePosition = false;
+        public bool UseOverridePosition;
         public Vector3 OverridePosition;
-        public bool UseOverrideRotation = false;
+        public bool UseOverrideRotation;
         public Quaternion OverrideRotation = Quaternion.identity;
-        public bool UseAttachTransform = false;
+        public bool UseAttachTransform;
         public Transform AttachTransform;
 
         public bool StickWindow;
 
-        public LayerMask PanelLayerMask;// = LayerMask.GetMask("Default", "World", "Ground");
+        public LayerMask PanelLayerMask;
         //the prefered distance to display an exit 
         public float DisplayDistance = 3;
         public bool LockYPosition = true;

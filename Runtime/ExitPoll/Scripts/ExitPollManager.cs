@@ -221,6 +221,11 @@ namespace Cognitive3D
         /// </summary>
         private static ExitPollData ProcessExitPollResponse(int responseCode, string error, string text)
         {
+            if (responseCode != 200)
+            {
+                Util.logError("Failed to fetch ExitPoll data. Response code is " + responseCode);
+            }
+
             if (string.IsNullOrEmpty(text))
             {
                 Debug.LogError("C3D Exitpoll returned empty text");

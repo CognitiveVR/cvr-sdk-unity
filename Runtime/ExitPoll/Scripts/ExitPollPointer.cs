@@ -7,7 +7,7 @@ namespace Cognitive3D
 {
     internal static class ExitPollPointer
     {
-        internal static GameObject pointerInstance = null;
+        internal static GameObject pointerInstance;
         internal static ExitPollPanel currentExitPollPanel;
         internal static ExitPollParameters currentExitPollParameters;
 

@@ -78,7 +78,7 @@ namespace Cognitive3D
             }
         }
 
-        int _choiceIndex = 0;
+        int _choiceIndex;
         private bool hasRefreshedExitPollHooks;
         private bool hasInitExitPollHooks;
 
