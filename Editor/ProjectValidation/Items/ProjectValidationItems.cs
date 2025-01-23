@@ -755,7 +755,7 @@ namespace Cognitive3D
             }
     #endif
 
-    #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER && UNITY_ANDROID
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
@@ -786,7 +786,7 @@ namespace Cognitive3D
             }
     #endif
 
-    #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2 && UNITY_ANDROID
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
