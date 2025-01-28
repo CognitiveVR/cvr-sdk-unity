@@ -1,10 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.UI;
-using Cognitive3D;
-using System.IO;
-using UnityEngine.XR;
 
 //used in ExitPoll to record participant's voice
 //on completion, will encode the audio to a wav and pass a base64 string of the data to the ExitPoll
@@ -22,7 +18,7 @@ namespace Cognitive3D
         private int outputRate = 16000;
         AudioClip clip;
         bool _recording;
-        bool _finishedRecording;
+        private bool _recordingCooldown;
 
         [Header("Visuals")]
         public Image MicrophoneImage;
@@ -51,13 +47,13 @@ namespace Cognitive3D
 
         //if the player is looking at the button, updates the fill image and calls ActivateAction if filled
         //uses QuestionSet's CurrentExitPollPanel to pass base64 string to panel using the 'AnswerMicrophone' method
+
         void Update()
         {
             if (GameplayReferences.HMD == null) { return; }
-            if (_finishedRecording) { return; }
 
 #if UNITY_WEBGL
-            //microphone not support on webgl
+            // Microphone not supported on WebGL
 #else
             if (_recording)
             {
@@ -69,26 +65,32 @@ namespace Cognitive3D
 
                 if (_currentRecordTime <= 0)
                 {
-                    Microphone.End(null);
-                    byte[] bytes;
-                    Cognitive3D.MicrophoneUtility.Save(clip, out bytes);
-                    string encodedWav = MicrophoneUtility.EncodeWav(bytes);
-                    questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
-                    buttonPrompt.text = "Recording saved";
-                    _finishedRecording = true;
+                    StopRecording();
                 }
+            }
+
+            if (focusThisFrame && !_recordingCooldown)
+            {
+                if (_recording)
+                {
+                    StopRecording();
+                }
+                else
+                {
+                    StartRecording();
+                }
+
+                StartCoroutine(ResetFocusCooldown());
             }
 #endif
         }
 
-        //increase the fill amount if this image was focused this frame. calls RecorderActivate if past threshold
+        // Increase the fill amount if this image was focused this frame. Calls RecorderActivate if past threshold
         protected override void LateUpdate()
         {
             if (OnConfirm == null) { return; }
-            if (_recording) { return; }
-            if (_finishedRecording) { return; }
 
-            if (focusThisFrame)
+            if (focusThisFrame && !_recording && !_recordingCooldown)
             {
                 // Gradually fill
                 if (slowFill)
@@ -97,15 +99,17 @@ namespace Cognitive3D
                     UpdateFillAmount();
                     if (FillAmount >= FillDuration)
                     {
-                        RecorderActivate();
+                        StartRecording();
+                        StartCoroutine(ResetFocusCooldown());
                     }
                 }
                 else // Immediately activate
                 {
-                    RecorderActivate();
+                    StartRecording();
+                    StartCoroutine(ResetFocusCooldown());
                 }
             }
-            else if (FillAmount > 0)
+            else if (FillAmount > 0 && !_recording)
             {
                 FillAmount = 0;
                 UpdateFillAmount();
@@ -113,20 +117,40 @@ namespace Cognitive3D
             focusThisFrame = false;
         }
 
-        void RecorderActivate()
+        void StartRecording()
         {
 #if UNITY_WEBGL
-            //microphone not supported on webgl
-            return;
+            return; // Microphone not supported on WebGL
 #else
             clip = Microphone.Start(null, false, RecordTime, outputRate);
 #endif
             fillImage.color = Color.red;
 
             _currentRecordTime = RecordTime;
-            _finishedRecording = false;
             _recording = true;
             buttonPrompt.text = "Recording...";
+        }
+
+        void StopRecording()
+        {
+            Microphone.End(null);
+            byte[] bytes;
+            Cognitive3D.MicrophoneUtility.Save(clip, out bytes);
+            string encodedWav = MicrophoneUtility.EncodeWav(bytes);
+            questionSet.CurrentExitPollPanel.AnswerMicrophone(encodedWav);
+            buttonPrompt.text = "Recording saved\nPress again to re-record";
+
+            _recording = false;
+            FillAmount = 0; // Reset the fill amount
+            UpdateFillAmount();
+        }
+
+        // Cooldown to prevent immediate toggling
+        private IEnumerator ResetFocusCooldown()
+        {
+            _recordingCooldown = true; // Set cooldown
+            yield return new WaitForSeconds(0.2f); // Adjust the cooldown duration as needed
+            _recordingCooldown = false;
         }
 
         //increases the fill image if confirming selection with a pointer. lowers as recording time increases
