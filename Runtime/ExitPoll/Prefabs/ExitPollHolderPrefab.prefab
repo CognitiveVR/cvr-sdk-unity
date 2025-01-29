@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4329532137821989269
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4329532137821989259}
+  - component: {fileID: 4329532137821989258}
+  m_Layer: 0
+  m_Name: ExitPollHolderPrefab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4329532137821989259
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4329532137821989269}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4329532137821989258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4329532137821989269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dff3c6fe9380fb4691996ca51d03697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Parameters:
+    Hook: 
+    ExitpollSpawnType: 1
+    PointerType: 1
+    PointerActivationButton: 0
+    HMDPointerPrefab: {fileID: 1519450223153822, guid: a294e1928a0a665449041210b7e563b9,
+      type: 3}
+    PointerControllerPrefab: {fileID: 8777217466836023694, guid: ee8c90e88cb2e6743b3f1745e91f71d2,
+      type: 3}
+    PointerLineWidth: 0.01
+    PointerGradient:
+      serializedVersion: 2
+      key0: {r: 0.286, g: 0.106, b: 0.631, a: 1}
+      key1: {r: 0.055, g: 0.416, b: 0.624, a: 1}
+      key2: {r: 0.039, g: 0.557, b: 0.259, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 32768
+      ctime2: 65535
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_NumColorKeys: 3
+      m_NumAlphaKeys: 2
+    BoolPanelOverride: {fileID: 8155311442945591058, guid: 7ad4296d7709e3b4d8542066cb492b0e,
+      type: 3}
+    HappyPanelOverride: {fileID: 4283561230937508966, guid: b01e98d31526a1040a88022a4aefff3f,
+      type: 3}
+    ThumbsPanelOverride: {fileID: 7015749132107248154, guid: eac5a78d04a21434e90e87d15f81b698,
+      type: 3}
+    MultiplePanelOverride: {fileID: 3595951147999294787, guid: 2eeeeaf3809917b4192193d6718008a2,
+      type: 3}
+    ScalePanelOverride: {fileID: 2560340190076736175, guid: 85c062667345a2f45945f9f416fc7bac,
+      type: 3}
+    VoicePanelOverride: {fileID: 2245823323629699921, guid: eb24b9b13017b9a45898a13c46701f38,
+      type: 3}
+    PanelTextMaterial: {fileID: 2100000, guid: a1168a6ce2b80904885e78fd27a6551f, type: 2}
+    PanelErrorTextMaterial: {fileID: 2100000, guid: ffa3d6ac823aee544b310f213c1b6e92,
+      type: 2}
+    PanelBackgroundMaterial: {fileID: 2100000, guid: 62c8f729698af684d9f16372d21047a5,
+      type: 2}
+    OnBegin:
+      m_PersistentCalls:
+        m_Calls: []
+    OnComplete:
+      m_PersistentCalls:
+        m_Calls: []
+    OnClose:
+      m_PersistentCalls:
+        m_Calls: []
+    RotateToStayOnScreen: 1
+    UseOverridePosition: 0
+    OverridePosition: {x: 0, y: 0, z: 0}
+    UseOverrideRotation: 0
+    OverrideRotation: {x: 0, y: 0, z: 0, w: 1}
+    UseAttachTransform: 0
+    AttachTransform: {fileID: 0}
+    StickWindow: 0
+    PanelLayerMask:
+      serializedVersion: 2
+      m_Bits: 0
+    DisplayDistance: 3
+    LockYPosition: 1
+    MinimumDisplayDistance: 0.2
+  ActivateOnEnable: 0

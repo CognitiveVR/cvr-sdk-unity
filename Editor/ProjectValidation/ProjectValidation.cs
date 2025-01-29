@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
+using System.Threading.Tasks;
 
 namespace Cognitive3D
 {
@@ -185,16 +186,21 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="oldmessage">The message to search for in the validation items</param>
         /// <param name="newmessage">The new message to replace the old message with</param>
-        public static void UpdateItemMessage(string oldmessage, string newmessage)
+        internal static async void UpdateItemMessage(string oldMessage, string newMessage)
         {
-            var items = registry.GetAllItems();
-            foreach (var item in items)
+            foreach (var item in registry.GetAllItems())
             {
-                if (item.message.Contains(oldmessage))
+                if (item.message.Contains(oldMessage))
                 {
-                    item.message = newmessage;
+                    item.message = newMessage;
                 }
             }
+
+            // Add a brief delay to ensure updates are processed
+            await Task.Delay(600);
+
+            // Trigger the GUI update
+            ProjectValidationGUI.UpdateItemLevelMessage(oldMessage, newMessage);
         }
 
         /// <summary>

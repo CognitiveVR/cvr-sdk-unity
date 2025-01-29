@@ -449,15 +449,15 @@ namespace Cognitive3D
         /// <summary>
         ///  A refrence to the controller pointer (if) instantiated for exitpoll
         /// </summary>
-        private static GameObject controllerPointer;
+        private static GameObject pointerController;
 
         /// <summary>
         /// 
         /// </summary>
-        public static GameObject ControllerPointer
+        public static GameObject PointerController
         {
-            get { return controllerPointer; }
-            set { controllerPointer = value; }
+            get { return pointerController; }
+            set { pointerController = value; }
         }
 
         public static bool SDKSupportsControllers
@@ -749,6 +749,142 @@ namespace Cognitive3D
 
             return Vector3.zero;
         }
+
+        /// <summary>
+        /// Attempts to retrieve the world-space rotation of a controller/hand based on the specified XRNode.
+        /// Adjusts the local rotation to account for the parent's rotation.
+        /// </summary>
+        /// <param name="node">The XRNode representing the controller (e.g., LeftHand or RightHand).</param>
+        /// <param name="rotation">The resulting world-space rotation of the controller.</param>
+        /// <returns>True if a valid rotation is obtained.</returns>
+        public static bool TryGetControllerRotation(XRNode node, out Quaternion rotation)
+        {
+            rotation = GetNodeRotation(node);
+            // Ensure we have a valid rotation
+            if (rotation == Quaternion.identity)
+            {
+                return false;
+            }
+            
+            rotation = HMD.transform.parent.rotation * rotation;
+            return true;
+        }
+
+        /// <summary>
+        /// Retrieves the rotation of a specified XR node (e.g., hand or controller) based on the current tracking type.
+        /// Returns Quaternion.identity if the node rotation cannot be determined or if the tracking type is unsupported.
+        /// </summary>
+        /// <param name="node">The XRNode (e.g., XRNode.LeftHand, XRNode.RightHand) to get the rotation for.</param>
+        private static Quaternion GetNodeRotation(XRNode node)
+        {
+            TrackingType currentTracking = GetCurrentTrackedDevice();
+
+#if C3D_OCULUS
+            var targetNode = currentTracking switch
+            {
+                TrackingType.Controller => node == XRNode.RightHand ? OVRPlugin.Node.ControllerRight : OVRPlugin.Node.ControllerLeft,
+                TrackingType.Hand => node == XRNode.RightHand ? OVRPlugin.Node.HandRight : OVRPlugin.Node.HandLeft,
+                _ => OVRPlugin.Node.None,
+            };
+
+            if (targetNode != OVRPlugin.Node.None)
+            {
+                return OVRPlugin.GetNodePose(targetNode, OVRPlugin.Step.Physics).ToOVRPose().orientation;
+            }
+#elif C3D_PICOXR
+            switch (currentTracking)
+            {
+                case TrackingType.Controller:
+                    var controllerNode = node == XRNode.RightHand ? Unity.XR.PXR.PXR_Input.Controller.RightController : Unity.XR.PXR.PXR_Input.Controller.LeftController;
+                    return Unity.XR.PXR.PXR_Input.GetControllerPredictRotation(controllerNode, 0);
+                case TrackingType.Hand:
+                    var handNode = node == XRNode.RightHand ? Unity.XR.PXR.HandType.HandRight : Unity.XR.PXR.HandType.HandLeft;
+
+                    Unity.XR.PXR.HandJointLocations handJointLocations = new Unity.XR.PXR.HandJointLocations();
+
+                    if (Unity.XR.PXR.PXR_HandTracking.GetJointLocations(handNode, ref handJointLocations) && handJointLocations.isActive != 0U)
+                    {
+                        int wristIndex = (int)Unity.XR.PXR.HandJoint.JointWrist;
+                        if (wristIndex < handJointLocations.jointLocations.Length)
+                        {
+                            return handJointLocations.jointLocations[wristIndex].pose.Orientation.ToQuat();
+                        }
+                    }
+                    break;
+            }
+#elif C3D_VIVEWAVE
+            var rotation = Quaternion.identity;
+            switch (currentTracking)
+            {
+                case TrackingType.Controller:
+                    var controller = node == XRNode.RightHand ? Wave.OpenXR.InputDeviceControl.ControlDevice.Right : Wave.OpenXR.InputDeviceControl.ControlDevice.Left;
+                    Wave.OpenXR.InputDeviceControl.GetRotation(controller, out rotation);
+                    return rotation;
+
+                case TrackingType.Hand:
+                    if (Wave.Essence.Hand.HandManager.Instance != null)
+                    {
+                        var isRightHand = node == XRNode.RightHand;
+                        Wave.Essence.Hand.HandManager.Instance.GetJointRotation(Wave.Essence.Hand.HandManager.HandJoint.Wrist, ref rotation, isRightHand);
+                        return rotation;
+                    }
+                    break;
+            }
+#elif C3D_DEFAULT
+            switch (currentTracking)
+            {
+                case TrackingType.Controller:
+                    return GetDefaultNodeRotation(node);
+
+    #if COGNITIVE3D_INCLUDE_XR_HANDS
+                case TrackingType.Hand:
+                    var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
+                    SubsystemManager.GetSubsystems(subsystems);
+
+                    foreach (var subsystem in subsystems)
+                    {
+                        if (!subsystem.running) continue;
+
+                        var hand = node == XRNode.RightHand ? subsystem.rightHand : subsystem.leftHand;
+                        if (hand.isTracked)
+                        {
+                            var wrist = hand.GetJoint(UnityEngine.XR.Hands.XRHandJointID.Wrist);
+                            if (wrist.TryGetPose(out var pose))
+                            {
+                                return pose.rotation;
+                            }
+                        }
+                    }
+                    break;
+    #endif
+            }
+#endif
+            // Default fallback for retrieving controller rotations
+            // Compatible with all XR SDKs but does not return hand rotations
+            return GetDefaultNodeRotation(node);
+        }
+
+        /// <summary>
+        /// Default fallback for retrieving the rotation of an XRNode when no specific SDK is defined.
+        /// </summary>
+        /// <param name="node">The XRNode to retrieve the rotation for (e.g., LeftController, RightController, Head).</param>
+        /// <returns>The rotation of the specified XRNode, or Quaternion.identity if not found.</returns>
+        internal static Quaternion GetDefaultNodeRotation(XRNode node)
+        {
+            List<XRNodeState> nodeStates = new List<XRNodeState>();
+            InputTracking.GetNodeStates(nodeStates);
+
+            foreach (XRNodeState nodeState in nodeStates)
+            {
+                if (nodeState.nodeType == node && nodeState.TryGetRotation(out var rotation))
+                {
+                    return rotation;
+                }
+            }
+
+            return Quaternion.identity;
+        }
+
 
 #endregion
 

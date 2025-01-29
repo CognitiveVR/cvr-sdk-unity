@@ -2389,7 +2389,7 @@ namespace Cognitive3D.Serialization
 
         #region Exitpoll
         //TODO list of some generic class that can be serialized instead of Cognitive3D.ExitPollSet.ResponseContext
-        internal static string FormatExitpoll(List<Cognitive3D.ExitPollSet.ResponseContext> responseProperties, string QuestionSetId, string hook, string sceneId, int versionNumber, int versionId)
+        internal static string FormatExitpoll(List<Cognitive3D.ExitPollManager.ResponseContext> responseProperties, string QuestionSetId, string hook, string sceneId, int versionNumber, int versionId)
         {
             StringBuilder builder = new StringBuilder();
             builder.Append("{");

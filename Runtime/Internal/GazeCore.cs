@@ -48,6 +48,12 @@ namespace Cognitive3D
         {
             if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
+                if (Cognitive3D_Manager.Instance.trackingSpace!= null)
+                {
+                    floorPos = Cognitive3D_Manager.Instance.trackingSpace.position;
+                    return true;
+                }
+                
                 if (cameraRoot == null)
                 {
                     cameraRoot = GameplayReferences.HMD.root;

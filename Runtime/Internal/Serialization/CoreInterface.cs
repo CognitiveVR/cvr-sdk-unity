@@ -247,7 +247,7 @@ namespace Cognitive3D
         #endregion
 
         #region Exitpoll
-        internal static string SerializeExitpollAnswers(List<ExitPollSet.ResponseContext> responses, string questionSetId,string hook)
+        internal static string SerializeExitpollAnswers(List<ExitPollManager.ResponseContext> responses, string questionSetId,string hook)
         {
             return SharedCore.FormatExitpoll(responses,questionSetId,hook,Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber,Cognitive3D_Manager.TrackingSceneVersionId);
         }
