@@ -148,6 +148,12 @@ namespace Cognitive3D
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
         }
 
+        //GET request question set
+        internal static string GetExitpollHooks()
+        {
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/hooks");
+        }
+
         //POST question set responses
         //https://data.cognitive3d.com/v0/scenes/questionSets/[questionSetName]/[questionSetVersion]/responses
         internal static string PostExitpollResponses(string questionsetname, int questionsetversion)
