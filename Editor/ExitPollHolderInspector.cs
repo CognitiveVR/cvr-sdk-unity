@@ -78,7 +78,7 @@ namespace Cognitive3D
             }
         }
 
-        int _choiceIndex;
+        int _choiceIndex = -1;
         private bool hasRefreshedExitPollHooks;
         private bool hasInitExitPollHooks;
 
@@ -89,7 +89,7 @@ namespace Cognitive3D
             ExitPollHolder t = (ExitPollHolder)target;
             ExitPollParameters p = t.Parameters;
 
-            //display script field
+            // Display script field
             var script = serializedObject.FindProperty("m_Script");
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
@@ -104,14 +104,15 @@ namespace Cognitive3D
             }
 
             string[] displayOptions = new string[EditorCore.ExitPollHooks.Length];
-            if (!string.IsNullOrEmpty(p.Hook) && _choiceIndex == 0 && displayOptions.Length > 0)
+            if (!string.IsNullOrEmpty(p.Hook) && _choiceIndex == -1 && displayOptions.Length > 0)
             {
-                // Try once to select the correct hook
+                // Select the correct hook once
                 for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
                 {
                     if (EditorCore.ExitPollHooks[i].name == p.Hook)
                     {
                         _choiceIndex = i;
+                        break;
                     }
                 }
             }
@@ -152,8 +153,7 @@ namespace Cognitive3D
             int border = 2;
             GUIStyle minimalPaddingButton = new GUIStyle("button");
             minimalPaddingButton.padding = new RectOffset(border, border, border, border);
-            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Hooks"),minimalPaddingButton, GUILayout.Width(19),
-                    GUILayout.Height(19)))
+            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Hooks"),minimalPaddingButton, GUILayout.Width(19),GUILayout.Height(19)))
             {
                 EditorCore.RefreshExitPollHooks();
                 hasRefreshedExitPollHooks = true;
