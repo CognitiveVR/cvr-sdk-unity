@@ -28,7 +28,7 @@ namespace Cognitive3D
                 // Sends sensor data on change
                 if (currentRSSI != prevRSSI)
                 {
-                    SensorRecorder.RecordDataPoint("WifiRSSI", currentRSSI);
+                    SensorRecorder.RecordDataPoint("c3d.app.WifiRSSI", currentRSSI);
                     prevRSSI = currentRSSI;
                 }
             }

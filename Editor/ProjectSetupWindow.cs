@@ -11,6 +11,7 @@ namespace Cognitive3D
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
+            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -25,6 +26,7 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
+            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -39,6 +41,7 @@ namespace Cognitive3D
 
         internal static void Init(Rect position)
         {
+            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -824,8 +827,13 @@ namespace Cognitive3D
             }
 
             //calculate fill amount
-            float fillAmount = (float)(EditorApplication.timeSinceStartup - compileStartTime) / 10f;
-            fillAmount = Mathf.Clamp(fillAmount, 0.02f, 1f);
+            float compileDifference = (float)(EditorApplication.timeSinceStartup - compileStartTime);
+
+            //scale the loading bar so it never entirely fills
+            float fillAmount = compileDifference;
+            fillAmount = 1 - (fillAmount / (fillAmount * fillAmount));
+            fillAmount = Mathf.Lerp(compileDifference / 10, fillAmount, fillAmount/2);
+            fillAmount = Mathf.Max(0.02f, fillAmount);
             var compileDurationBox = new Rect(30, 120, 440, 30);
             var progressBackground = new Rect(30, 150, 440, 30);
             var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);

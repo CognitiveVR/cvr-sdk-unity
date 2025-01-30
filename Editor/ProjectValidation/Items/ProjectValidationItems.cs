@@ -265,19 +265,28 @@ namespace Cognitive3D
                 level: ProjectValidation.ItemLevel.Required, 
                 category: CATEGORY,
                 actionType: ProjectValidation.ItemAction.Edit,
-                message: "Current scene path is invalid. Please verify the path in Cognitive3D's preference scene settings",
-                fixmessage: "Current scene path is valid",
+                message: "Scene path(s) are invalid. Please verify the path in Cognitive3D's preference scene settings",
+                fixmessage: "Scene path(s) are valid",
                 checkAction: () =>
                 {
-                    Cognitive3D_Preferences.SceneSettings c3dScene = Cognitive3D_Preferences.FindCurrentScene();
-                    if (c3dScene != null)
+                    const string oldMessage = "Scene path(s) are invalid. Please verify the path in Cognitive3D's preference scene settings";
+                    var invalidScenes = new List<string>();
+
+                    foreach (var scene in Cognitive3D_Preferences.Instance.sceneSettings)
                     {
-                        // Load the asset at the C3D scene path
-                        Object scene = AssetDatabase.LoadAssetAtPath(c3dScene.ScenePath, typeof(SceneAsset));
-                        return scene != null;
+                        if (AssetDatabase.LoadAssetAtPath(scene.ScenePath, typeof(SceneAsset)) == null)
+                        {
+                            invalidScenes.Add(scene.SceneName);
+                        }
                     }
-                    
-                    return false;
+
+                    string newMessage = invalidScenes.Count > 0 
+                        ? $"{string.Join(", ", invalidScenes)} {oldMessage}" 
+                        : oldMessage;
+
+                    ProjectValidation.UpdateItemMessage(oldMessage, newMessage);
+
+                    return invalidScenes.Count == 0;
                 },
                 fixAction: () =>
                 {
@@ -295,18 +304,19 @@ namespace Cognitive3D
                 {
                     string newMessage;
                     string oldMessage = "The maximum limit of controllers in the scene has been exceeded. Please remove any extra controller dynamic objects.";
-                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
-                    {
-                        if (_controllerNamesList.Count > 2)
-                        {
-                            newMessage = oldMessage + $" The detected controller objects are: {string.Join(", ", _controllerNamesList)}";
-                            ProjectValidation.UpdateItemMessage(oldMessage, newMessage);
-                        }
 
-                        return _controllerNamesList.Count <= 2;
+                    if (ProjectValidation.TryGetControllers(out var controllerNamesList))
+                    {
+                        if (controllerNamesList.Count > 2)
+                        {
+                            newMessage = $"{oldMessage} The detected controller objects are: {string.Join(", ", controllerNamesList)}";
+                            ProjectValidation.UpdateItemMessage(oldMessage, newMessage);
+                            return false; // Exceeds the limit
+                        }
+                        return true; // Within the limit
                     }
-                    
-                    return true;
+
+                    return true; // No controllers detected or within the limit
                 },
                 fixAction: () =>
                 {
@@ -545,8 +555,26 @@ namespace Cognitive3D
                 fixAction: () =>
                 {
                     var waverig = new GameObject();
-                    waverig.name = "Wave Rig";
+                    waverig.name = "WaveRig";
                     waverig.AddComponent<Wave.Essence.WaveRig>();
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required, 
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "No Eye Manager found in current scene.",
+                fixmessage: "Eye Manager found in current scene.",
+                checkAction: () =>
+                {   
+                    return ProjectValidation.FindComponentInActiveScene<Wave.Essence.Eye.EyeManager>();
+                },
+                fixAction: () =>
+                {
+                    var eyeManager = new GameObject();
+                    eyeManager.name = "EyeManager";
+                    eyeManager.AddComponent<Wave.Essence.Eye.EyeManager>();
                 }
             );
 
@@ -737,7 +765,7 @@ namespace Cognitive3D
             }
     #endif
 
-    #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER && UNITY_ANDROID
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
@@ -768,7 +796,7 @@ namespace Cognitive3D
             }
     #endif
 
-    #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2
+    #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2 && UNITY_ANDROID
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 

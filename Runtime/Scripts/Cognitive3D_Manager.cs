@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "1.6.5";
+        public static readonly string SDK_VERSION = "1.7.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -733,8 +733,6 @@ namespace Cognitive3D
         void OnApplicationPause(bool paused)
         {
             if (!IsInitialized) { return; }
-            CustomEvent pauseEvent = new CustomEvent("c3d.pause").SetProperty("ispaused", paused);
-            pauseEvent.Send();
             FlushData();
         }
         bool hasCanceled = false;
@@ -750,11 +748,7 @@ namespace Cognitive3D
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             // if android plugin is initialized or Android platform is used, send end session event from plugin. Otherwise, send it from unity
-            if (AndroidPlugin.isInitialized)
-            {
-                AndroidPlugin.WantsToQuit();
-            }
-            else
+            if (!AndroidPlugin.isInitialized)
 #endif
             {
                 new CustomEvent("c3d.sessionEnd").SetProperties(new Dictionary<string, object>
