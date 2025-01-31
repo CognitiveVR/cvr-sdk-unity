@@ -29,19 +29,17 @@ namespace Cognitive3D
         static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
 
         internal ICache runtimeCache;
-        internal ILocalExitpoll exitpollCache;
         int lastDataResponse = 0;
 
         const float cacheUploadInterval = 2;
         const float minRetryDelay = 60;
         const float maxRetryDelay = 240;
 
-        internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
+        internal void Initialize(ICache runtimeCache)
         {
             DontDestroyOnLoad(gameObject);
             instance = this;
             this.runtimeCache = runtimeCache;
-            this.exitpollCache = exitpollCache;
         }
 
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
@@ -500,6 +498,95 @@ namespace Cognitive3D
                 return retryDelay * 2;
             }
             return minRetryDelay;
+        }
+
+        public static void GetTuningVariables(string participantId, Response callback, float timeout)
+        {
+            string url = CognitiveStatics.GetTuningVariableURL(participantId);
+            var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "GET");
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+            request.SendWebRequest();
+
+            instance.StartCoroutine(instance.WaitForTuningVariableResponse(request, callback, timeout));
+        }
+
+        System.Collections.IEnumerator WaitForTuningVariableResponse(UnityWebRequest www, Response callback, float timeout)
+        {
+            float time = 0;
+            while (time < timeout)
+            {
+                yield return null;
+                if (www.isDone) break;
+                time += Time.deltaTime;
+            }
+
+            var headers = www.GetResponseHeaders();
+            int responsecode = (int)www.responseCode;
+            lastDataResponse = responsecode;
+            //check cvr header to make sure not blocked by capture portal
+
+#if UNITY_WEBGL
+            //webgl cors issue doesn't seem to accept this required header
+            if (!headers.ContainsKey("cvr-request-time"))
+            {
+                headers.Add("cvr-request-time", string.Empty);
+            }
+#endif
+
+            if (!www.isDone)
+                Util.logWarning("Network::WaitForTuningVariableResponse timeout");
+            if (responsecode != 200)
+                Util.logWarning("Network::WaitForTuningVariableResponse responsecode is " + responsecode);
+
+            if (headers != null)
+            {
+                if (!headers.ContainsKey("cvr-request-time"))
+                    Util.logWarning("Network::WaitForTuningVariableResponse does not contain cvr-request-time header");
+            }
+
+            if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
+            {
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
+                {
+                    string text;
+                    if (Cognitive3D_Manager.TuningVariableHandler.GetTuningVariables(out text))
+                    {
+                        if (callback != null)
+                        {
+                            callback.Invoke(responsecode, "", text);
+                        }
+                    }
+                    else
+                    {
+                        if (callback != null)
+                        {
+                            callback.Invoke(responsecode, "", "");
+                        }
+                    }
+                }
+                else
+                {
+                    if (callback != null)
+                    {
+                        callback.Invoke(responsecode, "", "");
+                    }
+                }
+            }
+            else
+            {
+                if (callback != null)
+                {
+                    callback.Invoke(responsecode, www.error, www.downloadHandler.text);
+                }
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
+                {
+                    Cognitive3D_Manager.TuningVariableHandler.WriteTuningVariables(www.downloadHandler.text);
+                }
+            }
+            www.Dispose();
+            activeRequests.Remove(www);
         }
 
         //skip network cleanup if immediately/manually destroyed
