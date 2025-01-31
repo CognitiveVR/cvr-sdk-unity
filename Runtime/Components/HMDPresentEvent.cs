@@ -102,8 +102,11 @@ namespace Cognitive3D.Components
                     if (isUserCurrentlyPresent && !wasUserPresentPreviously) // put on headset after removing
                     {
                         double currentTimestamp = Util.Timestamp();
-                        CustomEvent equippedEvent = new CustomEvent("c3d.User equipped headset").SetProperty("Seconds headset was removed", currentTimestamp - removedTimestamp);
-                        equippedEvent.Send();
+                        if (removedTimestamp.HasValue && currentTimestamp > removedTimestamp)
+                        {
+                            CustomEvent equippedEvent = new CustomEvent("c3d.User equipped headset").SetProperty("Seconds headset was removed", currentTimestamp - removedTimestamp);
+                            equippedEvent.Send();
+                        }
                         wasUserPresentPreviously = true;
                     }
                     else if (!isUserCurrentlyPresent && wasUserPresentPreviously) // removing headset

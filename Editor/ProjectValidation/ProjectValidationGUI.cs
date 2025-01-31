@@ -235,6 +235,20 @@ namespace Cognitive3D
             FoldableList newLevelItemList = new FoldableList(title, icon, items);
             foldableLists.Add(newLevelItemList);
         }
+
+        internal static void UpdateItemLevelMessage(string oldMessage, string newMessage)
+        {
+            foreach (var itemList in foldableLists)
+            {
+                foreach (var item in itemList.items)
+                {
+                    if (item.message.Contains(oldMessage))
+                    {
+                        item.message = newMessage;
+                    }
+                }
+            }
+        }
     }
 
     [Serializable]

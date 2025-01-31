@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1646705450373899609
+--- !u!1 &2200677796254409954
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1578913761495854881}
-  - component: {fileID: 1755871760038798575}
+  - component: {fileID: 2200677796254409952}
+  - component: {fileID: 2200677796254409955}
   m_Layer: 0
   m_Name: ExitPollHolderPrefab
   m_TagString: Untagged
@@ -17,27 +17,27 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1578913761495854881
+--- !u!4 &2200677796254409952
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1646705450373899609}
+  m_GameObject: {fileID: 2200677796254409954}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 21.747274, y: -2.4415894, z: 4.3483925}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1755871760038798575
+--- !u!114 &2200677796254409955
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1646705450373899609}
+  m_GameObject: {fileID: 2200677796254409954}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5dff3c6fe9380fb4691996ca51d03697, type: 3}
@@ -46,21 +46,59 @@ MonoBehaviour:
   Parameters:
     Hook: 
     ExitpollSpawnType: 1
-    PointerParentOverride: {fileID: 0}
     PointerType: 0
-    PointerOverride: {fileID: 0}
-    BoolPanelOverride: {fileID: 8155311442945591058, guid: b75be6c0da1c4494cb2c35d3c839f48d,
+    PointerActivationButton: 0
+    HMDPointerPrefab: {fileID: 1519450223153822, guid: 39f5fc3ee60bbb240b1596106877619b,
       type: 3}
-    HappyPanelOverride: {fileID: 4283561230937508966, guid: 6faf55dc64447614b8023042894e8196,
+    PointerControllerPrefab: {fileID: 8777217466836023694, guid: 6c0a4493f35d57c4daec66a7549dbb88,
       type: 3}
-    ThumbsPanelOverride: {fileID: 7015749132107248154, guid: 86fd823ff5dcc6f4e8284cc09c05ade2,
+    PointerLineWidth: 0.01
+    PointerGradient:
+      serializedVersion: 2
+      key0: {r: 0.286, g: 0.106, b: 0.631, a: 1}
+      key1: {r: 0.055, g: 0.416, b: 0.624, a: 1}
+      key2: {r: 0.039, g: 0.557, b: 0.259, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 32768
+      ctime2: 65535
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_NumColorKeys: 3
+      m_NumAlphaKeys: 2
+    BoolPanelOverride: {fileID: 8155311442945591058, guid: 6196da0d97d2a77459a216d54e55507e,
       type: 3}
-    MultiplePanelOverride: {fileID: 3595951147999294787, guid: 4569ef2e4f1e24043b2f1abcb6c1f379,
+    HappyPanelOverride: {fileID: 4283561230937508966, guid: 498d6a3db57912a488259e6ca8c01d52,
       type: 3}
-    ScalePanelOverride: {fileID: 2560340190076736175, guid: cd12eefb6376c824ba2d5e1377c983a7,
+    ThumbsPanelOverride: {fileID: 7015749132107248154, guid: eff24fd889140084e8cb027ec727ea74,
       type: 3}
-    VoicePanelOverride: {fileID: 2245823323629699921, guid: 9403946311e91b143a34eeefd1e90c4d,
+    MultiplePanelOverride: {fileID: 3595951147999294787, guid: 8519dbe8bdc8b91449360a9d00a25385,
       type: 3}
+    ScalePanelOverride: {fileID: 2560340190076736175, guid: c513ed5ced5691e4d8fb3188ff3ac025,
+      type: 3}
+    VoicePanelOverride: {fileID: 2245823323629699921, guid: 7782563e119d99d418d7081e5d8b4cb4,
+      type: 3}
+    PanelTextMaterial: {fileID: 2100000, guid: c91f8a479a576b34c9a5dc67ea2cae31, type: 2}
+    PanelErrorTextMaterial: {fileID: 2100000, guid: e02ce176cd6c704439bdc062bf92ddb6,
+      type: 2}
+    PanelBackgroundMaterial: {fileID: 2100000, guid: fb799585f5d4e63409a37083a4f4edd8,
+      type: 2}
     OnBegin:
       m_PersistentCalls:
         m_Calls: []
@@ -78,8 +116,6 @@ MonoBehaviour:
     UseAttachTransform: 0
     AttachTransform: {fileID: 0}
     StickWindow: 0
-    UseTimeout: 0
-    Timeout: 3
     PanelLayerMask:
       serializedVersion: 2
       m_Bits: 0

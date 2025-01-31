@@ -35,12 +35,7 @@ namespace Cognitive3D
             Vector3 panelScale = new Vector3(2, 1.2f, 0.1f);
             if (boolPanelPrefab == null)
             {
-                if (p.BoolPanelOverride == null)
-                {
-                    boolPanelPrefab = ExitPoll.ExitPollTrueFalse;
-                    
-                }
-                else
+                if (p.BoolPanelOverride != null)
                 {
                     boolPanelPrefab = p.BoolPanelOverride;
                 }
@@ -53,7 +48,7 @@ namespace Cognitive3D
                     panelScale = collider.size;
             }
 
-            if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
             {
                 if (p.UseAttachTransform && p.AttachTransform != null)
                     Handles.DrawDottedLine(t.transform.position, p.AttachTransform.position,5);
@@ -83,6 +78,10 @@ namespace Cognitive3D
             }
         }
 
+        int _choiceIndex = -1;
+        private bool hasRefreshedExitPollHooks;
+        private bool hasInitExitPollHooks;
+
         public override void OnInspectorGUI()
         {
             //TODO editor properties - allow multiple selection
@@ -90,24 +89,83 @@ namespace Cognitive3D
             ExitPollHolder t = (ExitPollHolder)target;
             ExitPollParameters p = t.Parameters;
 
-            //display script field
+            // Display script field
             var script = serializedObject.FindProperty("m_Script");
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(script, true, new GUILayoutOption[0]);
             EditorGUI.EndDisabledGroup();
 
-            if (string.IsNullOrEmpty(p.Hook))
+            EditorGUILayout.LabelField("Current Question Set Hook",p.Hook);
+
+            if (!hasInitExitPollHooks)
             {
-                EditorGUI.indentLevel++;
-                p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
-                var rect = GUILayoutUtility.GetLastRect();
-                rect.width = 16;
-                GUI.Label(rect, new GUIContent(EditorCore.Error, "Hook should not be empty!"));
-                EditorGUI.indentLevel--;
+                EditorCore.RefreshExitPollHooks();
+                hasInitExitPollHooks = true;
+            }
+
+            string[] displayOptions = new string[EditorCore.ExitPollHooks.Length];
+            if (!string.IsNullOrEmpty(p.Hook) && _choiceIndex == -1 && displayOptions.Length > 0)
+            {
+                // Select the correct hook once
+                for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
+                {
+                    if (EditorCore.ExitPollHooks[i].name == p.Hook)
+                    {
+                        _choiceIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            for (int i = 0; i < EditorCore.ExitPollHooks.Length; i++)
+            {
+                displayOptions[i] = EditorCore.ExitPollHooks[i].name;
+            }
+
+            // Drop down button
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUI.BeginDisabledGroup(EditorCore.ExitPollHooks.Length == 0);
+            _choiceIndex = EditorGUILayout.Popup("Question Set Hooks", _choiceIndex, displayOptions);
+            EditorGUI.EndDisabledGroup();
+
+            // Save button
+            if (EditorCore.ExitPollHooks.Length > 0 && _choiceIndex != -1)
+            {
+                bool isSameHook = p.Hook == EditorCore.ExitPollHooks[_choiceIndex].name;
+
+                GUI.enabled = !isSameHook;  // Disable the button if hookname is the same as selected option
+                if (GUILayout.Button("Save", GUILayout.Width(40)))
+                {
+                    p.Hook = EditorCore.ExitPollHooks[_choiceIndex].name;
+                }
+
+                GUI.enabled = true;
             }
             else
             {
-                p.Hook = EditorGUILayout.TextField("Question Set Hook", p.Hook);
+                EditorGUI.BeginDisabledGroup(true);
+                GUILayout.Button("Save", GUILayout.Width(40));
+                EditorGUI.EndDisabledGroup();
+            }
+
+            // GUI style that has less border so the refresh icon is more clear
+            int border = 2;
+            GUIStyle minimalPaddingButton = new GUIStyle("button");
+            minimalPaddingButton.padding = new RectOffset(border, border, border, border);
+            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh Hooks"),minimalPaddingButton, GUILayout.Width(19),GUILayout.Height(19)))
+            {
+                EditorCore.RefreshExitPollHooks();
+                hasRefreshedExitPollHooks = true;
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            if (hasRefreshedExitPollHooks && EditorCore.ExitPollHooks.Length == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No ExitPoll hooks found for this project. Have you set them up on the dashboard yet?",
+                    MessageType.Warning);
             }
 
             t.ActivateOnEnable = EditorGUILayout.Toggle("Activate on Enable", t.ActivateOnEnable);
@@ -115,21 +173,51 @@ namespace Cognitive3D
             //EditorGUILayout.HelpBox("Customize ExitPoll parameters\nCall public 'Activate' function to create exitpoll", MessageType.Info);
 
             GUILayout.Space(10);
-            EditorGUILayout.LabelField("Controller Tracking", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Pointer Settings", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
-            p.PointerType = (ExitPoll.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
-
+            p.PointerType = (ExitPollManager.PointerType)EditorGUILayout.EnumPopup("Exit Poll Pointer Type", p.PointerType);
+            if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
+            {
+                p.PointerActivationButton = (ExitPollManager.PointerInputButton)EditorGUILayout.EnumPopup("Pointer Input Button", p.PointerActivationButton);
+            }
             EditorGUILayout.HelpBox(GetPointerDescription(p), MessageType.Info);
+
+            if (p.PointerType == ExitPollManager.PointerType.HMD)
+            {
+                p.HMDPointerPrefab = (GameObject)EditorGUILayout.ObjectField(
+                    new GUIContent("HMD Pointer Prefab","Prefab responsible for managing pointer input and visualizing the pointer."), 
+                    p.HMDPointerPrefab, typeof(GameObject), true
+                );
+            }
+
+            if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
+            {
+                p.PointerControllerPrefab = (GameObject)EditorGUILayout.ObjectField(
+                    new GUIContent("Pointer Controller Prefab","Prefab responsible for managing pointer input and visualizing the pointer."), 
+                    p.PointerControllerPrefab, typeof(GameObject), true
+                );
+
+                p.PointerLineWidth = EditorGUILayout.FloatField(
+                    new GUIContent("Pointer Line Width Multiplier","Adjusts the overall scaling factor applied to the LineRenderer.widthCurve, determining the final width of the pointer line."), 
+                    p.PointerLineWidth
+                );
+
+                p.PointerGradient = EditorGUILayout.GradientField(
+                    new GUIContent("Pointer Gradient Color","Defines the gradient color of the pointer line. Customize this to set how the pointer visually transitions between colors."), 
+                    p.PointerGradient
+                );
+            }
+
             EditorGUI.indentLevel--;
 
             GUILayout.Space(10);
             EditorGUILayout.LabelField("Tracking Space", EditorStyles.boldLabel);
 
             EditorGUI.indentLevel++;
-            p.ExitpollSpawnType = (ExitPoll.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
+            p.ExitpollSpawnType = (ExitPollManager.SpawnType)EditorGUILayout.EnumPopup(p.ExitpollSpawnType);
             
-            if (p.ExitpollSpawnType == ExitPoll.SpawnType.World)
+            if (p.ExitpollSpawnType == ExitPollManager.SpawnType.WorldSpace)
             {
                 GUILayout.BeginHorizontal();
                 p.UseAttachTransform = EditorGUILayout.Toggle(new GUIContent("Use Attach Transform","Attach ExitPoll Panels to this transform in your scene"), p.UseAttachTransform);
@@ -155,14 +243,22 @@ namespace Cognitive3D
 
 
             GUILayout.Space(10);
-            EditorGUILayout.LabelField("Panel Overrides", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Panel Prefabs", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
-            p.BoolPanelOverride = (GameObject)EditorGUILayout.ObjectField("Bool Panel Override", p.BoolPanelOverride, typeof(GameObject), true);
-            p.HappyPanelOverride = (GameObject)EditorGUILayout.ObjectField("Happy Panel Override", p.HappyPanelOverride, typeof(GameObject), true);
-            p.ThumbsPanelOverride = (GameObject)EditorGUILayout.ObjectField("Thumbs Panel Override", p.ThumbsPanelOverride, typeof(GameObject), true);
-            p.MultiplePanelOverride = (GameObject)EditorGUILayout.ObjectField("Multiple Panel Override", p.MultiplePanelOverride, typeof(GameObject), true);
-            p.ScalePanelOverride = (GameObject)EditorGUILayout.ObjectField("Scale Panel Override", p.ScalePanelOverride, typeof(GameObject), true);
-            p.VoicePanelOverride = (GameObject)EditorGUILayout.ObjectField("Voice Panel Override", p.VoicePanelOverride, typeof(GameObject), true);
+            p.BoolPanelOverride = (GameObject)EditorGUILayout.ObjectField("Bool Panel", p.BoolPanelOverride, typeof(GameObject), true);
+            p.HappyPanelOverride = (GameObject)EditorGUILayout.ObjectField("Happy Panel", p.HappyPanelOverride, typeof(GameObject), true);
+            p.ThumbsPanelOverride = (GameObject)EditorGUILayout.ObjectField("Thumbs Panel", p.ThumbsPanelOverride, typeof(GameObject), true);
+            p.MultiplePanelOverride = (GameObject)EditorGUILayout.ObjectField("Multiple Panel", p.MultiplePanelOverride, typeof(GameObject), true);
+            p.ScalePanelOverride = (GameObject)EditorGUILayout.ObjectField("Scale Panel", p.ScalePanelOverride, typeof(GameObject), true);
+            p.VoicePanelOverride = (GameObject)EditorGUILayout.ObjectField("Voice Panel", p.VoicePanelOverride, typeof(GameObject), true);
+            EditorGUI.indentLevel--;
+
+            GUILayout.Space(10);
+            EditorGUILayout.LabelField("Panel UI Settings", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            p.PanelTextMaterial = (Material)EditorGUILayout.ObjectField("Panel Text Material", p.PanelTextMaterial, typeof(Material), true);
+            p.PanelErrorTextMaterial = (Material)EditorGUILayout.ObjectField("Panel Error Text Material", p.PanelErrorTextMaterial, typeof(Material), true);
+            p.PanelBackgroundMaterial = (Material)EditorGUILayout.ObjectField("Panel Background Material", p.PanelBackgroundMaterial, typeof(Material), true);
             EditorGUI.indentLevel--;
 
             GUILayout.Space(10);
@@ -195,13 +291,13 @@ namespace Cognitive3D
 
         private string GetPointerDescription(ExitPollParameters parameters)
         {
-            if (parameters.PointerType == ExitPoll.PointerType.LeftControllerPointer)
+            if (parameters.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
-                return "Users will interact with the buttons by using the left controller and/or left hand, if available.";
+                return "Users will interact with the buttons by using controllers and/or hands, if available.";
             }
-            else if (parameters.PointerType == ExitPoll.PointerType.RightControllerPointer)
+            else if (parameters.PointerType == ExitPollManager.PointerType.Custom)
             {
-                return "Users will interact with the buttons by using the right controller and/or right hand, if available.";
+                return "Users will interact with the buttons by using custom pointer.";
             }
             else
             {
