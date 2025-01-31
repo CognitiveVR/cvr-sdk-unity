@@ -130,7 +130,7 @@ namespace Cognitive3D
             EditorGUI.EndDisabledGroup();
 
             // Save button
-            if (EditorCore.ExitPollHooks.Length > 0)
+            if (EditorCore.ExitPollHooks.Length > 0 && _choiceIndex != -1)
             {
                 bool isSameHook = p.Hook == EditorCore.ExitPollHooks[_choiceIndex].name;
 
