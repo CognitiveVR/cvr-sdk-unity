@@ -1049,7 +1049,6 @@ namespace Cognitive3D
                     break;
                 case Page.Organization:
                     onclick += () => SaveApplicationKey();
-                    onclick += () => UnityEditor.VSAttribution.Cognitive3D.VSAttribution.SendAttributionEvent("Login", "Cognitive3D", apikey);
                     buttonDisabled = apikey == null || string.IsNullOrEmpty(apikey);
                     if (buttonDisabled)
                     {
