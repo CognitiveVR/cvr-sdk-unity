@@ -1213,6 +1213,8 @@ namespace Cognitive3D
         /// </summary>
         public static Texture2D BakeTerrainTexture(TerrainData data)
         {
+            if (data == null) return new Texture2D(1, 1);
+            
             float[,,] maps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
 
             //LIMIT to 6 layers for now! rbga + black + transparency?
