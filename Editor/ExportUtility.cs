@@ -1101,6 +1101,8 @@ namespace Cognitive3D
 
         public static Texture2D BakeCTSTerrainTexture(TerrainData data, Material material)
         {
+            if (data == null) return new Texture2D(1, 1);
+            
             //read splatmaps and texture arrays
             var t = material.GetTexture("_Texture_Array_Albedo");
             var albedos = t as Texture2DArray;
@@ -1183,6 +1185,8 @@ namespace Cognitive3D
 
         public static Texture2D BakeGridTerrainTexture(TerrainData data, Material material)
         {
+            if (data == null) return new Texture2D(1, 1);
+
             Texture2D finalTexture = new Texture2D((int)data.size.x, (int)data.size.z);
             Color c = Color.white;
             Color white = Color.white;
