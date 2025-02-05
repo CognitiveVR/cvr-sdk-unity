@@ -1,7 +1,10 @@
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.Networking;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Cognitive3D.Newtonsoft.Json;
 
 namespace Cognitive3D
 {
@@ -89,6 +92,26 @@ namespace Cognitive3D
             await SendTrackingDataAsync(TRACK_URL, jsonPayload);
         }
 
+        /// <summary>
+        /// Async method to send tracking data to Segment
+        /// More info about track event: https://segment.com/docs/connections/spec/track/ 
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="properties"></param>
+        public static async void TrackEvent(string eventName, SegmentProperties properties)
+        {
+            var payload = new SegmentTrackPayload
+            {
+                anonymousId = _anonymousId,
+                @event = eventName,
+                properties = properties
+            };
+
+            string jsonPayload = JsonConvert.SerializeObject(payload);
+
+            await SendTrackingDataAsync(TRACK_URL, jsonPayload);
+        }
+
         private static async Task SendTrackingDataAsync(string trackURL, string data)
         {
             if (string.IsNullOrEmpty(_writeKey)) FetchKey();
@@ -113,7 +136,7 @@ namespace Cognitive3D
 
         // Classes to match Segment API payload structure
         [System.Serializable]
-        private class SegmentTrackPayload
+        internal class SegmentTrackPayload
         {
             public string anonymousId;
             public string @event;
@@ -122,10 +145,23 @@ namespace Cognitive3D
         }
 
         [System.Serializable]
-        private class SegmentProperties
+        internal class SegmentProperties
         {
             public string buttonName;
             public string status;
+
+            [JsonExtensionData]
+            private Dictionary<string, object> otherProperties = new Dictionary<string, object>();
+
+            public void SetProperty(string key, object value)
+            {
+                otherProperties[key] = value;
+            }
+
+            public object GetProperty(string key)
+            {
+                return otherProperties.TryGetValue(key, out var value) ? value : null;
+            }
         }
     }
 }
