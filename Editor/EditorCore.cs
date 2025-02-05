@@ -2025,6 +2025,21 @@ namespace Cognitive3D
             }
         }
 
+        [System.Serializable]
+        internal class OrganizationData
+        {
+            public string organizationName;
+            public SubscriptionData[] subscriptions;
+        }
+
+        [System.Serializable]
+        internal class SubscriptionData
+        {
+            public long beginning;
+            public long expiration;
+            public string planType;
+            public bool isFreeTrial;
+        }
         #endregion
 
         #region Dynamic Object Aggregation Manifest

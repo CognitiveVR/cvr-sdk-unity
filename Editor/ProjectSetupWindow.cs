@@ -322,22 +322,6 @@ namespace Cognitive3D
             }
         }
 
-        [System.Serializable]
-        private class OrganizationData
-        {
-            public string organizationName;
-            public SubscriptionData[] subscriptions;
-        }
-
-        [System.Serializable]
-        private class SubscriptionData
-        {
-            public long beginning;
-            public long expiration;
-            public string planType;
-            public bool isFreeTrial;
-        }
-
         private System.DateTime UnixTimeStampToDateTime(long unixTimeStamp)
         {
             System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
@@ -356,7 +340,7 @@ namespace Cognitive3D
             // Check if response data is valid
             try
             {
-                JsonUtility.FromJson<OrganizationData>(text);
+                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
                 isResponseJsonValid = true;
             }
             catch
@@ -366,7 +350,7 @@ namespace Cognitive3D
                 return;
             }
 
-            OrganizationData organizationDetails = JsonUtility.FromJson< OrganizationData>(text);
+            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
             if (organizationDetails == null)
             {
                 Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");

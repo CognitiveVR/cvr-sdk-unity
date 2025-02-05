@@ -17,9 +17,14 @@ namespace Cognitive3D
 
         private static string _writeKey;
         private static string _anonymousId;
+        static string _organizationName;
 
         static SegmentAnalytics()
         {
+            if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
+            {
+                EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
+            } 
             _anonymousId = System.Guid.NewGuid().ToString();
             FetchKey();
         }
@@ -60,6 +65,8 @@ namespace Cognitive3D
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
                 anonymousId = _anonymousId,
+                organizationName = _organizationName,
+                sdkVersion = Cognitive3D_Manager.SDK_VERSION,
                 name = pageName,
                 properties = new SegmentProperties
                 {
@@ -82,6 +89,8 @@ namespace Cognitive3D
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
                 anonymousId = _anonymousId,
+                organizationName = _organizationName,
+                sdkVersion = Cognitive3D_Manager.SDK_VERSION,
                 @event = eventName,
                 properties = new SegmentProperties
                 {
@@ -103,6 +112,8 @@ namespace Cognitive3D
             var payload = new SegmentTrackPayload
             {
                 anonymousId = _anonymousId,
+                organizationName = _organizationName,
+                sdkVersion = Cognitive3D_Manager.SDK_VERSION,
                 @event = eventName,
                 properties = properties
             };
@@ -134,11 +145,43 @@ namespace Cognitive3D
             }
         }
 
+        private static void GetSubscriptionResponse(int responseCode, string error, string text)
+        {
+            if (responseCode != 200)
+            {
+                Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
+                return;
+            }
+
+            // Check if response data is valid
+            try
+            {
+                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+            }
+            catch
+            {
+                Debug.LogError("Invalid JSON response");
+                return;
+            }
+
+            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+            if (organizationDetails == null)
+            {
+                Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
+            }
+            else
+            {
+                _organizationName = organizationDetails.organizationName;
+            }
+        }
+
         // Classes to match Segment API payload structure
         [System.Serializable]
         internal class SegmentTrackPayload
         {
             public string anonymousId;
+            public string organizationName;
+            public string sdkVersion;
             public string @event;
             public string name;
             public SegmentProperties properties;
