@@ -14,18 +14,14 @@ namespace Cognitive3D
         private const string KEY_URL = "https://data.cognitive3d.com/segmentWriteKey";
         private const string TRACK_URL = "https://api.segment.io/v1/track";
         private const string PAGE_URL = "https://api.segment.io/v1/page";
+        private const string IDENTIFY_URL = "https://api.segment.io/v1/identify";
 
         private static string _writeKey;
-        private static string _anonymousId;
-        static string _organizationName;
+        private static string _userId;
+        private static string _organizationName;
 
         static SegmentAnalytics()
         {
-            if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
-            {
-                EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
-            } 
-            _anonymousId = System.Guid.NewGuid().ToString();
             FetchKey();
         }
 
@@ -35,6 +31,11 @@ namespace Cognitive3D
         private static async void FetchKey()
         {
             _writeKey = await GetKeyFromServerAsync();
+
+            if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
+            {
+                EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
+            } 
         }
 
         private static async Task<string> GetKeyFromServerAsync()
@@ -53,6 +54,19 @@ namespace Cognitive3D
             }
         }
 
+        public static async void Identify()
+        {
+            // Create the data payload in JSON format
+            string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentIdentifyPayload
+            {
+                userId = _userId,
+                organizationName = _organizationName,
+                sdkVersion = Cognitive3D_Manager.SDK_VERSION
+            });
+
+            await SendTrackingDataAsync(IDENTIFY_URL, jsonPayload);
+        }
+
         /// <summary>
         /// Async method to send page data to Segment
         /// More info about page event: https://segment.com/docs/connections/spec/page/
@@ -64,9 +78,8 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
-                anonymousId = _anonymousId,
+                userId = _userId,
                 organizationName = _organizationName,
-                sdkVersion = Cognitive3D_Manager.SDK_VERSION,
                 name = pageName,
                 properties = new SegmentProperties
                 {
@@ -88,9 +101,8 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
-                anonymousId = _anonymousId,
+                userId = _userId,
                 organizationName = _organizationName,
-                sdkVersion = Cognitive3D_Manager.SDK_VERSION,
                 @event = eventName,
                 properties = new SegmentProperties
                 {
@@ -111,9 +123,8 @@ namespace Cognitive3D
         {
             var payload = new SegmentTrackPayload
             {
-                anonymousId = _anonymousId,
+                userId = _userId,
                 organizationName = _organizationName,
-                sdkVersion = Cognitive3D_Manager.SDK_VERSION,
                 @event = eventName,
                 properties = properties
             };
@@ -147,6 +158,7 @@ namespace Cognitive3D
 
         private static void GetSubscriptionResponse(int responseCode, string error, string text)
         {
+            _userId = System.Guid.NewGuid().ToString();
             if (responseCode != 200)
             {
                 Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
@@ -173,15 +185,24 @@ namespace Cognitive3D
             {
                 _organizationName = organizationDetails.organizationName;
             }
+
+            Identify();
         }
 
         // Classes to match Segment API payload structure
         [System.Serializable]
-        internal class SegmentTrackPayload
+        internal class SegmentIdentifyPayload
         {
-            public string anonymousId;
+            public string userId;
             public string organizationName;
             public string sdkVersion;
+        }
+
+        [System.Serializable]
+        internal class SegmentTrackPayload
+        {
+            public string userId;
+            public string organizationName;
             public string @event;
             public string name;
             public SegmentProperties properties;
