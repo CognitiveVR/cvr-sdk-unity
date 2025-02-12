@@ -858,7 +858,7 @@ namespace Cognitive3D
 
         bool CommonMeshesContainsSearch(string search)
         {
-            foreach (var commonMesh in System.Enum.GetNames(typeof(DynamicObject.CommonDynamicMesh)))
+            foreach (var commonMesh in System.Enum.GetNames(typeof(InputUtil.CommonDynamicMesh)))
             {
                 if (commonMesh.ToLower(System.Globalization.CultureInfo.InvariantCulture).Contains(search))
                 {

@@ -922,15 +922,15 @@ namespace Cognitive3D
                 Debug.Log("Set Controller Dynamic Object Settings. Create Controller Input Tracker component");
             }
 
-            DynamicObject.ControllerType controllerType = DynamicObject.ControllerType.Quest2;
+            InputUtil.ControllerType controllerType = InputUtil.ControllerType.Quest2;
 #if C3D_STEAMVR2
-                controllerType = DynamicObject.ControllerType.ViveWand;
+                controllerType = InputUtil.ControllerType.ViveWand;
 #elif C3D_OCULUS
-                controllerType = DynamicObject.ControllerType.Quest2;
+                controllerType = InputUtil.ControllerType.Quest2;
 #elif C3D_PICOXR
-                controllerType = DynamicObject.ControllerType.PicoNeo3;
+                controllerType = InputUtil.ControllerType.PicoNeo3;
 #elif C3D_VIVEWAVE
-                controllerType = DynamicObject.ControllerType.ViveFocus;
+                controllerType = InputUtil.ControllerType.ViveFocus;
 #endif
             
             if (leftcontroller != null)
