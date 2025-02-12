@@ -303,6 +303,21 @@ namespace Cognitive3D
             return ControllerDisplayType.unknown;
         }
 
+        internal static bool TryParseControllerDisplayType(string display, out ControllerDisplayType controllerDisplayType)
+        {
+            foreach (ControllerDisplayType value in System.Enum.GetValues(typeof(ControllerDisplayType)))
+            {
+                if (display.Contains(value.ToString()))
+                {
+                    controllerDisplayType = value;
+                    return true;
+                }
+            }
+
+            controllerDisplayType = ControllerDisplayType.unknown;
+            return false;
+        }
+
         /// <summary>
         /// Oculus SeGets the current tracked device i.e. hand or controller
         /// </summary>
