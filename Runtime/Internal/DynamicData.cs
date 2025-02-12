@@ -98,5 +98,43 @@ namespace Cognitive3D
             DesiredUpdateRate = updateInterval;
             UpdateInterval = 0;
         }
+
+        // Used for controllers/hands
+        public DynamicData(string name, string customid, string meshname, Vector3 position, Quaternion rotation, float posThreshold, float rotThreshold, float updateInterval, string inputType, string controllerType, bool isRightHand)
+        {
+            if (string.IsNullOrEmpty(customid))
+            {
+                Id = Cognitive3D.DynamicManager.GetUniqueObjectId(meshname);
+                UseCustomId = false;
+            }
+            else
+            {
+                Id = customid;
+                UseCustomId = true;
+            }
+            Name = name;
+            MeshName = meshname;
+            Transform = null; // Since this constructor doesn’t take a Transform
+            LastPosition = position;
+            LastRotation = rotation;
+            LastScale = Vector3.zero;
+            PositionThreshold = posThreshold;
+            RotationThreshold = rotThreshold;
+            ScaleThreshold = 0;
+            active = true;
+            dirty = true;
+            remove = false;
+            hasEnabled = false;
+
+            HasProperties = false;
+            Properties = null;
+            InputType = inputType;
+            IsController = true;
+            ControllerType = controllerType;
+            IsRightHand = isRightHand;
+
+            DesiredUpdateRate = updateInterval;
+            UpdateInterval = 0;
+        }
     }
 }
