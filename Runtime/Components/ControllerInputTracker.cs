@@ -427,8 +427,8 @@ namespace Cognitive3D.Components
 
         void Init()
         {
-            LeftHand = DynamicManager.GetControllerDynamicData(InputUtil.InputType.Controller, false);
-            RightHand = DynamicManager.GetControllerDynamicData(InputUtil.InputType.Controller, true);
+            LeftHand = DynamicManager.GetInputDynamicData(InputUtil.InputType.Controller, false);
+            RightHand = DynamicManager.GetInputDynamicData(InputUtil.InputType.Controller, true);
 
             Cognitive3D_Manager.SetSessionProperty("c3d.device.controllerinputs.enabled", true);
 
