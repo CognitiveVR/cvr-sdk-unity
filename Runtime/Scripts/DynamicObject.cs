@@ -510,6 +510,19 @@ namespace Cognitive3D
             hasInitialized = false;
         }
 
+        private void OnDestroy()
+        {
+            GameplayReferences.OnControllerValidityChange -= DelayEnable;
+
+            PhysicsGaze.OnGazeTick -= SyncWithGazeTick;
+
+            DynamicManager.SetTransform(DataId, transform);
+
+            Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
+            
+            hasInitialized = false;
+        }
+
 #if UNITY_EDITOR
         private void Reset()
     {

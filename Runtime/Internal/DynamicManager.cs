@@ -1027,13 +1027,9 @@ namespace Cognitive3D
                 Quaternion rot;
 
                 if (array[index].Transform == null) array[index].remove = true;
-                if (array[index].remove) continue;
-                // pos = array[index].remove ? array[index].LastPosition : array[index].Transform.position;
-                // scale = array[index].remove ? array[index].LastScale : array[index].Transform.lossyScale;
-                // rot = array[index].remove ? array[index].LastRotation : array[index].Transform.rotation;
-                pos = array[index].Transform.position;
-                scale = array[index].Transform.lossyScale;
-                rot = array[index].Transform.rotation;
+                pos = array[index].remove ? array[index].LastPosition : array[index].Transform.position;
+                scale = array[index].remove ? array[index].LastScale : array[index].Transform.lossyScale;
+                rot = array[index].remove ? array[index].LastRotation : array[index].Transform.rotation;
 
                 //check distance
                 if (!writeData)
