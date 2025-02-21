@@ -17,6 +17,7 @@ namespace Cognitive3D
 #endif
     [AddComponentMenu("Cognitive3D/Common/Dynamic Object")]
     [HelpURL("https://docs.cognitive3d.com/unity/dynamic-objects/")]
+    [DisallowMultipleComponent]
     public class DynamicObject : MonoBehaviour
     {
         /// <summary>
