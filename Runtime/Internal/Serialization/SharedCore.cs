@@ -29,6 +29,7 @@ namespace Cognitive3D.Serialization
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
             SerializeBoundaryShapes(copyToCache);
+            SerializeDynamicImmediate(copyToCache);
         }
 
         internal static void Flush(bool copyToCache)
