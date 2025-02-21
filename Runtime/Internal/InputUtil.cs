@@ -457,8 +457,7 @@ namespace Cognitive3D
             switch (currentTracking)
             {
                 case InputType.Controller:
-                    var controllerNode = node == XRNode.RightHand ? Unity.XR.PXR.PXR_Input.Controller.RightController : Unity.XR.PXR.PXR_Input.Controller.LeftController;
-                    return Unity.XR.PXR.PXR_Input.GetControllerPredictPosition(controllerNode, 0);
+                    return GetDefaultNodePosition(node);
                 case InputType.Hand:
                     var handNode = node == XRNode.RightHand ? Unity.XR.PXR.HandType.HandRight : Unity.XR.PXR.HandType.HandLeft;
 
@@ -592,8 +591,7 @@ namespace Cognitive3D
             switch (currentTracking)
             {
                 case InputType.Controller:
-                    var controllerNode = node == XRNode.RightHand ? Unity.XR.PXR.PXR_Input.Controller.RightController : Unity.XR.PXR.PXR_Input.Controller.LeftController;
-                    return Unity.XR.PXR.PXR_Input.GetControllerPredictRotation(controllerNode, 0);
+                    return GetDefaultNodeRotation(node);
                 case InputType.Hand:
                     var handNode = node == XRNode.RightHand ? Unity.XR.PXR.HandType.HandRight : Unity.XR.PXR.HandType.HandLeft;
 
