@@ -9,34 +9,34 @@ using System.Collections.Generic;
 // If the participantId is set at session start, variables are fetched immediately.
 // Otherwise, it waits up to 5 seconds for a participantId to be set.
 // If the timer runs out, it defaults to using the deviceId.
-// If fetchVariablesAutomatically is false, call Cognitive3D.Components.TuningVariables.FetchVariables manually.
+// If fetchVariablesAutomatically is false, call Cognitive3D.Components.AppVariables.FetchVariables manually.
 
-//CONSIDER custom editor to display tuning variables
+//CONSIDER custom editor to display app variables
 
 namespace Cognitive3D.Components
 {
 #region Json
-    internal class TuningVariableCollection
+    internal class AppVariableCollection
     {
-        public List<TuningVariableItem> tuningVariables = new List<TuningVariableItem>();
+        public List<AppVariableItem> appVariables = new List<AppVariableItem>();
     }
 #endregion
 
     [DisallowMultipleComponent]
-    [AddComponentMenu("Cognitive3D/Components/Tuning Variables")]
-    public class TuningVariables : AnalyticsComponentBase
+    [AddComponentMenu("Cognitive3D/Components/App Variables")]
+    public class AppVariables : AnalyticsComponentBase
     {
         static bool hasFetchedVariables;
         /// <summary>
         /// the delay to hear a response from our backend. If there is no response in this time, try to use a local cache of variables
         /// </summary>
-        const float requestTuningVariablesTimeout = 3;
+        const float requestAppVariablesTimeout = 3;
         /// <summary>
         /// the delay waiting for participant id to be set (if not already set at the start of the session)
         /// </summary>
         public float waitForParticipantIdTimeout = 5;
         /// <summary>
-        /// if true, uses the participant id (possibly with a delay) to get tuning variables. Otherwise, use the device id
+        /// if true, uses the participant id (possibly with a delay) to get app variables. Otherwise, use the device id
         /// </summary>
         public bool useParticipantId = true;
         /// <summary>
@@ -88,7 +88,7 @@ namespace Cognitive3D.Components
         {
             if (!hasFetchedVariables)
             {
-                NetworkManager.GetTuningVariables(Cognitive3D_Manager.DeviceId, TuningVariableResponse, requestTuningVariablesTimeout);
+                NetworkManager.GetAppVariables(Cognitive3D_Manager.DeviceId, AppVariableResponse, requestAppVariablesTimeout);
             }
         }
 
@@ -96,32 +96,32 @@ namespace Cognitive3D.Components
         {
             if (!hasFetchedVariables)
             {
-                NetworkManager.GetTuningVariables(participantId, TuningVariableResponse, requestTuningVariablesTimeout);
+                NetworkManager.GetAppVariables(participantId, AppVariableResponse, requestAppVariablesTimeout);
             }
         }
 
-        static void TuningVariableResponse(int responsecode, string error, string text)
+        static void AppVariableResponse(int responsecode, string error, string text)
         {
             if (hasFetchedVariables)
             {
-                Util.logDevelopment("TuningVariableResponse called multiple times!");
+                Util.logDevelopment("AppVariableResponse called multiple times!");
                 return;
             }
 
             if (responsecode != 200)
             {
-                Util.logDevelopment("Tuning Variable reponse code " + responsecode + "  " + error);
+                Util.logDevelopment("App Variable reponse code " + responsecode + "  " + error);
             }
             
             try
             {
-                var tvc = JsonUtility.FromJson<TuningVariableCollection>(text);
+                var tvc = JsonUtility.FromJson<AppVariableCollection>(text);
                 if (tvc != null)
                 {
-                    TuningVariableManager.Reset();
-                    foreach (var entry in tvc.tuningVariables)
+                    AppVariableManager.Reset();
+                    foreach (var entry in tvc.appVariables)
                     {
-                        TuningVariableManager.SetVariable(entry);
+                        AppVariableManager.SetVariable(entry);
 
                         if (entry.type == "string")
                         {
@@ -139,7 +139,7 @@ namespace Cognitive3D.Components
                 }
                 else
                 {
-                    Util.logDevelopment("TuningVariableCollection is null");
+                    Util.logDevelopment("AppVariableCollection is null");
                 }
             }
             catch (System.Exception e)
@@ -148,7 +148,7 @@ namespace Cognitive3D.Components
             }
 
             hasFetchedVariables = true;
-            TuningVariableManager.InvokeOnTuningVariablesAvailable();
+            AppVariableManager.InvokeOnAppVariablesAvailable();
         }
 
         private void Cognitive3D_Manager_OnPostSessionEnd()

@@ -162,7 +162,7 @@ namespace Cognitive3D
         }
 
         //GET request question set
-        internal static string GetTuningVariableURL(string userId)
+        internal static string GetAppVariableURL(string userId)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/appvariables?identifier=", userId);
         }

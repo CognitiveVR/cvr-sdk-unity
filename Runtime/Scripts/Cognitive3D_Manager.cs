@@ -156,7 +156,7 @@ namespace Cognitive3D
 #endif
 
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
-            TuningVariableHandler = new TuningVariablesLocalDataHandler(Application.persistentDataPath + "/c3dlocal/tuningvariables/");
+            AppVariableHandler = new AppVariablesLocalDataHandler(Application.persistentDataPath + "/c3dlocal/appvariables/");
 
             if (Cognitive3D_Preferences.Instance.LocalStorage)
             {
@@ -835,7 +835,7 @@ namespace Cognitive3D
         private static void InvokeOnParticipantIdSet(string participantId) { if (OnParticipantIdSet != null) { OnParticipantIdSet.Invoke(participantId); } }
 
         internal static ILocalExitpoll ExitpollHandler;
-        internal static ILocalTuningVariables TuningVariableHandler;
+        internal static ILocalAppVariables AppVariableHandler;
         internal static ICache DataCache;
         internal static NetworkManager NetworkManager;
 

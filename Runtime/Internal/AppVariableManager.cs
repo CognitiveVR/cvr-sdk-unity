@@ -4,24 +4,24 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public static class TuningVariableManager
+    public static class AppVariableManager
     {
-        static Dictionary<string, Cognitive3D.TuningVariableItem> tuningVariables = new Dictionary<string, Cognitive3D.TuningVariableItem>();
+        static Dictionary<string, AppVariableItem> appVariables = new Dictionary<string, AppVariableItem>();
 
-        public delegate void onTuningVariablesAvailable();
+        public delegate void onAppVariablesAvailable();
         /// <summary>
-        /// Called after tuning variables are available (also called after a delay if no response)
+        /// Called after app variables are available (also called after a delay if no response)
         /// </summary>
-        public static event onTuningVariablesAvailable OnTuningVariablesAvailable;
-        internal static void InvokeOnTuningVariablesAvailable() { if (OnTuningVariablesAvailable != null) { OnTuningVariablesAvailable.Invoke(); } }
+        public static event onAppVariablesAvailable OnAppVariablesAvailable;
+        internal static void InvokeOnAppVariablesAvailable() { if (OnAppVariablesAvailable != null) { OnAppVariablesAvailable.Invoke(); } }
 
         internal static void Reset()
         {
-            tuningVariables.Clear();
+            appVariables.Clear();
         }
-        internal static void SetVariable(TuningVariableItem entry)
+        internal static void SetVariable(AppVariableItem entry)
         {
-            tuningVariables.Add(entry.name, entry);
+            appVariables.Add(entry.name, entry);
         }
 
         /// <summary>
@@ -30,11 +30,11 @@ namespace Cognitive3D
         /// <typeparam name="T">The expected type of variable</typeparam>
         /// <param name="variableName">The name of the variable to read</param>
         /// <param name="defaultValue">The value to return if no variable is found</param>
-        /// <returns>The value of the tuning varible, or the defaultValue if not found</returns>
+        /// <returns>The value of the app varible, or the defaultValue if not found</returns>
         public static T GetValue<T>(string variableName, T defaultValue)
         {
-            Cognitive3D.TuningVariableItem returnItem;
-            if (tuningVariables.TryGetValue(variableName, out returnItem))
+            Cognitive3D.AppVariableItem returnItem;
+            if (appVariables.TryGetValue(variableName, out returnItem))
             {
                 if (typeof(T) == typeof(string))
                 {
@@ -52,14 +52,14 @@ namespace Cognitive3D
             return defaultValue;
         }
 
-        public static Dictionary<string, Cognitive3D.TuningVariableItem> GetAllTuningVariables()
+        public static Dictionary<string, Cognitive3D.AppVariableItem> GetAllAppVariables()
         {
-            return tuningVariables;
+            return appVariables;
         }
     }
 
     [System.Serializable]
-    public class TuningVariableItem
+    public class AppVariableItem
     {
         public string name;
         public string description;

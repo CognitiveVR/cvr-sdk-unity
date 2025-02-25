@@ -500,19 +500,19 @@ namespace Cognitive3D
             return minRetryDelay;
         }
 
-        public static void GetTuningVariables(string participantId, Response callback, float timeout)
+        public static void GetAppVariables(string participantId, Response callback, float timeout)
         {
-            string url = CognitiveStatics.GetTuningVariableURL(participantId);
+            string url = CognitiveStatics.GetAppVariableURL(participantId);
             var request = UnityWebRequest.Get(url);
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "GET");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.SendWebRequest();
 
-            instance.StartCoroutine(instance.WaitForTuningVariableResponse(request, callback, timeout));
+            instance.StartCoroutine(instance.WaitForAppVariableResponse(request, callback, timeout));
         }
 
-        System.Collections.IEnumerator WaitForTuningVariableResponse(UnityWebRequest www, Response callback, float timeout)
+        System.Collections.IEnumerator WaitForAppVariableResponse(UnityWebRequest www, Response callback, float timeout)
         {
             float time = 0;
             while (time < timeout)
@@ -536,14 +536,14 @@ namespace Cognitive3D
 #endif
 
             if (!www.isDone)
-                Util.logWarning("Network::WaitForTuningVariableResponse timeout");
+                Util.logWarning("Network::WaitForAppVariableResponse timeout");
             if (responsecode != 200)
-                Util.logWarning("Network::WaitForTuningVariableResponse responsecode is " + responsecode);
+                Util.logWarning("Network::WaitForAppVariableResponse responsecode is " + responsecode);
 
             if (headers != null)
             {
                 if (!headers.ContainsKey("cvr-request-time"))
-                    Util.logWarning("Network::WaitForTuningVariableResponse does not contain cvr-request-time header");
+                    Util.logWarning("Network::WaitForAppVariableResponse does not contain cvr-request-time header");
             }
 
             if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
@@ -551,7 +551,7 @@ namespace Cognitive3D
                 if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
                     string text;
-                    if (Cognitive3D_Manager.TuningVariableHandler.GetTuningVariables(out text))
+                    if (Cognitive3D_Manager.AppVariableHandler.GetAppVariables(out text))
                     {
                         if (callback != null)
                         {
@@ -582,7 +582,7 @@ namespace Cognitive3D
                 }
                 if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
-                    Cognitive3D_Manager.TuningVariableHandler.WriteTuningVariables(www.downloadHandler.text);
+                    Cognitive3D_Manager.AppVariableHandler.WriteAppVariables(www.downloadHandler.text);
                 }
             }
             www.Dispose();
