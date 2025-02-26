@@ -20,21 +20,31 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/App Variables")]
     public class AppVariables : AnalyticsComponentBase
     {
+        /// <summary>
+        /// List to store app variables
+        /// </summary>
         static List<AppVariableItem> appVariables = new List<AppVariableItem>();
 
+        /// <summary>
+        /// Flag indicating if variables have been fetched
+        /// </summary>
         static bool hasFetchedVariables;
+
         /// <summary>
         /// the delay to hear a response from our backend. If there is no response in this time, try to use a local cache of variables
         /// </summary>
         const float requestAppVariablesTimeout = 3;
+
         /// <summary>
         /// the delay waiting for participant id to be set (if not already set at the start of the session)
         /// </summary>
         public float waitForParticipantIdTimeout = 5;
+
         /// <summary>
         /// if true, uses the participant id (possibly with a delay) to get app variables. Otherwise, use the device id
         /// </summary>
         public bool useParticipantId = true;
+
         /// <summary>
         /// if true, sends identifying data to retrieve variables as soon as possible
         /// </summary>
@@ -69,6 +79,9 @@ namespace Cognitive3D.Components
             }
         }
 
+        /// <summary>
+        /// Delay fetching of app variables if the participant ID is not set within the specified timeout
+        /// </summary>
         IEnumerator DelayFetch()
         {
             yield return new WaitForSeconds(waitForParticipantIdTimeout);
@@ -80,6 +93,9 @@ namespace Cognitive3D.Components
             FetchVariables(participantId);
         }
 
+        /// <summary>
+        /// Fetches app variables if not already fetched, using the device ID.
+        /// </summary>
         public static void FetchVariables()
         {
             if (!hasFetchedVariables)
@@ -88,6 +104,10 @@ namespace Cognitive3D.Components
             }
         }
 
+        /// <summary>
+        /// Fetches app variables using a participant ID if not already fetched.
+        /// </summary>
+        /// <param name="participantId"></param>
         public static void FetchVariables(string participantId)
         {
             if (!hasFetchedVariables)
@@ -154,6 +174,11 @@ namespace Cognitive3D.Components
             AppVariableManager.InvokeOnAppVariablesAvailable();
         }
 
+        /// <summary>
+        /// Processes a list of app variables and applies the provided setter function to each entry.
+        /// </summary>
+        /// <param name="variables"></param>
+        /// <param name="setter"></param>
         private static void ProcessAppVariables(List<AppVariableItem> variables, Action<AppVariableItem> setter)
         {
             if (variables == null || variables.Count == 0) return;
