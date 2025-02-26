@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 /// <summary>
 /// Retrieves configuration variables from the Cognitive3D backend to customize your app.
@@ -15,17 +16,12 @@ using System.Collections.Generic;
 
 namespace Cognitive3D.Components
 {
-#region Json
-    internal class AppVariableCollection
-    {
-        public List<AppVariableItem> appVariables = new List<AppVariableItem>();
-    }
-#endregion
-
     [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/App Variables")]
     public class AppVariables : AnalyticsComponentBase
     {
+        static List<AppVariableItem> appVariables = new List<AppVariableItem>();
+
         static bool hasFetchedVariables;
         /// <summary>
         /// the delay to hear a response from our backend. If there is no response in this time, try to use a local cache of variables
@@ -110,36 +106,43 @@ namespace Cognitive3D.Components
 
             if (responsecode != 200)
             {
-                Util.logDevelopment("App Variable reponse code " + responsecode + "  " + error);
+                Util.logDevelopment("App Variable response code " + responsecode + "  " + error);
             }
             
             try
             {
-                var tvc = JsonUtility.FromJson<AppVariableCollection>(text);
-                if (tvc != null)
+                var tvc = JsonUtility.FromJson<AppVariableData>(text);
+                if (tvc == null)
                 {
-                    AppVariableManager.Reset();
-                    foreach (var entry in tvc.appVariables)
-                    {
-                        AppVariableManager.SetVariable(entry);
-
-                        if (entry.type == "string")
-                        {
-                            Cognitive3D_Manager.SetSessionProperty(entry.name, entry.valueString);
-                        }
-                        else if (entry.type == "int")
-                        {
-                            Cognitive3D_Manager.SetSessionProperty(entry.name, entry.valueInt);
-                        }
-                        else if (entry.type == "boolean")
-                        {
-                            Cognitive3D_Manager.SetSessionProperty(entry.name, entry.valueBool);
-                        }
-                    }
+                    Util.logError("No app variable found!");
+                    return;
                 }
-                else
+
+                AppVariableManager.Reset();
+                if (tvc.abTests.Count > 0)
                 {
-                    Util.logDevelopment("AppVariableCollection is null");
+                    ProcessAppVariables(tvc.abTests, AppVariableManager.SetABTest);
+                }
+
+                if (tvc.tuningConfigurations.Count > 0)
+                {
+                    ProcessAppVariables(tvc.tuningConfigurations, AppVariableManager.SetTuningConfiguration);
+                }
+
+                foreach (var item in appVariables)
+                {
+                    if (item.type == "string")
+                    {
+                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, AppVariableManager.GetValue<string>(item.appVariableName, ""));
+                    }
+                    else if (item.type == "bool")
+                    {
+                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, AppVariableManager.GetValue<bool>(item.appVariableName, false));
+                    }
+                    else if (item.type == "int")
+                    {
+                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, AppVariableManager.GetValue<int>(item.appVariableName, 0));
+                    }
                 }
             }
             catch (System.Exception e)
@@ -149,6 +152,17 @@ namespace Cognitive3D.Components
 
             hasFetchedVariables = true;
             AppVariableManager.InvokeOnAppVariablesAvailable();
+        }
+
+        private static void ProcessAppVariables(List<AppVariableItem> variables, Action<AppVariableItem> setter)
+        {
+            if (variables == null || variables.Count == 0) return;
+
+            foreach (var entry in variables)
+            {
+                setter(entry);
+                appVariables.Add(entry);
+            }
         }
 
         private void Cognitive3D_Manager_OnPostSessionEnd()
