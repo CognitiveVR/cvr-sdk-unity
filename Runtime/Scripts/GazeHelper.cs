@@ -11,6 +11,8 @@ namespace Cognitive3D
     {
         public static Ray GetCurrentWorldGazeRay()
         {
+            if (!GameplayReferences.HMD) return new Ray();
+            
             return new Ray(GameplayReferences.HMD.position, GetLookDirection());
         }
 #if C3D_SRANIPAL
