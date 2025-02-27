@@ -390,7 +390,17 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
-            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+
+#if C3D_VIVEWAVE
+            SystemEvent.Remove(WVR_EventType.WVR_EventType_ArenaChanged, ArenaChanged);
+#endif
+        }
+
+        private void OnDestroy()
+        {
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
 
 #if C3D_VIVEWAVE

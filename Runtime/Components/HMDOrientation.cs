@@ -76,6 +76,10 @@ namespace Cognitive3D.Components
         /// <summary>
         /// Calculates yaw of hmd/users neck
         /// Positive means looking right, negative means looking left
+        /// 
+        /// This yaw value is recorded in **real-world space**, not virtual space.
+        /// Rotating the tracking space (e.g., using snap turn) does **not** affect the yaw value.
+        /// However, the yaw value **does** change when the player physically moves or recenters.
         /// </summary>
         private void RecordYaw()
         {
