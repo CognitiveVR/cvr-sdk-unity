@@ -144,24 +144,24 @@ namespace Cognitive3D.Components
                     ProcessRemoteVariables(tvc.abTests, RemoteControlManager.SetABTest);
                 }
 
-                if (tvc.remoteConfigurations.Count > 0)
+                if (tvc.tuningConfigurations.Count > 0)
                 {
-                    ProcessRemoteVariables(tvc.remoteConfigurations, RemoteControlManager.SetRemoteConfiguration);
+                    ProcessRemoteVariables(tvc.tuningConfigurations, RemoteControlManager.SetRemoteConfiguration);
                 }
 
                 foreach (var item in remoteVariables)
                 {
                     if (item.type == "string")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<string>(item.remoteVariableName, ""));
+                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, RemoteControlManager.GetValue<string>(item.appVariableName, ""));
                     }
                     else if (item.type == "bool")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<bool>(item.remoteVariableName, false));
+                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, RemoteControlManager.GetValue<bool>(item.appVariableName, false));
                     }
                     else if (item.type == "int")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<int>(item.remoteVariableName, 0));
+                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, RemoteControlManager.GetValue<int>(item.appVariableName, 0));
                     }
                 }
             }

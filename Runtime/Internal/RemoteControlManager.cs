@@ -41,7 +41,7 @@ namespace Cognitive3D
         /// <param name="entry">The remote configuration item to add to the list.</param>
         internal static void SetRemoteConfiguration(RemoteVariableItem entry)
         {
-            remoteVariableCollection.remoteConfigurations.Add(entry);
+            remoteVariableCollection.tuningConfigurations.Add(entry);
             remoteVariables.Add(entry);
         }
 
@@ -56,7 +56,7 @@ namespace Cognitive3D
         {
             foreach (var item in remoteVariables)
             {
-                if (item.remoteVariableName == variableName)
+                if (item.appVariableName == variableName)
                 {
                     return ConvertValue<T>(item.valueString, item.valueBool, item.valueInt, defaultValue);
                 }
@@ -93,7 +93,7 @@ namespace Cognitive3D
     {
         public string name;
         public string description;
-        public string remoteVariableName;
+        public string appVariableName;
         public string type;
         public int valueInt;
         public string valueString;
@@ -122,6 +122,6 @@ namespace Cognitive3D
     internal class RemoteVariableCollection
     {
         public List<RemoteVariableItem> abTests = new List<RemoteVariableItem>();
-        public List<RemoteVariableItem> remoteConfigurations = new List<RemoteVariableItem>();
+        public List<RemoteVariableItem> tuningConfigurations = new List<RemoteVariableItem>();
     }
 }
