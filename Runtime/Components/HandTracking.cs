@@ -36,6 +36,8 @@ namespace Cognitive3D.Components
 
         void RegisterHands()
         {
+            if (!Cognitive3D_Manager.autoInitializeInput) return;
+            
             // Hands
             DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.LeftHand, false);
             DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.RightHand, true);
