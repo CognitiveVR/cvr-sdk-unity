@@ -4,41 +4,45 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    public static class AppVariableManager
+    public static class RemoteControlManager
     {
-        static AppVariableData appVariableData = new AppVariableData();
+        static RemoteVariableCollection remoteVariableCollection = new RemoteVariableCollection();
+        static List<RemoteVariableItem> remoteVariables = new List<RemoteVariableItem>();
 
-        public delegate void onAppVariablesAvailable();
+        public delegate void onRemoteControlsAvailable();
         /// <summary>
-        /// Called after app variables are available (also called after a delay if no response)
+        /// Called after remote variables are available (also called after a delay if no response)
         /// </summary>
-        public static event onAppVariablesAvailable OnAppVariablesAvailable;
-        internal static void InvokeOnAppVariablesAvailable() { if (OnAppVariablesAvailable != null) { OnAppVariablesAvailable.Invoke(); } }
+        public static event onRemoteControlsAvailable OnRemoteControlsAvailable;
+        internal static void InvokeOnRemoteControlsAvailable() { if (OnRemoteControlsAvailable != null) { OnRemoteControlsAvailable.Invoke(); } }
 
         /// <summary>
-        /// Resets the app variable data
+        /// Resets the remote variable data
         /// </summary>
         internal static void Reset()
         {
-            appVariableData = new AppVariableData();
+            remoteVariableCollection = new RemoteVariableCollection();
+            remoteVariables.Clear();
         }
 
         /// <summary>
-        /// Adds a new AB test entry to the list of AB tests in app variable data
+        /// Adds a new AB test entry to the list of AB tests in remote control collection
         /// </summary>
         /// <param name="entry">The AB test item to add to the list.</param>
-        internal static void SetABTest(AppVariableItem entry)
+        internal static void SetABTest(RemoteVariableItem entry)
         {
-            appVariableData.abTests.Add(entry);
+            remoteVariableCollection.abTests.Add(entry);
+            remoteVariables.Add(entry);
         }
 
         /// <summary>
-        /// Adds a new tuning configuration entry to the list of tuning configurations in app variable data
+        /// Adds a new remote configuration entry to the list of remote configurations in remote control collection
         /// </summary>
-        /// <param name="entry">The tuning configuration item to add to the list.</param>
-        internal static void SetTuningConfiguration(AppVariableItem entry)
+        /// <param name="entry">The remote configuration item to add to the list.</param>
+        internal static void SetRemoteConfiguration(RemoteVariableItem entry)
         {
-            appVariableData.tuningConfigurations.Add(entry);
+            remoteVariableCollection.remoteConfigurations.Add(entry);
+            remoteVariables.Add(entry);
         }
 
         /// <summary>
@@ -50,19 +54,11 @@ namespace Cognitive3D
         /// <returns>The value of the app varible, or the defaultValue if not found</returns>
         public static T GetValue<T>(string variableName, T defaultValue)
         {
-            foreach (var abTest in appVariableData.abTests)
+            foreach (var item in remoteVariables)
             {
-                if (abTest.appVariableName == variableName)
+                if (item.remoteVariableName == variableName)
                 {
-                    return ConvertValue<T>(abTest.valueString, abTest.valueBool, abTest.valueInt, defaultValue);
-                }
-            }
-
-            foreach (var tuningConfiguration in appVariableData.tuningConfigurations)
-            {
-                if (tuningConfiguration.appVariableName == variableName)
-                {
-                    return ConvertValue<T>(tuningConfiguration.valueString, tuningConfiguration.valueBool, tuningConfiguration.valueInt, defaultValue);
+                    return ConvertValue<T>(item.valueString, item.valueBool, item.valueInt, defaultValue);
                 }
             }
             return defaultValue;
@@ -93,11 +89,11 @@ namespace Cognitive3D
     }
 
     [System.Serializable]
-    public class AppVariableItem
+    public class RemoteVariableItem
     {
         public string name;
         public string description;
-        public string appVariableName;
+        public string remoteVariableName;
         public string type;
         public int valueInt;
         public string valueString;
@@ -123,9 +119,9 @@ namespace Cognitive3D
     }
 
     [System.Serializable]
-    public class AppVariableData
+    internal class RemoteVariableCollection
     {
-        public List<AppVariableItem> abTests = new List<AppVariableItem>();
-        public List<AppVariableItem> tuningConfigurations = new List<AppVariableItem>();
+        public List<RemoteVariableItem> abTests = new List<RemoteVariableItem>();
+        public List<RemoteVariableItem> remoteConfigurations = new List<RemoteVariableItem>();
     }
 }

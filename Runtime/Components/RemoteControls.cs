@@ -10,20 +10,20 @@ using System;
 // If the participantId is set at session start, variables are fetched immediately.
 // Otherwise, it waits up to 5 seconds for a participantId to be set.
 // If the timer runs out, it defaults to using the deviceId.
-// If fetchVariablesAutomatically is false, call Cognitive3D.Components.AppVariables.FetchVariables manually.
+// If fetchVariablesAutomatically is false, call Cognitive3D.Components.RemoteControls.FetchVariables manually.
 
-//CONSIDER custom editor to display app variables
+//CONSIDER custom editor to display remote variables
 
 namespace Cognitive3D.Components
 {
     [DisallowMultipleComponent]
-    [AddComponentMenu("Cognitive3D/Components/App Variables")]
-    public class AppVariables : AnalyticsComponentBase
+    [AddComponentMenu("Cognitive3D/Components/Remote Controls")]
+    public class RemoteControls : AnalyticsComponentBase
     {
         /// <summary>
-        /// List to store app variables
+        /// List to store remote variables
         /// </summary>
-        static List<AppVariableItem> appVariables = new List<AppVariableItem>();
+        static List<RemoteVariableItem> remoteVariables = new List<RemoteVariableItem>();
 
         /// <summary>
         /// Flag indicating if variables have been fetched
@@ -33,7 +33,7 @@ namespace Cognitive3D.Components
         /// <summary>
         /// the delay to hear a response from our backend. If there is no response in this time, try to use a local cache of variables
         /// </summary>
-        const float requestAppVariablesTimeout = 3;
+        const float requestRemoteControlsTimeout = 3;
 
         /// <summary>
         /// the delay waiting for participant id to be set (if not already set at the start of the session)
@@ -41,7 +41,7 @@ namespace Cognitive3D.Components
         public float waitForParticipantIdTimeout = 5;
 
         /// <summary>
-        /// if true, uses the participant id (possibly with a delay) to get app variables. Otherwise, use the device id
+        /// if true, uses the participant id (possibly with a delay) to get remote variables. Otherwise, use the device id
         /// </summary>
         public bool useParticipantId = true;
 
@@ -80,7 +80,7 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Delay fetching of app variables if the participant ID is not set within the specified timeout
+        /// Delay fetching of remote variables if the participant ID is not set within the specified timeout
         /// </summary>
         IEnumerator DelayFetch()
         {
@@ -94,74 +94,75 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Fetches app variables if not already fetched, using the device ID.
+        /// Fetches remote variables if not already fetched, using the device ID.
         /// </summary>
         public static void FetchVariables()
         {
             if (!hasFetchedVariables)
             {
-                NetworkManager.GetAppVariables(Cognitive3D_Manager.DeviceId, AppVariableResponse, requestAppVariablesTimeout);
+                NetworkManager.GetRemoteControls(Cognitive3D_Manager.DeviceId, RemoteControlResponse, requestRemoteControlsTimeout);
             }
         }
 
         /// <summary>
-        /// Fetches app variables using a participant ID if not already fetched.
+        /// Fetches remote variables using a participant ID if not already fetched.
         /// </summary>
         /// <param name="participantId"></param>
         public static void FetchVariables(string participantId)
         {
             if (!hasFetchedVariables)
             {
-                NetworkManager.GetAppVariables(participantId, AppVariableResponse, requestAppVariablesTimeout);
+                NetworkManager.GetRemoteControls(participantId, RemoteControlResponse, requestRemoteControlsTimeout);
             }
         }
 
-        static void AppVariableResponse(int responsecode, string error, string text)
+        static void RemoteControlResponse(int responsecode, string error, string text)
         {
             if (hasFetchedVariables)
             {
-                Util.logDevelopment("AppVariableResponse called multiple times!");
+                Util.logDevelopment("RemoteControlResponse called multiple times!");
                 return;
             }
 
             if (responsecode != 200)
             {
-                Util.logDevelopment("App Variable response code " + responsecode + "  " + error);
+                Util.logDevelopment("remote variable response code " + responsecode + "  " + error);
             }
             
             try
             {
-                var tvc = JsonUtility.FromJson<AppVariableData>(text);
+                Debug.LogError($"Text is {text}");
+                var tvc = JsonUtility.FromJson<RemoteVariableCollection>(text);
                 if (tvc == null)
                 {
-                    Util.logError("No app variable found!");
+                    Util.logError("No remote variable found!");
                     return;
                 }
 
-                AppVariableManager.Reset();
+                RemoteControlManager.Reset();
                 if (tvc.abTests.Count > 0)
                 {
-                    ProcessAppVariables(tvc.abTests, AppVariableManager.SetABTest);
+                    ProcessRemoteVariables(tvc.abTests, RemoteControlManager.SetABTest);
                 }
 
-                if (tvc.tuningConfigurations.Count > 0)
+                if (tvc.remoteConfigurations.Count > 0)
                 {
-                    ProcessAppVariables(tvc.tuningConfigurations, AppVariableManager.SetTuningConfiguration);
+                    ProcessRemoteVariables(tvc.remoteConfigurations, RemoteControlManager.SetRemoteConfiguration);
                 }
 
-                foreach (var item in appVariables)
+                foreach (var item in remoteVariables)
                 {
                     if (item.type == "string")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, AppVariableManager.GetValue<string>(item.appVariableName, ""));
+                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<string>(item.remoteVariableName, ""));
                     }
                     else if (item.type == "bool")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, AppVariableManager.GetValue<bool>(item.appVariableName, false));
+                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<bool>(item.remoteVariableName, false));
                     }
                     else if (item.type == "int")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.appVariableName, AppVariableManager.GetValue<int>(item.appVariableName, 0));
+                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<int>(item.remoteVariableName, 0));
                     }
                 }
             }
@@ -171,22 +172,22 @@ namespace Cognitive3D.Components
             }
 
             hasFetchedVariables = true;
-            AppVariableManager.InvokeOnAppVariablesAvailable();
+            RemoteControlManager.InvokeOnRemoteControlsAvailable();
         }
 
         /// <summary>
-        /// Processes a list of app variables and applies the provided setter function to each entry.
+        /// Processes a list of remote variables and applies the provided setter function to each entry.
         /// </summary>
         /// <param name="variables"></param>
         /// <param name="setter"></param>
-        private static void ProcessAppVariables(List<AppVariableItem> variables, Action<AppVariableItem> setter)
+        private static void ProcessRemoteVariables(List<RemoteVariableItem> variables, Action<RemoteVariableItem> setter)
         {
             if (variables == null || variables.Count == 0) return;
 
             foreach (var entry in variables)
             {
                 setter(entry);
-                appVariables.Add(entry);
+                remoteVariables.Add(entry);
             }
         }
 
