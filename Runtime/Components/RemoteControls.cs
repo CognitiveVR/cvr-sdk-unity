@@ -131,7 +131,6 @@ namespace Cognitive3D.Components
             
             try
             {
-                Debug.LogError($"Text is {text}");
                 var tvc = JsonUtility.FromJson<RemoteVariableCollection>(text);
                 if (tvc == null)
                 {
