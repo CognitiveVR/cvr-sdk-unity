@@ -264,10 +264,8 @@ namespace Cognitive3D
                     var dyn = targets[0] as DynamicObject;
                     dyn.inputType = (InputUtil.InputType)EditorGUILayout.EnumPopup(new GUIContent("Input Type","Used if this controller cannot be identified at runtime"),dyn.inputType);
                     dyn.IsController = dyn.inputType == InputUtil.InputType.Controller || dyn.inputType == InputUtil.InputType.Hand;
-                    // dyn.IsController = EditorGUILayout.Toggle(new GUIContent("Is Controller","Visualize on SceneExplorer with a common mesh.\nInclude metadata to display button inputs."),dyn.IsController);
                     EditorGUI.BeginDisabledGroup(dyn.inputType == InputUtil.InputType.None);
                     dyn.IsRight = EditorGUILayout.Toggle("Is Right Hand",dyn.IsRight);
-                    // EditorGUI.BeginDisabledGroup(dyn.inputType == DynamicObject.InputType.Hand);
                     dyn.IdentifyControllerAtRuntime = EditorGUILayout.Toggle(new GUIContent("Identify Controller at Runtime","Use Unity's API to try to identify the InputDevice name"), dyn.IdentifyControllerAtRuntime);
                     dyn.FallbackControllerType = (InputUtil.ControllerType)EditorGUILayout.EnumPopup(new GUIContent("Fallback Controller Type","Used if this controller cannot be identified at runtime"),dyn.FallbackControllerType);
                     EditorGUI.EndDisabledGroup();

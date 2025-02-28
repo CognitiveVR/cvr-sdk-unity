@@ -922,7 +922,7 @@ namespace Cognitive3D.Components
                         {
                             OnVectorChanged(LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, leftJoystickVector, CurrentLeftButtonStates);
                         }
-                        OnVectorChanged(LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);;
+                        OnVectorChanged(LeftLastFrameButtonStates[CommonUsages.primary2DAxisClick.name].ButtonName, axisPower, x, y, CurrentLeftButtonStates);
                         LeftJoystickVector = currentVector;
                     }
                 }

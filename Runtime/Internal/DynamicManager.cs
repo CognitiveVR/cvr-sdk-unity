@@ -744,13 +744,11 @@ namespace Cognitive3D
                             sb.Append("}");
                         }
                         props = sb.ToString();
-                    }
 
-                    if (ActiveInputsArray[i].HasProperties)
-                    {
                         ActiveInputsArray[i].HasProperties = false;
                         ActiveInputsArray[i].Properties = null;
                     }
+                    
                     CoreInterface.WriteDynamicController(ActiveInputsArray[i], props, false, builder.ToString(),Util.Timestamp(Time.frameCount));
                 }
             }
@@ -1255,10 +1253,7 @@ namespace Cognitive3D
                             sb.Append("}");
                         }
                         props = sb.ToString();
-                    }
 
-                    if (array[index].HasProperties)
-                    {
                         array[index].HasProperties = false;
                         array[index].Properties = null;
                     }
