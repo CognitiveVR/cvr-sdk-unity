@@ -11,6 +11,7 @@ namespace Cognitive3D.Components
         
 #if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
         private InputUtil.InputType lastTrackedDevice = InputUtil.InputType.None;
+        private bool handsRegistered;
 
         protected override void OnSessionBegin()
         {
@@ -29,20 +30,29 @@ namespace Cognitive3D.Components
         {
             if (didChangeSceneId && Cognitive3D_Manager.TrackingScene != null)
             {
+                handsRegistered = false;
+
                 // Registering new controllers
                 RegisterHands();
             }
         }
 
+        // Registers hands only if they are being used. If controllers are in use, hands will not be registered or recorded.
         void RegisterHands()
         {
-            if (!Cognitive3D_Manager.autoInitializeInput) return;
+            if (!Cognitive3D_Manager.autoInitializeInput || handsRegistered) return;
             
             // Hands
-            DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.LeftHand, false);
-            DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.RightHand, true);
+            var currentTrackedDevice = InputUtil.GetCurrentTrackedDevice();
+            if (currentTrackedDevice == InputUtil.InputType.Hand)
+            {
+                DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.LeftHand, false);
+                DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.RightHand, true);
 
-            DynamicManager.UpdateDynamicInputEnabledState(InputUtil.GetCurrentTrackedDevice());
+                handsRegistered = true;
+
+                DynamicManager.UpdateDynamicInputEnabledState(InputUtil.GetCurrentTrackedDevice());
+            }
         }
 
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
@@ -75,7 +85,16 @@ namespace Cognitive3D.Components
                 lastTrackedDevice = currentTrackedDevice;
 
                 OnInputChanged?.Invoke(currentTrackedDevice);
-                DynamicManager.UpdateDynamicInputEnabledState(currentTrackedDevice);
+
+                // Register hands if they are now being tracked
+                if (currentTrackedDevice == InputUtil.InputType.Hand && !handsRegistered)
+                {
+                    RegisterHands();
+                }
+                else
+                {
+                    DynamicManager.UpdateDynamicInputEnabledState(currentTrackedDevice);
+                }
             }
         }
 
