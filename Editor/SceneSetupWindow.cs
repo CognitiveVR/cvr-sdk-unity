@@ -47,7 +47,6 @@ namespace Cognitive3D
         static bool wantEyeTrackingEnabled;
         static bool wantPassthroughEnabled;
         static bool wantSocialEnabled;
-        static bool wantHandTrackingEnabled;
         static bool wantSceneApiEnabled;
 
         const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
@@ -105,7 +104,6 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
                 wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
@@ -154,7 +152,6 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
                 wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
@@ -960,34 +957,12 @@ namespace Cognitive3D
                 }
             }
 
-            // Hand Tracking
-            GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
-            Rect infoRect4 = new Rect(320, 280, 30, 30);
-            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Tracking."), "image_centered");
-
-            Rect checkboxRect4 = new Rect(105, 280, 30, 30);
-            if (wantHandTrackingEnabled)
-            {
-                if (GUI.Button(checkboxRect4, EditorCore.BoxCheckmark, "image_centered"))
-                {
-                    wantHandTrackingEnabled = false;
-                }
-            }
-            else
-            {
-                if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
-                {
-                    SegmentAnalytics.TrackEvent("EnabledHandTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
-                    wantHandTrackingEnabled = true;
-                }
-            }
-
             // Scene API
-            GUI.Label(new Rect(140, 335, 440, 440), "Quest 3 Scene API", "normallabel");
-            Rect infoRect5 = new Rect(320, 330, 30, 30);
+            GUI.Label(new Rect(140, 285, 440, 440), "Quest 3 Scene API", "normallabel");
+            Rect infoRect5 = new Rect(320, 280, 30, 30);
             GUI.Label(infoRect5, new GUIContent(EditorCore.Info, "Collects dimensions of the room the participant is in."), "image_centered");
 
-            Rect checkboxRect5 = new Rect(105, 330, 30, 30);
+            Rect checkboxRect5 = new Rect(105, 280, 30, 30);
             if (wantSceneApiEnabled)
             {
                 if (GUI.Button(checkboxRect5, EditorCore.BoxCheckmark, "image_centered"))
@@ -1053,22 +1028,6 @@ namespace Cognitive3D
                 if (social != null)
                 {
                     DestroyImmediate(social);
-                }
-            }
-            if (wantHandTrackingEnabled)
-            {
-                var hand = FindObjectOfType<HandTracking>();
-                if (hand == null)
-                {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<HandTracking>();
-                }
-            }
-            else
-            {
-                var hand = FindObjectOfType<HandTracking>();
-                if (hand != null)
-                {
-                    DestroyImmediate(hand);
                 }
             }
 
