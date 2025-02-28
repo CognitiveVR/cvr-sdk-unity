@@ -144,9 +144,9 @@ namespace Cognitive3D.Components
                     ProcessRemoteVariables(tvc.abTests, RemoteControlManager.SetABTest);
                 }
 
-                if (tvc.tuningConfigurations.Count > 0)
+                if (tvc.remoteConfigurations.Count > 0)
                 {
-                    ProcessRemoteVariables(tvc.tuningConfigurations, RemoteControlManager.SetRemoteConfiguration);
+                    ProcessRemoteVariables(tvc.remoteConfigurations, RemoteControlManager.SetRemoteConfiguration);
                 }
 
                 foreach (var item in remoteVariables)
