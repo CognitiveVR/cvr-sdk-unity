@@ -30,7 +30,7 @@ namespace Cognitive3D
         private static EditorUtils window;
         private static bool pause;
 
-        private static CancellationTokenSource cancellationTokenSource = new();
+        private static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         public static void Init()
         {

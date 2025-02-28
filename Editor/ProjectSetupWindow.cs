@@ -830,10 +830,8 @@ namespace Cognitive3D
             float compileDifference = (float)(EditorApplication.timeSinceStartup - compileStartTime);
 
             //scale the loading bar so it never entirely fills
-            float fillAmount = compileDifference;
-            fillAmount = 1 - (fillAmount / (fillAmount * fillAmount));
-            fillAmount = Mathf.Lerp(compileDifference / 10, fillAmount, fillAmount/2);
-            fillAmount = Mathf.Max(0.02f, fillAmount);
+            float fillAmount = Mathf.Log10(compileDifference);
+            fillAmount = Mathf.Clamp(fillAmount,0.02f, 0.95f);
             var compileDurationBox = new Rect(30, 120, 440, 30);
             var progressBackground = new Rect(30, 150, 440, 30);
             var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);

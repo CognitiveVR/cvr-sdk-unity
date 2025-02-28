@@ -361,6 +361,10 @@ namespace Cognitive3D
 
             foreach(var pool in pools)
             {
+                if (pool.Ids == null || pool.Ids.Length == 0)
+                {
+                    continue;
+                }
                 foreach(var id in pool.Ids)
                 {
                     usedids.Add(id);
