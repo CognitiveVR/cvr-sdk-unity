@@ -121,7 +121,7 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
             return "Collects and sends data pertaining to Hand Tracking";
 #else
-            return "This component is compatible with Oculus, Wave (Vive), PicoXR, and OpenXR platforms";
+            return "This component is compatible with Oculus, Wave (HTC Vive), PicoXR, and OpenXR platforms";
 #endif
         }
 #endregion
