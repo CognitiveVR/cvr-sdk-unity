@@ -56,7 +56,7 @@ namespace Cognitive3D
         {
             foreach (var item in remoteVariables)
             {
-                if (item.appVariableName == variableName)
+                if (item.remoteVariableName == variableName)
                 {
                     return ConvertValue<T>(item.valueString, item.valueBool, item.valueInt, defaultValue);
                 }
@@ -93,7 +93,7 @@ namespace Cognitive3D
     {
         public string name;
         public string description;
-        public string appVariableName;
+        public string remoteVariableName;
         public string type;
         public int valueInt;
         public string valueString;
