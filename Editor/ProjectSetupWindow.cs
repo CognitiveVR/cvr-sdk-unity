@@ -26,7 +26,7 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
-            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
