@@ -11,7 +11,7 @@ namespace Cognitive3D
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
-            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "Opened");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -26,7 +26,7 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
-            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "Opened");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -41,7 +41,7 @@ namespace Cognitive3D
 
         internal static void Init(Rect position)
         {
-            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "Opened");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);

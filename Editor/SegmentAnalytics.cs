@@ -13,7 +13,6 @@ namespace Cognitive3D
     {
         private const string KEY_URL = "https://data.cognitive3d.com/segmentWriteKey";
         private const string TRACK_URL = "https://api.segment.io/v1/track";
-        private const string PAGE_URL = "https://api.segment.io/v1/page";
         private const string IDENTIFY_URL = "https://api.segment.io/v1/identify";
 
         private static string _writeKey;
@@ -65,29 +64,6 @@ namespace Cognitive3D
             });
 
             await SendTrackingDataAsync(IDENTIFY_URL, jsonPayload);
-        }
-
-        /// <summary>
-        /// Async method to send page data to Segment
-        /// More info about page event: https://segment.com/docs/connections/spec/page/
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="status"></param>
-        public static async void PageEvent(string pageName, string status = "")
-        {
-            // Create the data payload in JSON format
-            string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
-            {
-                userId = _userId,
-                organizationName = _organizationName,
-                name = pageName,
-                properties = new SegmentProperties
-                {
-                    status = status
-                }
-            });
-
-            await SendTrackingDataAsync(PAGE_URL, jsonPayload);
         }
 
         /// <summary>

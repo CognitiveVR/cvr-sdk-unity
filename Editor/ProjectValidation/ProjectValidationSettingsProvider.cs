@@ -24,7 +24,7 @@ namespace Cognitive3D
 
         public static void OpenSettingsWindow()
         {
-            SegmentAnalytics.PageEvent("ProjectValidationWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectValidationWindow_Opened", "ProjectValidationWindow");
             SettingsService.OpenProjectSettings(SettingsPath);
         }
 
