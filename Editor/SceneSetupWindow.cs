@@ -643,6 +643,11 @@ namespace Cognitive3D
                 if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
                 {
                     SegmentAnalytics.TrackEvent("EnabledAutoInputSetup_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+
+                    // Remove DynamicObject component from left and right controllers if they exist
+                    if (leftcontroller && leftcontroller.GetComponent<DynamicObject>()) DestroyImmediate(leftcontroller.GetComponent<DynamicObject>());
+                    if (rightcontroller && rightcontroller.GetComponent<DynamicObject>()) DestroyImmediate(rightcontroller.GetComponent<DynamicObject>());
+
                     Cognitive3D_Manager.autoInitializeInput = true;
                 }
             }
