@@ -140,11 +140,13 @@ namespace Cognitive3D
 
         private static void GetSubscriptionResponse(int responseCode, string error, string text)
         {
-            // Check if response data is valid
-            var organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
-            if (organizationDetails != null)
+            if (responseCode == 200)
             {
-                _organizationName = organizationDetails.organizationName;
+                var organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+                if (organizationDetails != null)
+                {
+                    _organizationName = organizationDetails.organizationName;
+                }
             }
             Identify();
         }
@@ -153,17 +155,17 @@ namespace Cognitive3D
         private static void GetUserResponse(int responseCode, string error, string text)
         {
             _userId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
-
-            var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
-
-            if (userdata != null)
+            if (responseCode == 200)
             {
-                _userId = userdata.userId;
-                _userEmail = userdata.email;
-                _userFirstName = userdata.firstName;
-                _userLastName = userdata.lastName;
+                var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+                if (userdata != null)
+                {
+                    _userId = userdata.userId;
+                    _userEmail = userdata.email;
+                    _userFirstName = userdata.firstName;
+                    _userLastName = userdata.lastName;
+                }
             }
-
             EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
         }
 
