@@ -230,7 +230,6 @@ namespace Cognitive3D
         internal class SegmentProperties
         {
             public string buttonName;
-            public string status;
 
             [JsonExtensionData]
             private Dictionary<string, object> otherProperties = new Dictionary<string, object>();
