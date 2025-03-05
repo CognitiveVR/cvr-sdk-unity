@@ -33,7 +33,7 @@ namespace Cognitive3D
         {
             _writeKey = await GetKeyFromServerAsync();
 
-            _anonymousId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
+            _anonymousId = _userId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
             _groupId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
 
             if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
