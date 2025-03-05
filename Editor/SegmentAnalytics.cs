@@ -16,24 +16,27 @@ namespace Cognitive3D
         private const string IDENTIFY_URL = "https://api.segment.io/v1/identify";
 
         private static string _writeKey;
-        private static string _userId;
+        private static int _userId;
+        private static string _userFirstName;
+        private static string _userLastName;
+        private static string _userEmail;
         private static string _organizationName;
 
         static SegmentAnalytics()
         {
-            FetchKey();
+            Init();
         }
 
         /// <summary>
-        /// Method to fetch the Segment key
+        /// Method to fetch the Segment key and identify user
         /// </summary>
-        private static async void FetchKey()
+        private static async void Init()
         {
             _writeKey = await GetKeyFromServerAsync();
 
             if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
             {
-                EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
+                EditorCore.GetUserData(EditorCore.DeveloperKey, GetUserResponse);
             } 
         }
 
@@ -59,6 +62,9 @@ namespace Cognitive3D
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentIdentifyPayload
             {
                 userId = _userId,
+                userEmail = _userEmail,
+                userFirstName = _userFirstName,
+                userLastName = _userLastName,
                 organizationName = _organizationName,
                 sdkVersion = Cognitive3D_Manager.SDK_VERSION
             });
@@ -112,7 +118,7 @@ namespace Cognitive3D
 
         private static async Task SendTrackingDataAsync(string trackURL, string data)
         {
-            if (string.IsNullOrEmpty(_writeKey)) FetchKey();
+            if (string.IsNullOrEmpty(_writeKey)) Init();
 
             if (!string.IsNullOrEmpty(_writeKey))
             {
@@ -134,42 +140,41 @@ namespace Cognitive3D
 
         private static void GetSubscriptionResponse(int responseCode, string error, string text)
         {
-            _userId = System.Guid.NewGuid().ToString();
-            if (responseCode != 200)
-            {
-                Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
-                return;
-            }
-
             // Check if response data is valid
-            try
-            {
-                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
-            }
-            catch
-            {
-                Debug.LogError("Invalid JSON response");
-                return;
-            }
-
-            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
-            if (organizationDetails == null)
-            {
-                Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
-            }
-            else
+            var organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+            if (organizationDetails != null)
             {
                 _organizationName = organizationDetails.organizationName;
             }
-
             Identify();
+        }
+
+
+        private static void GetUserResponse(int responseCode, string error, string text)
+        {
+            _userId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
+
+            var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+
+            if (userdata != null)
+            {
+                _userId = userdata.userId;
+                _userEmail = userdata.email;
+                _userFirstName = userdata.firstName;
+                _userLastName = userdata.lastName;
+            }
+
+            EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
         }
 
         // Classes to match Segment API payload structure
         [System.Serializable]
         internal class SegmentIdentifyPayload
         {
-            public string userId;
+            public int userId;
+            public string userFirstName;
+            public string userLastName;
+            public string userEmail;
             public string organizationName;
             public string sdkVersion;
         }
@@ -177,7 +182,7 @@ namespace Cognitive3D
         [System.Serializable]
         internal class SegmentTrackPayload
         {
-            public string userId;
+            public int userId;
             public string organizationName;
             public string @event;
             public string name;
@@ -193,12 +198,12 @@ namespace Cognitive3D
             [JsonExtensionData]
             private Dictionary<string, object> otherProperties = new Dictionary<string, object>();
 
-            public void SetProperty(string key, object value)
+            internal void SetProperty(string key, object value)
             {
                 otherProperties[key] = value;
             }
 
-            public object GetProperty(string key)
+            internal object GetProperty(string key)
             {
                 return otherProperties.TryGetValue(key, out var value) ? value : null;
             }

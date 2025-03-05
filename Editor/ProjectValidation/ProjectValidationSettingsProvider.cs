@@ -18,7 +18,6 @@ namespace Cognitive3D
         [MenuItem("Cognitive3D/Project Validation", false, 1)]
         static void OpenProjectSetupTool()
         {
-            SegmentAnalytics.TrackEvent("OpenProjectValidation", "MenuItems_ProjectValidation");
             OpenSettingsWindow();
         }
 
