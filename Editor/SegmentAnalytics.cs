@@ -34,7 +34,7 @@ namespace Cognitive3D
             _writeKey = await GetKeyFromServerAsync();
 
             _anonymousId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
-            _groupId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());;
+            _groupId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
 
             if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
             {
@@ -88,7 +88,7 @@ namespace Cognitive3D
             if (userData != null)
             {
                 _groupTraits.organizationName = userData.organizationName;
-            };
+            }
 
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentGroupPayload
@@ -113,6 +113,7 @@ namespace Cognitive3D
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
+                anonymousId = _anonymousId,
                 userId = _userId,
                 @event = eventName,
                 properties = new SegmentProperties
@@ -134,6 +135,7 @@ namespace Cognitive3D
         {
             var payload = new SegmentTrackPayload
             {
+                anonymousId = _anonymousId,
                 userId = _userId,
                 @event = eventName,
                 properties = properties
@@ -218,6 +220,7 @@ namespace Cognitive3D
         [System.Serializable]
         internal class SegmentTrackPayload
         {
+            public int anonymousId;
             public int userId;
             public string organizationName;
             public string @event;
