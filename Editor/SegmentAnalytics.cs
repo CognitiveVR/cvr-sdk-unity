@@ -222,9 +222,7 @@ namespace Cognitive3D
         {
             public int anonymousId;
             public int userId;
-            public string organizationName;
             public string @event;
-            public string name;
             public SegmentProperties properties;
         }
 
