@@ -12,15 +12,14 @@ namespace Cognitive3D
     internal static class SegmentAnalytics
     {
         private const string KEY_URL = "https://data.cognitive3d.com/segmentWriteKey";
-        private const string TRACK_URL = "https://api.segment.io/v1/track";
         private const string IDENTIFY_URL = "https://api.segment.io/v1/identify";
+        private const string TRACK_URL = "https://api.segment.io/v1/track";
+        private const string GROUP_URL = "https://api.segment.io/v1/group";
 
         private static string _writeKey;
+        private static int _anonymousId;
         private static int _userId;
-        private static string _userFirstName;
-        private static string _userLastName;
-        private static string _userEmail;
-        private static string _organizationName;
+        private static int _groupId;
 
         static SegmentAnalytics()
         {
@@ -33,6 +32,9 @@ namespace Cognitive3D
         private static async void Init()
         {
             _writeKey = await GetKeyFromServerAsync();
+
+            _anonymousId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
+            _groupId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());;
 
             if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
             {
@@ -56,20 +58,48 @@ namespace Cognitive3D
             }
         }
 
-        public static async void Identify()
+        public static async void Identify(EditorCore.UserData userData)
         {
+            var _userTraits = new SegmentUserTraits();
+            _userTraits.sdkVersion = Cognitive3D_Manager.SDK_VERSION;
+            if (userData != null)
+            {
+                _userTraits.name = $"{userData.firstName} {userData.lastName}";
+                _userTraits.email = userData.email;
+                _userTraits.projectId = userData.projectId;
+                _userTraits.projectName = userData.projectName;
+            }            
+
             // Create the data payload in JSON format
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentIdentifyPayload
             {
+                anonymousId = _anonymousId,
                 userId = _userId,
-                userEmail = _userEmail,
-                userFirstName = _userFirstName,
-                userLastName = _userLastName,
-                organizationName = _organizationName,
-                sdkVersion = Cognitive3D_Manager.SDK_VERSION
+                traits = _userTraits
             });
 
             await SendTrackingDataAsync(IDENTIFY_URL, jsonPayload);
+        }
+
+        public static async void Group(EditorCore.UserData userData)
+        {
+            var _groupTraits = new SegmentGroupTraits();
+
+            if (userData != null)
+            {
+                _groupTraits.organizationName = userData.organizationName;
+            };
+
+            // Create the data payload in JSON format
+            string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentGroupPayload
+            {
+                groupId = _groupId,
+                anonymousId = _anonymousId,
+                userId = _userId,
+                traits = _groupTraits
+            });
+
+            await SendTrackingDataAsync(GROUP_URL, jsonPayload);
         }
 
         /// <summary>
@@ -84,7 +114,6 @@ namespace Cognitive3D
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
                 userId = _userId,
-                organizationName = _organizationName,
                 @event = eventName,
                 properties = new SegmentProperties
                 {
@@ -106,7 +135,6 @@ namespace Cognitive3D
             var payload = new SegmentTrackPayload
             {
                 userId = _userId,
-                organizationName = _organizationName,
                 @event = eventName,
                 properties = properties
             };
@@ -138,47 +166,53 @@ namespace Cognitive3D
             }
         }
 
-        private static void GetSubscriptionResponse(int responseCode, string error, string text)
-        {
-            if (responseCode == 200)
-            {
-                var organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
-                if (organizationDetails != null)
-                {
-                    _organizationName = organizationDetails.organizationName;
-                }
-            }
-            Identify();
-        }
-
 
         private static void GetUserResponse(int responseCode, string error, string text)
         {
-            _userId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
-            if (responseCode == 200)
+            var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+            if (responseCode == 200 && userdata != null)
             {
-                var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
-                if (userdata != null)
-                {
-                    _userId = userdata.userId;
-                    _userEmail = userdata.email;
-                    _userFirstName = userdata.firstName;
-                    _userLastName = userdata.lastName;
-                }
+                _userId = userdata.userId;
+                _groupId = userdata.organizationId;
             }
-            EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
+
+            Identify(userdata);
+            Group(userdata);
         }
 
         // Classes to match Segment API payload structure
         [System.Serializable]
+        internal class SegmentGroupPayload
+        {
+            // Same as organization ID
+            public int groupId;
+            public int anonymousId;
+            public int userId;
+            public SegmentGroupTraits traits;
+        }
+
+        [System.Serializable]
+        public class SegmentGroupTraits
+        {
+            public string organizationName;
+        }
+
+        [System.Serializable]
         internal class SegmentIdentifyPayload
         {
+            public int anonymousId;
             public int userId;
-            public string userFirstName;
-            public string userLastName;
-            public string userEmail;
-            public string organizationName;
+            public SegmentUserTraits traits;
+        }
+
+        [System.Serializable]
+        public class SegmentUserTraits
+        {
+            public string name;
+            public string email;
             public string sdkVersion;
+            public int projectId;
+            public string projectName;
         }
 
         [System.Serializable]

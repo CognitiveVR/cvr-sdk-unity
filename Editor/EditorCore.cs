@@ -2046,6 +2046,10 @@ namespace Cognitive3D
             public int userId;
             public string firstName;
             public string lastName;
+            public int projectId;
+            public string projectName;
+            public int organizationId;
+            public string organizationName;
         }
 
         [System.Serializable]
