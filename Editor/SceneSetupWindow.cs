@@ -466,7 +466,7 @@ namespace Cognitive3D
 #elif C3D_OCULUS
             //basic setup
             var manager = FindObjectOfType<OVRCameraRig>();
-            if (manager != null)
+            if (manager != null && manager.leftHandAnchor != null && manager.rightHandAnchor != null && manager.trackingSpace != null)
             {
                 leftcontroller = manager.leftHandAnchor.gameObject;
                 rightcontroller = manager.rightHandAnchor.gameObject;
@@ -577,8 +577,8 @@ namespace Cognitive3D
 
         void ControllerUpdate()
         {
-            bool leftControllerIsValid = leftcontroller?.GetComponent<DynamicObject>() != null;
-            bool rightControllerIsValid = rightcontroller?.GetComponent<DynamicObject>() != null;
+            bool leftControllerIsValid = leftcontroller && leftcontroller?.GetComponent<DynamicObject>() != null;
+            bool rightControllerIsValid = rightcontroller && rightcontroller?.GetComponent<DynamicObject>() != null;
             bool cameraIsValid = Camera.main != null && mainCameraObject == Camera.main.gameObject;
             bool trackingSpaceIsValid = trackingSpace?.GetComponent<RoomTrackingSpace>() != null;
 
