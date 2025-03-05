@@ -50,7 +50,7 @@ namespace Cognitive3D
         [MenuItem("Cognitive3D/Open Web Dashboard...", priority = 105)]
         static void Cognitive3DDashboard()
         {
-            Application.OpenURL("https://" + Cognitive3D_Preferences.Instance.Dashboard);
+            Application.OpenURL("https://app." + CognitiveStatics.GetDomain());
         }
         [MenuItem("Cognitive3D/Documentation...", priority = 110)]
         static void Cognitive3DDocumentation()
