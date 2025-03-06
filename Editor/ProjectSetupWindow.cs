@@ -839,6 +839,7 @@ namespace Cognitive3D
 
             //done
             if (EditorApplication.isCompiling) { return; }
+            SegmentAnalytics.TrackEvent("RecompileCompleted_RecompilePage", "ProjectSetupRecompilePage");
             compileStartTime = -1;
 
             currentPage++;
@@ -1044,7 +1045,8 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.SDKSelection:
-                    onclick = () => currentPage = Page.MultiplayerSetup;
+                    onclick += () => SegmentAnalytics.TrackEvent("SDKDefineSelected_SDKDefinePage", "ProjectSetupSDKDefinePage");
+                    onclick += () => currentPage = Page.MultiplayerSetup;
                     break;
                 case Page.Recompile:
                     onclick = null;
