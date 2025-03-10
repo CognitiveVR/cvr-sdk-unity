@@ -644,9 +644,15 @@ namespace Cognitive3D
                 {
                     SegmentAnalytics.TrackEvent("EnabledAutoInputSetup_PlayerSetupPage", "SceneSetupPlayerSetupPage");
 
-                    // Remove DynamicObject component from left and right controllers if they exist
-                    if (leftcontroller && leftcontroller.GetComponent<DynamicObject>()) DestroyImmediate(leftcontroller.GetComponent<DynamicObject>());
-                    if (rightcontroller && rightcontroller.GetComponent<DynamicObject>()) DestroyImmediate(rightcontroller.GetComponent<DynamicObject>());
+                    // Remove the controllers/hands DynamicObject components (if they exist)
+                    var dynamics = FindObjectsOfType<DynamicObject>();
+                    foreach (var dynamic in dynamics)
+                    {
+                        if (dynamic.IsController)
+                        {
+                            DestroyImmediate(dynamic);
+                        }
+                    }
 
                     Cognitive3D_Manager.autoInitializeInput = true;
                 }
