@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
+using System.Linq;
 
 namespace Cognitive3D.Components
 {
@@ -68,7 +69,9 @@ namespace Cognitive3D.Components
 #elif C3D_PICOXR
             if (Unity.XR.PXR.PXR_Boundary.GetEnabled())
             {
-                return Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.PlayArea);
+                var boundaryPoints = GetConvexHull(Unity.XR.PXR.PXR_Boundary.GetGeometry(Unity.XR.PXR.BoundaryType.OuterBoundary));
+                boundaryPoints = GetLargestInscribedRectangle(boundaryPoints);
+                return boundaryPoints;
             }
             else
             {
@@ -101,6 +104,95 @@ namespace Cognitive3D.Components
             Util.LogOnce("Unable to find boundary points using XRInputSubsystem", LogType.Warning);
             return null;
 #endif
+        }
+
+        /// <summary>
+        /// This function calculates the convex hull of a set of points using Andrew’s monotone chain algorithm. 
+        /// It constructs the lower and upper hulls by iterating through the points. The function returns the convex hull 
+        /// as an array of Vector3s with duplicates removed.
+        /// </summary>
+        private static Vector3[] GetConvexHull(Vector3[] points)
+        {
+            // Convex Hull using Andrew’s monotone chain algorithm
+            if (points.Length < 3) return points;
+            points = points.OrderBy(p => p.x).ThenBy(p => p.z).ToArray();
+
+            Vector3[] hull = new Vector3[points.Length * 2]; // Allocate max possible size
+            int hullSize = 0;
+
+            // Lower hull
+            foreach (var point in points)
+            {
+                while (hullSize >= 2 && Cross(hull[hullSize - 2], hull[hullSize - 1], point) <= 0)
+                    hullSize--;
+                hull[hullSize++] = point;
+            }
+
+            // Upper hull
+            int lowerHullSize = hullSize;
+            for (int i = points.Length - 2; i >= 0; i--)
+            {
+                var point = points[i];
+                while (hullSize > lowerHullSize && Cross(hull[hullSize - 2], hull[hullSize - 1], point) <= 0)
+                    hullSize--;
+                hull[hullSize++] = point;
+            }
+
+            // Remove duplicate and return final array
+            return hull.Take(hullSize - 1).ToArray();
+        }
+
+        /// <summary>
+        /// Calculates the cross product of two vectors (a - o) and (b - o) in 2D space.
+        /// This is used to determine the orientation of the points relative to each other (e.g., clockwise or counterclockwise).
+        /// </summary>
+        /// <param name="o">The origin point of the cross product.</param>
+        /// <param name="a">The first point for the cross product calculation.</param>
+        /// <param name="b">The second point for the cross product calculation.</param>
+        private static float Cross(Vector3 o, Vector3 a, Vector3 b)
+        {
+            return (a.x - o.x) * (b.z - o.z) - (a.z - o.z) * (b.x - o.x);
+        }
+
+        /// <summary>
+        /// Finds the largest rectangle that can be inscribed within the given convex hull.
+        /// Iterates through all pairs of points in the convex hull to calculate the maximum area rectangle 
+        /// and returns the four corners of that rectangle.
+        /// </summary>
+        /// <param name="convexHull">An array of points forming the convex hull.</param>
+        private static Vector3[] GetLargestInscribedRectangle(Vector3[] convexHull)
+        {
+            float maxRectangleWidth = 0, maxRectangleHeight = 0;
+            Vector3 rectangleCenter = Vector3.zero;
+            Vector3 bottomLeftCorner = Vector3.zero, bottomRightCorner = Vector3.zero;
+            Vector3 topLeftCorner = Vector3.zero, topRightCorner = Vector3.zero;
+
+            foreach (var point1 in convexHull)
+            {
+                foreach (var point2 in convexHull)
+                {
+                    if (point1 == point2) continue;
+
+                    float rectangleWidth = Mathf.Abs(point1.x - point2.x);
+                    float rectangleHeight = Mathf.Abs(point1.z - point2.z);
+
+                    // Check if the area of the rectangle formed by these two points is larger than the current max
+                    if (rectangleWidth * rectangleHeight > maxRectangleWidth * maxRectangleHeight)
+                    {
+                        maxRectangleWidth = rectangleWidth;
+                        maxRectangleHeight = rectangleHeight;
+                        rectangleCenter = new Vector3((point1.x + point2.x) / 2, point1.y, (point1.z + point2.z) / 2);
+
+                        // Calculate the corners of the rectangle
+                        bottomLeftCorner = new Vector3(rectangleCenter.x - maxRectangleWidth / 2, rectangleCenter.y, rectangleCenter.z - maxRectangleHeight / 2);
+                        bottomRightCorner = new Vector3(rectangleCenter.x + maxRectangleWidth / 2, rectangleCenter.y, rectangleCenter.z - maxRectangleHeight / 2);
+                        topLeftCorner = new Vector3(rectangleCenter.x - maxRectangleWidth / 2, rectangleCenter.y, rectangleCenter.z + maxRectangleHeight / 2);
+                        topRightCorner = new Vector3(rectangleCenter.x + maxRectangleWidth / 2, rectangleCenter.y, rectangleCenter.z + maxRectangleHeight / 2);
+                    }
+                }
+            }
+
+            return new Vector3[] { topLeftCorner, bottomLeftCorner, bottomRightCorner, topRightCorner };
         }
     }
 
