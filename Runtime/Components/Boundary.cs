@@ -9,7 +9,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary")]
     public class Boundary : AnalyticsComponentBase
     {
-#if (C3D_OCULUS || C3D_DEFAULT) && UNITY_ANDROID && !UNITY_EDITOR
+#if (C3D_OCULUS || C3D_DEFAULT || C3D_PICOXR) && UNITY_ANDROID && !UNITY_EDITOR
         /// <summary>
         /// The previous list of coordinates (local to tracking space) describing the boundary <br/>
         /// Used for comparison to determine if the boundary changed
