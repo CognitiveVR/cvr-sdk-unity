@@ -153,15 +153,15 @@ namespace Cognitive3D.Components
                 {
                     if (item.type == "string")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<string>(item.remoteVariableName, ""));
+                        Cognitive3D_Manager.SetSessionProperty("c3d.remote_variable." + item.remoteVariableName, RemoteControlManager.GetValue<string>(item.remoteVariableName, ""));
                     }
                     else if (item.type == "bool")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<bool>(item.remoteVariableName, false));
+                        Cognitive3D_Manager.SetSessionProperty("c3d.remote_variable." + item.remoteVariableName, RemoteControlManager.GetValue<bool>(item.remoteVariableName, false));
                     }
                     else if (item.type == "int")
                     {
-                        Cognitive3D_Manager.SetSessionProperty(item.remoteVariableName, RemoteControlManager.GetValue<int>(item.remoteVariableName, 0));
+                        Cognitive3D_Manager.SetSessionProperty("c3d.remote_variable." + item.remoteVariableName, RemoteControlManager.GetValue<int>(item.remoteVariableName, 0));
                     }
                 }
             }
