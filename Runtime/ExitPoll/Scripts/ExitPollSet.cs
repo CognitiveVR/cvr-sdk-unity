@@ -112,7 +112,7 @@ namespace Cognitive3D
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             // Increment counter if controller pointer exists and tracking type is none
-            if (GameplayReferences.PointerController != null && GameplayReferences.GetCurrentTrackedDevice() == GameplayReferences.TrackingType.None)
+            if (GameplayReferences.PointerController != null && InputUtil.GetCurrentTrackedDevice() == InputUtil.InputType.None)
             {
                 noTrackingCountdown += deltaTime;
                 

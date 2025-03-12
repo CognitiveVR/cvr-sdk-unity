@@ -45,7 +45,7 @@ namespace Cognitive3D
 
                 Ray ray = GazeHelper.GetCurrentWorldGazeRay();
 
-                if (Cognitive3D_Preferences.Instance.EnableGaze == true && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out var hitDistance, out var hitDynamic, out var hitWorld, out var hitLocal, out var hitcoord)) //hit dynamic
+                if (Cognitive3D_Preferences.Instance.EnableGaze == true && GameplayReferences.HMDCameraComponent && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out var hitDistance, out var hitDynamic, out var hitWorld, out var hitLocal, out var hitcoord)) //hit dynamic
                 {
                     string ObjectId = hitDynamic.GetId();
                     var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -77,7 +77,7 @@ namespace Cognitive3D
                     yield return null;
                 }
 
-                if (Cognitive3D_Preferences.Instance.EnableGaze == true && Physics.Raycast(ray, out var hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
+                if (Cognitive3D_Preferences.Instance.EnableGaze == true && GameplayReferences.HMDCameraComponent && Physics.Raycast(ray, out var hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
                 {
                     Vector3 pos = GameplayReferences.HMD.position;
                     Vector3 gazepoint = hit.point;
@@ -101,7 +101,7 @@ namespace Cognitive3D
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                     DisplayGazePoints.Update();
                 }
-                else //hit sky / farclip / gaze disabled. record HMD position and rotation
+                else if (GameplayReferences.HMD) //hit sky / farclip / gaze disabled. record HMD position and rotation
                 {
                     Vector3 pos = GameplayReferences.HMD.position;
                     Quaternion rot = GameplayReferences.HMD.rotation;

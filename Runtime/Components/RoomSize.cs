@@ -124,7 +124,7 @@ namespace Cognitive3D.Components
             {
                 if (previousBoundaryPoints != null && previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
                 {
-                    if (!IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
+                    if (!BoundaryUtil.IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
                     {
                         SendExitEvent();
                     }
@@ -138,32 +138,6 @@ namespace Cognitive3D.Components
             {
                 Debug.Log("Tracking Space not found");
             }
-        }
-
-        /// <summary>
-        /// Determines if a point is within a polygon
-        /// </summary>
-        /// <param name="polygon">An array of Vector3 representing the corners of a polygon</param>
-        /// <param name="testPoint">A Vector3 representing the point to test</param>
-        /// <returns>True if point is in polygon, false otherwise</returns>
-        private static bool IsPointInPolygon4(Vector3[] polygon, Vector3 testPoint)
-        {
-            if (polygon == null || polygon.Length < 3) { return false; }
-            bool result = false;
-            int j = polygon.Length - 1;
-            for (int i = 0; i < polygon.Length; i++)
-            {
-                // Only using x and z coordinates because Unity is "y-up" and boundary is infinitely high
-                if (polygon[i].z < testPoint.z && polygon[j].z >= testPoint.z || polygon[j].z < testPoint.z && polygon[i].z >= testPoint.z)
-                {
-                    if (polygon[i].x + (testPoint.z - polygon[i].z) / (polygon[j].z - polygon[i].z) * (polygon[j].x - polygon[i].x) < testPoint.x)
-                    {
-                        result = !result;
-                    }
-                }
-                j = i;
-            }
-            return result;
         }
 
         /// <summary>

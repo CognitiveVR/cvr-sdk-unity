@@ -69,6 +69,8 @@ namespace Cognitive3D
         [HideInInspector]
         public Transform trackingSpace;
 
+        internal static bool autoInitializeInput = true;
+
         /// <summary>
         /// sets instance of Cognitive3D_Manager
         /// </summary>

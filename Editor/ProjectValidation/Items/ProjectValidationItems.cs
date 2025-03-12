@@ -332,12 +332,10 @@ namespace Cognitive3D
                 fixmessage: "Controllers are correctly set up in current scene",
                 checkAction: () =>
                 {
-                    if (ProjectValidation.TryGetControllers(out var _controllerNamesList))
-                    {
-                        return _controllerNamesList.Count >= 2;
-                    }
-                    
-                    return false;
+                    if (Cognitive3D_Manager.autoInitializeInput)
+                        return true;
+
+                    return ProjectValidation.TryGetControllers(out var _controllerNamesList) && _controllerNamesList.Count >= 2;
                 },
                 fixAction: () =>
                 {

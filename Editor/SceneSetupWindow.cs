@@ -47,7 +47,6 @@ namespace Cognitive3D
         static bool wantEyeTrackingEnabled;
         static bool wantPassthroughEnabled;
         static bool wantSocialEnabled;
-        static bool wantHandTrackingEnabled;
         static bool wantSceneApiEnabled;
 
         const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
@@ -105,7 +104,6 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
                 wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
@@ -154,7 +152,6 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
                 wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
@@ -469,7 +466,7 @@ namespace Cognitive3D
 #elif C3D_OCULUS
             //basic setup
             var manager = FindObjectOfType<OVRCameraRig>();
-            if (manager != null)
+            if (manager != null && manager.leftHandAnchor != null && manager.rightHandAnchor != null && manager.trackingSpace != null)
             {
                 leftcontroller = manager.leftHandAnchor.gameObject;
                 rightcontroller = manager.rightHandAnchor.gameObject;
@@ -580,37 +577,21 @@ namespace Cognitive3D
 
         void ControllerUpdate()
         {
+            bool leftControllerIsValid = leftcontroller && leftcontroller?.GetComponent<DynamicObject>() != null;
+            bool rightControllerIsValid = rightcontroller && rightcontroller?.GetComponent<DynamicObject>() != null;
+            bool cameraIsValid = Camera.main != null && mainCameraObject == Camera.main.gameObject;
+            bool trackingSpaceIsValid = trackingSpace?.GetComponent<RoomTrackingSpace>() != null;
+
             PlayerSetupStart();
             GUI.Label(new Rect(30, 30, 440, 440), "You can use your existing Player Prefab. For most implementations, this is just a quick check to ensure cameras and controllers are configued correctly.", "normallabel");
             GUI.Label(new Rect(30, 100, 440, 440), "The display for the HMD should be tagged as <b>MainCamera</b>", "normallabel");
             GUI.Label(new Rect(30, 150, 440, 440), "The <b>TrackingSpace</b> is the root transform for the HMD and controllers", "normallabel");
 
             //hmd
-            int hmdRectHeight = 200;
+            DrawObjectPicker(ref mainCameraObject, "HMD", 200, 5689466);
+            HandleDragAndDrop(new Rect(180, 200, 440, 30), ref mainCameraObject);
 
-            GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
-            if (GUI.Button(new Rect(180, hmdRectHeight, 255, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
-            {
-                Selection.activeGameObject = mainCameraObject;
-            }
-
-            int pickerID_HMD = 5689466;
-            if (GUI.Button(new Rect(440, hmdRectHeight, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    mainCameraObject, true, "", pickerID_HMD);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD)
-                {
-                    mainCameraObject = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
-
-            Rect hmdAlertRect = new Rect(400, hmdRectHeight, 30, 30);
+            Rect hmdAlertRect = new Rect(400, 200, 30, 30);
             if (mainCameraObject == null)
             {
                 GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Camera GameObject not set"), "image_centered");
@@ -638,170 +619,83 @@ namespace Cognitive3D
 
 
             // tracking space
-            int hmdRectHeight2 = 235;
+            DrawObjectPicker(ref trackingSpace, "Tracking Space", 235, 5689467);
+            HandleDragAndDrop(new Rect(180, 235, 440, 30), ref trackingSpace);
 
-            GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
-            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
-            {
-                Selection.activeGameObject = trackingSpace;
-            }
-
-            int pickerID_HMD2 = 5689467;
-            if (GUI.Button(new Rect(440, hmdRectHeight2, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    trackingSpace, true, "", pickerID_HMD2);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD2)
-                {
-                    trackingSpace = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
             if (trackingSpace == null)
             {
-                GUI.Label(new Rect(400, hmdRectHeight2, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
+                GUI.Label(new Rect(400, 235, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
             }
 
             //controllers
+            GUI.Label(new Rect(150, 285, 440, 440), "Auto controllers/hands setup", "normallabel");
+            Rect checkboxRect = new Rect(120, 280, 30, 30);
+            if (Cognitive3D_Manager.autoInitializeInput)
+            {
+                if (GUI.Button(checkboxRect, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    SegmentAnalytics.TrackEvent("DisabledAutoInputSetup_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+                    Cognitive3D_Manager.autoInitializeInput = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    SegmentAnalytics.TrackEvent("EnabledAutoInputSetup_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+
+                    // Remove the controllers/hands DynamicObject components (if they exist)
+                    var dynamics = FindObjectsOfType<DynamicObject>();
+                    foreach (var dynamic in dynamics)
+                    {
+                        if (dynamic.IsController)
+                        {
+                            DestroyImmediate(dynamic);
+                        }
+                    }
+
+                    Cognitive3D_Manager.autoInitializeInput = true;
+                }
+            }
+
+            if (!Cognitive3D_Manager.autoInitializeInput)
+            {
 #if C3D_STEAMVR2
-            GUI.Label(new Rect(30, 280, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+                GUI.Label(new Rect(30, 320, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 280, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
+                GUI.Label(new Rect(30, 320, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
-            bool leftControllerIsValid = false;
-            bool rightControllerIsValid = false;
+                //left hand label
+                DrawObjectPicker(ref leftcontroller, "Left Controller", 365, 5689465);
+                HandleDragAndDrop(new Rect(180, 365, 440, 30), ref leftcontroller);
 
-            leftControllerIsValid = leftcontroller != null;
-            rightControllerIsValid = rightcontroller != null;
-
-            AllSetupComplete = false;
-            if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
+                if (!leftControllerIsValid)
                 {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false
-                        && (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() != null)) // Make sure tracking space isn't null before accessing its component
-                    {
-                        AllSetupComplete = true;
-                    }
+                    GUI.Label(new Rect(400, 365, 30, 30), new GUIContent(EditorCore.Alert, "Left Controller not set"), "image_centered");
                 }
-            }
-            int handOffset = 320;
 
-            //left hand label
-            GUI.Label(new Rect(30, handOffset + 15, 150, 30), "Left Controller", "boldlabel");
+                //right hand label
+                DrawObjectPicker(ref rightcontroller, "Right Controller", 400, 5689469);
+                HandleDragAndDrop(new Rect(180, 400, 440, 30), ref rightcontroller); 
 
-            string leftname = "Missing";
-            if (leftcontroller != null)
-                leftname = leftcontroller.gameObject.name;
-            if (GUI.Button(new Rect(180, handOffset + 15, 255, 30), leftname, "button_blueoutline"))
-            {
-                Selection.activeGameObject = leftcontroller;
-            }
-
-            int pickerID = 5689465;
-            if (GUI.Button(new Rect(440, handOffset + 15, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    leftcontroller, true, "", pickerID);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
+                if (!rightControllerIsValid)
                 {
-                    leftcontroller = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                    GUI.Label(new Rect(400, 400, 30, 30), new GUIContent(EditorCore.Alert, "Right Controller not set"), "image_centered");
                 }
             }
 
-            if (!leftControllerIsValid)
-            {
-                GUI.Label(new Rect(400, handOffset + 15, 30, 30), new GUIContent(EditorCore.Alert, "Left Controller not set"), "image_centered");
-            }
+            AllSetupComplete = (Cognitive3D_Manager.autoInitializeInput || (leftControllerIsValid && rightControllerIsValid)) 
+                                && cameraIsValid && trackingSpaceIsValid;
 
-            //right hand label
-            GUI.Label(new Rect(30, handOffset + 50, 150, 30), "Right Controller", "boldlabel");
-
-            string rightname = "Missing";
-            if (rightcontroller != null)
-                rightname = rightcontroller.gameObject.name;
-
-            if (GUI.Button(new Rect(180, handOffset + 50, 255, 30), rightname, "button_blueoutline"))
-            {
-                Selection.activeGameObject = rightcontroller;
-            }
-
-            pickerID = 5689469;
-            if (GUI.Button(new Rect(440, handOffset + 50, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    rightcontroller, true, "", pickerID);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
-                {
-                    rightcontroller = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
-
-            if (!rightControllerIsValid)
-            {
-                GUI.Label(new Rect(400, handOffset + 50, 30, 30), new GUIContent(EditorCore.Alert, "Right Controller not set"), "image_centered");
-            }
-
-            //drag and drop
-            if (new Rect(180, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-            else if (new Rect(180, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-            else if (new Rect(180, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    mainCameraObject = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-            else if (new Rect(180, hmdRectHeight2, 440, 30).Contains(Event.current.mousePosition)) // trackingSpace
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    trackingSpace = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-
-            if (GUI.Button(new Rect(160, 420, 200, 30), new GUIContent("Set up GameObjects","Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
+            if (GUI.Button(new Rect(160, 450, 200, 30), new GUIContent("Set up GameObjects","Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
             {
                 if (mainCameraObject != null)
                 {
                     mainCameraObject.tag = "MainCamera";
                 }
 
-                SetupControllers();
+                SetupPlayer();
 
                 UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
                 Event.current.Use();
@@ -809,11 +703,11 @@ namespace Cognitive3D
 
             if (AllSetupComplete)
             {
-                GUI.Label(new Rect(130, 420, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                GUI.Label(new Rect(130, 450, 30, 30), EditorCore.CircleCheckmark, "image_centered");
             }
             else
             {
-                GUI.Label(new Rect(128, 420, 32, 32), EditorCore.Alert, "image_centered");
+                GUI.Label(new Rect(128, 450, 32, 32), EditorCore.Alert, "image_centered");
             }
 #if C3D_STEAMVR2
 
@@ -850,6 +744,45 @@ namespace Cognitive3D
                 GUI.Label(new Rect(128, 455, 32, 32), EditorCore.Alert, "image_centered");
             }
 #endif
+        }
+
+        private void DrawObjectPicker(ref GameObject obj, string label, int rectHeight, int pickerID)
+        {
+            GUILayout.BeginHorizontal();
+            GUI.Label(new Rect(30, rectHeight, 150, 30), label, "boldlabel");
+            if (GUI.Button(new Rect(180, rectHeight, 255, 30), obj != null? obj.name:"Missing", "button_blueoutline"))
+            {
+                Selection.activeGameObject = obj;
+            }
+            if (GUI.Button(new Rect(440, rectHeight, 30, 30), EditorCore.SearchIconWhite))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    obj, true, "", pickerID);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
+                {
+                    obj = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(25f);
+        }
+
+        private void HandleDragAndDrop(Rect dropArea, ref GameObject targetObject)
+        {
+            if (dropArea.Contains(Event.current.mousePosition))
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    targetObject = DragAndDrop.objectReferences[0] as GameObject;
+                }
+            }
         }
 
         bool hasCheckedForSteamVRActionsSet;
@@ -891,20 +824,55 @@ namespace Cognitive3D
             }
         }
 
-        public static void SetupControllers()
+        public static void SetupPlayer()
         {
             if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
             {
                 trackingSpace.AddComponent<RoomTrackingSpace>();
             }
 
-            if (leftcontroller != null && leftcontroller.GetComponent<DynamicObject>() == null)
+            if (!Cognitive3D_Manager.autoInitializeInput)
             {
-                leftcontroller.AddComponent<DynamicObject>();
-            }
-            if (rightcontroller != null && rightcontroller.GetComponent<DynamicObject>() == null)
-            {
-                rightcontroller.AddComponent<DynamicObject>();
+                if (leftcontroller != null && leftcontroller.GetComponent<DynamicObject>() == null)
+                {
+                    leftcontroller.AddComponent<DynamicObject>();
+                }
+                if (rightcontroller != null && rightcontroller.GetComponent<DynamicObject>() == null)
+                {
+                    rightcontroller.AddComponent<DynamicObject>();
+                }
+
+                InputUtil.ControllerType controllerType = InputUtil.ControllerType.Quest2;
+#if C3D_STEAMVR2
+                controllerType = InputUtil.ControllerType.ViveWand;
+#elif C3D_OCULUS
+                controllerType = InputUtil.ControllerType.Quest2;
+#elif C3D_PICOXR
+                controllerType = InputUtil.ControllerType.PicoNeo3;
+#elif C3D_VIVEWAVE
+                controllerType = InputUtil.ControllerType.ViveFocus;
+#endif
+            
+                if (leftcontroller != null)
+                {
+                    var dyn = leftcontroller.GetComponent<DynamicObject>();
+                    dyn.IsRight = false;
+                    dyn.IsController = true;
+                    dyn.inputType = InputUtil.InputType.Controller;
+                    dyn.SyncWithPlayerGazeTick = true;
+                    dyn.FallbackControllerType = controllerType;
+                    dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
+                }
+                if (rightcontroller != null)
+                {
+                    var dyn = rightcontroller.GetComponent<DynamicObject>();
+                    dyn.IsRight = true;
+                    dyn.IsController = true;
+                    dyn.inputType = InputUtil.InputType.Controller;
+                    dyn.SyncWithPlayerGazeTick = true;
+                    dyn.FallbackControllerType = controllerType;
+                    dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
+                }
             }
 
             if (Cognitive3D_Manager.Instance == null)
@@ -920,36 +888,6 @@ namespace Cognitive3D
             {
                 Cognitive3D_Manager.Instance.gameObject.AddComponent<Components.ControllerInputTracker>();
                 Debug.Log("Set Controller Dynamic Object Settings. Create Controller Input Tracker component");
-            }
-
-            DynamicObject.ControllerType controllerType = DynamicObject.ControllerType.Quest2;
-#if C3D_STEAMVR2
-                controllerType = DynamicObject.ControllerType.ViveWand;
-#elif C3D_OCULUS
-                controllerType = DynamicObject.ControllerType.Quest2;
-#elif C3D_PICOXR
-                controllerType = DynamicObject.ControllerType.PicoNeo3;
-#elif C3D_VIVEWAVE
-                controllerType = DynamicObject.ControllerType.ViveFocus;
-#endif
-            
-            if (leftcontroller != null)
-            {
-                var dyn = leftcontroller.GetComponent<DynamicObject>();
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.SyncWithPlayerGazeTick = true;
-                dyn.FallbackControllerType = controllerType;
-                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
-            }
-            if (rightcontroller != null)
-            {
-                var dyn = rightcontroller.GetComponent<DynamicObject>();
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.SyncWithPlayerGazeTick = true;
-                dyn.FallbackControllerType = controllerType;
-                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
         }
 
@@ -1030,34 +968,12 @@ namespace Cognitive3D
                 }
             }
 
-            // Hand Tracking
-            GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
-            Rect infoRect4 = new Rect(320, 280, 30, 30);
-            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Tracking."), "image_centered");
-
-            Rect checkboxRect4 = new Rect(105, 280, 30, 30);
-            if (wantHandTrackingEnabled)
-            {
-                if (GUI.Button(checkboxRect4, EditorCore.BoxCheckmark, "image_centered"))
-                {
-                    wantHandTrackingEnabled = false;
-                }
-            }
-            else
-            {
-                if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
-                {
-                    SegmentAnalytics.TrackEvent("EnabledHandTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
-                    wantHandTrackingEnabled = true;
-                }
-            }
-
             // Scene API
-            GUI.Label(new Rect(140, 335, 440, 440), "Quest 3 Scene API", "normallabel");
-            Rect infoRect5 = new Rect(320, 330, 30, 30);
+            GUI.Label(new Rect(140, 285, 440, 440), "Quest 3 Scene API", "normallabel");
+            Rect infoRect5 = new Rect(320, 280, 30, 30);
             GUI.Label(infoRect5, new GUIContent(EditorCore.Info, "Collects dimensions of the room the participant is in."), "image_centered");
 
-            Rect checkboxRect5 = new Rect(105, 330, 30, 30);
+            Rect checkboxRect5 = new Rect(105, 280, 30, 30);
             if (wantSceneApiEnabled)
             {
                 if (GUI.Button(checkboxRect5, EditorCore.BoxCheckmark, "image_centered"))
@@ -1123,22 +1039,6 @@ namespace Cognitive3D
                 if (social != null)
                 {
                     DestroyImmediate(social);
-                }
-            }
-            if (wantHandTrackingEnabled)
-            {
-                var hand = FindObjectOfType<HandTracking>();
-                if (hand == null)
-                {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<HandTracking>();
-                }
-            }
-            else
-            {
-                var hand = FindObjectOfType<HandTracking>();
-                if (hand != null)
-                {
-                    DestroyImmediate(hand);
                 }
             }
 

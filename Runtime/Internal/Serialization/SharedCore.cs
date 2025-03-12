@@ -29,6 +29,7 @@ namespace Cognitive3D.Serialization
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
             SerializeBoundaryShapes(copyToCache);
+            SerializeDynamicImmediate(copyToCache);
         }
 
         internal static void Flush(bool copyToCache)
@@ -1947,15 +1948,21 @@ namespace Cognitive3D.Serialization
             if (!IsInitialized) { return; }
             DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
 
-            dome.controllerType = data.ControllerType;
-            dome.isController = true;
+            dome.inputType = data.InputType;
+
+            if (data.IsController)
+            {
+                dome.controllerType = data.ControllerType;
+                dome.isController = true;
+            }
+
             if (data.IsRightHand)
             {
-                dome.Properties = "{\"controller\": \"right\"}";
+                dome.Properties = "\"controller\": \"right\"";
             }
             else
             {
-                dome.Properties = "{\"controller\": \"left\"}";
+                dome.Properties = "\"controller\": \"left\"";
             }
             dome.HasProperties = true;
 
@@ -2336,9 +2343,9 @@ namespace Cognitive3D.Serialization
             //properties should already be formatted, just need to append them here
             if (!string.IsNullOrEmpty(entry.Properties))
             {
-                builder.Append(",\"properties\":[");
+                builder.Append(",\"properties\":{");
                 builder.Append(entry.Properties);
-                builder.Append("]");
+                builder.Append("}");
             }
 
             builder.Append("}"); //close manifest entry

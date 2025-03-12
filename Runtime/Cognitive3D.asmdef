@@ -24,7 +24,8 @@
         "PhotonUnityNetworking",
         "PhotonRealtime",
         "meta.xr.mrutilitykit",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "Unity.XR.Hands"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -68,6 +69,11 @@
             "name": "com.normalvr.normcore",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_NORMCORE"
+        },
+        {
+            "name": "com.unity.xr.hands",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_XR_HANDS"
         }
     ],
     "noEngineReferences": false

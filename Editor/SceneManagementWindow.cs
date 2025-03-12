@@ -381,7 +381,7 @@ namespace Cognitive3D
                 // Assign dynamics to controllers
                 case SceneManagementUploadState.GameObjectSetup:
                     SceneSetupWindow.Init();
-                    SceneSetupWindow.SetupControllers();
+                    SceneSetupWindow.SetupPlayer();
                     EditorSceneManager.SaveOpenScenes();
                     sceneUploadState = SceneManagementUploadState.Export;
                     return;
