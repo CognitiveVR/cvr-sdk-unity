@@ -167,6 +167,12 @@ namespace Cognitive3D
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
         }
 
+        //GET request remote variables
+        internal static string GetRemoteControlsURL(string userId)
+        {
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/remotevariables?identifier=", userId);
+        }
+
         /// <summary>
         /// Creates the GET request endpoint with access token and search parameters
         /// </summary>

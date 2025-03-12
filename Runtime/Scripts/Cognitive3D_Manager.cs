@@ -158,6 +158,7 @@ namespace Cognitive3D
 #endif
 
             ExitpollHandler = new ExitPollLocalDataHandler(Application.persistentDataPath + "/c3dlocal/exitpoll/");
+            remoteControlsHandler = new RemoteControlsLocalDataHandler(Application.persistentDataPath + "/c3dlocal/remotecontrols/");
 
             if (Cognitive3D_Preferences.Instance.LocalStorage)
             {
@@ -174,7 +175,7 @@ namespace Cognitive3D
             GameObject networkGo = new GameObject("Cognitive Network");
             networkGo.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
             NetworkManager = networkGo.AddComponent<NetworkManager>();
-            NetworkManager.Initialize(DataCache, ExitpollHandler);
+            NetworkManager.Initialize(DataCache);
 
             GameplayReferences.Initialize();
             DynamicManager.Initialize();
@@ -813,7 +814,15 @@ namespace Cognitive3D
         public static event onLevelLoaded OnLevelLoaded;
         private static void InvokeLevelLoadedEvent(Scene scene, LoadSceneMode mode, bool newSceneId) { if (OnLevelLoaded != null) { OnLevelLoaded(scene, mode, newSceneId); } }
 
+        public delegate void onParticipantIdSet(string participantId);
+        /// <summary>
+        /// Called after a participant id is set. May be called multiple times
+        /// </summary>
+        public static event onParticipantIdSet OnParticipantIdSet;
+        private static void InvokeOnParticipantIdSet(string participantId) { if (OnParticipantIdSet != null) { OnParticipantIdSet.Invoke(participantId); } }
+
         internal static ILocalExitpoll ExitpollHandler;
+        internal static ILocalRemoteControls remoteControlsHandler;
         internal static ICache DataCache;
         internal static NetworkManager NetworkManager;
 
@@ -973,6 +982,7 @@ namespace Cognitive3D
             }
             ParticipantId = id;
             SetParticipantProperty("id", id);
+            InvokeOnParticipantIdSet(id);
         }
 
         /// <summary>
