@@ -1,7 +1,10 @@
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.Networking;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Cognitive3D.Newtonsoft.Json;
 
 namespace Cognitive3D
 {
@@ -9,24 +12,34 @@ namespace Cognitive3D
     internal static class SegmentAnalytics
     {
         private const string KEY_URL = "https://data.cognitive3d.com/segmentWriteKey";
+        private const string IDENTIFY_URL = "https://api.segment.io/v1/identify";
         private const string TRACK_URL = "https://api.segment.io/v1/track";
-        private const string PAGE_URL = "https://api.segment.io/v1/page";
+        private const string GROUP_URL = "https://api.segment.io/v1/group";
 
         private static string _writeKey;
-        private static string _anonymousId;
+        private static int _anonymousId;
+        private static int _userId;
+        private static int _groupId;
 
         static SegmentAnalytics()
         {
-            _anonymousId = System.Guid.NewGuid().ToString();
-            FetchKey();
+            Init();
         }
 
         /// <summary>
-        /// Method to fetch the Segment key
+        /// Method to fetch the Segment key and identify user
         /// </summary>
-        private static async void FetchKey()
+        private static async void Init()
         {
             _writeKey = await GetKeyFromServerAsync();
+
+            _anonymousId = _userId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
+            _groupId = Mathf.Abs(System.Guid.NewGuid().GetHashCode());
+
+            if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
+            {
+                EditorCore.GetUserData(EditorCore.DeveloperKey, GetUserResponse);
+            } 
         }
 
         private static async Task<string> GetKeyFromServerAsync()
@@ -45,26 +58,48 @@ namespace Cognitive3D
             }
         }
 
-        /// <summary>
-        /// Async method to send page data to Segment
-        /// More info about page event: https://segment.com/docs/connections/spec/page/
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="status"></param>
-        public static async void PageEvent(string pageName, string status = "")
+        public static async void Identify(EditorCore.UserData userData)
         {
+            var _userTraits = new SegmentUserTraits();
+            _userTraits.sdkVersion = Cognitive3D_Manager.SDK_VERSION;
+            if (userData != null)
+            {
+                _userTraits.name = $"{userData.firstName} {userData.lastName}";
+                _userTraits.email = userData.email;
+                _userTraits.projectId = userData.projectId;
+                _userTraits.projectName = userData.projectName;
+            }            
+
             // Create the data payload in JSON format
-            string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
+            string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentIdentifyPayload
             {
                 anonymousId = _anonymousId,
-                name = pageName,
-                properties = new SegmentProperties
-                {
-                    status = status
-                }
+                userId = _userId,
+                traits = _userTraits
             });
 
-            await SendTrackingDataAsync(PAGE_URL, jsonPayload);
+            await SendTrackingDataAsync(IDENTIFY_URL, jsonPayload);
+        }
+
+        public static async void Group(EditorCore.UserData userData)
+        {
+            var _groupTraits = new SegmentGroupTraits();
+
+            if (userData != null)
+            {
+                _groupTraits.organizationName = userData.organizationName;
+            }
+
+            // Create the data payload in JSON format
+            string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentGroupPayload
+            {
+                groupId = _groupId,
+                anonymousId = _anonymousId,
+                userId = _userId,
+                traits = _groupTraits
+            });
+
+            await SendTrackingDataAsync(GROUP_URL, jsonPayload);
         }
 
         /// <summary>
@@ -79,6 +114,7 @@ namespace Cognitive3D
             string jsonPayload = UnityEngine.JsonUtility.ToJson(new SegmentTrackPayload
             {
                 anonymousId = _anonymousId,
+                userId = _userId,
                 @event = eventName,
                 properties = new SegmentProperties
                 {
@@ -89,9 +125,30 @@ namespace Cognitive3D
             await SendTrackingDataAsync(TRACK_URL, jsonPayload);
         }
 
+        /// <summary>
+        /// Async method to send tracking data to Segment
+        /// More info about track event: https://segment.com/docs/connections/spec/track/ 
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="properties"></param>
+        public static async void TrackEvent(string eventName, SegmentProperties properties)
+        {
+            var payload = new SegmentTrackPayload
+            {
+                anonymousId = _anonymousId,
+                userId = _userId,
+                @event = eventName,
+                properties = properties
+            };
+
+            string jsonPayload = JsonConvert.SerializeObject(payload);
+
+            await SendTrackingDataAsync(TRACK_URL, jsonPayload);
+        }
+
         private static async Task SendTrackingDataAsync(string trackURL, string data)
         {
-            if (string.IsNullOrEmpty(_writeKey)) FetchKey();
+            if (string.IsNullOrEmpty(_writeKey)) Init();
 
             if (!string.IsNullOrEmpty(_writeKey))
             {
@@ -111,21 +168,81 @@ namespace Cognitive3D
             }
         }
 
+
+        private static void GetUserResponse(int responseCode, string error, string text)
+        {
+            var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+            if (responseCode == 200 && userdata != null)
+            {
+                _userId = userdata.userId;
+                _groupId = userdata.organizationId;
+            }
+
+            Identify(userdata);
+            Group(userdata);
+        }
+
         // Classes to match Segment API payload structure
         [System.Serializable]
-        private class SegmentTrackPayload
+        internal class SegmentGroupPayload
         {
-            public string anonymousId;
-            public string @event;
+            // Same as organization ID
+            public int groupId;
+            public int anonymousId;
+            public int userId;
+            public SegmentGroupTraits traits;
+        }
+
+        [System.Serializable]
+        public class SegmentGroupTraits
+        {
+            public string organizationName;
+        }
+
+        [System.Serializable]
+        internal class SegmentIdentifyPayload
+        {
+            public int anonymousId;
+            public int userId;
+            public SegmentUserTraits traits;
+        }
+
+        [System.Serializable]
+        public class SegmentUserTraits
+        {
             public string name;
+            public string email;
+            public string sdkVersion;
+            public int projectId;
+            public string projectName;
+        }
+
+        [System.Serializable]
+        internal class SegmentTrackPayload
+        {
+            public int anonymousId;
+            public int userId;
+            public string @event;
             public SegmentProperties properties;
         }
 
         [System.Serializable]
-        private class SegmentProperties
+        internal class SegmentProperties
         {
             public string buttonName;
-            public string status;
+
+            [JsonExtensionData]
+            private Dictionary<string, object> otherProperties = new Dictionary<string, object>();
+
+            internal void SetProperty(string key, object value)
+            {
+                otherProperties[key] = value;
+            }
+
+            internal object GetProperty(string key)
+            {
+                return otherProperties.TryGetValue(key, out var value) ? value : null;
+            }
         }
     }
 }

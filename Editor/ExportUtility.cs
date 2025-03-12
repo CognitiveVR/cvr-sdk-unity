@@ -535,7 +535,10 @@ namespace Cognitive3D
             UploadComplete = null;
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
-            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", "SceneSetupSceneUploadPage");
+            SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+            props.buttonName = "SceneSetupSceneUploadPage";
+            props.SetProperty("sceneVersion", UploadSceneSettings.VersionNumber+1);
+            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", props);
         }
 
         static Cognitive3D_Preferences.SceneSettings UploadSceneSettings;

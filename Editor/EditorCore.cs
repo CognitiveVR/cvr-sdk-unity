@@ -2025,6 +2025,48 @@ namespace Cognitive3D
             }
         }
 
+        internal static void GetUserData(string developerKey, EditorNetwork.Response callback)
+        {
+            if (!string.IsNullOrEmpty(developerKey))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + developerKey);
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/user", callback, headers, true);
+            }
+            else
+            {
+                callback.Invoke(0, "Invalid Developer Key", "");
+            }
+        }
+
+        [System.Serializable]
+        internal class UserData
+        {
+            public string email;
+            public int userId;
+            public string firstName;
+            public string lastName;
+            public int projectId;
+            public string projectName;
+            public int organizationId;
+            public string organizationName;
+        }
+
+        [System.Serializable]
+        internal class OrganizationData
+        {
+            public string organizationName;
+            public SubscriptionData[] subscriptions;
+        }
+
+        [System.Serializable]
+        internal class SubscriptionData
+        {
+            public long beginning;
+            public long expiration;
+            public string planType;
+            public bool isFreeTrial;
+        }
         #endregion
 
         #region Dynamic Object Aggregation Manifest

@@ -98,7 +98,7 @@ namespace Cognitive3D
 
         internal static void Init()
         {
-            SegmentAnalytics.PageEvent("SceneManageWindow", "Opened");
+            SegmentAnalytics.TrackEvent("SceneManageWindow_Opened", "SceneManageWindow");
             // Only search "Assets/" - don't search Packages/
             string[] foldersToSearch = { "Assets/" };
             SceneManagementWindow window = (SceneManagementWindow)EditorWindow.GetWindow(typeof(SceneManagementWindow), true, "Scene Management (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
