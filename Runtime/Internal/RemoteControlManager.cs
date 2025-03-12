@@ -17,6 +17,17 @@ namespace Cognitive3D
         internal static void InvokeOnRemoteControlsAvailable() { if (OnRemoteControlsAvailable != null) { OnRemoteControlsAvailable.Invoke(); } }
 
         /// <summary>
+        /// Returns true if remote variables have already been returned from the server (or loaded from the local cache as a fallback)
+        /// </summary>
+        public static bool HasFetchedVariables
+        {
+            get
+            {
+                return Components.RemoteControls.hasFetchedVariables;
+            }
+        }
+
+        /// <summary>
         /// Resets the remote variable data
         /// </summary>
         internal static void Reset()

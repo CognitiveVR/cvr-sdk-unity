@@ -28,7 +28,7 @@ namespace Cognitive3D.Components
         /// <summary>
         /// Flag indicating if variables have been fetched
         /// </summary>
-        static bool hasFetchedVariables;
+        internal static bool hasFetchedVariables;
 
         /// <summary>
         /// the delay to hear a response from our backend. If there is no response in this time, try to use a local cache of variables
@@ -193,6 +193,12 @@ namespace Cognitive3D.Components
         private void Cognitive3D_Manager_OnPostSessionEnd()
         {
             hasFetchedVariables = false;
+            Cognitive3D_Manager.OnParticipantIdSet -= Cognitive3D_Manager_OnParticipantIdSet;
+            Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
+        }
+
+        private void OnDestroy()
+        {
             Cognitive3D_Manager.OnParticipantIdSet -= Cognitive3D_Manager_OnParticipantIdSet;
             Cognitive3D_Manager.OnPostSessionEnd -= Cognitive3D_Manager_OnPostSessionEnd;
         }
