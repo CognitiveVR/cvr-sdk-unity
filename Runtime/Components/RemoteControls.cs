@@ -36,19 +36,20 @@ namespace Cognitive3D.Components
         const float requestRemoteControlsTimeout = 3;
 
         /// <summary>
-        /// the delay waiting for participant id to be set (if not already set at the start of the session)
+        /// if true, sends identifying data to retrieve variables as soon as possible after Session Begin
         /// </summary>
-        public float waitForParticipantIdTimeout = 5;
+        public bool fetchVariablesAutomatically = true;
 
         /// <summary>
-        /// if true, uses the participant id (possibly with a delay) to get remote variables. Otherwise, use the device id
+        /// if true, uses the ParticipantId (possibly with a delay) to get Remote Variables. Otherwise, use the DeviceId
         /// </summary>
         public bool useParticipantId = true;
 
         /// <summary>
-        /// if true, sends identifying data to retrieve variables as soon as possible
+        /// the delay waiting for ParticipantId to be set (if not already set at the start of the session)
         /// </summary>
-        public bool fetchVariablesAutomatically = true;
+        public float waitForParticipantIdTimeout = 5;
+
 
         protected override void OnSessionBegin()
         {
@@ -205,7 +206,7 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-            return "Retrieves variables from the Cognitive3D server to adjust the user's experience";
+            return "Retrieves variables from the Cognitive3D Dashboard to adjust the user's experience";
         }
 
         public override bool GetWarning()

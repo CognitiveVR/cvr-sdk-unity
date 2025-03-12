@@ -97,6 +97,17 @@ namespace Cognitive3D
 
             return defaultValue;
         }
+
+        /// <summary>
+        /// Logs all Remote Variables. For development and debugging
+        /// </summary>
+        public static void ListAllVariables()
+        {
+            foreach(var v in remoteVariables)
+            {
+                Debug.Log(v.ToString());
+            }
+        }
     }
 
     [System.Serializable]
