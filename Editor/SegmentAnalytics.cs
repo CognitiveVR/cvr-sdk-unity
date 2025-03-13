@@ -172,6 +172,11 @@ namespace Cognitive3D
         private static void GetUserResponse(int responseCode, string error, string text)
         {
             var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+            if (responseCode != 200)
+            {
+                Util.logDevelopment("Failed to retrieve user data" + responseCode + "  " + error);
+            }
+
             if (responseCode == 200 && userdata != null)
             {
                 _userId = userdata.userId;
