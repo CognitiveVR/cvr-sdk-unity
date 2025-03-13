@@ -357,7 +357,7 @@ namespace Cognitive3D
 #region Controllers and Hands Manager
         private static DynamicData[] ActiveInputsArray = new DynamicData[24];
 
-        internal static void RegisterController(string registerId, XRNode controller, bool isRight)
+        internal static void RegisterController(XRNode controller, bool isRight, string registerId = "")
         {
             InputUtil.TryGetInputDevice(controller, out InputDevice controllerDevice);
             InputUtil.TryGetControllerPosition(controller, out Vector3 pos);
@@ -440,7 +440,7 @@ namespace Cognitive3D
                 CoreInterface.WriteControllerManifestEntry(data);
         }
 
-        internal static void RegisterHand(string registerId, XRNode hand, bool isRight)
+        internal static void RegisterHand(XRNode hand, bool isRight, string registerId = "")
         {
             InputUtil.TryGetControllerPosition(hand, out Vector3 pos);
             InputUtil.TryGetControllerRotation(hand, out Quaternion rot);

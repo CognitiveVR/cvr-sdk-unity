@@ -46,8 +46,8 @@ namespace Cognitive3D.Components
             var currentTrackedDevice = InputUtil.GetCurrentTrackedDevice();
             if (currentTrackedDevice == InputUtil.InputType.Hand)
             {
-                DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.LeftHand, false);
-                DynamicManager.RegisterHand("", UnityEngine.XR.XRNode.RightHand, true);
+                DynamicManager.RegisterHand(UnityEngine.XR.XRNode.LeftHand, false);
+                DynamicManager.RegisterHand(UnityEngine.XR.XRNode.RightHand, true);
 
                 handsRegistered = true;
 
