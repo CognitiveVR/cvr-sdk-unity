@@ -59,6 +59,8 @@ namespace Cognitive3D
 
                 if (!IsUserPresent()) //player isn't present
                 {
+                    // Dispose of the previous token before creating a new one
+                    cancellationTokenSource?.Dispose();
                     cancellationTokenSource = new CancellationTokenSource();
                     var waitForUserTaskTimeout = await WaitForUser(cancellationTokenSource.Token); //wait until they're back, or time has elapsed
 

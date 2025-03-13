@@ -6,10 +6,9 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Hand Tracking")]
     public class HandTracking : AnalyticsComponentBase
     {
+#if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
         internal delegate void onInputChanged(InputUtil.InputType currentTrackedDevice);
         internal static event onInputChanged OnInputChanged;
-        
-#if C3D_OCULUS || C3D_VIVEWAVE || C3D_PICOXR || C3D_DEFAULT
         private InputUtil.InputType lastTrackedDevice = InputUtil.InputType.None;
         private bool handsRegistered;
 
