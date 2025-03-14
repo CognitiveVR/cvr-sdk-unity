@@ -535,7 +535,10 @@ namespace Cognitive3D
             UploadComplete = null;
 
             Debug.Log("<color=green>Scene Upload Complete!</color>");
-            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", "SceneSetupSceneUploadPage");
+            SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+            props.buttonName = "SceneSetupSceneUploadPage";
+            props.SetProperty("sceneVersion", UploadSceneSettings.VersionNumber+1);
+            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", props);
         }
 
         static Cognitive3D_Preferences.SceneSettings UploadSceneSettings;
@@ -1101,6 +1104,8 @@ namespace Cognitive3D
 
         public static Texture2D BakeCTSTerrainTexture(TerrainData data, Material material)
         {
+            if (data == null) return new Texture2D(1, 1);
+            
             //read splatmaps and texture arrays
             var t = material.GetTexture("_Texture_Array_Albedo");
             var albedos = t as Texture2DArray;
@@ -1183,6 +1188,8 @@ namespace Cognitive3D
 
         public static Texture2D BakeGridTerrainTexture(TerrainData data, Material material)
         {
+            if (data == null) return new Texture2D(1, 1);
+
             Texture2D finalTexture = new Texture2D((int)data.size.x, (int)data.size.z);
             Color c = Color.white;
             Color white = Color.white;
@@ -1213,6 +1220,8 @@ namespace Cognitive3D
         /// </summary>
         public static Texture2D BakeTerrainTexture(TerrainData data)
         {
+            if (data == null) return new Texture2D(1, 1);
+            
             float[,,] maps = data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight);
 
             //LIMIT to 6 layers for now! rbga + black + transparency?

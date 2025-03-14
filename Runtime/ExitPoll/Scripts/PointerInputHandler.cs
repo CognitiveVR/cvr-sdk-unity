@@ -35,13 +35,13 @@ namespace Cognitive3D
 
         void Update()
         {
-            var currentTrackedDevice = GameplayReferences.GetCurrentTrackedDevice();
+            var currentTrackedDevice = InputUtil.GetCurrentTrackedDevice();
 
-            if (currentTrackedDevice == GameplayReferences.TrackingType.Hand)
+            if (currentTrackedDevice == InputUtil.InputType.Hand)
             {
                 HandleHandInput();
             }
-            else if (currentTrackedDevice == GameplayReferences.TrackingType.Controller)
+            else if (currentTrackedDevice == InputUtil.InputType.Controller)
             {
                 HandleControllerInput();
             }
@@ -96,8 +96,8 @@ namespace Cognitive3D
             UnityEngine.XR.XRNode activeController = isRightHand ? UnityEngine.XR.XRNode.RightHand : UnityEngine.XR.XRNode.LeftHand;
             Vector3 controllerPosition;
             Quaternion controllerRotation;
-            GameplayReferences.TryGetControllerPosition(activeController, out controllerPosition);
-            GameplayReferences.TryGetControllerRotation(activeController, out controllerRotation);
+            InputUtil.TryGetControllerPosition(activeController, out controllerPosition);
+            InputUtil.TryGetControllerRotation(activeController, out controllerRotation);
 
             Vector3 direction = controllerRotation * Vector3.forward;
             bool activation = ExitPollUtil.GetButtonState(activeController, ExitPollUtil.GetButtonFeature(pointerInputButton));

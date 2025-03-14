@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using UnityEngine.SceneManagement;
-using Cognitive3D;
+using UnityEngine.XR;
 
 //dynamic component registers/removes itself from this centrally managed dynamicData array. manager handles sending manifest when
 //MANAGER holds array of data and puts contents into CORE queues. this iterates through the array (128/frame) - checks for changes to submit to core
@@ -20,11 +20,11 @@ namespace Cognitive3D
 
         internal static void Initialize()
         {
-            Cognitive3D.Cognitive3D_Manager.OnUpdate -= OnUpdate;
-            Cognitive3D.Cognitive3D_Manager.OnLevelLoaded -= OnSceneLoaded;
+            Cognitive3D_Manager.OnUpdate -= OnUpdate;
+            Cognitive3D_Manager.OnLevelLoaded -= OnSceneLoaded;
 
-            Cognitive3D.Cognitive3D_Manager.OnUpdate += OnUpdate;
-            Cognitive3D.Cognitive3D_Manager.OnLevelLoaded += OnSceneLoaded;
+            Cognitive3D_Manager.OnUpdate += OnUpdate;
+            Cognitive3D_Manager.OnLevelLoaded += OnSceneLoaded;
 
             //when the cognitive3d manager begins a new session, should mark all data in ActiveDynamicObjectsArray as needing to send manifest again
             for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
@@ -124,41 +124,6 @@ namespace Cognitive3D
             }
             if (Cognitive3D_Manager.IsInitialized)
                 CoreInterface.WriteDynamicManifestEntry(data);
-        }
-
-        internal static void RegisterController(DynamicData data)
-        {
-            //check for duplicate ids in all data
-            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
-            {
-                if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
-                {
-                    return;
-                }
-            }
-
-            //register controller and set manifest entry properties
-            bool foundSpot = false;
-            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
-            {
-                if (!ActiveDynamicObjectsArray[i].active)
-                {
-                    ActiveDynamicObjectsArray[i] = data;
-                    foundSpot = true;
-                    break;
-                }
-            }
-            if (!foundSpot)
-            {
-                Util.logWarning("Dynamic Object Array expanded!");
-
-                int nextFreeIndex = ActiveDynamicObjectsArray.Length;
-                Array.Resize<DynamicData>(ref ActiveDynamicObjectsArray, ActiveDynamicObjectsArray.Length * 2);
-                //just expanded the array. this spot will be empty
-                ActiveDynamicObjectsArray[nextFreeIndex] = data;
-            }
-            if (Cognitive3D_Manager.IsInitialized)
-                CoreInterface.WriteControllerManifestEntry(data);
         }
 
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
@@ -389,6 +354,175 @@ namespace Cognitive3D
 
         #endregion
 
+#region Controllers and Hands Manager
+        private static DynamicData[] ActiveInputsArray = new DynamicData[24];
+
+        internal static void RegisterController(XRNode controller, bool isRight, string registerId = "")
+        {
+            InputUtil.TryGetInputDevice(controller, out InputDevice controllerDevice);
+            InputUtil.TryGetControllerPosition(controller, out Vector3 pos);
+            InputUtil.TryGetControllerRotation(controller, out Quaternion rot);
+
+            var controllerDisplayType = InputUtil.GetControllerPopupName(controllerDevice.name, isRight);
+            var commonDynamicMesh = InputUtil.GetControllerMeshName(controllerDevice.name, isRight);
+            var registerMeshName = commonDynamicMesh.ToString();
+            var data = new DynamicData(controllerDevice.name, registerId, registerMeshName, pos, rot, 0.01f, 0.1f, 0.1f, InputUtil.InputType.Controller.ToString(), controllerDisplayType.ToString(), isRight);
+
+            bool foundSpot = false;
+            // Check for existing dynamic with same mesh name and controller type
+            // Register controller and set manifest entry properties
+            for (int i = 0; i < ActiveInputsArray.Length; i++)
+            {
+                if (ActiveInputsArray[i].active && 
+                    ActiveInputsArray[i].MeshName == registerMeshName && 
+                    ActiveInputsArray[i].IsRightHand == isRight)
+                {
+                    // Update the existing dynamic data
+                    ActiveInputsArray[i].LastPosition = pos;
+                    ActiveInputsArray[i].LastRotation = rot;
+                    data = ActiveInputsArray[i];// Avoid creating a new dynamic
+                    foundSpot = true;
+                }
+                else if (!ActiveInputsArray[i].active)
+                {
+                    ActiveInputsArray[i] = data;
+                    foundSpot = true;
+                    break;
+                }
+            }
+
+            if (!foundSpot)
+            {
+                Util.logWarning("Dynamic Object Array expanded!");
+
+                int nextFreeIndex = ActiveInputsArray.Length;
+                Array.Resize<DynamicData>(ref ActiveInputsArray, ActiveInputsArray.Length * 2);
+                //just expanded the array. this spot will be empty
+                ActiveInputsArray[nextFreeIndex] = data;
+            }
+
+            if (Cognitive3D_Manager.IsInitialized)
+                CoreInterface.WriteControllerManifestEntry(data);
+        }
+
+        internal static void RegisterController(DynamicData data)
+        {
+            //check for duplicate ids in all data
+            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+            {
+                if (ActiveDynamicObjectsArray[i].active && data.Id == ActiveDynamicObjectsArray[i].Id)
+                {
+                    return;
+                }
+            }
+
+            //register controller and set manifest entry properties
+            bool foundSpot = false;
+            for (int i = 0; i < ActiveDynamicObjectsArray.Length; i++)
+            {
+                if (!ActiveDynamicObjectsArray[i].active)
+                {
+                    ActiveDynamicObjectsArray[i] = data;
+                    foundSpot = true;
+                    break;
+                }
+            }
+            if (!foundSpot)
+            {
+                Util.logWarning("Dynamic Object Array expanded!");
+
+                int nextFreeIndex = ActiveDynamicObjectsArray.Length;
+                Array.Resize<DynamicData>(ref ActiveDynamicObjectsArray, ActiveDynamicObjectsArray.Length * 2);
+                //just expanded the array. this spot will be empty
+                ActiveDynamicObjectsArray[nextFreeIndex] = data;
+            }
+            if (Cognitive3D_Manager.IsInitialized)
+                CoreInterface.WriteControllerManifestEntry(data);
+        }
+
+        internal static void RegisterHand(XRNode hand, bool isRight, string registerId = "")
+        {
+            InputUtil.TryGetControllerPosition(hand, out Vector3 pos);
+            InputUtil.TryGetControllerRotation(hand, out Quaternion rot);
+
+            var name = isRight ? "RightHand" : "LeftHand";
+            var controllerDisplayType = isRight ? InputUtil.ControllerDisplayType.hand_right : InputUtil.ControllerDisplayType.hand_left;
+            var commonDynamicMesh = isRight ? InputUtil.CommonDynamicMesh.handRight : InputUtil.CommonDynamicMesh.handLeft;
+            var registerMeshName = commonDynamicMesh.ToString();
+            var data = new DynamicData(name, registerId, registerMeshName, pos, rot, 0.01f, 0.1f, 0.1f, InputUtil.InputType.Hand.ToString(), controllerDisplayType.ToString(), isRight);
+
+            bool foundSpot = false;
+            // Check for existing dynamic with same mesh name and controller type
+            // Register hand and set manifest entry properties
+            for (int i = 0; i < ActiveInputsArray.Length; i++)
+            {
+                if (ActiveInputsArray[i].active && 
+                    ActiveInputsArray[i].MeshName == registerMeshName && 
+                    ActiveInputsArray[i].IsRightHand == isRight)
+                {
+                    // Update the existing dynamic data
+                    ActiveInputsArray[i].LastPosition = pos;
+                    ActiveInputsArray[i].LastRotation = rot;
+                    data = ActiveInputsArray[i];// Avoid creating a new dynamic
+                    foundSpot = true;
+                }
+                else if (!ActiveInputsArray[i].active)
+                {
+                    ActiveInputsArray[i] = data;
+                    foundSpot = true;
+                    break;
+                }
+            }
+
+            if (!foundSpot)
+            {
+                Util.logWarning("Dynamic Object Array expanded!");
+
+                int nextFreeIndex = ActiveInputsArray.Length;
+                Array.Resize<DynamicData>(ref ActiveInputsArray, ActiveInputsArray.Length * 2);
+                //just expanded the array. this spot will be empty
+                ActiveInputsArray[nextFreeIndex] = data;
+            }
+
+            if (Cognitive3D_Manager.IsInitialized)
+                CoreInterface.WriteControllerManifestEntry(data);
+        }
+
+        internal static DynamicData GetInputDynamicData(InputUtil.InputType type, bool isRight)
+        {
+            for (int i = 0; i < ActiveInputsArray.Length; i++)
+            {
+                if (ActiveInputsArray[i].IsController &&
+                    ActiveInputsArray[i].InputType == type.ToString() &&
+                    ActiveInputsArray[i].IsRightHand == isRight)
+                {
+                    return ActiveInputsArray[i];
+                }
+            }
+            
+            Util.logError($"No DynamicData found for type {type} and isRight {isRight}");
+            return new DynamicData(); // Return null if no matching dynamic data is found
+        }
+
+        internal static void UpdateDynamicInputEnabledState(InputUtil.InputType currentTrackedDevice)
+        {
+            for (int i = 0; i < ActiveInputsArray.Length; i++)
+            {
+                if (ActiveInputsArray[i].active)
+                {
+                    List<KeyValuePair<string, object>> properties = new List<KeyValuePair<string, object>>
+                    {
+                        new KeyValuePair<string, object>("enabled",
+                        ActiveInputsArray[i].InputType == currentTrackedDevice.ToString())
+                    };
+
+                    ActiveInputsArray[i].Properties = properties;
+                    ActiveInputsArray[i].dirty = true;
+                    ActiveInputsArray[i].HasProperties = true;
+                }
+            }
+        }
+
         /// <summary>
         /// takes a list of inputs changed this frame. writes a snapshot outside of normal tick
         /// </summary>
@@ -475,6 +609,9 @@ namespace Cognitive3D
                             sb.Append("\"");
                             sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
                             sb.Append("\"");
+                        } else if (ActiveDynamicObjectsArray[i].Properties[j].Value is bool) // Explicitly handle booleans
+                        {
+                            sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
                         }
                         else
                         {
@@ -504,11 +641,11 @@ namespace Cognitive3D
                 {
                     if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
                     {
-                        props += ",\"enabled\":false";
+                        props += ",{\"enabled\":false}";
                     }
                     else
                     {
-                        props += "\"enabled\":false";
+                        props += "{\"enabled\":false}";
                     }
                 }
 
@@ -520,6 +657,111 @@ namespace Cognitive3D
                 CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
             }
         }
+
+        internal static void RecordControllerEvent(bool isRight, List<ButtonState> changedInputs)
+        {
+            var controller = GetInputDynamicData(InputUtil.InputType.Controller, isRight);
+
+            if (!String.IsNullOrEmpty(controller.Id))
+            {
+                bool found = false;
+                int i = 0;
+                for (; i < ActiveInputsArray.Length; i++)
+                {
+                    if (ActiveInputsArray[i].Id == controller.Id)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) { Util.logDebug("Dynamic Object ID " + controller.Id + " not found"); return; }
+
+
+                if (!Cognitive3D_Manager.IsInitialized) { return; }
+                Vector3 pos;
+                Quaternion rot;
+
+                XRNode handNode = isRight ? XRNode.RightHand : XRNode.LeftHand;
+                InputUtil.TryGetControllerPosition(handNode, out pos);
+                InputUtil.TryGetControllerRotation(handNode, out rot);
+                
+                //write changedinputs into string
+                System.Text.StringBuilder builder = new System.Text.StringBuilder(256 * changedInputs.Count);
+                if (changedInputs.Count > 0)
+                {
+                    ActiveInputsArray[i].dirty = true;
+                    for(int j = 0; j<changedInputs.Count;j++)
+                    {
+                        if (j != 0) { builder.Append(","); }
+                        builder.Append("\"");
+                        builder.Append(changedInputs[j].ButtonName);
+                        builder.Append("\":{");
+                        builder.Append("\"buttonPercent\":");
+                        builder.Append(changedInputs[j].ButtonPercent);
+                        if (changedInputs[j].IncludeXY)
+                        {
+                            builder.Append(",\"x\":");
+                            builder.Append(changedInputs[j].X.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
+                            builder.Append(",\"y\":");
+                            builder.Append(changedInputs[j].Y.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
+                        }
+                        builder.Append("}");
+                    }
+                }
+
+                if (ActiveInputsArray[i].dirty || ActiveInputsArray[i].HasProperties || !ActiveInputsArray[i].hasEnabled || ActiveInputsArray[i].remove) //HasProperties, HasEnabled, Remove should all have Dirty set at the same time
+                {
+                    ActiveInputsArray[i].UpdateInterval = 0;
+
+                    ActiveInputsArray[i].dirty = false;
+                    ActiveInputsArray[i].LastPosition = pos;
+                    ActiveInputsArray[i].LastRotation = rot;
+                    string props = null;
+                    if (ActiveInputsArray[i].HasProperties)
+                    {
+                        System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
+                        for (int j = 0; j < ActiveInputsArray[i].Properties.Count; j++)
+                        {
+                            if (j != 0)
+                                sb.Append(",");
+                            sb.Append("{\"");
+                            sb.Append(ActiveInputsArray[i].Properties[j].Key);
+                            sb.Append("\":");
+
+                            if (ActiveInputsArray[i].Properties[j].Value is string)
+                            {
+                                sb.Append("\"");
+                                sb.Append(ActiveInputsArray[i].Properties[j].Value);
+                                sb.Append("\"");
+                            } else if (ActiveInputsArray[i].Properties[j].Value is bool) // Explicitly handle booleans
+                            {
+                                sb.Append(ActiveInputsArray[i].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
+                            }
+                            else
+                            {
+                                sb.Append(ActiveInputsArray[i].Properties[j].Value);
+                            }
+                            sb.Append("}");
+                        }
+                        props = sb.ToString();
+
+                        ActiveInputsArray[i].HasProperties = false;
+                        ActiveInputsArray[i].Properties = null;
+                    }
+                    
+                    CoreInterface.WriteDynamicController(ActiveInputsArray[i], props, false, builder.ToString(),Util.Timestamp(Time.frameCount));
+                }
+            }
+            
+        }
+
+        // Resets input array
+        internal static void InputReset()
+        {
+            if (!Cognitive3D_Manager.IsInitialized) return;
+            Array.Clear(ActiveInputsArray, 0, ActiveInputsArray.Length);
+        }
+#endregion
 
         internal static void SetProperties(string id, List<KeyValuePair<string,object>> properties)
         {
@@ -690,6 +932,9 @@ namespace Cognitive3D
                                 sb.Append("\"");
                                 sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
                                 sb.Append("\"");
+                            }else if (ActiveDynamicObjectsArray[i].Properties[j].Value is bool) // Explicitly handle booleans
+                            {
+                                sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
                             }
                             else
                             {
@@ -737,7 +982,7 @@ namespace Cognitive3D
             }
         }
 
-        //alllow ticking a limited number of dynamic objects per frame
+        //allow ticking a limited number of dynamic objects per frame
         static int index = 0;
         static int maxTicks = 128;
         //IMPROVEMENT some function based on the number of dynamic objects to track and the intervals needed. should be as high as possible without causing 'overlap' between this tick and the next
@@ -749,50 +994,48 @@ namespace Cognitive3D
             if (!Cognitive3D_Manager.IsInitialized) { return; }
             if (string.IsNullOrEmpty(Cognitive3D_Manager.TrackingSceneId)) { return; }
 
-
             //limits the number of dynamic object data that can be processed each update loop
             int numTicks = 0;
 
-            for (; index < ActiveDynamicObjectsArray.Length; index++)
+            // Process controllers/hands
+            ProcessInputDynamicArray(ref ActiveInputsArray, InputUtil.GetCurrentTrackedDevice(), deltaTime, ref numTicks);
+
+            // Process dynamic objects
+            ProcessDynamicArray(ref ActiveDynamicObjectsArray, deltaTime, ref numTicks);
+        }
+
+        private static void ProcessDynamicArray(ref DynamicData[] array, float deltaTime, ref int numTicks)
+        {
+            for (; index < array.Length; index++)
             {
-                if (!ActiveDynamicObjectsArray[index].active) { continue; }
+                if (!array[index].active) continue;
 
-                //can set dynamic object to dirty to immediately send snapshot. otherwise wait for update interval
-                if (!ActiveDynamicObjectsArray[index].dirty && ActiveDynamicObjectsArray[index].UpdateInterval < ActiveDynamicObjectsArray[index].DesiredUpdateRate) { ActiveDynamicObjectsArray[index].UpdateInterval += deltaTime; continue; }
-                ActiveDynamicObjectsArray[index].UpdateInterval = 0;
+                if (!array[index].dirty && array[index].UpdateInterval < array[index].DesiredUpdateRate) 
+                {
+                    array[index].UpdateInterval += deltaTime; 
+                    continue;
+                }
+                array[index].UpdateInterval = 0;
 
-                //used to skip through position and rotation check if one of them has already been set, or if the data was already marked as 'dirty'
-                bool writeData = ActiveDynamicObjectsArray[index].dirty;
+                bool writeData = array[index].dirty;
 
-                //if removing, don't compare to current transform (possibly destroyed)
+                // Get position, scale, rotation depending on whether it's a controller or dynamic object
                 Vector3 pos;
                 Vector3 scale;
                 Quaternion rot;
 
-                if (ActiveDynamicObjectsArray[index].Transform == null)
-                    ActiveDynamicObjectsArray[index].remove = true;
-
-                if (ActiveDynamicObjectsArray[index].remove)
-                {
-                    pos = ActiveDynamicObjectsArray[index].LastPosition;
-                    scale = ActiveDynamicObjectsArray[index].LastScale;
-                    rot = ActiveDynamicObjectsArray[index].LastRotation;
-                }
-                else
-                {
-                    pos = ActiveDynamicObjectsArray[index].Transform.position;
-                    scale = ActiveDynamicObjectsArray[index].Transform.lossyScale;
-                    rot = ActiveDynamicObjectsArray[index].Transform.rotation;
-                }
-
+                if (array[index].Transform == null) array[index].remove = true;
+                pos = array[index].remove ? array[index].LastPosition : array[index].Transform.position;
+                scale = array[index].remove ? array[index].LastScale : array[index].Transform.lossyScale;
+                rot = array[index].remove ? array[index].LastRotation : array[index].Transform.rotation;
 
                 //check distance
                 if (!writeData)
                 {
                     //IMPROVEMENT INLINE SQRMAGNITUDE
-                    if (Vector3.SqrMagnitude(pos - ActiveDynamicObjectsArray[index].LastPosition) > ActiveDynamicObjectsArray[index].PositionThreshold * ActiveDynamicObjectsArray[index].PositionThreshold)
+                    if (Vector3.SqrMagnitude(pos - array[index].LastPosition) > array[index].PositionThreshold * array[index].PositionThreshold)
                     {
-                        ActiveDynamicObjectsArray[index].dirty = true;
+                        array[index].dirty = true;
                         writeData = true;
                     }
                 }
@@ -801,69 +1044,75 @@ namespace Cognitive3D
                 if (!writeData)
                 {
                     //IMPROVEMENT INLINE DOT
-                    float f = Quaternion.Dot(ActiveDynamicObjectsArray[index].LastRotation, rot);
+                    float f = Quaternion.Dot(array[index].LastRotation, rot);
 
                     float fabs = f < 0 ? f * -1 : f;
                     float min = fabs < 1 ? fabs : 1;
 
-                    if (System.Math.Acos(min) * 114.59156f > ActiveDynamicObjectsArray[index].RotationThreshold)
+                    if (System.Math.Acos(min) * 114.59156f > array[index].RotationThreshold)
                     {
-                        ActiveDynamicObjectsArray[index].dirty = true;
+                        array[index].dirty = true;
                         writeData = true;
                     }
                 }
 
                 //check scale
                 bool writeScale = false;
-                if (Vector3.SqrMagnitude(ActiveDynamicObjectsArray[index].LastScale - scale) > ActiveDynamicObjectsArray[index].ScaleThreshold * ActiveDynamicObjectsArray[index].ScaleThreshold)
+                if (Vector3.SqrMagnitude(array[index].LastScale - scale) > array[index].ScaleThreshold * array[index].ScaleThreshold)
                 {
                     //IMPROVEMENT INLINE SQRMAGNITUDE
                     //TEST scale threshold
                     writeScale = true;
                     writeData = true;
-                    ActiveDynamicObjectsArray[index].dirty = true;
+                    array[index].dirty = true;
                 }
 
-                if (writeData || ActiveDynamicObjectsArray[index].dirty || ActiveDynamicObjectsArray[index].HasProperties || !ActiveDynamicObjectsArray[index].hasEnabled || ActiveDynamicObjectsArray[index].remove)
+                // Update the dynamic object only if necessary
+                if (writeData || array[index].dirty || array[index].HasProperties || !array[index].hasEnabled || array[index].remove)
                 {
-                    ActiveDynamicObjectsArray[index].dirty = false;
-                    ActiveDynamicObjectsArray[index].LastPosition = pos;
-                    ActiveDynamicObjectsArray[index].LastRotation = rot;
+                    array[index].dirty = false;
+                    array[index].LastPosition = pos;
+                    array[index].LastRotation = rot;
+
                     if (writeScale)
                     {
-                        ActiveDynamicObjectsArray[index].LastScale = scale;
+                        array[index].LastScale = scale;
                     }
+
                     string props = null;
-                    if (ActiveDynamicObjectsArray[index].HasProperties)
+                    if (array[index].HasProperties)
                     {
                         System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
-                        for (int j = 0; j < ActiveDynamicObjectsArray[index].Properties.Count; j++)
+                        for (int j = 0; j < array[index].Properties.Count; j++)
                         {
                             if (j != 0)
                                 sb.Append(",");
                             sb.Append("{\"");
-                            sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Key);
+                            sb.Append(array[index].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (ActiveDynamicObjectsArray[index].Properties[j].Value is string)
+                            if (array[index].Properties[j].Value is string)
                             {
                                 sb.Append("\"");
-                                sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Value);
+                                sb.Append(array[index].Properties[j].Value);
                                 sb.Append("\"");
+                            }else if (array[index].Properties[j].Value is bool) // Explicitly handle booleans
+                            {
+                                sb.Append(array[index].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
                             }
                             else
                             {
-                                sb.Append(ActiveDynamicObjectsArray[index].Properties[j].Value);
+                                sb.Append(array[index].Properties[j].Value);
                             }
                             sb.Append("}");
                         }
                         props = sb.ToString();
                     }
-
-                    if (!ActiveDynamicObjectsArray[index].hasEnabled)
+                    
+                    if (!array[index].hasEnabled)
                     {
-                        ActiveDynamicObjectsArray[index].hasEnabled = true;
-                        if (ActiveDynamicObjectsArray[index].HasProperties || !string.IsNullOrEmpty(props))
+                        array[index].hasEnabled = true;
+                        if (array[index].HasProperties || !string.IsNullOrEmpty(props))
                         {
                             props += ",{\"enabled\":true}";
                         }
@@ -871,13 +1120,11 @@ namespace Cognitive3D
                         {
                             props += "{\"enabled\":true}";
                         }
-                        writeScale = true;
-                        ActiveDynamicObjectsArray[index].LastScale = scale;
                     }
 
-                    if (ActiveDynamicObjectsArray[index].remove)
+                    if (array[index].remove)
                     {
-                        if (ActiveDynamicObjectsArray[index].HasProperties || !string.IsNullOrEmpty(props))
+                        if (array[index].HasProperties || !string.IsNullOrEmpty(props))
                         {
                             props += ",{\"enabled\":false}";
                         }
@@ -886,20 +1133,21 @@ namespace Cognitive3D
                             props += "{\"enabled\":false}";
                         }
                     }
-                    if (ActiveDynamicObjectsArray[index].HasProperties)
+
+                    if (array[index].HasProperties)
                     {
-                        ActiveDynamicObjectsArray[index].HasProperties = false;
-                        ActiveDynamicObjectsArray[index].Properties = null;
+                        array[index].HasProperties = false;
+                        array[index].Properties = null;
                     }
-                    CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[index], props, writeScale,Util.Timestamp(Time.frameCount));
+
+                    CoreInterface.WriteDynamic(array[index], props, writeScale, Util.Timestamp(Time.frameCount));
                 }
 
-
-                if (ActiveDynamicObjectsArray[index].remove)
+                if (array[index].remove)
                 {
-                    ActiveDynamicObjectsArray[index].active = false;
-                    ActiveDynamicObjectsArray[index].remove = false;
-                    ActiveDynamicObjectsArray[index].hasEnabled = false;
+                    array[index].active = false;
+                    array[index].remove = false;
+                    array[index].hasEnabled = false;
                 }
 
                 numTicks++;
@@ -911,6 +1159,124 @@ namespace Cognitive3D
             }
             index = 0;
         }
+
+        private static void ProcessInputDynamicArray(ref DynamicData[] array, InputUtil.InputType currentInputTracking, float deltaTime, ref int numTicks)
+        {
+            for (; index < array.Length; index++)
+            {
+                if (!array[index].active) continue;
+
+                if (!array[index].dirty && currentInputTracking.ToString() != array[index].InputType)
+                {
+                    continue;
+                }
+
+                if (!array[index].dirty && array[index].UpdateInterval < array[index].DesiredUpdateRate) 
+                {
+                    array[index].UpdateInterval += deltaTime; 
+                    continue;
+                }
+                array[index].UpdateInterval = 0;
+
+                bool writeData = array[index].dirty;
+
+                // Get position, scale, rotation depending on whether it's a controller or dynamic object
+                Vector3 pos = Vector3.zero;
+                Quaternion rot = Quaternion.identity;
+
+                if (array[index].IsController)
+                {
+                    XRNode handNode = array[index].IsRightHand ? XRNode.RightHand : XRNode.LeftHand;
+                    InputUtil.TryGetControllerPosition(handNode, out pos);
+                    InputUtil.TryGetControllerRotation(handNode, out rot);
+                }
+
+                //check distance
+                if (!writeData)
+                {
+                    //IMPROVEMENT INLINE SQRMAGNITUDE
+                    if (Vector3.SqrMagnitude(pos - array[index].LastPosition) > array[index].PositionThreshold * array[index].PositionThreshold)
+                    {
+                        array[index].dirty = true;
+                        writeData = true;
+                    }
+                }
+
+                //check rotation
+                if (!writeData)
+                {
+                    //IMPROVEMENT INLINE DOT
+                    float f = Quaternion.Dot(array[index].LastRotation, rot);
+
+                    float fabs = f < 0 ? f * -1 : f;
+                    float min = fabs < 1 ? fabs : 1;
+
+                    if (System.Math.Acos(min) * 114.59156f > array[index].RotationThreshold)
+                    {
+                        array[index].dirty = true;
+                        writeData = true;
+                    }
+                }
+
+                // Update the dynamic object only if necessary
+                if (writeData || array[index].dirty || array[index].HasProperties || array[index].remove)
+                {
+                    array[index].dirty = false;
+                    array[index].LastPosition = pos;
+                    array[index].LastRotation = rot;
+
+                    string props = null;
+                    if (array[index].HasProperties)
+                    {
+                        System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
+                        for (int j = 0; j < array[index].Properties.Count; j++)
+                        {
+                            if (j != 0)
+                                sb.Append(",");
+                            sb.Append("{\"");
+                            sb.Append(array[index].Properties[j].Key);
+                            sb.Append("\":");
+
+                            if (array[index].Properties[j].Value is string)
+                            {
+                                sb.Append("\"");
+                                sb.Append(array[index].Properties[j].Value);
+                                sb.Append("\"");
+                            }else if (array[index].Properties[j].Value is bool) // Explicitly handle booleans
+                            {
+                                sb.Append(array[index].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
+                            }
+                            else
+                            {
+                                sb.Append(array[index].Properties[j].Value);
+                            }
+                            sb.Append("}");
+                        }
+                        props = sb.ToString();
+
+                        array[index].HasProperties = false;
+                        array[index].Properties = null;
+                    }
+
+                    CoreInterface.WriteDynamic(array[index], props, false, Util.Timestamp(Time.frameCount));
+                }
+
+                if (array[index].remove)
+                {
+                    array[index].active = false;
+                    array[index].remove = false;
+                }
+
+                numTicks++;
+                if (numTicks > maxTicks)
+                {
+                    //limit the number of data points processed each frame
+                    return;
+                }
+            }
+            index = 0;
+        }
+
 
         /// <summary>
         /// used to manually send all outstanding dynamic data immediately
@@ -941,7 +1307,6 @@ namespace Cognitive3D
             while (index != 0);
 
             //force dynamicCore to send all queued data as web requests
-            //Cognitive3D.DynamicObjectCore.FlushData(copyDataToCache);
             CoreInterface.Flush(copyDataToCache);
         }
 

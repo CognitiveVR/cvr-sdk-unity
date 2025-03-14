@@ -13,6 +13,12 @@ namespace Cognitive3D
         private const string META_SUBSCRIPTION_URL = "https://graph.oculus.com/application/subscriptions";
 
         //editor urls
+        internal static string GetDomain()
+        {
+            int dotIndex = Cognitive3D_Preferences.Instance.Gateway.IndexOf('.');
+            return dotIndex != -1 ? Cognitive3D_Preferences.Instance.Gateway.Substring(dotIndex + 1) : "cognitive3d.com";
+        }
+
         //GET dynamic object manifest
         //https://data.cognitive3d.com/v0/objects
         internal static string GetDynamicManifest(int versionid)
@@ -64,7 +70,7 @@ namespace Cognitive3D
         //https://app.cognitive3d.com/v3/scenes/[sceneId]/v/[sceneVersionNumber]/viewer
         internal static string GetSceneUrl(string sceneid, int sceneVersionNumber)
         {
-            return "https://app.cognitive3d.com/v3/scenes/" + sceneid + "/v/" + sceneVersionNumber + "/viewer";
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://app.", GetDomain(), "/v3/scenes/", sceneid, "/v/", sceneVersionNumber, "/viewer");
         }
 
         //GET github api to get latest release data
@@ -159,6 +165,12 @@ namespace Cognitive3D
         internal static string PostExitpollResponses(string questionsetname, int questionsetversion)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
+        }
+
+        //GET request remote variables
+        internal static string GetRemoteControlsURL(string userId)
+        {
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/remotevariables?identifier=", userId);
         }
 
         /// <summary>

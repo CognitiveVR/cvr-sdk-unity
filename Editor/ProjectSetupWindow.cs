@@ -11,7 +11,7 @@ namespace Cognitive3D
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
-            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -26,7 +26,7 @@ namespace Cognitive3D
 
         internal static void Init(Page page)
         {
-            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -41,7 +41,7 @@ namespace Cognitive3D
 
         internal static void Init(Rect position)
         {
-            SegmentAnalytics.PageEvent("ProjectSetupWindow", "Opened");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -322,22 +322,6 @@ namespace Cognitive3D
             }
         }
 
-        [System.Serializable]
-        private class OrganizationData
-        {
-            public string organizationName;
-            public SubscriptionData[] subscriptions;
-        }
-
-        [System.Serializable]
-        private class SubscriptionData
-        {
-            public long beginning;
-            public long expiration;
-            public string planType;
-            public bool isFreeTrial;
-        }
-
         private System.DateTime UnixTimeStampToDateTime(long unixTimeStamp)
         {
             System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
@@ -356,7 +340,7 @@ namespace Cognitive3D
             // Check if response data is valid
             try
             {
-                JsonUtility.FromJson<OrganizationData>(text);
+                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
                 isResponseJsonValid = true;
             }
             catch
@@ -366,7 +350,7 @@ namespace Cognitive3D
                 return;
             }
 
-            OrganizationData organizationDetails = JsonUtility.FromJson< OrganizationData>(text);
+            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
             if (organizationDetails == null)
             {
                 Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
@@ -830,10 +814,8 @@ namespace Cognitive3D
             float compileDifference = (float)(EditorApplication.timeSinceStartup - compileStartTime);
 
             //scale the loading bar so it never entirely fills
-            float fillAmount = compileDifference;
-            fillAmount = 1 - (fillAmount / (fillAmount * fillAmount));
-            fillAmount = Mathf.Lerp(compileDifference / 10, fillAmount, fillAmount/2);
-            fillAmount = Mathf.Max(0.02f, fillAmount);
+            float fillAmount = Mathf.Log10(compileDifference);
+            fillAmount = Mathf.Clamp(fillAmount,0.02f, 0.95f);
             var compileDurationBox = new Rect(30, 120, 440, 30);
             var progressBackground = new Rect(30, 150, 440, 30);
             var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);
@@ -855,6 +837,7 @@ namespace Cognitive3D
 
             //done
             if (EditorApplication.isCompiling) { return; }
+            SegmentAnalytics.TrackEvent("RecompileCompleted_RecompilePage", "ProjectSetupRecompilePage");
             compileStartTime = -1;
 
             currentPage++;
@@ -1060,7 +1043,8 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.SDKSelection:
-                    onclick = () => currentPage = Page.MultiplayerSetup;
+                    onclick += () => SegmentAnalytics.TrackEvent("SDKDefineSelected_SDKDefinePage", "ProjectSetupSDKDefinePage");
+                    onclick += () => currentPage = Page.MultiplayerSetup;
                     break;
                 case Page.Recompile:
                     onclick = null;

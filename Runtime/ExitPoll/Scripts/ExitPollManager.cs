@@ -153,7 +153,7 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Records a user's answer, to be submitted later
+        /// Records a user's microphone answer using a Base64 WAV string
         /// Use with CompleteMicrophoneRecording to get the audioclip format
         /// </summary>
         /// <param name="questionIndex"></param>
@@ -179,6 +179,20 @@ namespace Cognitive3D
             {
                 Util.logError("Exitpoll expected response not defined for question index " + questionIndex);
             }
+        }
+
+        /// <summary>
+        /// Records a user's microphone answer using an AudioClip
+        /// Converts the AudioClip to a Base64 WAV string
+        /// </summary>
+        /// <param name="questionIndex">Index of the question</param>
+        /// <param name="audioClip">Recorded AudioClip</param>
+        public static void RecordMicrophoneAnswer(int questionIndex, AudioClip audioClip)
+        {
+            byte[] bytes;
+            MicrophoneUtility.Save(audioClip, out bytes);
+            string encodedWav = MicrophoneUtility.EncodeWav(bytes);
+            RecordMicrophoneAnswer(questionIndex, encodedWav);
         }
 
         /// <summary>

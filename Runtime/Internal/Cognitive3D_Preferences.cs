@@ -7,38 +7,33 @@ namespace Cognitive3D
 {
     public class Cognitive3D_Preferences : ScriptableObject
     {
-        static bool IsSet = false;
         static Cognitive3D_Preferences instance;
         public static Cognitive3D_Preferences Instance
         {
             get
             {
-                if (IsSet)
+                if (instance != null)
                     return instance;
 
+                instance = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
+                    
                 if (instance == null)
                 {
-                    instance = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
-                    if (instance == null)
-                    {
 #if UNITY_EDITOR
-                        if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-                        {
-                            Debug.LogError("Cognitive3D_Preferences asset is missing!");
-                        }
-#else
+                    if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+                    {
                         Debug.LogError("Cognitive3D_Preferences asset is missing!");
-#endif
-                        instance = CreateInstance<Cognitive3D_Preferences>();
                     }
-                    IsSet = true;
-                    S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
+#else
+                    Debug.LogError("Cognitive3D_Preferences asset is missing!");
+#endif
+                    instance = CreateInstance<Cognitive3D_Preferences>();
                 }
+                S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                 return instance;
             }
         }
 
-        // 
         internal static bool GetPreferencesFile()
         {
             return Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences") ? true : false;
