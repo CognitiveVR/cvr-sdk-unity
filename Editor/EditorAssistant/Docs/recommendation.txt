@@ -1,0 +1,790 @@
+External Android Plugin
+Records essential Android-specific data for each session, such as crash logs, low memory events, and Wi-Fi signal strength. This plugin provides detailed information on these critical aspects, along with end session events, to aid in troubleshooting and performance monitoring.
+
+Crash Logging
+Note
+
+This feature is supported in the Cognitive3D Unity SDK version 1.5.2 and above.
+
+The Crash Logging captures crash-related logs on device to help identify the root cause of crashes. Sessions that experience crashes are tagged with a Crash label on the dashboard in the Session list and the individual Session.
+
+Session tagged as a Crash
+
+Each crash event is displayed in the Session Timeline, providing detailed information, including the stack trace.
+
+Detailed view of a crash stack trace
+
+Low Memory Logging
+Note
+
+This feature is supported in the Cognitive3D Unity SDK version 1.5.2 and above.
+
+The Low Memory Logging monitors and logs low memory warnings. Sessions that experience low memory conditions are tagged with a LowMemory label on the dashboard.
+
+Session tagged with LowMemory
+
+Each low memory event is shown in the Session Timeline and includes a property indicating the memory level and status.
+
+Detailed view of a low memory event
+
+End Session Event
+Note
+
+This feature is supported in the Cognitive3D Unity SDK version 1.5.4 and above.
+
+Sends an end session event when the app is closed. This event is sent at the start of the next session and includes details such as the exit code, reason for exit, and the session length. For more information about exit codes and reasons, refer to the Android documentation.
+
+Detailed view of an end session event
+
+Wi-Fi RSSI Sensor
+Note
+
+This feature is supported in the Cognitive3D Unity SDK version 1.5.4 and above.
+
+Sends Wi-Fi RSSI on Android devices, providing the strength of the Wi-Fi signal received by the device, typically expressed in decibels relative to a milliwatt (dBm). This value is crucial for understanding the quality and reliability of a Wi-Fi connection.
+
+RSSI (dBm)	Signal Strength	Description
+>= -50	Excellent	Strong signal with excellent connectivity.
+-51 to -60	Good	Reliable connection with minor degradation.
+-61 to -70	Fair	Usable signal but may experience slower speeds.
+-71 to -85	Weak	Low signal strength, potential connectivity issues.
+< -86	Poor	Unstable connection, likely frequent drops.
+
+Custom Events
+Custom Events are a simple but important way Cognitive3D can record data from your experience.
+
+Custom Events automatically record x,y,z coordinates. If the position is not provided it will use the position of the HMD. In conjunction with Gaze tracking, coordinates gives you the ability to map out how your Participants are interacting with your experience in 3D space.
+
+Setup
+Custom Events are visible on the Dashboard on the Session Details page and Analysis Tool. They are also a common feature of the Objectives system.
+
+Custom Events can be recorded with a small amount of code. This example will record an event at the position of the HMD:
+
+void PickupBasket()
+{
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .Send();
+}
+You can add a position to your Custom Event with an optional argument:
+
+void PickupBasket()
+{
+  Vector3 basketPosition = shoppingBasket.transform.position;
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .Send(basketPosition);
+}
+You can add one or more properties to your Custom Events:
+
+void PickupBasket()
+{
+  Vector3 productPosition = someProduct.transform.position;
+
+  //you can either write properties one at a time
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .SetProperty("Basket Location", "Store Entrance")
+  .SetProperty("Some Other Property", 100)
+  .Send(productPosition);
+
+  //or several at once with a dictionary
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+      .SetProperties(new Dictionary<string, object> {
+        { "Basket Location", "Store Entrance" },
+        { "Some Other Property", 100 }
+      })
+      .Send(productPosition);
+}
+Duration
+In some cases you may want to record a span of time with a Custom Event. Simply create a new Custom Event object and call Send at a later time. This will automatically add a Duration property to the Custom Event
+
+private Cognitive3D.CustomEvent holdEvent;
+
+public void PickupItem()
+{
+  // Some code to pickup the item
+  // ...
+  holdEvent = new Cognitive3D.CustomEvent("Product Grabbed");
+}
+
+public void DropItem()
+{
+  // Some code to drop the item
+  // ...
+  if (holdEvent != null)
+  {
+    holdEvent.Send(transform.position);
+    holdEvent = null;
+  }
+}
+Dynamic Object Custom Events
+Custom Events can be assigned to Dynamic Objects. This can be used to identify interactions with specific objects. A summary of Custom Events can be seen on the Dynamic Objects page.
+
+ObjectEventTable
+
+To assign a Dynamic Object to a Custom Event the code is similar to how properties are added:
+
+public void PurchaseItem(GameObject product)
+{
+  // Some code to purchase an item
+  // ...
+  Vector3 pos = product.transform.position;
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .SetDynamicObject(dynamicObject)
+  .Send(pos);
+}
+Dynamic Object Properties
+Custom Events that are assigned a Dynamic Object can also have properties which will be available on the Dashboard. This can provide very specific Objective steps and Dynamic Object summaries.
+
+This code explains how to assign a Dynamic Object with properties to a Custom Event.
+
+public void PurchaseItem(GameObject product)
+{
+  // Some code to purchase an item
+  // ...
+  var pos = product.transform.position;
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .SetDynamicObject(dynamicObject)
+  .SetProperty("Product Price", 2.99f)
+  .Send(pos);
+}
+Event Sensors
+When recording your Custom Events you can append the current state of Sensors as individual properties.
+
+public void PurchaseItem(GameObject product)
+{
+  var pos = product.transform.position;
+
+  //this will append the latest value of every Sensor
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .AppendSensors()
+  .Send(pos);
+
+  //this will append the latest value of only the 'heartrate' Sensor
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .AppendSensors("heartrate")
+  .SetDynamicObject(dynamicObject)
+  .Send(pos);
+}
+Optimized Implementation
+There is an alternate method of recording Custom Events without creating a C# object using the 'new' keyword. This method is less flexible to write but may be useful if you are recording hundreds of events and need to optimize. Here is an example:
+
+public void PurchaseItem(GameObject product)
+{
+  var pos = product.transform.position;
+
+  //Custom Event at a position
+  Cognitive3D.CustomEvent.SendCustomEvent("Product Purchased",pos);
+
+  //Custom Event at a position with a Dynamic Object ID
+  DynamicObject dynamicObject = product.GetComponent<DynamicObject>();
+  string dynamicObjectId = string.Empty;
+  if (dynamicObject != null)
+  {
+    dynamicObjectId = dynamicObject.GetId();
+  }
+  Cognitive3D.CustomEvent.SendCustomEvent("Product Purchased",pos,dynamicObjectId);
+}
+Advanced Uses Cases
+Trigger Areas
+You can use Custom Events to identify when a Participant enters and exits a pre-defined region in your scene. Recording when a participant enters an area could be useful to build Objectives with positional data normally only available in SceneExplorer.
+
+You could create a Custom Event when the participant enters the area and call Send on that Custom Event when they leave. The area would likely be defined using a collider with IsTrigger enabled. The player GameObject would also need to have a collider and a kinematic rigid body to activate the trigger when they enter.
+
+Custom Events
+Custom Events are a simple but important way Cognitive3D can record data from your experience.
+
+Custom Events automatically record x,y,z coordinates. If the position is not provided it will use the position of the HMD. In conjunction with Gaze tracking, coordinates gives you the ability to map out how your Participants are interacting with your experience in 3D space.
+
+Setup
+Custom Events are visible on the Dashboard on the Session Details page and Analysis Tool. They are also a common feature of the Objectives system.
+
+Custom Events can be recorded with a small amount of code. This example will record an event at the position of the HMD:
+
+void PickupBasket()
+{
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .Send();
+}
+You can add a position to your Custom Event with an optional argument:
+
+void PickupBasket()
+{
+  Vector3 basketPosition = shoppingBasket.transform.position;
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .Send(basketPosition);
+}
+You can add one or more properties to your Custom Events:
+
+void PickupBasket()
+{
+  Vector3 productPosition = someProduct.transform.position;
+
+  //you can either write properties one at a time
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .SetProperty("Basket Location", "Store Entrance")
+  .SetProperty("Some Other Property", 100)
+  .Send(productPosition);
+
+  //or several at once with a dictionary
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+      .SetProperties(new Dictionary<string, object> {
+        { "Basket Location", "Store Entrance" },
+        { "Some Other Property", 100 }
+      })
+      .Send(productPosition);
+}
+Duration
+In some cases you may want to record a span of time with a Custom Event. Simply create a new Custom Event object and call Send at a later time. This will automatically add a Duration property to the Custom Event
+
+private Cognitive3D.CustomEvent holdEvent;
+
+public void PickupItem()
+{
+  // Some code to pickup the item
+  // ...
+  holdEvent = new Cognitive3D.CustomEvent("Product Grabbed");
+}
+
+public void DropItem()
+{
+  // Some code to drop the item
+  // ...
+  if (holdEvent != null)
+  {
+    holdEvent.Send(transform.position);
+    holdEvent = null;
+  }
+}
+Dynamic Object Custom Events
+Custom Events can be assigned to Dynamic Objects. This can be used to identify interactions with specific objects. A summary of Custom Events can be seen on the Dynamic Objects page.
+
+ObjectEventTable
+
+To assign a Dynamic Object to a Custom Event the code is similar to how properties are added:
+
+public void PurchaseItem(GameObject product)
+{
+  // Some code to purchase an item
+  // ...
+  Vector3 pos = product.transform.position;
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .SetDynamicObject(dynamicObject)
+  .Send(pos);
+}
+Dynamic Object Properties
+Custom Events that are assigned a Dynamic Object can also have properties which will be available on the Dashboard. This can provide very specific Objective steps and Dynamic Object summaries.
+
+This code explains how to assign a Dynamic Object with properties to a Custom Event.
+
+public void PurchaseItem(GameObject product)
+{
+  // Some code to purchase an item
+  // ...
+  var pos = product.transform.position;
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .SetDynamicObject(dynamicObject)
+  .SetProperty("Product Price", 2.99f)
+  .Send(pos);
+}
+Event Sensors
+When recording your Custom Events you can append the current state of Sensors as individual properties.
+
+public void PurchaseItem(GameObject product)
+{
+  var pos = product.transform.position;
+
+  //this will append the latest value of every Sensor
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .AppendSensors()
+  .Send(pos);
+
+  //this will append the latest value of only the 'heartrate' Sensor
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .AppendSensors("heartrate")
+  .SetDynamicObject(dynamicObject)
+  .Send(pos);
+}
+Optimized Implementation
+There is an alternate method of recording Custom Events without creating a C# object using the 'new' keyword. This method is less flexible to write but may be useful if you are recording hundreds of events and need to optimize. Here is an example:
+
+public void PurchaseItem(GameObject product)
+{
+  var pos = product.transform.position;
+
+  //Custom Event at a position
+  Cognitive3D.CustomEvent.SendCustomEvent("Product Purchased",pos);
+
+  //Custom Event at a position with a Dynamic Object ID
+  DynamicObject dynamicObject = product.GetComponent<DynamicObject>();
+  string dynamicObjectId = string.Empty;
+  if (dynamicObject != null)
+  {
+    dynamicObjectId = dynamicObject.GetId();
+  }
+  Cognitive3D.CustomEvent.SendCustomEvent("Product Purchased",pos,dynamicObjectId);
+}
+Advanced Uses Cases
+Trigger Areas
+You can use Custom Events to identify when a Participant enters and exits a pre-defined region in your scene. Recording when a participant enters an area could be useful to build Objectives with positional data normally only available in SceneExplorer.
+
+You could create a Custom Event when the participant enters the area and call Send on that Custom Event when they leave. The area would likely be defined using a collider with IsTrigger enabled. The player GameObject would also need to have a collider and a kinematic rigid body to activate the trigger when they enter.
+
+ExitPoll
+Overview
+ExitPoll allows you to ask your participants questions. This page will walk you through the process of enabling and configuring an ExitPoll in your application.
+
+ExitPoll Setup
+1. Create ExitPoll Question Set and Hook
+Before using ExitPoll, create a question set on the Dashboard. You can do this under Manage ExitPolls in Project Settings, accessible via the gear icon in the top-right menu bar.
+
+exitpoll manager
+
+Next, you will need a Hook to display the ExitPoll in your experience. The hook will be your unique identifier to retrieve a set of questions from the backend. Click on Manage Hooks, create a new hook, and link it to your question set as shown below.
+
+exitpoll set a hook
+
+For more details, visit the Dashboard Exitpoll page.
+
+2. ExitPoll Setup in Unity
+Once you've set up your question set(s) on the Dashboard, add an ExitPollHolder component to your Unity scene to configure and display the questions.
+
+Note
+
+For Unity SDK version 1.7.0 or later: Use the ExitPollHolder prefab in your scene. You can find it in Cognitive3D package/Runtime/Exitpoll/Prefabs or within the ExitPoll Customization sample.
+
+For Unity SDK version 1.6.5 or earlier: Create an empty GameObject and add the ExitPollHolder component manually or use the ExitPollHolder prefab within the ExitPoll Customization sample.
+
+Question Set Hook - Select your question set hook from the dropdown list. If the list is empty or you've added a new hook on the dashboard, click the Refresh button to refresh the list. After selecting your hook, click the Save button to set the hook name for the ExitPoll.
+exitpoll component hooks dropdown list
+
+Note
+
+For Unity SDK version 1.6.5 or earlier: Manually enter the question hook into the Question Set Hook field to retrieve questions from the dashboard. You can find the hook in your Cognitive3D online dashboard.
+
+Activate on Enable - Check this box if you want exitpoll to start as soon as this component is enabled. Otherwise you will need to call ExitPollHolder.Activate() yourself as shown in the example below.
+public Cognitive3D.ExitPollHolder holder;
+void SomeFunction()
+{
+    //display the ExitPoll
+    holder.Activate();
+}
+Note
+
+Ensure that SessionBegin() is called before an ExitPoll is activated. Otherwise it will not display properly.
+
+ExitPoll Pointer Type - Select how your users will interact with the exit poll.
+HMD Pointer - Users can interact with buttons by focusing their HMD on them. A red crosshair will be displayed for better visibility.
+Controllers and Hands - Users can interact with buttons by pointing and pressing the associated controller button. Note that hand pointer support is currently available only for applications developed with the Meta SDK.
+
+exitpoll controllers and hands pointer
+
+Custom – Users can interact with buttons using custom pointers. To enable this, you'll need to implement code that allows interaction via the SetPointerFocus() method from the Cognitive3D.IPointerFocus interface.
+
+public GameObject pointer;
+void SomeFunction(bool activation, bool hover)
+{
+    // Interacting with buttons using custom pointer and physics raycast
+    if (Physics.Raycast(pointer.transform.position, pointer.transform.rotation * Vector3.forward, out RaycastHit hit, 20, LayerMask.GetMask("UI")))
+    {
+        Cognitive3D.IPointerFocus button = hit.collider.GetComponent<Cognitive3D.IPointerFocus>();
+        if (button != null)
+        {
+            button.SetPointerFocus(activation, hover);
+        }
+    }
+}
+Note
+
+For Unity SDK version 1.6.5 or earlier: You have the following options for pointer type:
+
+Right Controller Pointer and Left Controller Pointer - Users will be able to interact with buttons by pointing and pulling the trigger on the right or left controller. In Meta applications, if hand tracking is available, users can also use buttons using their right or left hand and a pinch gesture.
+Tracking Space - World or Player Relative. Configures the behavior of how the ExitPoll panel will move.
+(World Space) Attach Transform - Check this box if you want exit poll panels to follow this GameObject. Otherwise, the panels will stay in the absolute world spawn position.
+(Player Space) Collision Layer Mask - The ExitPoll panel will try to spawn in front of the participant and avoid collisions with GameObjects on these layers.
+(Player Space) Sticky Window - Check this box if you want the exit poll to stay relative to the user when they move/teleport.
+(Player Space) Lock Y Position - Check this box if you want to match the ExitPoll panel with the vertical position of the participant's HMD
+(Player Space) Default Display Distance - Sets the preferred distance away from the participant to spawn the ExitPoll panel
+Panel Prefabs - Allows you display either custom panels or the default Cognitive3D panels for the selected ExitPoll question set.
+On Begin - Events called when the ExitPoll is activated, has a valid question set, and displays a panel
+On Complete - Events called when the question set is completed successfully
+On Close - Events called when the question set closes for any reason including after OnComplete is called. If there is an error receiving questions this may be called instead of OnBegin
+Prefab Overview
+The ExitPoll panel prefabs are ready to use in any application. It was built to be flexible and easy to change to fit your user experience and functionality.
+
+panels
+
+The ExitPoll panels use Unity's built in Canvas system
+All the art is separated from the functioning part of this panel; replacing this with your assets is easy
+The buttons have a small radius that fills while the participant is looking at it
+The On Confirm action is similar to Unity's Canvas buttons - they can invoke functions on other components. These are loosely connected so you can replace these buttons with your own button script
+button
+
+Customization
+Using the ExitPoll Holder component outlined above is a simple way to override which prefabs to use for a single ExitPoll question set. Or you can change the default ExitPoll Panel prefabs located in the Cognitive3D Package in the Runtime/ExitPoll/Prefabs folder. The exit poll panel prefabs can now be downloaded as a sample in addition to the SDK - this will allow you to customize the prefabs and drag and drop them as panel overrides in the ExitPollHolder component.
+
+Art Style and Branding
+Note
+
+For Meta SDK Applications: For improved visual crispiness and readability in your Meta SDK-based applications, consider implementing OVR Compositor Layers. This can enhance the clarity of the ExitPoll content by leveraging advanced compositing features. For more information on how to implement this feature in your Unity project, refer to the official Meta documentation here: OVR Compositor Layers Implementation
+
+The visuals of each ExitPoll prefab are largely independent of the functionality. You can customize or remove the background, buttons, and text as needed. Additionally, you can modify their materials by using the references in the ExitPollHolder component to the original prefabs.
+
+ExitPoll Panel UI Settings
+
+In the case of the 'Scale' and 'Multiple Choice' Exitpoll types, all the buttons already exist in the prefab and are disabled as necessary.
+
+Input System
+The PointerController component pointing at a VirtualButton component will call SetPointerFocus() each frame. The VirtualButton handles the visuals and delay before calling the OnConfirm action. This is implemented as a UnityEvent and can be set in the inspector. This calls the AnswerInt function on the ExitPollPanel component on the root GameObject with a property value.
+
+A custom input must call AnswerInt similarly to these default buttons. For example, you could create a new script and use Unity's OnCollision method to call this UnityEvent, or hardcode the function call and pass the correct value as a parameter. Here is a very simple code sample:
+
+// OnImpact is set to call 'AnswerInt' in the inspector
+public UnityEngine.Events.UnityEvent OnImpact;
+private void OnCollisionEnter(Collision c)
+{
+    if (c.gameObject.CompareTag("hand"))
+    OnImpact.Invoke();
+}
+API Reference
+Retrieve ExitPoll Data
+To use a custom UI for the ExitPoll panels, you can retrieve the ExitPoll data, including the title, description, questions, and more, using the following API:
+
+Note
+
+Be sure to set the hook name first using Cognitive3D.ExitPollManager.HookName.
+
+// A function you call from your app
+public async void DisplaySurveyQuestions()
+{
+    // Request the question data
+    Cognitive3D.ExitPollManager.HookName = "HookName";
+    Task<Cognitive3D.ExitPollData> exitPollDataTask = Cognitive3D.ExitPollManager.GetExitPollQuestionSets();
+
+    // Await the response
+    Cognitive3D.ExitPollData exitPollData = await exitPollDataTask;
+
+    // Spawn your prefabs to display the questions to your users
+    // ...
+}
+Using ExitPoll Data
+The ExitPollData class provides all the necessary details for retrieving and displaying exit poll questions in a custom UI. Below is a breakdown of how to use its fields effectively when integrating them into your custom prefabs.
+
+ExitPoll Data Fields:
+
+Field	Type	Description
+name	string	The name of the exit poll.
+version	int	The version number of the exit poll.
+title	string	The title of the exit poll.
+questions	ExitPollDataEntry[]	An array of questions included in the exit poll.
+ExitPoll Question Fields: Each question include the following fields:
+
+Field	Type	Description
+title	string	The title of the question.
+type	string	The type of the question (e.g., multiple choice, scale, voice).
+maxResponseLength	int	Maximum response length (only applicable for voice-based questions).
+minLabel	string	Label for the minimum value in scale-based questions.
+maxLabel	string	Label for the maximum value in scale-based questions.
+range	ExitPollDataScaleRange	The range of values for scale-based questions.
+answers	ExitPollDataEntryAnswer[]	An array of answer choices (only applicable for multiple-choice questions).
+Scale-Based Questions: For scale-based questions, the range field defines the scale range with start and end values.
+
+Field	Type	Description
+start	int	The starting value of the scale.
+end	int	The ending value of the scale.
+Multiple-Choice Questions: For multiple-choice questions, the answers array includes the text of each choice.
+
+Field	Type	Description
+answer	string	The text of the answer choice.
+Implementing in a Custom UI: When designing a custom UI, use these fields to display the exit poll title and dynamically loop through the questions. For multiple-choice or scale-based questions, ensure the correct options are presented based on their respective fields.
+
+Recording ExitPoll Answers
+To record your answers, use Cognitive3D.ExitPollManager.RecordAnswer() for integer responses or Cognitive3D.ExitPollManager.RecordMicrophoneAnswer() for microphone-based answers. Both methods take the question index (starting at 0) as their first parameter, so ensure you're recording the answers for the correct associated questions.
+
+Note that all question types, except for microphone-based questions, take integer responses.
+
+Note
+
+For recording audio or microphone answers, you'll need to convert them to bytes and then to a Base64 string.
+
+Record 1 for boolean true, happy, or thumbs up; and 0 for boolean false, sad, or thumbs down.
+
+For multiple-choice questions (with a max of 4 options), use 0 for the first option, 1 the second, 2 for the third, and 3 the fourth option.
+
+For scale questions, use the value selected on the user's display.
+
+private void RecordAnswers()
+{
+    // record the first question (a true/false question) as 'true'
+    Cognitive3D.ExitPollManager.RecordAnswer(0, 1);
+
+    // record the second question (a scale question from 1-10) as 7
+    Cognitive3D.ExitPollManager.RecordAnswer(1, 7);
+
+    // this should be a wav file converted to a base64 string
+    string MicrophoneAudioClip;
+
+    // record the third question (an audio question))
+    Cognitive3D.ExitPollManager.RecordMicrophoneAnswer(2, MicrophoneAudioClip);
+}
+Submitting ExitPoll Answers
+After recording all your ExitPoll question answers, you can submit them using the following API:
+
+private void CompleteAllQuestions()
+{
+    // records all the user's answers
+    Cognitive3D.ExitPollManager.SubmitAllAnswers();
+}
+Offline Exitpoll
+The ExitPoll Question Set will be saved locally if Local Data Cache is enabled. This can be changed in Preferences from the Cognitive3D menu. Fore more information on saving data locally, you can visit our docs on the local cache.
+
+If the device cannot reach the internet it will display the last Question Set it received when there was an internet connection. Participant responses will be saved locally until the application connects to the internet.
+
+Gaze and Fixations
+Gaze and Fixations are closely related. Gaze records the HMD position over time and the direction of the eyes at a set interval. Fixations use a dispersion technique to identify where the participant's eyes are steady and maintaining focus.
+
+When using an HMD without Eye Tracking, Fixations will not be recorded and Gaze will assume the participant's focus is directly in front of the HMD.
+
+Setup
+We use 3rd party eye tracking plugins to record Fixations and Gaze using Eye Tracking. Import any required Unity Packages into your project. For example, if you are using the Vive Pro Eye, you will need to import the SRanipal SDK. Then, open the Scene Setup Window from the Cognitive3D menu and select the appropriate SDK. Press Next until the project re-compiles. Then you can close this window.
+
+Fixation Recorder Component
+When using an SDK with supported Eye Tracking the Fixation Recorder component will be added to the Cognitive3D_Manager Game Object on Start if it is not already present. If you wish to configure recording Fixations you can add this component and modify these values in the Editor. A high level summary is available on the Fixations page.
+
+The default values are taken from several academic papers and should be suitable for most projects.
+
+Blink
+Note: all times are in milliseconds
+
+MaxBlinkMS - The maximum amount of time that can be assigned as a single 'blink'. If eyes are closed for longer than this we assume that the user is consciously closing their eyes
+PreBlinkDiscardMS - When a blink occurs ignore gaze preceding the blink up to this far back in time
+BlinkEndWarmupMS - After a blink has ended ignore gaze up to this long afterwards as the participant re-focuses
+Fixation
+MinFixationMS - The time that gaze must be within the MaxFixationAngle before a Fixation begins
+MaxConsecutiveDiscardMS - The amount of time gaze can be discarded before a fixation is ended. Gaze can be discarded if the eye tracker returns unexpected values
+MaxFixationAngle - The angle that a number of gaze samples must fall within for a Fixation to begin
+MaxConsecutiveOffDynamicMS - Amount of time gaze can be off the transform before fixation ends. Mostly useful when Fixation is right on the edge of a Dynamic Object
+DynamicFixationSizeMultiplier - Increases the MaxFixationAngle on Dynamic Objects. Helps reduce incorrect Fixation ending, especially on Smooth Pursuit Fixations
+FocusSizeFromCenter - This curve increases the size of the MaxFixationAngle as gaze gets toward the edge of the viewport. This is used to reduce the number of incorrectly ended fixations because of hardware limits at the edge of the eye tracking field of view
+Saccade
+SaccadeFixationEndMS - Amount of consecutive eye samples before a Fixation ends as the eye fixates elsewhere. This is the most common way of fixations ending
+
+Participants
+A Participant is the person interacting with your experience - your end user. This might be a player in your game, an employee going through training, a person from your focus group, etc.
+
+Setting Participant Name and ID
+Correctly identifying Participants during your experience allows you to track how their performance changes over time. This should include a Unique ID (such as employee number) and a friendly Full Name.
+
+void Start()
+{
+    Cognitive3D.Cognitive3D_Manager.SetParticipantFullName("John Smith");
+    Cognitive3D.Cognitive3D_Manager.SetParticipantId("E001");
+    //...
+}
+Setting Participant Properties
+You can also set properties about your Participants. These can change between sessions. Changes to these properties may represent increased training, a new role or a new preference.
+
+void Start()
+{
+    //...
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Years Employed",3);
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Handedness","Left");
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Tool Preference","Default");
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Training Level","Class A");
+}
+Some included Components (such as HMDHeight) automatically record Participant properties. Simply add these components to the Cognitive3D_Manager in your scene and they will automatically record relevant properties.
+
+Sign In and Single Sign-On
+Usernames and properties obviously should not be hard-coded into your application. One possible method to identify your Participant is to put them in an isolated space (such as an empty scene) before starting the session. From that scene you could present a simple login screen before beginning your experience.
+
+If you have a single sign-on solution for standalone headsets and wish to use that userID to identify your participants, get in touch and we can support your implementation!
+
+Remote Controls
+The A/B testing and Remote Configurations features allow you to customize the behavior of your app based on different conditions or User Segments. Remote Variables can be a powerful tool during feature development and managing live apps by serving settings that are managed remotely.
+
+A/B Testing
+An A/B test is a configuration that randomly returns one of several variants to the application. This allows developers to test different variants of a feature, setting, or content to see which performs better. The test can involve multiple user groups, each receiving different versions of the variable to compare performance or user engagement.
+
+For example, you could use an A/B Test to select a different layout for your main menu. After one hundred players have seen each variation, you can analyze the results on the Dashboard to see which one leads to more feature usage and longer user retention.
+
+Remote Configurations
+A Remote Configuration refers to a set of rules for returning a specific Remote Variable to the application. You can use these configurations to modify gameplay mechanics, user experience, or performance-related aspects dynamically.
+
+For example, you could use a Remote Configuration to control guidance in a VR training experience. After a couple weeks in which employees are guided through a process, the guidance in the VR app could be turned off. You could then use the Dashboard to measure employee completion rates to ensure your training knowledge is being retained.
+
+Remote Controls Setup
+1. Create Remote Variables
+To start using Remote Variables in Unity, you'll need create Remote Variables on the Dashboard. See Dashboard Remote Controls for details.
+
+2. Remote Controls in Unity
+In the Unity Editor, add the RemoteControls component to the Cognitive3D_Manager GameObject in your scene.
+
+Remote Controls component
+
+The component will try to identify the ParticipantId to be used with Sticky A/B Tests. This option on the Dashboard will consistently return variants to the same user. If this ParticipantId is not available, it will fall back and use the DeviceId instead. You can adjust the following settings:
+
+Fetch Variables Automatically - When enabled, this component will return Remote Variables from our Dashboard when the Session starts. If Use Participant Id is true, it may wait for the ParticipantId to be set if it is not already.
+
+Use Participant Id - When enabled, the ParticipantId will be used to identify the Session to fetch Remote Variables. If disabled, the DeviceId will be used instead.
+
+Wait for Participant Id Timeout - This field defines the amount of time the Cognitive3D SDK will wait for the ParticipantId to be set if it is not already available at the start of the session. If the ParticipantId is not set within this time, the DeviceId will be used to identify the Session.
+
+API Reference
+Fetching Remote Variables
+To manually fetch the Remote Variables from the Dashboard (instead of using the Automatic toggle on the component), you can call the FetchVariables function.
+
+// A function you call from your app
+public void YourDelayedStartupFunction()
+{
+    // Fetching Remote variables using device ID
+    Cognitive3D.Components.RemoteControls.FetchVariables();
+
+    // Or fetching Remote variables using participant ID
+    Cognitive3D.Cognitive3D_Manager.SetParticipantId("participant1");
+    Cognitive3D.Components.RemoteControls.FetchVariables(Cognitive3D.Cognitive3D_Manager.ParticipantId);
+}
+Using Remote Variable Value
+To use a Remote Variable, first ensure that you've fetched the Variables from the Dashboard (either automatically from the component settings, or the function call described above). You can access the Variable's value using the following code:
+
+// A function you call from your app
+public void YourFunction()
+{
+    // Retrieve an remote variable by its name with a default value
+    // For a string-type remote variable
+    Cognitive3D.RemoteControlManager.GetValue<string>("RemoteVariableName", "defaultValue");
+
+    // For an integer-type remote variable
+    Cognitive3D.RemoteControlManager.GetValue<int>("RemoteVariableName", 0);
+
+    // For a boolean-type remote variable
+    Cognitive3D.RemoteControlManager.GetValue<bool>("RemoteVariableName", false);
+}
+You can also use the OnRemoteControlsAvailable event to wait until the Remote Variables are available:
+
+void Start()
+{
+    // If Remote Variables are already available
+    if (Cognitive3D.RemoteControlManager.HasFetchedVariables)
+    {
+        OnRemoteControlsAvailable();
+    }
+    else
+    {
+        // Subscribe to the OnRemoteControlsAvailable event
+        Cognitive3D.RemoteControlManager.OnRemoteControlsAvailable += OnRemoteControlsAvailable;
+    }    
+}
+
+void OnRemoteControlsAvailable()
+{
+    Cognitive3D.RemoteControlManager.OnRemoteControlsAvailable -= OnRemoteControlsAvailable;
+    // Retrieve the value of a remote variable (example for an int type)
+    var value = Cognitive3D.RemoteControlManager.GetValue<int>("RemoteVariableName", 0);
+
+    Debug.Log($"Remote variable value is {value}");
+}
+
+Scenes
+A Scene on our dashboard is a container that holds all the user sessions, all the Dynamic Objects that appear in the scene and an approximation of the scene geometry exported from Unity. Together, this allows you to replay sessions in SceneExplorer with context about where in your Unity scene the player is engaging with your gameplay.
+
+Concepts
+Uploading a Scene to the Cognitive3D dashboard from Unity does two things:
+
+Creates this container to hold each Participant's Session Data (Gaze, Fixations, Dynamics, Events, Sensors). The Scene Id is returned to Unity to identify where this Session Data should be sent.
+Exports and uploaded scene geometry to the Dashboard so you can see Session Data in the context of the scene.
+None of your game logic is uploaded to our dashboard. Colliders, trigger volumes, npc paths, audio sources, etc are not represented by this scene geometry.
+
+If your Scene geometry changes during development, or doesn't represent the space the Participant is engaged in, you should create a new Scene Version. This will have the same results as uploading a new scene - a new container is created and new geometry is uploaded.
+
+If you have Dynamic Objects in your Scene that change during development, you do not need to create a new Scene Version. See the Dynamic Objects page to see how to upload Dynamic Object Meshes to your scenes.
+
+When should I upload a new version of my scene?
+These are the cases when a new version of your Scene is warranted:
+
+You make a substantial change to the base geometry of your scene.
+You want to make a new, clean separation of data for you scene.
+For example if you were doing test sessions and now want to launch a clean slate for production or deployment.
+You have substantially changed the Dynamic Objects in your scene.
+For example if you changed object names, or removed them altogether, you will see those old objects in the Object List, despite removing them from your Unity scene, since the data has already been sent.
+If you simply moved a Dynamic Object in the scene, you do NOT need to re-upload anything.
+
+Additive Scene Loading
+When loading a scene in Unity the Session Data will be uploaded using the Scene Id of the last loaded scene. In this situation it does not matter if Dynamic Objects move in one scene or the Participant fixates on a surface in a different scene. All Session Data will be uploaded to the same Dashboard Scene.
+
+Exporting Additive Scenes
+There are several ways to export Scene geometry when using multiple scenes. In the examples below we will assume there is a scene called Main and a scene called EnvironmentArt.
+
+Note
+
+intercom Exporting scenes and managing files can get confusing. Feel free to reach out for assistance. If you have a question or any feedback about our documentation please use the Intercom button in the lower right corner of any web page.
+
+Export only one scene
+Export just the EnvironmentArt scene. This is the simplest solution if the contents of the scene with art provide enough context about the space to make useful insights.
+
+Exporting a temporary scene
+This concept is to combine all the art into a Unity scene and export that. You can upload your Main scene using the combined content instead.
+
+Create a scene called Temporary in Unity
+Copy and paste the contents of all 'Main' and 'EnvironmentArt' into the Temporary scene
+Export the Temporary scene using the Scene Setup Window, but do not upload
+In your project's directory, rename the Cognitive3D_SceneExplorerExport/Temporary folder to Main
+Open your Main scene and open the SceneExport window
+Do not export this scene - the contents of the directory will be used instead when you upload.
+Combine Exported scenes Externally
+This concept is to export each scene from Unity and combine them in an external program, such as Windows 3D builder, Blender, or another tool of your choice.
+
+Use the Scene Setup Window to export each scene
+Open the 3D program of your choice
+Import the exported GLTF file of each scene
+Save / Export the file as a GLTF in the Cognitive3D_SceneExplorerExport/YourSceneName directory of your project
+Note
+
+This can also be a simple way of previewing the contents of your exported file before uploading to the Dashboard. There might be slight differences based on the software.
+
+API Reference
+When scenes are uploaded to Cognitive3D Dashboard, the scene ID updates automatically when a new scene loads. However, to manually set or change the tracking scene, use the following function:
+
+// Function to manually set the tracking scene
+public void SetTrackingScene()
+{
+    // Set the tracking scene using the path of the scene you want to track
+    Cognitive3D.Cognitive3D_Manager.SetTrackingSceneByPath("Assets/Scenes/SceneName");
+
+    Debug.Log("New tracking scene is set");
+}
+For example, if you instantiate prefabs to switch VR environments instead of loading new Unity scenes, you can use this function to set the Tracking Scene and distinguish these environments on the Cognitive3D Dashboard.
+
+Sensors
+Using additional sensors, you can get a detailed snapshot of the participant's physical state. While we don't support specific sensors, we provide a simple API to record sensor data and display this data on SceneExplorer. We also record summary metrics such as average, minimum and maximum rates for each sensor to the Session Properties.
+
+If there is sensor data available for a SceneExplorer session, it can be accessed by the sensors tab on the navigation bar.
+
+Graph Display
+
+Code Reference
+Recording Sensor Data
+Sensors record float values and double values. Please get in touch if you require other data types. The recorded sensor data is automatically sent while the user is playing.
+
+float sensorData = Random.Range(1, 100f);
+Cognitive3D.SensorRecorder.RecordDataPoint("SensorName", sensorData);
+Sensor Frequency Limits
+Sensor data is automatically limited to 10 Hz (10 times per second). This is to enable viewing spatial sensor data on SceneViewer. Data recorded faster than this frequency will be discarded.
+
+If you need to record sensor data at a higher frequency, you can manually indicate the frequency before recording data with RecordDataPoint. This high frequency data will not be visible on SceneViewer.
+
+Cognitive3D.SensorRecorder.InitializeSensor("My 100hz Sensor", 100, initialValue);
+Sensors Namespaces
+You can add namespaces for your different sensors. This helps keep things organized on SceneExplorer.
+
+For example, if you had multiple Heart related sensors attached to your participant, you could nest them under the "Heart" namespace by adding a period between the parent and child elements.
+
+Cognitive3D.SensorRecorder.RecordDataPoint("Heart.Blood Oxygen", sensorData);
+...
+Cognitive3D.SensorRecorder.RecordDataPoint("Heart.EKG", sensorData);
+Results in:
+
+Namespacing Sensors

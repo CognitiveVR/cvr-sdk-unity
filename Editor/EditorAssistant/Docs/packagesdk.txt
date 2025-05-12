@@ -1,0 +1,36 @@
+Getting Started with the Cognitive3D SDK for Unity
+Welcome! This page will help you quickly integrate Cognitive3D Analytics into your Unity projects to provide analytics and insights about your participants' behavior in VR and AR.
+
+Quick Setup Video
+
+This video was recorded in November 2023, with Cognitive3D SDK version 1.3.8. Many thanks to Valem for the tutorial.
+
+Quick Setup Instructions
+You can add the package from Unity's Package Manager:
+
+In Unity, from the Window menu, open the Package Manager.
+Click the + button and choose Add package from git URL. package install
+Enter the following URL: https://github.com/CognitiveVR/cvr-sdk-unity.git
+The package will download and install.
+Alternatively you can download the package from GitHub and use Add package from disk to import the Cognitive3D SDK into your project.
+
+The Project Setup Window will automatically open or it can be opened from the Cognitive3D menu.
+
+Settings Window
+
+You will need your Developer Key from the Cognitive3D Dashboard to complete this set up process. You may need to press Generate Developer Key and Generate Application Key. The most recent Application Key associated with your Developer Key will be automatically retrieved from the dashboard.
+
+Dashboard API Key
+
+We support general XR features in Unity and offer additional support for specific SDKs. You can select additional SDKs to enable features such as Eye Tracking. If you are unsure which APIs you should choose, see the Runtime page for reference.
+
+If you have any objects in your scene that move (other than the player), add a Dynamic Object Component to that object. Dynamic Objects are covered in more detail in Comprehensive Setup Guide and Dynamic Objects.
+
+The Scene Setup Window will ask you to Export and Upload your scene to our Dashboard. This may take some time depending on your internet connection and size of the scene.
+
+The Scene Setup Window will automatically add a Cognitive3D Manager to the scene. This manager will automatically send a "Session Begin" Custom Event, Gaze, and basic information about the device. This manager persists upon changing scenes.
+
+Simply press Play in the Unity Editor and you will see a new session on the Dashboard. Sessions recorded in the Editor are automatically tagged as 'Test' and will be separated from your production sessions. See Test and Junk Sessions here for more details.
+
+Next Steps
+Once you verify that your data is being recorded properly, there are several ways to record more data to allow for deeper insights into your experience. The Comprehensive Setup Guide goes into an overview of how to set up each of the SDK's core features.

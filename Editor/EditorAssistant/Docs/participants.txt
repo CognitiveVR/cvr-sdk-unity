@@ -1,0 +1,29 @@
+Participants
+A Participant is the person interacting with your experience - your end user. This might be a player in your game, an employee going through training, a person from your focus group, etc.
+
+Setting Participant Name and ID
+Correctly identifying Participants during your experience allows you to track how their performance changes over time. This should include a Unique ID (such as employee number) and a friendly Full Name.
+
+void Start()
+{
+    Cognitive3D.Cognitive3D_Manager.SetParticipantFullName("John Smith");
+    Cognitive3D.Cognitive3D_Manager.SetParticipantId("E001");
+    //...
+}
+Setting Participant Properties
+You can also set properties about your Participants. These can change between sessions. Changes to these properties may represent increased training, a new role or a new preference.
+
+void Start()
+{
+    //...
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Years Employed",3);
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Handedness","Left");
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Tool Preference","Default");
+    Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("Training Level","Class A");
+}
+Some included Components (such as HMDHeight) automatically record Participant properties. Simply add these components to the Cognitive3D_Manager in your scene and they will automatically record relevant properties.
+
+Sign In and Single Sign-On
+Usernames and properties obviously should not be hard-coded into your application. One possible method to identify your Participant is to put them in an isolated space (such as an empty scene) before starting the session. From that scene you could present a simple login screen before beginning your experience.
+
+If you have a single sign-on solution for standalone headsets and wish to use that userID to identify your participants, get in touch and we can support your implementation!

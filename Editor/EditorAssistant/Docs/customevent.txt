@@ -1,0 +1,141 @@
+Custom Events
+Custom Events are a simple but important way Cognitive3D can record data from your experience.
+
+Custom Events automatically record x,y,z coordinates. If the position is not provided it will use the position of the HMD. In conjunction with Gaze tracking, coordinates gives you the ability to map out how your Participants are interacting with your experience in 3D space.
+
+Setup
+Custom Events are visible on the Dashboard on the Session Details page and Analysis Tool. They are also a common feature of the Objectives system.
+
+Custom Events can be recorded with a small amount of code. This example will record an event at the position of the HMD:
+
+void PickupBasket()
+{
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .Send();
+}
+You can add a position to your Custom Event with an optional argument:
+
+void PickupBasket()
+{
+  Vector3 basketPosition = shoppingBasket.transform.position;
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .Send(basketPosition);
+}
+You can add one or more properties to your Custom Events:
+
+void PickupBasket()
+{
+  Vector3 productPosition = someProduct.transform.position;
+
+  //you can either write properties one at a time
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+  .SetProperty("Basket Location", "Store Entrance")
+  .SetProperty("Some Other Property", 100)
+  .Send(productPosition);
+
+  //or several at once with a dictionary
+  new Cognitive3D.CustomEvent("Picked up shopping basket")
+      .SetProperties(new Dictionary<string, object> {
+        { "Basket Location", "Store Entrance" },
+        { "Some Other Property", 100 }
+      })
+      .Send(productPosition);
+}
+Duration
+In some cases you may want to record a span of time with a Custom Event. Simply create a new Custom Event object and call Send at a later time. This will automatically add a Duration property to the Custom Event
+
+private Cognitive3D.CustomEvent holdEvent;
+
+public void PickupItem()
+{
+  // Some code to pickup the item
+  // ...
+  holdEvent = new Cognitive3D.CustomEvent("Product Grabbed");
+}
+
+public void DropItem()
+{
+  // Some code to drop the item
+  // ...
+  if (holdEvent != null)
+  {
+    holdEvent.Send(transform.position);
+    holdEvent = null;
+  }
+}
+Dynamic Object Custom Events
+Custom Events can be assigned to Dynamic Objects. This can be used to identify interactions with specific objects. A summary of Custom Events can be seen on the Dynamic Objects page.
+
+ObjectEventTable
+
+To assign a Dynamic Object to a Custom Event the code is similar to how properties are added:
+
+public void PurchaseItem(GameObject product)
+{
+  // Some code to purchase an item
+  // ...
+  Vector3 pos = product.transform.position;
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .SetDynamicObject(dynamicObject)
+  .Send(pos);
+}
+Dynamic Object Properties
+Custom Events that are assigned a Dynamic Object can also have properties which will be available on the Dashboard. This can provide very specific Objective steps and Dynamic Object summaries.
+
+This code explains how to assign a Dynamic Object with properties to a Custom Event.
+
+public void PurchaseItem(GameObject product)
+{
+  // Some code to purchase an item
+  // ...
+  var pos = product.transform.position;
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .SetDynamicObject(dynamicObject)
+  .SetProperty("Product Price", 2.99f)
+  .Send(pos);
+}
+Event Sensors
+When recording your Custom Events you can append the current state of Sensors as individual properties.
+
+public void PurchaseItem(GameObject product)
+{
+  var pos = product.transform.position;
+
+  //this will append the latest value of every Sensor
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .AppendSensors()
+  .Send(pos);
+
+  //this will append the latest value of only the 'heartrate' Sensor
+  Cognitive3D.DynamicObject dynamicObject = product.GetComponent<Cognitive3D.DynamicObject>();
+  new Cognitive3D.CustomEvent("Product Purchased")
+  .AppendSensors("heartrate")
+  .SetDynamicObject(dynamicObject)
+  .Send(pos);
+}
+Optimized Implementation
+There is an alternate method of recording Custom Events without creating a C# object using the 'new' keyword. This method is less flexible to write but may be useful if you are recording hundreds of events and need to optimize. Here is an example:
+
+public void PurchaseItem(GameObject product)
+{
+  var pos = product.transform.position;
+
+  //Custom Event at a position
+  Cognitive3D.CustomEvent.SendCustomEvent("Product Purchased",pos);
+
+  //Custom Event at a position with a Dynamic Object ID
+  DynamicObject dynamicObject = product.GetComponent<DynamicObject>();
+  string dynamicObjectId = string.Empty;
+  if (dynamicObject != null)
+  {
+    dynamicObjectId = dynamicObject.GetId();
+  }
+  Cognitive3D.CustomEvent.SendCustomEvent("Product Purchased",pos,dynamicObjectId);
+}
+Advanced Uses Cases
+Trigger Areas
+You can use Custom Events to identify when a Participant enters and exits a pre-defined region in your scene. Recording when a participant enters an area could be useful to build Objectives with positional data normally only available in SceneExplorer.
+
+You could create a Custom Event when the participant enters the area and call Send on that Custom Event when they leave. The area would likely be defined using a collider with IsTrigger enabled. The player GameObject would also need to have a collider and a kinematic rigid body to activate the trigger when they enter.

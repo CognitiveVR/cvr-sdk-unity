@@ -1,0 +1,30 @@
+Sensors
+Using additional sensors, you can get a detailed snapshot of the participant's physical state. While we don't support specific sensors, we provide a simple API to record sensor data and display this data on SceneExplorer. We also record summary metrics such as average, minimum and maximum rates for each sensor to the Session Properties.
+
+If there is sensor data available for a SceneExplorer session, it can be accessed by the sensors tab on the navigation bar.
+
+Graph Display
+
+Code Reference
+Recording Sensor Data
+Sensors record float values and double values. Please get in touch if you require other data types. The recorded sensor data is automatically sent while the user is playing.
+
+float sensorData = Random.Range(1, 100f);
+Cognitive3D.SensorRecorder.RecordDataPoint("SensorName", sensorData);
+Sensor Frequency Limits
+Sensor data is automatically limited to 10 Hz (10 times per second). This is to enable viewing spatial sensor data on SceneViewer. Data recorded faster than this frequency will be discarded.
+
+If you need to record sensor data at a higher frequency, you can manually indicate the frequency before recording data with RecordDataPoint. This high frequency data will not be visible on SceneViewer.
+
+Cognitive3D.SensorRecorder.InitializeSensor("My 100hz Sensor", 100, initialValue);
+Sensors Namespaces
+You can add namespaces for your different sensors. This helps keep things organized on SceneExplorer.
+
+For example, if you had multiple Heart related sensors attached to your participant, you could nest them under the "Heart" namespace by adding a period between the parent and child elements.
+
+Cognitive3D.SensorRecorder.RecordDataPoint("Heart.Blood Oxygen", sensorData);
+...
+Cognitive3D.SensorRecorder.RecordDataPoint("Heart.EKG", sensorData);
+Results in:
+
+Namespacing Sensors
