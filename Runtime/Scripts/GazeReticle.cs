@@ -27,7 +27,9 @@ namespace Cognitive3D
 
         void Update()
         {
-            Ray ray = GazeHelper.GetCurrentWorldGazeRay();
+            Ray ray = new Ray();
+            GazeHelper.TryGetCurrentWorldGazeRay(ref ray);
+
             Vector3 newPosition = ray.GetPoint(Distance);
 
             transform.position = Vector3.Lerp(transform.position, newPosition, Speed);

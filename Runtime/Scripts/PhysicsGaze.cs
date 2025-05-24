@@ -43,9 +43,22 @@ namespace Cognitive3D
                     Debug.LogException(e);
                 }
 
-                Ray ray = GazeHelper.GetCurrentWorldGazeRay();
+                Ray ray = new Ray();
+                bool gazeResult = GazeHelper.TryGetCurrentWorldGazeRay(ref ray);
 
-                if (Cognitive3D_Preferences.Instance.EnableGaze == true && GameplayReferences.HMDCameraComponent && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out var hitDistance, out var hitDynamic, out var hitWorld, out var hitLocal, out var hitcoord)) //hit dynamic
+                //hit dynamic object
+                if (Cognitive3D_Preferences.Instance.EnableGaze == true
+                    && GameplayReferences.HMDCameraComponent
+                    && gazeResult == true
+                    && DynamicRaycast(ray.origin,
+                        ray.direction,
+                        GameplayReferences.HMDCameraComponent.farClipPlane,
+                        0.05f,
+                        out var hitDistance,
+                        out var hitDynamic,
+                        out var hitWorld,
+                        out var hitLocal,
+                        out var hitcoord)) //hit dynamic
                 {
                     string ObjectId = hitDynamic.GetId();
                     var mediacomponent = hitDynamic.GetComponent<MediaComponent>();
@@ -77,7 +90,15 @@ namespace Cognitive3D
                     yield return null;
                 }
 
-                if (Cognitive3D_Preferences.Instance.EnableGaze == true && GameplayReferences.HMDCameraComponent && Physics.Raycast(ray, out var hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))
+                //hit world
+                if (Cognitive3D_Preferences.Instance.EnableGaze == true
+                    && GameplayReferences.HMDCameraComponent
+                    && gazeResult == true
+                    && Physics.Raycast(ray,
+                        out var hit,
+                        GameplayReferences.HMDCameraComponent.farClipPlane,
+                        Cognitive3D_Preferences.Instance.GazeLayerMask,
+                        Cognitive3D_Preferences.Instance.TriggerInteraction))
                 {
                     Vector3 pos = GameplayReferences.HMD.position;
                     Vector3 gazepoint = hit.point;
@@ -101,7 +122,7 @@ namespace Cognitive3D
                     DisplayGazePoints[DisplayGazePoints.Count].IsLocal = false;
                     DisplayGazePoints.Update();
                 }
-                else if (GameplayReferences.HMD) //hit sky / farclip / gaze disabled. record HMD position and rotation
+                else if (GameplayReferences.HMD) //hit sky / farclip / eye tracking gaze enabled by invalid. record HMD position and rotation
                 {
                     Vector3 pos = GameplayReferences.HMD.position;
                     Quaternion rot = GameplayReferences.HMD.rotation;

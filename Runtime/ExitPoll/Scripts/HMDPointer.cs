@@ -17,7 +17,9 @@ namespace Cognitive3D
 
         void Update()
         {
-            Ray ray = Cognitive3D.GazeHelper.GetCurrentWorldGazeRay();
+            Ray ray = new Ray();
+            GazeHelper.TryGetCurrentWorldGazeRay(ref ray);
+
             UpdateDrawLine(ray);
             Debug.DrawRay(transform.position, ray.direction * 10, Color.red);
 

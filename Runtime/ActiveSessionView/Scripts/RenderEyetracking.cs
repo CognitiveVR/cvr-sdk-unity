@@ -140,7 +140,8 @@ namespace Cognitive3D.ActiveSession
             if (showReticle)
             {
                 FixationMaterial.color = ReticleColor;
-                var gazeRay = Cognitive3D.GazeHelper.GetCurrentWorldGazeRay();
+                var gazeRay = new Ray();
+                Cognitive3D.GazeHelper.TryGetCurrentWorldGazeRay(ref gazeRay);
                 var point = gazeRay.GetPoint(20);
                 //draw a texture on screen?
                 //graphics.drawmesh in world?

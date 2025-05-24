@@ -125,7 +125,9 @@ namespace Cognitive3D.ActiveSession
 
         void Reticle_OnGUI()
         {
-            var gazeRay = Cognitive3D.GazeHelper.GetCurrentWorldGazeRay();
+            Ray gazeRay = new Ray();
+            GazeHelper.TryGetCurrentWorldGazeRay(ref gazeRay);
+
             var point = gazeRay.GetPoint(10);
             var screenPoint = WorldToRemapScreen(point);
 
