@@ -7,42 +7,33 @@ namespace Cognitive3D
 {
     public class Cognitive3D_Preferences : ScriptableObject
     {
-        static bool IsSet = false;
         static Cognitive3D_Preferences instance;
         public static Cognitive3D_Preferences Instance
         {
             get
             {
-                if (IsSet)
+                if (instance != null)
                     return instance;
 
+                instance = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
+                    
                 if (instance == null)
                 {
-                    instance = Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences");
-                    if (instance == null)
-                    {
 #if UNITY_EDITOR
-                        if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-                        {
-                            Debug.LogError("Cognitive3D_Preferences asset is missing!");
-                        }
-#else
+                    if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+                    {
                         Debug.LogError("Cognitive3D_Preferences asset is missing!");
-#endif
-                        instance = CreateInstance<Cognitive3D_Preferences>();
                     }
-                    IsSet = true;
-                    S_GazeSnapshotCount = instance.GazeSnapshotCount;
-                    S_DynamicSnapshotCount = instance.DynamicSnapshotCount;
-                    S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
-                    S_EventDataThreshold = instance.EventDataThreshold;
-                    S_SensorSnapshotCount = instance.SensorSnapshotCount;
+#else
+                    Debug.LogError("Cognitive3D_Preferences asset is missing!");
+#endif
+                    instance = CreateInstance<Cognitive3D_Preferences>();
                 }
+                S_DynamicObjectSearchInParent = instance.DynamicObjectSearchInParent;
                 return instance;
             }
         }
 
-        // 
         internal static bool GetPreferencesFile()
         {
             return Resources.Load<Cognitive3D_Preferences>("Cognitive3D_Preferences") ? true : false;
@@ -50,10 +41,6 @@ namespace Cognitive3D
 
         //static for faster access
         public const float SnapshotInterval = 0.1f;
-        public static int S_GazeSnapshotCount;
-        public static int S_DynamicSnapshotCount;
-        public static int S_EventDataThreshold;
-        public static int S_SensorSnapshotCount;
         public static bool S_DynamicObjectSearchInParent;
 
         public string Protocol = "https";
@@ -103,6 +90,7 @@ namespace Cognitive3D
         public int DynamicSnapshotCount = 512;
         public int EventDataThreshold = 256;
         public int FixationSnapshotCount = 256;
+        public int BoundarySnapshotCount = 64;
 
         public int AutomaticSendTimer = 10;
 
@@ -143,6 +131,7 @@ namespace Cognitive3D
             newInstance.sceneSettings.Add(new SceneSettings(name, path));
         }
 
+        [Obsolete]
         public static SceneSettings FindScene(string sceneName)
         {
             return Instance.sceneSettings.Find(x => x.SceneName == sceneName);
@@ -171,7 +160,7 @@ namespace Cognitive3D
         [Serializable]
         public class SceneSettings
         {
-            public string SceneName = "";
+            public string SceneName = ""; //only used for editor display. not unique, do not use for logic
             [UnityEngine.Serialization.FormerlySerializedAs("SceneKey")]
             public string SceneId = "";
             public string ScenePath = "";

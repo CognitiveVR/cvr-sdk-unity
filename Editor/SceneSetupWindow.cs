@@ -2,14 +2,39 @@
 using UnityEngine;
 using UnityEditor;
 using Cognitive3D.Components;
+
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+using Unity.XR.CoreUtils;
+#endif
+
+#if C3D_VIVEWAVE
+using Wave.Essence;
+#endif
+
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+using UnityEditor.XR.LegacyInputHelpers;
+#endif
+
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
+#endif
+
+#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+using Unity.Netcode;
+#endif
+
+#if COGNITIVE3D_INCLUDE_NORMCORE
+using Normal.Realtime;
 #endif
 
 #if C3D_STEAMVR2
 using Valve.VR;
 using System.IO;
 using Valve.Newtonsoft.Json;
+#endif
+
+#if COGNITIVE3D_INCLUDE_META_XR_UTILITY
+using Meta.XR.MRUtilityKit;
 #endif
 
 //uploading multiple scenes at once?
@@ -22,18 +47,29 @@ namespace Cognitive3D
         static bool wantEyeTrackingEnabled;
         static bool wantPassthroughEnabled;
         static bool wantSocialEnabled;
-        static bool wantHandTrackingEnabled;
+        static bool wantSceneApiEnabled;
+
+        const string SCENE_MANAGER_NAME = "Cognitive3D_OVRSceneManager";
+        const string SCENE_PLANE_PREFAB_NAME = "Cognitive3D_PlanePrefab";
+        const string SCENE_VOLUME_PREFAB_NAME = "Cognitive3D_VolumePrefab";
+        const string MRUK_NAME = "Cognitive3D_Meta_MRUK";
 #endif
 
-        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/session-tags/";
+        private const string URL_SESSION_TAGS_DOCS = "https://docs.cognitive3d.com/dashboard/organization-settings/#session-tags";
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
+
+        private static bool completedUpload = false;
+        internal static bool CompletedUpload { get => completedUpload; set => completedUpload = value; }
+
         internal static void Init()
         {
+            SegmentAnalytics.TrackEvent("SceneSetupWindow_Opened", "SceneSetupWindow");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            currentPage = Page.Welcome;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -68,19 +104,20 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
         }
 
         internal static void Init(Page page)
         {
-            currentPage = page;
+            SegmentAnalytics.TrackEvent("SceneSetupWindow_Opened", "SceneSetupWindow");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
+            currentPage = page;
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
@@ -115,25 +152,38 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusPassthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<OculusSocial>();
-                wantHandTrackingEnabled = Cognitive3D_Manager.Instance.GetComponent<HandTracking>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
             }
 #endif
         }
 
         internal static void Init(Rect position)
         {
+            SegmentAnalytics.TrackEvent("SceneSetupWindow_Opened", "SceneSetupWindow");
             SceneSetupWindow window = (SceneSetupWindow)EditorWindow.GetWindow(typeof(SceneSetupWindow), true, "Scene Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
             window.position = new Rect(position.x+5, position.y+5, 500, 550);
             window.Show();
-            window.initialPlayerSetup = false;
+            initialPlayerSetup = false;
 
             ExportUtility.ClearUploadSceneSettings();
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
             EditorCore.GetSceneThumbnail(settings, ref ignored, true);
+        }
+
+        /// <summary>
+        /// Instantiates a Cognitive3D_Manager <br/>
+        /// Identifies controller and camera objects <br/>
+        /// Sets them up (for example with dynamic objects) <br/>
+        /// Adds to scene settings
+        /// </summary>
+        internal static void PerformBasicSetup()
+        {
+            Init();
+            PlayerSetupStart();
         }
 
         internal enum Page
@@ -158,7 +208,7 @@ namespace Cognitive3D
                 _currentPage = value;
             }
         }
-        
+
         private void OnGUI()
         {
             GUI.skin = EditorCore.WizardGUISkin;
@@ -256,6 +306,63 @@ namespace Cognitive3D
                 }
     #endif
 #endif
+
+#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+    #if C3D_NETCODE
+            if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NetcodeMultiplayer>() == null)
+            {
+                Cognitive3D_Manager.Instance.gameObject.AddComponent<NetcodeMultiplayer>();
+            }
+            if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NetworkObject>() == null)
+            {
+                Cognitive3D_Manager.Instance.gameObject.AddComponent<NetworkObject>();
+            }
+    #else
+            if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NetcodeMultiplayer>() != null)
+            {
+                DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<NetcodeMultiplayer>());
+            }
+            if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NetworkObject>() != null)
+            {
+                DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<NetworkObject>());
+            }
+    #endif
+#endif
+
+#if COGNITIVE3D_INCLUDE_NORMCORE
+    #if C3D_NORMCORE
+        if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>() == null)
+        {
+            Cognitive3D_Manager.Instance.gameObject.AddComponent<NormcoreMultiplayer>();
+        }
+
+        string localPath = "Assets/Resources/Cognitive3D_NormcoreSync.prefab";
+
+        string folderPath = System.IO.Path.GetDirectoryName(localPath);
+        if (!System.IO.Directory.Exists(folderPath))
+        {
+            System.IO.Directory.CreateDirectory(folderPath);
+        }
+
+        if (!Resources.Load<GameObject>("Cognitive3D_NormcoreSync"))
+        {
+            GameObject c3dNormcoreSyncObject = new GameObject("Cognitive3D_NormcoreSync");
+            PrefabUtility.SaveAsPrefabAsset(c3dNormcoreSyncObject, localPath);
+            DestroyImmediate(c3dNormcoreSyncObject);
+        }
+
+        GameObject c3dNormcoreSyncPrefab = Resources.Load<GameObject>("Cognitive3D_NormcoreSync");
+        if (!c3dNormcoreSyncPrefab.GetComponent<NormcoreSync>())
+        {
+            c3dNormcoreSyncPrefab.AddComponent<NormcoreSync>();
+        }
+    #else
+        if (Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>() != null)
+        {
+            DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<NormcoreMultiplayer>());
+        }
+    #endif
+#endif
         }
 
         void ProjectErrorUpdate()
@@ -278,19 +385,19 @@ namespace Cognitive3D
 
 #region Controllers
 
-        GameObject leftcontroller;
-        GameObject rightcontroller;
-        GameObject mainCameraObject;
-        GameObject trackingSpace;
+        static GameObject leftcontroller;
+        static GameObject rightcontroller;
+        static GameObject mainCameraObject;
+        static GameObject trackingSpace;
 
         [System.NonSerialized]
-        bool initialPlayerSetup;
+        static bool initialPlayerSetup;
+
         //called once when entering controller update page. finds/sets expected defaults
-        void PlayerSetupStart()
+        static void PlayerSetupStart()
         {
             if (initialPlayerSetup) { return; }
             initialPlayerSetup = true;
-
             var camera = Camera.main;
             if (camera != null)
             {
@@ -319,9 +426,9 @@ namespace Cognitive3D
                 trackingSpace = trackingSpaceInScene.gameObject;
             }
 
-            if (leftcontroller != null && rightcontroller != null)
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
             {
-                //found dynamic objects for controllers - prefer to use those
+                //found dynamic objects for controllers and tracking space - prefer to use those
                 return;
             }
 
@@ -334,14 +441,36 @@ namespace Cognitive3D
             {
                 leftcontroller = player.hands[0].gameObject;
                 rightcontroller = player.hands[1].gameObject;
+                trackingSpace = player.trackingOriginTransform.gameObject; 
+            }
+            else
+            {
+                var playArea = FindObjectOfType<SteamVR_PlayArea>();
+                if (playArea != null)
+                {
+                    var controllers = playArea.GetComponentsInChildren<SteamVR_Behaviour_Pose>();
+                    foreach (var controller in controllers)
+                    {
+                        if (controller.inputSource == SteamVR_Input_Sources.LeftHand)
+                        {
+                            leftcontroller = controller.gameObject;
+                        }
+                        if (controller.inputSource == SteamVR_Input_Sources.RightHand)
+                        {
+                            rightcontroller = controller.gameObject;
+                        }
+                    }
+                    trackingSpace = playArea.gameObject;
+                }
             }
 #elif C3D_OCULUS
             //basic setup
             var manager = FindObjectOfType<OVRCameraRig>();
-            if (manager != null)
+            if (manager != null && manager.leftHandAnchor != null && manager.rightHandAnchor != null && manager.trackingSpace != null)
             {
                 leftcontroller = manager.leftHandAnchor.gameObject;
                 rightcontroller = manager.rightHandAnchor.gameObject;
+                trackingSpace = manager.trackingSpace.gameObject;
             }
 
             OVRManager ovrManager = Object.FindObjectOfType<OVRManager>();
@@ -361,6 +490,14 @@ namespace Cognitive3D
 
 #elif C3D_VIVEWAVE
             //TODO investigate if automatically detecting vive wave controllers is possible
+            if (trackingSpace == null)
+            {
+                var waveRig = FindObjectOfType<WaveRig>();
+                if (waveRig != null)
+                {
+                    trackingSpace = waveRig.CameraOffset;
+                }
+            }
 #elif C3D_PICOVR
             //basic setup
             var manager = FindObjectOfType<Pvr_Controller>();
@@ -374,9 +511,9 @@ namespace Cognitive3D
 #elif C3D_PICOXR
             //TODO investigate if automatically detecting pico controllers is possible using PicoXR package
 #endif
-            if (leftcontroller != null && rightcontroller != null)
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
             {
-                //found controllers from VR SDKs
+                //found controllers and tracking space from VR SDKs
                 return;
             }
 
@@ -395,280 +532,261 @@ namespace Cognitive3D
                     leftcontroller = driver.gameObject;
                 }
             }
+
+            // if tracking space and controllers not found yet, look for it in other ways
+#if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+            var cameraOffset = FindObjectOfType<CameraOffset>();
+            if (cameraOffset != null)
+            {
+                trackingSpace = cameraOffset.gameObject;
+                var cameraOffsetObject = cameraOffset.cameraFloorOffsetObject;
+                if (cameraOffsetObject != null)
+                {
+                    trackingSpace = cameraOffsetObject.gameObject;
+                }
+            }
+#endif
+            if (leftcontroller != null && rightcontroller != null && trackingSpace != null)
+            {
+                //found controllers and tracking space from VR SDKs
+                return;
+            }
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+            var xrRig = FindObjectOfType<XROrigin>();
+            if (xrRig != null)
+            {
+                trackingSpace = xrRig.gameObject;
+                var xrRigOffset = xrRig.CameraFloorOffsetObject;
+                if (xrRigOffset != null)
+                {
+                    trackingSpace = xrRigOffset.gameObject;
+                }
+            }
+            if (leftcontroller == null)
+            {
+                leftcontroller = GameObject.Find("Left Controller")?.gameObject;
+            }
+            if (rightcontroller == null)
+            {
+                rightcontroller = GameObject.Find("Right Controller")?.gameObject;
+            }
+#endif
         }
 
         bool AllSetupComplete;
 
         void ControllerUpdate()
         {
+            bool leftControllerIsValid = leftcontroller && leftcontroller?.GetComponent<DynamicObject>() != null;
+            bool rightControllerIsValid = rightcontroller && rightcontroller?.GetComponent<DynamicObject>() != null;
+            bool cameraIsValid = Camera.main != null && mainCameraObject == Camera.main.gameObject;
+            bool trackingSpaceIsValid = trackingSpace != null ? trackingSpace.GetComponent<RoomTrackingSpace>() != null : false;
+
             PlayerSetupStart();
-            GUI.Label(new Rect(30, 30, 440, 440), "You can use your existing Player Prefab. For most implementations, this is just a quick check to ensure cameras and controllers are configued correctly.", "normallabel");
-            GUI.Label(new Rect(30, 100, 440, 440), "The display for the HMD should be tagged as <b>MainCamera</b>", "normallabel");
-
-            //hmd
-            int hmdRectHeight = 150;
-
-            GUI.Label(new Rect(30, hmdRectHeight, 50, 30), "HMD", "boldlabel");
-            if (GUI.Button(new Rect(180, hmdRectHeight, 255, 30), mainCameraObject != null? mainCameraObject.gameObject.name:"Missing", "button_blueoutline"))
-            {
-                Selection.activeGameObject = mainCameraObject;
-            }
-
-            int pickerID_HMD = 5689466;
-            if (GUI.Button(new Rect(440, hmdRectHeight, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    mainCameraObject, true, "", pickerID_HMD);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD)
-                {
-                    mainCameraObject = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
-
-            Rect hmdAlertRect = new Rect(400, hmdRectHeight, 30, 30);
-            if (mainCameraObject == null)
-            {
-                GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Camera GameObject not set"), "image_centered");
-            }
-            else if (mainCameraObject.CompareTag("MainCamera") == false)
-            {
-                GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Selected Camera is not tagged 'MainCamera'"), "image_centered");
-            }
-            else
-            {
-                //warning icon if multiple objects tagged with mainCamera in scene
-                int mainCameraCount = 0;
-                for (int i = 0; i < Camera.allCamerasCount; i++)
-                {
-                    if (Camera.allCameras[i].CompareTag("MainCamera"))
-                    {
-                        mainCameraCount++;
-                    }
-                }
-                if (mainCameraCount > 1)
-                {
-                    GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Multiple cameras are tagged 'MainCamera'. This may cause runtime issues"), "image_centered");
-                }
-            }
-
-
-            // tracking space
-            int hmdRectHeight2 = 185;
-
-            GUI.Label(new Rect(30, hmdRectHeight2, 150, 30), "Tracking Space", "boldlabel");
-            if (GUI.Button(new Rect(180, hmdRectHeight2, 255, 30), trackingSpace != null ? trackingSpace.name : "Missing", "button_blueoutline"))
-            {
-                Selection.activeGameObject = trackingSpace;
-            }
-
-            int pickerID_HMD2 = 5689467;
-            if (GUI.Button(new Rect(440, hmdRectHeight2, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    trackingSpace, true, "", pickerID_HMD2);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID_HMD2)
-                {
-                    trackingSpace = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
-            if (trackingSpace == null)
-            {
-                GUI.Label(new Rect(400, hmdRectHeight2, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
-            }
+            GUI.Label(new Rect(30, 30, 450, 440), "You can use your existing Player Prefab. For most implementations, this is just a quick check to ensure cameras and controllers are configued correctly.", "normallabel");
 
             //controllers
+            GUI.Label(new Rect(200, 105, 440, 440), "Auto Player Setup", "normallabel");
+            Rect checkboxRect = new Rect(170, 100, 30, 30);
+
+            if (Cognitive3D_Manager.autoInitializePlayerSetup)
+            {
+                if (GUI.Button(checkboxRect, EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    SegmentAnalytics.TrackEvent("DisabledAutoPlayerSetup_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+                    Cognitive3D_Manager.autoInitializePlayerSetup = false;
+                }
+
+                GUI.Label(new Rect(30, 140, 440, 440), "When \"Auto Player Setup\" is enabled, all player-related objects are automatically detected and tracked. If you'd prefer to assign these objects manually, disable this option.", "normallabel");
+            }
+            else
+            {
+                if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
+                {
+                    SegmentAnalytics.TrackEvent("EnabledAutoPlayerSetup_PlayerSetupPage", "SceneSetupPlayerSetupPage");
+
+                    // Remove the controllers/hands DynamicObject components (if they exist)
+                    var dynamics = FindObjectsOfType<DynamicObject>();
+                    if (dynamics.Length > 0)
+                    {
+                        foreach (var dynamic in dynamics)
+                        {
+                            if (dynamic.IsController)
+                            {
+                                DestroyImmediate(dynamic);
+                            }
+                        }
+                    }
+
+                    var trackingSpaces = FindObjectsOfType<RoomTrackingSpace>();
+                    if (trackingSpaces.Length > 0)
+                    {
+                        foreach (var _trackingSpace in trackingSpaces)
+                        {
+                            DestroyImmediate(_trackingSpace);
+                        }
+                    }
+
+                    Cognitive3D_Manager.autoInitializePlayerSetup = true;
+                }
+
+                GUI.Label(new Rect(30, 140, 440, 440), "The display for the HMD should be tagged as <b>MainCamera</b>", "normallabel");
+                GUI.Label(new Rect(30, 180, 440, 440), "The <b>TrackingSpace</b> is the root transform for the HMD and controllers", "normallabel");
+                //hmd
+                DrawObjectPicker(ref mainCameraObject, "HMD", 230, 5689466);
+                HandleDragAndDrop(new Rect(180, 230, 440, 30), ref mainCameraObject);
+
+                Rect hmdAlertRect = new Rect(400, 230, 30, 30);
+                if (mainCameraObject == null)
+                {
+                    GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Camera GameObject not set"), "image_centered");
+                }
+                else if (mainCameraObject.CompareTag("MainCamera") == false)
+                {
+                    GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Selected Camera is not tagged 'MainCamera'"), "image_centered");
+                }
+                else
+                {
+                    //warning icon if multiple objects tagged with mainCamera in scene
+                    int mainCameraCount = 0;
+                    for (int i = 0; i < Camera.allCamerasCount; i++)
+                    {
+                        if (Camera.allCameras[i].CompareTag("MainCamera"))
+                        {
+                            mainCameraCount++;
+                        }
+                    }
+                    if (mainCameraCount > 1)
+                    {
+                        GUI.Label(hmdAlertRect, new GUIContent(EditorCore.Alert, "Multiple cameras are tagged 'MainCamera'. This may cause runtime issues"), "image_centered");
+                    }
+                }
+
+                // tracking space
+                DrawObjectPicker(ref trackingSpace, "Tracking Space", 265, 5689467);
+                HandleDragAndDrop(new Rect(180, 265, 440, 30), ref trackingSpace);
+
+                if (trackingSpace == null)
+                {
+                    GUI.Label(new Rect(400, 265, 30, 30), new GUIContent(EditorCore.Alert, "Tracking Space not set"), "image_centered");
+                }
+
 #if C3D_STEAMVR2
-            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
+                GUI.Label(new Rect(30, 310, 440, 440), "The Controllers should have <b>SteamVR Behaviour Pose</b> components", "normallabel");
 #else
-            GUI.Label(new Rect(30, 250, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
+                GUI.Label(new Rect(30, 310, 440, 440), "The Controllers may have <b>Tracked Pose Driver</b> components", "normallabel");
 #endif
 
-            bool leftControllerIsValid = false;
-            bool rightControllerIsValid = false;
+                //left hand label
+                DrawObjectPicker(ref leftcontroller, "Left Controller", 355, 5689465);
+                HandleDragAndDrop(new Rect(180, 355, 440, 30), ref leftcontroller);
 
-            leftControllerIsValid = leftcontroller != null;
-            rightControllerIsValid = rightcontroller != null;
-
-            AllSetupComplete = false;
-            if (rightControllerIsValid && leftControllerIsValid && Camera.main != null && mainCameraObject == Camera.main.gameObject)
-            {
-                var rdyn = rightcontroller.GetComponent<DynamicObject>();
-                if (rdyn != null && rdyn.IsController && rdyn.IsRight == true)
+                if (!leftControllerIsValid)
                 {
-                    var ldyn = leftcontroller.GetComponent<DynamicObject>();
-                    if (ldyn != null && ldyn.IsController && ldyn.IsRight == false
-                        && (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() != null)) // Make sure tracking space isn't null before accessing its component
-                    {
-                        AllSetupComplete = true;
-                    }
-                }
-            }
-            int handOffset = 290;
-
-            //left hand label
-            GUI.Label(new Rect(30, handOffset + 15, 150, 30), "Left Controller", "boldlabel");
-
-            string leftname = "Missing";
-            if (leftcontroller != null)
-                leftname = leftcontroller.gameObject.name;
-            if (GUI.Button(new Rect(180, handOffset + 15, 255, 30), leftname, "button_blueoutline"))
-            {
-                Selection.activeGameObject = leftcontroller;
-            }
-
-            int pickerID = 5689465;
-            if (GUI.Button(new Rect(440, handOffset + 15, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    leftcontroller, true, "", pickerID);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
-                {
-                    leftcontroller = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
-
-            if (!leftControllerIsValid)
-            {
-                GUI.Label(new Rect(400, handOffset + 15, 30, 30), new GUIContent(EditorCore.Alert, "Left Controller not set"), "image_centered");
-            }
-
-            //right hand label
-            GUI.Label(new Rect(30, handOffset + 50, 150, 30), "Right Controller", "boldlabel");
-
-            string rightname = "Missing";
-            if (rightcontroller != null)
-                rightname = rightcontroller.gameObject.name;
-
-            if (GUI.Button(new Rect(180, handOffset + 50, 255, 30), rightname, "button_blueoutline"))
-            {
-                Selection.activeGameObject = rightcontroller;
-            }
-
-            pickerID = 5689469;
-            if (GUI.Button(new Rect(440, handOffset + 50, 30, 30), EditorCore.SearchIconWhite))
-            {
-                GUI.skin = null;
-                EditorGUIUtility.ShowObjectPicker<GameObject>(
-                    rightcontroller, true, "", pickerID);
-                GUI.skin = EditorCore.WizardGUISkin;
-            }
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
-                {
-                    rightcontroller = EditorGUIUtility.GetObjectPickerObject() as GameObject;
-                }
-            }
-
-            if (!rightControllerIsValid)
-            {
-                GUI.Label(new Rect(400, handOffset + 50, 30, 30), new GUIContent(EditorCore.Alert, "Right Controller not set"), "image_centered");
-            }
-
-            //drag and drop
-            if (new Rect(180, handOffset + 50, 440, 30).Contains(Event.current.mousePosition)) //right hand
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    rightcontroller = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-            else if (new Rect(180, handOffset + 15, 440, 30).Contains(Event.current.mousePosition)) //left hand
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    leftcontroller = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-            else if (new Rect(180, hmdRectHeight, 440, 30).Contains(Event.current.mousePosition)) //hmd
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    mainCameraObject = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-            else if (new Rect(180, hmdRectHeight2, 440, 30).Contains(Event.current.mousePosition)) // trackingSpace
-            {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
-                if (Event.current.type == EventType.DragPerform)
-                {
-                    trackingSpace = (GameObject)DragAndDrop.objectReferences[0];
-                }
-            }
-
-            if (GUI.Button(new Rect(160, 400, 200, 30), new GUIContent("Setup GameObjects","Setup the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
-            {
-                SetupControllers(leftcontroller, rightcontroller);
-                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
-                {
-                    trackingSpace.AddComponent<RoomTrackingSpace>();
+                    GUI.Label(new Rect(400, 355, 30, 30), new GUIContent(EditorCore.Alert, "Left Controller not set"), "image_centered");
                 }
 
-                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-                Event.current.Use();
-            }
+                //right hand label
+                DrawObjectPicker(ref rightcontroller, "Right Controller", 390, 5689469);
+                HandleDragAndDrop(new Rect(180, 390, 440, 30), ref rightcontroller);
 
-            if (AllSetupComplete)
-            {
-                GUI.Label(new Rect(130, 400, 30, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(128, 400, 32, 32), EditorCore.Alert, "image_centered");
-            }
+                if (!rightControllerIsValid)
+                {
+                    GUI.Label(new Rect(400, 390, 30, 30), new GUIContent(EditorCore.Alert, "Right Controller not set"), "image_centered");
+                }
+
+                AllSetupComplete = (Cognitive3D_Manager.autoInitializePlayerSetup || (leftControllerIsValid && rightControllerIsValid))
+                                && cameraIsValid && trackingSpaceIsValid;
+
 #if C3D_STEAMVR2
-
-            //generate default input file if it doesn't already exist
-            bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
-            if (GUI.Button(new Rect(160, 450, 200, 30), "Append Input Bindings"))
-            {
-                if (SteamVR_Input.actionFile == null)
-                {
-                    bool initializeSuccess = SteamVR_Input.InitializeFile(false, false);
-
-                    if (initializeSuccess == false)
-                    {
-                        //copy
-                        SteamVR_CopyExampleInputFiles.CopyFiles(true);
-                        System.Threading.Thread.Sleep(1000);
-                        SteamVR_Input.InitializeFile();
-                    }
-                }
-                if (SteamVR_Input_EditorWindow.IsOpen())
-                {
-                    SteamVR_Input_EditorWindow.GetOpenWindow().Close();
-                }
-                AppendSteamVRActionSet();
-                SetDefaultBindings();
-                Valve.VR.SteamVR_Input_Generator.BeginGeneration();
-            }
-            if (DoesC3DInputActionSetExist())
-            {
-                GUI.Label(new Rect(130, 450, 30, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-            else
-            {
-                GUI.Label(new Rect(128, 450, 32, 32), EditorCore.Alert, "image_centered");
-            }
+                if (GUI.Button(new Rect(30, 440, 200, 30), new GUIContent("Set up GameObjects", "Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
+#else
+                if (GUI.Button(new Rect(160, 440, 200, 30), new GUIContent("Set up GameObjects", "Set up the player rig tracking space, attach Dynamic Object components to the controllers, and configures controllers to record button inputs")))
 #endif
+                {
+                    if (mainCameraObject != null)
+                    {
+                        mainCameraObject.tag = "MainCamera";
+                    }
+
+                    SetupPlayer();
+
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+                    Event.current.Use();
+                }
+
+                if (AllSetupComplete)
+                {
+#if C3D_STEAMVR2
+                    GUI.Label(new Rect(0, 440, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+#else
+                    GUI.Label(new Rect(130, 440, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+#endif
+                }
+                else
+                {
+#if C3D_STEAMVR2
+                    GUI.Label(new Rect(0, 440, 32, 32), EditorCore.Alert, "image_centered");
+#else
+                    GUI.Label(new Rect(128, 440, 32, 32), EditorCore.Alert, "image_centered");
+#endif
+                }
+#if C3D_STEAMVR2
+                //generate default input file if it doesn't already exist
+                bool hasInputActionFile = SteamVR_Input.DoesActionsFileExist();
+                if (GUI.Button(new Rect(270, 440, 200, 30), "Append Input Bindings"))
+                {
+                    AppendSteamVRBindings();
+                }
+                if (DoesC3DInputActionSetExist())
+                {
+                    GUI.Label(new Rect(240, 440, 30, 30), EditorCore.CircleCheckmark, "image_centered");
+                }
+                else
+                {
+                    GUI.Label(new Rect(238, 440, 32, 32), EditorCore.Alert, "image_centered");
+                }
+#endif
+            }
+        }
+
+        private void DrawObjectPicker(ref GameObject obj, string label, int rectHeight, int pickerID)
+        {
+            GUILayout.BeginHorizontal();
+            GUI.Label(new Rect(30, rectHeight, 150, 30), label, "boldlabel");
+            if (GUI.Button(new Rect(180, rectHeight, 255, 30), obj != null? obj.name:"Missing", "button_blueoutline"))
+            {
+                Selection.activeGameObject = obj;
+            }
+            if (GUI.Button(new Rect(440, rectHeight, 30, 30), EditorCore.SearchIconWhite))
+            {
+                GUI.skin = null;
+                EditorGUIUtility.ShowObjectPicker<GameObject>(
+                    obj, true, "", pickerID);
+                GUI.skin = EditorCore.WizardGUISkin;
+            }
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                if (EditorGUIUtility.GetObjectPickerControlID() == pickerID)
+                {
+                    obj = EditorGUIUtility.GetObjectPickerObject() as GameObject;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(25f);
+        }
+
+        private void HandleDragAndDrop(Rect dropArea, ref GameObject targetObject)
+        {
+            if (dropArea.Contains(Event.current.mousePosition))
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Link;
+                if (Event.current.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    targetObject = DragAndDrop.objectReferences[0] as GameObject;
+                }
+            }
         }
 
         bool hasCheckedForSteamVRActionsSet;
@@ -710,15 +828,62 @@ namespace Cognitive3D
             }
         }
 
-        public static void SetupControllers(GameObject left, GameObject right)
+        public static void SetupPlayer()
         {
-            if (left != null && left.GetComponent<DynamicObject>() == null)
+            if (!Cognitive3D_Manager.autoInitializePlayerSetup)
             {
-                left.AddComponent<DynamicObject>();
+                if (trackingSpace != null && trackingSpace.GetComponent<RoomTrackingSpace>() == null)
+                {
+                    trackingSpace.AddComponent<RoomTrackingSpace>();
+                }
+                
+                if (leftcontroller != null && leftcontroller.GetComponent<DynamicObject>() == null)
+                {
+                    leftcontroller.AddComponent<DynamicObject>();
+                }
+                if (rightcontroller != null && rightcontroller.GetComponent<DynamicObject>() == null)
+                {
+                    rightcontroller.AddComponent<DynamicObject>();
+                }
+
+                InputUtil.ControllerType controllerType = InputUtil.ControllerType.Quest2;
+#if C3D_STEAMVR2
+                controllerType = InputUtil.ControllerType.ViveWand;
+#elif C3D_OCULUS
+                controllerType = InputUtil.ControllerType.Quest2;
+#elif C3D_PICOXR
+                controllerType = InputUtil.ControllerType.PicoNeo3;
+#elif C3D_VIVEWAVE
+                controllerType = InputUtil.ControllerType.ViveFocus;
+#endif
+            
+                if (leftcontroller != null)
+                {
+                    var dyn = leftcontroller.GetComponent<DynamicObject>();
+                    dyn.IsRight = false;
+                    dyn.IsController = true;
+                    dyn.inputType = InputUtil.InputType.Controller;
+                    dyn.SyncWithPlayerGazeTick = true;
+                    dyn.FallbackControllerType = controllerType;
+                    dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
+                }
+                if (rightcontroller != null)
+                {
+                    var dyn = rightcontroller.GetComponent<DynamicObject>();
+                    dyn.IsRight = true;
+                    dyn.IsController = true;
+                    dyn.inputType = InputUtil.InputType.Controller;
+                    dyn.SyncWithPlayerGazeTick = true;
+                    dyn.FallbackControllerType = controllerType;
+                    dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
+                }
             }
-            if (right != null && right.GetComponent<DynamicObject>() == null)
+
+            if (Cognitive3D_Manager.Instance == null)
             {
-                right.AddComponent<DynamicObject>();
+                GameObject c3dManagerPrefab = Resources.Load<GameObject>("Cognitive3D_Manager");
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
             }
 
             //add a single controller input tracker to the cognitive3d_manager
@@ -727,36 +892,6 @@ namespace Cognitive3D
             {
                 Cognitive3D_Manager.Instance.gameObject.AddComponent<Components.ControllerInputTracker>();
                 Debug.Log("Set Controller Dynamic Object Settings. Create Controller Input Tracker component");
-            }
-
-            DynamicObject.ControllerType controllerType = DynamicObject.ControllerType.Quest2;
-#if C3D_STEAMVR2
-                controllerType = DynamicObject.ControllerType.ViveWand;
-#elif C3D_OCULUS
-                controllerType = DynamicObject.ControllerType.Quest2;
-#elif C3D_PICOXR
-                controllerType = DynamicObject.ControllerType.PicoNeo3;
-#elif C3D_VIVEWAVE
-                controllerType = DynamicObject.ControllerType.ViveFocus;
-#endif
-            
-            if (left != null)
-            {
-                var dyn = left.GetComponent<DynamicObject>();
-                dyn.IsRight = false;
-                dyn.IsController = true;
-                dyn.SyncWithPlayerGazeTick = true;
-                dyn.FallbackControllerType = controllerType;
-                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
-            }
-            if (right != null)
-            {
-                var dyn = right.GetComponent<DynamicObject>();
-                dyn.IsRight = true;
-                dyn.IsController = true;
-                dyn.SyncWithPlayerGazeTick = true;
-                dyn.FallbackControllerType = controllerType;
-                dyn.idSource = DynamicObject.IdSourceType.GeneratedID;
             }
         }
 
@@ -788,6 +923,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledOculusSocialSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantSocialEnabled = true;
                 }
             }
@@ -809,6 +945,7 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect2, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledMRSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantPassthroughEnabled = true;
                 }
             }
@@ -830,28 +967,30 @@ namespace Cognitive3D
             {
                 if (GUI.Button(checkboxRect3, EditorCore.BoxEmpty, "image_centered"))
                 {
+                    SegmentAnalytics.TrackEvent("EnabledQProEyeTrackingSupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
                     wantEyeTrackingEnabled = true;
                 }
             }
 
-            // Hand Tracking
-            GUI.Label(new Rect(140, 285, 440, 440), "Quest Hand Tracking", "normallabel");
-            Rect infoRect4 = new Rect(320, 280, 30, 30);
-            GUI.Label(infoRect4, new GUIContent(EditorCore.Info, "Collects and sends data pertaining to Hand Trackings ."), "image_centered");
+            // Scene API
+            GUI.Label(new Rect(140, 285, 440, 440), "Quest 3 Scene API", "normallabel");
+            Rect infoRect5 = new Rect(320, 280, 30, 30);
+            GUI.Label(infoRect5, new GUIContent(EditorCore.Info, "Collects dimensions of the room the participant is in."), "image_centered");
 
-            Rect checkboxRect4 = new Rect(105, 280, 30, 30);
-            if (wantHandTrackingEnabled)
+            Rect checkboxRect5 = new Rect(105, 280, 30, 30);
+            if (wantSceneApiEnabled)
             {
-                if (GUI.Button(checkboxRect4, EditorCore.BoxCheckmark, "image_centered"))
+                if (GUI.Button(checkboxRect5, EditorCore.BoxCheckmark, "image_centered"))
                 {
-                    wantHandTrackingEnabled = false;
+                    wantSceneApiEnabled = false;
                 }
             }
             else
             {
-                if (GUI.Button(checkboxRect4, EditorCore.BoxEmpty, "image_centered"))
+                if (GUI.Button(checkboxRect5, EditorCore.BoxEmpty, "image_centered"))
                 {
-                    wantHandTrackingEnabled = true;
+                    SegmentAnalytics.TrackEvent("EnabledQ3SceneAPISupport_AdditionalOculusSetup", "SceneSetupAdditionalOculusSetup");
+                    wantSceneApiEnabled = true;
                 }
             }
 
@@ -906,23 +1045,96 @@ namespace Cognitive3D
                     DestroyImmediate(social);
                 }
             }
-            if (wantHandTrackingEnabled)
+
+            if (wantSceneApiEnabled)
             {
-                var hand = FindObjectOfType<HandTracking>();
-                if (hand == null)
+#if !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
+                // Do not modify OVRManager permissions
+                var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
+                if (sceneApi == null)
                 {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<HandTracking>();
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<Cognitive3D_MetaSceneMesh>();
                 }
+                GameObject sceneManager = FindObjectOfType<OVRSceneManager>()?.gameObject;
+                if (sceneManager == null)
+                {
+                    sceneManager = new GameObject(SCENE_MANAGER_NAME);
+                    sceneManager.AddComponent<OVRSceneModelLoader>();
+                }
+                
+                // OVRSceneModelLoader requires OVRSceneManager so that will automatically add it
+                // We have this to future proof this in case that changes
+                var sceneManagerComponent = sceneManager.GetComponent<OVRSceneManager>();
+                if (sceneManagerComponent == null) 
+                {
+                    sceneManager.AddComponent<OVRSceneManager>();
+                }
+                if (sceneManagerComponent.PlanePrefab == null)
+                {
+                    GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                    if (planePrefab == null)
+                    {
+                        planePrefab = new GameObject(SCENE_PLANE_PREFAB_NAME);
+                    }
+                    // OVRSceneAnchor already has [DisallowMultipleComponent]
+                    planePrefab.AddComponent<OVRSceneAnchor>();
+                    sceneManagerComponent.PlanePrefab = planePrefab.GetComponent<OVRSceneAnchor>();
+                }
+                if (sceneManagerComponent.VolumePrefab == null)
+                {
+                    GameObject volumePrefab = GameObject.Find(SCENE_VOLUME_PREFAB_NAME);
+                    if (volumePrefab == null)
+                    {
+                        volumePrefab = new GameObject(SCENE_VOLUME_PREFAB_NAME);
+                    }
+                    // OVRSceneAnchor already has [DisallowMultipleComponent]
+                    volumePrefab.AddComponent<OVRSceneAnchor>();
+                    sceneManagerComponent.VolumePrefab = volumePrefab.GetComponent<OVRSceneAnchor>();
+                }
+#elif COGNITIVE3D_INCLUDE_META_XR_UTILITY
+                var mruk = FindObjectOfType<MRUK>()?.gameObject;
+                if (mruk == null)
+                {
+                    mruk = new GameObject(MRUK_NAME);
+                    mruk.AddComponent<MRUK>();
+                }
+#endif
             }
             else
             {
-                var hand = FindObjectOfType<HandTracking>();
-                if (hand != null)
+                // Only destory objects and components we created
+                // Do not modify OVRManager permissions
+                
+                // Component in C3D_Manager prefab
+                var sceneApi = FindObjectOfType<Cognitive3D_MetaSceneMesh>();
+                if (sceneApi != null)
                 {
-                    DestroyImmediate(hand);
+                    DestroyImmediate(sceneApi);
+                }
+
+                // Scene manager that we created
+                GameObject sceneManager = GameObject.Find(SCENE_MANAGER_NAME);
+                if (sceneManager != null)
+                {
+                    DestroyImmediate(sceneManager);
+                }
+
+                // Plane prefab
+                GameObject planePrefab = GameObject.Find(SCENE_PLANE_PREFAB_NAME);
+                if (planePrefab != null)
+                {
+                    DestroyImmediate(planePrefab);
+                }
+
+                // Volume prefab
+                GameObject volumePrefab = GameObject.Find(SCENE_VOLUME_PREFAB_NAME);
+                if (volumePrefab != null)
+                {
+                    DestroyImmediate(volumePrefab);
                 }
             }
 
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         }   
 #endif
 
@@ -1007,10 +1219,10 @@ namespace Cognitive3D
             //draw example scene image
             GUI.Box(new Rect(150, 130, 200, 150), isoSceneImage, "image_centered");
 
+            float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
+            string displayString;
             if (EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene()))
             {
-                float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
-                string displayString;
                 if (sceneSize < 1)
                 {
                     displayString = "Exported File Size: <1 MB";
@@ -1053,6 +1265,20 @@ namespace Cognitive3D
                         return;//cancel from 'do you want to save' popup
                     }
                 }
+
+                if (sceneSize < 1)
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneLess1MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+                else if (sceneSize >= 1 && sceneSize <= 500)
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneLessOrEqual500MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+                else // sceneSize > 500
+                {
+                    SegmentAnalytics.TrackEvent("ExportingSceneGreater500MB_SceneExportPage", "SceneSetupSceneExportPage");
+                }
+
                 ExportUtility.ExportGLTFScene();
 
                 string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
@@ -1113,17 +1339,18 @@ namespace Cognitive3D
 
         bool UploadSceneGeometry = true;
         bool UploadThumbnail = true;
-        bool UploadDynamicMeshes = true;
-
+        bool UploadPreviouslyExportedDynamicMeshes = true;
+        bool ExportAndUploadDynamicMeshesInScene = true;
+        static DynamicObject[] dynamicObjectsInScene;
         bool SceneExistsOnDashboard;
         bool SceneHasExportFiles;
 
         void UploadSummaryUpdate()
         {
             GUI.Label(steptitlerect, "SCENE UPLOAD SUMMARY", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "The following will be uploaded to the Dashboard:", "normallabel");
+            GUI.Label(new Rect(30, 30, 440, 440), "These will be uploaded to the Cognitive3D Dashboard:", "normallabel");
 
-            int heightOffset = 120;
+            int heightOffset = 80;
 
             int sceneVersion = 0;
             var settings = Cognitive3D_Preferences.FindCurrentScene();
@@ -1139,12 +1366,15 @@ namespace Cognitive3D
 
             SceneHasExportFiles = EditorCore.HasSceneExportFiles(Cognitive3D_Preferences.FindCurrentScene());
 
+            /// ////////////////////////////////////
+            /// UPLOAD SCENE GEOMETRY
+            /// ///////////////////////////////////
             var uploadSceneRect = new Rect(30, heightOffset, 30, 30);
             if (!SceneHasExportFiles)
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadSceneRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+2, 400, 30), "Upload Scene Geometry (No files exported)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 2, 400, 30), "Scene geometry (no files exported)", "normallabel");
                 UploadSceneGeometry = false;
             }
             else
@@ -1164,12 +1394,12 @@ namespace Cognitive3D
                         UploadSceneGeometry = true;
                     }
                 }
-                string uploadGeometryText = "Upload Scene Geometry";
+                string uploadGeometryText = "Scene geometry";
                 if (SceneExistsOnDashboard)
                 {
-                    uploadGeometryText = "Upload Scene Geometry (Version " + (sceneVersion+1) + ")";
+                    uploadGeometryText = "Scene geometry (version " + (sceneVersion+1) + ")";
                 }
-                GUI.Label(new Rect(60, heightOffset+2, 400, 30), uploadGeometryText, "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 2, 400, 30), uploadGeometryText, "normallabel");
             }
 
             var uploadThumbnailRect = new Rect(30, heightOffset+40, 30, 30);
@@ -1177,7 +1407,7 @@ namespace Cognitive3D
             {
                 //disable 'upload scene geometry' toggle
                 GUI.Button(uploadThumbnailRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+42, 340, 30), "Upload Scene Thumbnail (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 42, 340, 30), "Scene thumbnail (no scene exists)", "normallabel");
             }
             else
             {
@@ -1196,66 +1426,141 @@ namespace Cognitive3D
                         UploadThumbnail = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+42, 300, 30), "Upload Scene Thumbnail*", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 42, 300, 30), "Scene thumbnail*", "normallabel");
             }
 
-            //upload dynamics
-            int dynamicObjectCount = EditorCore.GetExportedDynamicObjectNames().Count;
-            var uploadDynamicRect = new Rect(30, heightOffset+80, 30, 30);
+            /// ////////////////////////////////////
+            /// EXPORTED DYNAMIC OBJECTS
+            /// ///////////////////////////////////
+            var uploadDynamicRect = new Rect(30, heightOffset + 80, 30, 30);
+            int numExportedDynamicObjects = EditorCore.GetExportedDynamicObjectNames().Count;
 
+            // No scene exists
             if (!SceneExistsOnDashboard && !UploadSceneGeometry)
             {
-                //can't upload dynamics
                 GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered");
-                GUI.Label(new Rect(60, heightOffset+82, 400, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes (No Scene exists)", "normallabel");
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30),  numExportedDynamicObjects + " previously exported dynamic meshes (no scene exists)", "normallabel");
+                GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
             else
             {
                 //upload dynamics toggle
-                if (UploadDynamicMeshes)
+                if (UploadPreviouslyExportedDynamicMeshes)
                 {
                     if (GUI.Button(uploadDynamicRect, EditorCore.BoxCheckmark, "image_centered"))
                     {
-                        UploadDynamicMeshes = false;
+                        UploadPreviouslyExportedDynamicMeshes = false;
                     }
                 }
                 else
                 {
                     if (GUI.Button(uploadDynamicRect, EditorCore.BoxEmpty, "image_centered"))
                     {
-                        UploadDynamicMeshes = true;
+                        UploadPreviouslyExportedDynamicMeshes = true;
                     }
                 }
-                GUI.Label(new Rect(60, heightOffset+82, 300, 30), "Upload " + dynamicObjectCount + " Dynamic Meshes", "normallabel");
-                GUI.Label(new Rect(200, heightOffset+340, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
+
+                GUI.Label(new Rect(60, heightOffset + 82, 420, 30), numExportedDynamicObjects + " previously exported dynamic meshes", "normallabel");
+                GUI.Label(new Rect(200, heightOffset + 360, 300, 40), "*You can adjust the scene camera to customise your thumbnail");
             }
 
-            //scene thumbnail preview
-            var thumbnailRect = new Rect(40, heightOffset+130, 420, 180);
+            /// ////////////////////////////////////
+            /// DYNAMICS IN SCENE BUT NOT EXPORTED
+            /// ///////////////////////////////////
+            var exportDynamicRect = new Rect(30, heightOffset + 120, 30, 30);
+            int dynamicObjectsNotExported = 0;
+            List<string> exportedDynamicObjectNames = EditorCore.GetExportedDynamicObjectNames();
+
+            // Go through all dynamic objects in scene
+            // See if it has been exported already (use mesh name as an identifier)
+            // IGNORE CONTROLLERS
+            dynamicObjectsInScene = FindObjectsOfType<DynamicObject>();
+
+            foreach (var dynamicObject in dynamicObjectsInScene)
+            {
+                bool found = false;
+                if (!dynamicObject.IsController)
+                {
+                    // In case there are NO exported object
+                    if (exportedDynamicObjectNames.Count == 0)
+                    {
+                        dynamicObjectsNotExported++;
+                    }
+                    else
+                    {
+                        foreach (var exportedDynamicObjectName in exportedDynamicObjectNames)
+                        {
+                            if (dynamicObject.MeshName == exportedDynamicObjectName)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            dynamicObjectsNotExported++;
+                        }
+                    }
+                }
+            }
+
+            // No scene exists
+            if (!SceneExistsOnDashboard && !UploadSceneGeometry)
+            {
+                GUI.Button(exportDynamicRect, EditorCore.BoxEmpty, "image_centered");
+                GUI.Label(new Rect(60, heightOffset + 122, 400, 30), dynamicObjectsNotExported + " new dynamic mesh(es) (no scene exists)", "normallabel");
+            }
+            else
+            {
+                // upload dynamics toggle
+                if (ExportAndUploadDynamicMeshesInScene)
+                {
+                    if (GUI.Button(exportDynamicRect, EditorCore.BoxCheckmark, "image_centered"))
+                    {
+                        ExportAndUploadDynamicMeshesInScene = false;
+                    }
+                }
+                else
+                {
+                    if (GUI.Button(exportDynamicRect, EditorCore.BoxEmpty, "image_centered"))
+                    {
+                        ExportAndUploadDynamicMeshesInScene = true;
+                    }
+                }
+
+                GUI.Label(new Rect(60, heightOffset + 122, 300, 30), dynamicObjectsNotExported + " new dynamic mesh(es)", "normallabel");
+            }
+
+
+            /// ////////////////////////////////////
+            /// SCENE THUMBNAIL PREVIEW
+            /// ///////////////////////////////////
+            var thumbnailRect = new Rect(40, heightOffset+170, 420, 180);
             Texture2D savedThumbnail = null;
             if (UploadThumbnail)
             {
-                GUI.Label(new Rect(150, heightOffset+312, 200, 20), "New Thumbnail from Scene View");
+                GUI.Label(new Rect(150, heightOffset + 312, 200, 20), "New Thumbnail from Scene View");
                 var sceneRT = EditorCore.GetSceneRenderTexture();
                 if (sceneRT != null)
                     GUI.Box(thumbnailRect, sceneRT, "image_centeredboxed");
                 else
                     GUI.Box(thumbnailRect, "Scene view not found", "image_centeredboxed");
             }
+            // look for thumbnail image file
             else if (EditorCore.GetSceneThumbnail(settings, ref savedThumbnail, false))
             {
-                //look for thumbnail image file
                 GUI.Label(new Rect(150, heightOffset + 280, 200, 20), "Thumbnail from previous scene version");
                 GUI.Box(thumbnailRect, savedThumbnail, "image_centeredboxed");
             }
+            // scene exists and has been uploaded, but no image to fall back to use
             else if (SceneExistsOnDashboard)
             {
-                //scene exists and has been uploaded, but no image to fall back to use
                 GUI.Box(thumbnailRect, "Fallback thumbnail\nnot available", "image_centeredboxed");
             }
+            // if a new scene version is uploaded, can it use the previous thumbnail?
             else
             {
-                //if a new scene version is uploaded, can it use the previous thumbnail?
                 GUI.Box(thumbnailRect, "Thumbnail not uploaded", "image_centeredboxed");
             }
         }
@@ -1344,41 +1649,64 @@ namespace Cognitive3D
                 case Page.Welcome:
                     break;
                 case Page.PlayerSetup:
-#if C3D_STEAMVR2
-                    appearDisabled = !AllSetupComplete;
-                    if (!AllSetupComplete)
+                    bool isSetupComplete = AllSetupComplete;
+
+                    // Track setup completion
+                    onclick += () =>
                     {
-                        if (appearDisabled)
-                        {
-                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
-                        }
+                        var status = isSetupComplete ? "PlayerGOComplete_PlayerSetupPage" : "PlayerGOIncomplete_PlayerSetupPage";
+                        SegmentAnalytics.TrackEvent(status, "SceneSetupPlayerSetupPage");
+                    };
+
+#if C3D_STEAMVR2
+                    bool needsConfirmation = false;
+                    if (!isSetupComplete)
+                    {
+                        // Automatically append input bindings for SteamVR
+                        appearDisabled = !Cognitive3D_Manager.autoInitializePlayerSetup;
+                        needsConfirmation = appearDisabled;
+                        onclick += () => AppendSteamVRBindings();
                     }
                     else
                     {
                         appearDisabled = !hasFoundSteamVRActionSet;
-                        if (!hasFoundSteamVRActionSet)
-                        {
-                            if (appearDisabled)
-                            {
-                                onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary SteamVR Input Action Set files?", "Yes", "No")) { currentPage++; } };
-                            }
-                        }
+                        needsConfirmation = appearDisabled;
                     }
 
-#else
-                    appearDisabled = !AllSetupComplete;
-                    if (!AllSetupComplete)
+                    if (needsConfirmation)
                     {
-                        if (appearDisabled)
+                        onclick += () =>
                         {
-                            onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No")) { currentPage++; } };
-                        }
+                            string message = !isSetupComplete
+                                ? "Are you sure you want to continue without configuring the player prefab?"
+                                : "Are you sure you want to continue without creating the necessary SteamVR Input Action Set files?";
+
+                            if (EditorUtility.DisplayDialog("Continue", message, "Yes", "No"))
+                            {
+                                currentPage++;
+                            }
+                        };
                     }
-#endif
+                #else
+                    appearDisabled = !isSetupComplete && !Cognitive3D_Manager.autoInitializePlayerSetup;
+                    if (appearDisabled)
+                    {
+                        onclick += () =>
+                        {
+                            if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without configuring the player prefab?", "Yes", "No"))
+                            {
+                                currentPage++;
+                            }
+                        };
+                    }
+                #endif
+
+                    // Always update light count
                     onclick += () => { numberOfLightsInScene = FindObjectsOfType<Light>().Length; };
                     break;
                 case Page.QuestProSetup:
 #if C3D_OCULUS
+                    text = "Apply";
                     onclick += () => ApplyOculusSettings();
 #endif
                     break;
@@ -1396,105 +1724,8 @@ namespace Cognitive3D
                     buttonAppear = false;
                     break;
                 case Page.SceneUpload:
-                    System.Action completedmanifestupload = delegate
-                    {
-                        if (UploadDynamicMeshes)
-                        {
-                            ExportUtility.UploadAllDynamicObjectMeshes(true);
-                        }
-                        currentPage = Page.SetupComplete;
-                    };
-
-                    //fifth upload manifest
-                    System.Action completedRefreshSceneVersion = delegate
-                    {
-                        if (UploadDynamicMeshes)
-                        {
-                            //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
-                            AggregationManifest manifest = new AggregationManifest();
-                            manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
-                            EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
-                        }
-                        else
-                        {
-                            completedmanifestupload.Invoke();
-                        }
-                    };
-
-                    //fourth upload dynamics
-                    System.Action<int> completeSceneUpload = delegate (int responseCode)
-                    {
-                        if (responseCode == 200 || responseCode == 201)
-                        {
-                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); //likely completed in previous step, but just in case
-                        }
-                        else
-                        {
-                            //ExportUtility displays an error popup, so don't need to do other UI here
-                            currentPage = Page.SceneUpload;
-                        }
-                    };
-
-                    //third upload scene
-                    System.Action completeScreenshot = delegate
-                    {
-                        Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
-                        if (current == null)
-                        {
-                            Debug.LogError("Trying to upload to a scene with no settings");
-                            return;
-                        }
-
-                        if (UploadSceneGeometry)
-                        {
-                            if (string.IsNullOrEmpty(current.SceneId))
-                            {
-                                //new scene
-                                if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
-                                {
-                                    sceneUploadProgress = 0;
-                                    sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                    currentPage = Page.SceneUploadProgress;
-                                    ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
-                                }
-                            }
-                            else
-                            {
-                                //new version
-                                if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel"))
-                                {
-                                    currentPage = Page.SceneUploadProgress;
-                                    sceneUploadProgress = 0;
-                                    sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                    ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            //check to upload the thumbnail (without the scene geo)
-                            if (UploadThumbnail)
-                            {
-                                EditorCore.UploadSceneThumbnail(current);
-                            }
-                            completeSceneUpload.Invoke(200);
-                        }
-                    };
-
-                    //second save screenshot
-                    System.Action completedRefreshSceneVersion1 = delegate
-                    {
-                        if (UploadThumbnail)
-                        {
-                            EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
-                        }
-                        else
-                        {
-                            //use the existing screenshot (assuming it exists)
-                            completeScreenshot.Invoke();
-                            completeScreenshot = null;
-                        }
-                    };
+                    // Look below at onclick()
+                    // These all happen after that
 
                     //only do this if uploading new scene files
                     //first refresh scene version
@@ -1506,7 +1737,7 @@ namespace Cognitive3D
                             {
                                 if (UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes())
                                 {
-                                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                                    UploadSceneAndDynamics(UploadPreviouslyExportedDynamicMeshes, ExportAndUploadDynamicMeshesInScene, UploadSceneGeometry, UploadThumbnail, true);
                                 }
                                 else
                                 {
@@ -1520,7 +1751,7 @@ namespace Cognitive3D
                         }
                         else
                         {
-                            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+                            UploadSceneAndDynamics(UploadPreviouslyExportedDynamicMeshes, ExportAndUploadDynamicMeshesInScene, UploadSceneGeometry, UploadThumbnail, true);
                         }
                     };
                     buttonDisabled = !(SceneExistsOnDashboard || (SceneHasExportFiles && UploadSceneGeometry));
@@ -1569,10 +1800,25 @@ namespace Cognitive3D
             }
         }
 
-        float sceneUploadProgress;
-        double sceneUploadStartTime;
+        internal static void ExportAllDynamicsInScene()
+        {
+            List<DynamicObject> dynsInSceneList = new List<DynamicObject>();        
+            
+            // This array HAS TO BE reinitialized here because
+            // this function can be from other places and
+            // we cannot guarantee that it has been initialized
+            dynamicObjectsInScene = FindObjectsOfType<DynamicObject>();
+            foreach (var dyn in dynamicObjectsInScene)
+            {
+                dynsInSceneList.Add(dyn);
+            }
+            ExportUtility.ExportDynamicObjects(dynsInSceneList);
+        }
+
+        static float sceneUploadProgress;
+        static double sceneUploadStartTime;
         //TODO styled UI element to display web request progress instead of built-in unity popup
-        void ReceiveSceneUploadProgress(float progress)
+        static void ReceiveSceneUploadProgress(float progress)
         {
             sceneUploadProgress = progress;
         }
@@ -1630,12 +1876,171 @@ namespace Cognitive3D
             }
         }
 
-        List<DynamicObject> GetDynamicObjectsInScene()
+        static List<DynamicObject> GetDynamicObjectsInScene()
         {
             return new List<DynamicObject>(GameObject.FindObjectsOfType<DynamicObject>());
         }
 
+        /// <summary>
+        /// Upload exported scene and optionally, dynamics
+        /// </summary>
+        /// <param name="uploadExportedDynamics">If true, upload dynamics from export directory</param>
+        /// <param name="exportAndUploadDynamicsFromScene">If true, exports dynamics from scene, and uploads them</param>
+        /// <param name="uploadSceneGeometry">If true, upload scene geometry</param>
+        /// <param name="uploadThumbnail">If true, upload scene thumbnail</param>
+        /// <param name="showPopups">If true, show popups (use false for automation)</param>
+        internal static void UploadSceneAndDynamics(bool uploadExportedDynamics, bool exportAndUploadDynamicsFromScene, bool uploadSceneGeometry, bool uploadThumbnail, bool showPopups = false)
+        {
+            System.Action completedmanifestupload = delegate
+            {
+                if (uploadExportedDynamics)
+                {
+                    ExportUtility.UploadAllDynamicObjectMeshes(showPopups);
+                }
+                else if (exportAndUploadDynamicsFromScene)
+                {
+                    List<string> dynamicMeshNames = new List<string>();
+                    foreach (var dyn in dynamicObjectsInScene)
+                    {
+                        dynamicMeshNames.Add(dyn.MeshName);
+                    }
+                    ExportUtility.UploadDynamicObjects(dynamicMeshNames, showPopups);
+                }
+                currentPage = Page.SetupComplete;
+                CompletedUpload = true;
+            };
+
+            // Fifth: upload manifest
+            System.Action completedRefreshSceneVersion = delegate
+            {
+                if (uploadExportedDynamics || exportAndUploadDynamicsFromScene)
+                {
+                    //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
+                    AggregationManifest manifest = new AggregationManifest();
+                    manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
+                    EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                }
+                else
+                {
+                    completedmanifestupload.Invoke();
+                }
+            };
+
+            // Fourth upload dynamics
+            System.Action<int> completeSceneUpload = delegate (int responseCode)
+            {
+                if (responseCode == 200 || responseCode == 201)
+                {
+                    if (exportAndUploadDynamicsFromScene)
+                    {
+                        ExportAllDynamicsInScene();
+                    }
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
+                }
+                else
+                {
+                    // ExportUtility displays an error popup, so don't need to do other UI here
+                    currentPage = Page.SceneUpload;
+                }
+                ProjectValidation.RegenerateItems();
+            };
+
+            //third upload scene
+            System.Action completeScreenshot = delegate
+            {
+                Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
+                if (current == null)
+                {
+                    Debug.LogError("Trying to upload to a scene with no settings");
+                    return;
+                }
+
+                if (uploadSceneGeometry)
+                {
+                    if (showPopups)
+                    {
+                        if (string.IsNullOrEmpty(current.SceneId))
+                        {
+                            // NEW SCENE
+                            if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
+                            {
+                                sceneUploadProgress = 0;
+                                sceneUploadStartTime = EditorApplication.timeSinceStartup;
+                                currentPage = Page.SceneUploadProgress;
+                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                            }
+                        }
+                        else
+                        {
+                            // NEW SCENE VERSION
+                            if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel"))
+                            {
+                                currentPage = Page.SceneUploadProgress;
+                                sceneUploadProgress = 0;
+                                sceneUploadStartTime = EditorApplication.timeSinceStartup;
+                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                            }
+                        }
+                    }
+                    else // UPLOAD WITHOUT POPUPS
+                    {
+                        ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                    }
+                }
+                else
+                {
+                    //check to upload the thumbnail (without the scene geo)
+                    if (uploadThumbnail)
+                    {
+                        EditorCore.UploadSceneThumbnail(current);
+                    }
+                    completeSceneUpload.Invoke(200);
+                }
+            };
+
+            //second save screenshot
+            System.Action completedRefreshSceneVersion1 = delegate
+            {
+                if (uploadThumbnail)
+                {
+                    EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
+                }
+                else
+                {
+                    //use the existing screenshot (assuming it exists)
+                    completeScreenshot.Invoke();
+                    completeScreenshot = null;
+                }
+            };
+
+            CompletedUpload = false;
+            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+        }
+
 #if C3D_STEAMVR2
+        internal static void AppendSteamVRBindings()
+        {
+            if (SteamVR_Input.actionFile == null)
+                            {
+                                bool initializeSuccess = SteamVR_Input.InitializeFile(false, false);
+
+                                if (initializeSuccess == false)
+                                {
+                                    //copy
+                                    SteamVR_CopyExampleInputFiles.CopyFiles(true);
+                                    System.Threading.Thread.Sleep(1000);
+                                    SteamVR_Input.InitializeFile();
+                                }
+                            }
+                            if (SteamVR_Input_EditorWindow.IsOpen())
+                            {
+                                SteamVR_Input_EditorWindow.GetOpenWindow().Close();
+                            }
+                            AppendSteamVRActionSet();
+                            SetDefaultBindings();
+                            Valve.VR.SteamVR_Input_Generator.BeginGeneration();
+        }
+
         internal static void AppendSteamVRActionSet()
         {
             SteamVR_Input_ActionFile actionfile;
@@ -1651,12 +2056,23 @@ namespace Cognitive3D
                     return;
                 }
 
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Grip", type = "boolean" });
-                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Trigger", type = "vector1" });
+                // Vive controller
                 actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Touchpad", type = "vector2" });
                 actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Touchpad_Press", type = "boolean" });
                 actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Touchpad_Touch", type = "boolean" });
+
+                // Oculus controller
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/A", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/B", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/X", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Y", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Joystick", type = "vector2" });
+
+                // Common
                 actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Menu", type = "boolean" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Grip", type = "vector1" });
+                actionfile.actions.Add(new SteamVR_Input_ActionFile_Action() { name = "/actions/C3D_Input/in/Trigger", type = "vector1" });
+
                 actionfile.action_sets.Add(cognitiveActionSet);
 
                 SaveActionFile(actionfile);
@@ -1692,90 +2108,148 @@ namespace Cognitive3D
 
         internal static void SetDefaultBindings()
         {
-            SteamVR_Input_BindingFile bindingfile;
-            if (LoadBindingFile(out bindingfile))
+            List<string> bindings = new List<string>() { "bindings_vive_controller", "bindings_oculus_touch" };
+            foreach (var binding in bindings)
             {
-                if (bindingfile.bindings.ContainsKey("/actions/c3d_input"))
+                if (LoadBindingFile(out var bindingfile, binding))
                 {
-                    bindingfile.bindings.Remove("/actions/c3d_input");
+                    if (bindingfile.bindings.ContainsKey("/actions/c3d_input"))
+                    {
+                        bindingfile.bindings.Remove("/actions/c3d_input");
+                    }
+
+                    SteamVR_Input_BindingFile_ActionList actionlist = new SteamVR_Input_BindingFile_ActionList();
+
+                    if (bindingfile.name.Contains("vive_controller"))
+                    {
+                        // Grip (vector1)
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/grip", "pull", "/actions/c3d_input/in/Grip"));
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/grip", "pull", "/actions/c3d_input/in/Grip"));
+
+                        // Trigger (vector1)
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/trigger", "pull", "/actions/c3d_input/in/Trigger"));
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/trigger", "pull", "/actions/c3d_input/in/Trigger"));
+
+                        // Menu (boolean)
+                        actionlist.sources.Add(createSource("button", "/user/hand/left/input/menu", "click", "/actions/c3d_input/in/Menu"));
+                        actionlist.sources.Add(createSource("button", "/user/hand/right/input/menu", "click", "/actions/c3d_input/in/Menu"));
+
+                        //left touchpad
+                        SteamVR_Input_BindingFile_Source bindingSource_left_pad = new SteamVR_Input_BindingFile_Source();
+                        bindingSource_left_pad.mode = "trackpad";
+                        bindingSource_left_pad.path = "/user/hand/left/input/trackpad";
+                        {
+                            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
+                            stringDictionary_press.Add("output", "/actions/c3d_input/in/touchpad_press");
+                            bindingSource_left_pad.inputs.Add("click", stringDictionary_press);
+
+                            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_touch = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
+                            stringDictionary_touch.Add("output", "/actions/c3d_input/in/touchpad_touch");
+                            bindingSource_left_pad.inputs.Add("touch", stringDictionary_touch);
+
+                            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_pos = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
+                            stringDictionary_pos.Add("output", "/actions/c3d_input/in/touchpad");
+                            bindingSource_left_pad.inputs.Add("position", stringDictionary_pos);
+                        }
+                        actionlist.sources.Add(bindingSource_left_pad);
+
+                        //right touchpad
+                        SteamVR_Input_BindingFile_Source bindingSource_right_pad = new SteamVR_Input_BindingFile_Source();
+                        bindingSource_right_pad.mode = "trackpad";
+                        bindingSource_right_pad.path = "/user/hand/right/input/trackpad";
+                        {
+                            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
+                            stringDictionary_press.Add("output", "/actions/c3d_input/in/touchpad_press");
+                            bindingSource_right_pad.inputs.Add("click", stringDictionary_press);
+
+                            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_touch = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
+                            stringDictionary_touch.Add("output", "/actions/c3d_input/in/touchpad_touch");
+                            bindingSource_right_pad.inputs.Add("touch", stringDictionary_touch);
+
+                            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_pos = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
+                            stringDictionary_pos.Add("output", "/actions/c3d_input/in/touchpad");
+                            bindingSource_right_pad.inputs.Add("position", stringDictionary_pos);
+                        }
+                        actionlist.sources.Add(bindingSource_right_pad);
+                    }
+                    else if (bindingfile.name.Contains("oculus_touch"))
+                    {
+                        // Primary Buttons
+                        actionlist.sources.Add(createSource("button", "/user/hand/left/input/x", "click", "/actions/c3d_input/in/X"));
+                        actionlist.sources.Add(createSource("button", "/user/hand/right/input/a", "click", "/actions/c3d_input/in/A"));
+
+                        // Secondary Buttons
+                        actionlist.sources.Add(createSource("button", "/user/hand/left/input/y", "click", "/actions/c3d_input/in/Y"));
+                        actionlist.sources.Add(createSource("button", "/user/hand/right/input/b", "click", "/actions/c3d_input/in/B"));
+
+                        // Grip (vector1)
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/grip", "pull", "/actions/c3d_input/in/Grip"));
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/grip", "pull", "/actions/c3d_input/in/Grip"));
+
+                        // Trigger (vector1)
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/trigger", "pull", "/actions/c3d_input/in/Trigger"));
+                        actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/trigger", "pull", "/actions/c3d_input/in/Trigger"));
+
+                        // Menu (boolean)
+                        actionlist.sources.Add(createSource("button", "/user/hand/left/input/menu", "click", "/actions/c3d_input/in/Menu"));
+                        actionlist.sources.Add(createSource("button", "/user/hand/right/input/menu", "click", "/actions/c3d_input/in/Menu"));
+
+                        // Joystick (vector2)
+                        actionlist.sources.Add(createJoystickSource("/user/hand/left/input/joystick", "/actions/c3d_input/in/Joystick"));
+                        actionlist.sources.Add(createJoystickSource("/user/hand/right/input/joystick", "/actions/c3d_input/in/Joystick"));
+                    }
+
+                    bindingfile.bindings.Add("/actions/c3d_input", actionlist);
+                    Util.logDevelopment($"SceneSetup.SetDefaultBindings has saved Cognitive3D input bindings for {binding}");
+                    SaveBindingFile(bindingfile, binding);
                 }
-
-                SteamVR_Input_BindingFile_ActionList actionlist = new SteamVR_Input_BindingFile_ActionList();
-
-                actionlist.sources.Add(createSource("button", "/user/hand/left/input/grip","click", "/actions/c3d_input/in/grip"));
-                actionlist.sources.Add(createSource("button", "/user/hand/right/input/grip", "click", "/actions/c3d_input/in/grip"));
-
-                actionlist.sources.Add(createSource("button", "/user/hand/left/input/menu","click", "/actions/c3d_input/in/menu"));
-                actionlist.sources.Add(createSource("button", "/user/hand/right/input/menu", "click", "/actions/c3d_input/in/menu"));
-
-                actionlist.sources.Add(createSource("trigger", "/user/hand/left/input/trigger", "pull", "/actions/c3d_input/in/trigger"));
-                actionlist.sources.Add(createSource("trigger", "/user/hand/right/input/trigger", "pull", "/actions/c3d_input/in/trigger"));
-
-                //left touchpad
-                SteamVR_Input_BindingFile_Source bindingSource_left_pad = new SteamVR_Input_BindingFile_Source();
-                bindingSource_left_pad.mode = "trackpad";
-                bindingSource_left_pad.path = "/user/hand/left/input/trackpad";
+                else
                 {
-                    SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_press.Add("output", "/actions/c3d_input/in/touchpad_press");
-                    bindingSource_left_pad.inputs.Add("click", stringDictionary_press);
-
-                    SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_touch = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_touch.Add("output", "/actions/c3d_input/in/touchpad_touch");
-                    bindingSource_left_pad.inputs.Add("touch", stringDictionary_touch);
-
-                    SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_pos = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_pos.Add("output", "/actions/c3d_input/in/touchpad");
-                    bindingSource_left_pad.inputs.Add("position", stringDictionary_pos);
+                    Debug.LogError($"SceneSetup.SetDefaultBindings has failed to load steamvr binding file for {binding}");
                 }
-                actionlist.sources.Add(bindingSource_left_pad);
-
-                //right touchpad
-                SteamVR_Input_BindingFile_Source bindingSource_right_pad = new SteamVR_Input_BindingFile_Source();
-                bindingSource_right_pad.mode = "trackpad";
-                bindingSource_right_pad.path = "/user/hand/right/input/trackpad";
-                {
-                    SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_press = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_press.Add("output", "/actions/c3d_input/in/touchpad_press");
-                    bindingSource_right_pad.inputs.Add("click", stringDictionary_press);
-
-                    SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_touch = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_touch.Add("output", "/actions/c3d_input/in/touchpad_touch");
-                    bindingSource_right_pad.inputs.Add("touch", stringDictionary_touch);
-
-                    SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary_pos = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-                    stringDictionary_pos.Add("output", "/actions/c3d_input/in/touchpad");
-                    bindingSource_right_pad.inputs.Add("position", stringDictionary_pos);
-                }
-                actionlist.sources.Add(bindingSource_right_pad);
-
-                bindingfile.bindings.Add("/actions/c3d_input", actionlist);
-                Util.logDevelopment("SceneSetup.SetDefaultBindings save Cognitive3D input bindings");
-                SaveBindingFile(bindingfile);
-            }
-            else
-            {
-                Debug.LogError("SceneSetup.SetDefaultBindings failed to load steamvr binding file");
             }
         }
 
         //mode = button, path = "/user/hand/left/input/grip", actiontype = "click", action = "/actions/c3d_input/in/grip"
-        static SteamVR_Input_BindingFile_Source createSource(string mode, string path, string actiontype, string action)
-        {
-            SteamVR_Input_BindingFile_Source bindingSource = new SteamVR_Input_BindingFile_Source();
-            bindingSource.mode = mode;
-            bindingSource.path = path;
 
-            SteamVR_Input_BindingFile_Source_Input_StringDictionary stringDictionary = new SteamVR_Input_BindingFile_Source_Input_StringDictionary();
-            stringDictionary.Add("output", action);
-            bindingSource.inputs.Add(actiontype, stringDictionary);
+        static SteamVR_Input_BindingFile_Source createSource(string mode, string path, string inputType, string action)
+        {
+            var bindingSource = new SteamVR_Input_BindingFile_Source
+            {
+                mode = mode,
+                path = path
+            };
+
+            var inputMap = new SteamVR_Input_BindingFile_Source_Input_StringDictionary
+            {
+                { "output", action }
+            };
+
+            bindingSource.inputs.Add(inputType, inputMap);
 
             return bindingSource;
         }
 
-        static bool LoadBindingFile(out SteamVR_Input_BindingFile bindingfile)
+        static SteamVR_Input_BindingFile_Source createJoystickSource(string path, string action)
         {
-            string bindingFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/bindings_vive_controller.json";
+            var source = new SteamVR_Input_BindingFile_Source
+            {
+                mode = "joystick",
+                path = path
+            };
+
+            var positionMap = new SteamVR_Input_BindingFile_Source_Input_StringDictionary
+            {
+                { "output", action }
+            };
+
+            source.inputs.Add("position", positionMap);
+            return source;
+        }
+
+        static bool LoadBindingFile(out SteamVR_Input_BindingFile bindingfile, string bindingFileName)
+        {
+            string bindingFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/" + bindingFileName + ".json";
             if (!File.Exists(bindingFilePath))
             {
                 Debug.LogErrorFormat("<b>[SteamVR]</b> binding file doesn't exist: {0}", bindingFilePath);
@@ -1788,9 +2262,9 @@ namespace Cognitive3D
             return true;
         }
 
-        static bool SaveBindingFile(SteamVR_Input_BindingFile bindingfile)
+        static bool SaveBindingFile(SteamVR_Input_BindingFile bindingfile, string bindingFileName)
         {
-            string bindingFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/bindings_vive_controller.json";
+            string bindingFilePath = SteamVR_Input.GetActionsFileFolder(true) + "/" + bindingFileName+ ".json";
 
             string newJSON = JsonConvert.SerializeObject(bindingfile, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 

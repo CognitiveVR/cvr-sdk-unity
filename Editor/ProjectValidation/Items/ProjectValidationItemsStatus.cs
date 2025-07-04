@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 using System.Collections.Generic;
@@ -12,19 +13,28 @@ namespace Cognitive3D
     {
         private const string LOG_TAG = "[COGNITIVE3D] ";
         static Dictionary<string, List<ProjectValidation.ItemLevel>> scenesNeedFix = new Dictionary<string, List<ProjectValidation.ItemLevel>>();
-        private static bool _throwExecption;
-        public static bool throwExecption {
+        private static bool _throwBuildException;
+        public static bool throwBuildException {
             get {
-                return _throwExecption;
+                return _throwBuildException;
             }
             internal set {
-                _throwExecption = value;
+                _throwBuildException = value;
             }
         }
 
         static ProjectValidationItemsStatus()
         {
             EditorSceneManager.sceneOpened += OnSceneOpened;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            EditorApplication.quitting += Cleanup;
+        }
+
+        private static void Cleanup()
+        {
+            EditorSceneManager.sceneOpened -= OnSceneOpened;
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.quitting -= Cleanup;
         }
 
         internal static string GetCurrentSceneName()
@@ -35,8 +45,16 @@ namespace Cognitive3D
         // Update project validation items when a new scene opens
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
-            ProjectValidation.Reset();
-            ProjectValidationItems.WaitBeforeProjectValidation();
+            ProjectValidation.RegenerateItems();
+        }
+        
+        // Update project validation items when play mode changes
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                ProjectValidation.RegenerateItems();
+            }
         }
 
         /// <summary>
@@ -59,7 +77,7 @@ namespace Cognitive3D
                     // Join the scene names with commas
                     string allSceneNames = string.Join(", ", sceneNames);
 
-                    Util.logError("Found unresolved issues in the following scenes: "  + allSceneNames);
+                    Util.logError("Found unresolved issues in the following scenes: " + allSceneNames);
 
                     List<string> sceneRequiredNames = new List<string>();
                     List<string> sceneRecommendedNames = new List<string>();
@@ -88,7 +106,7 @@ namespace Cognitive3D
                         // Opens up the first scene in the list that needs fix
                         EditorSceneManager.OpenScene(scenesNeedFix.Keys.First().ToString());
                         ProjectValidationSettingsProvider.OpenSettingsWindow();
-                        throwExecption = true;
+                        throwBuildException = true;
                     }
 
                     Clear();
@@ -103,7 +121,7 @@ namespace Cognitive3D
                 }
             }
 
-            throwExecption = false;
+            throwBuildException = false;
             Clear();
         }
 
@@ -112,18 +130,21 @@ namespace Cognitive3D
         /// </summary>
         internal static void VerifyAllBuildScenes()
         {
-            // Popup
-            bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to perform Cognitive3D project validation by verifying all build scenes? \n \nSelect \"Yes\" to verify scenes or \"No\" to continue with the build process. \n \n**Please note that if you choose to verify scenes, the build process will be stopped and will need to be restarted**", "Yes", "No");
-            if (result)
+            if (ProjectValidationLog.GetBuildProcessPopup())
             {
-                throwExecption = true;
-                StartSceneVerificationProcess();
-                return;
-            }
-            else
-            {
-                throwExecption = false;
-                return;
+                // Popup
+                bool result = EditorUtility.DisplayDialog(LOG_TAG + "Build Paused", "Would you like to verify that all build scenes meet the Cognitive3D configuration requirements? \n \n**Please note that if you choose to verify scenes, the build process will be stopped and will need to be restarted**", "Verify", "Skip");
+                if (result)
+                {
+                    throwBuildException = true;
+                    StartSceneVerificationProcess();
+                    return;
+                }
+                else
+                {
+                    throwBuildException = false;
+                    return;
+                }
             }
         }
 
@@ -161,31 +182,54 @@ namespace Cognitive3D
         /// </summary>
         internal static async void StartSceneVerificationProcess()
         {
-            if (TryGetScenesInBuildSettings(out var activeBuildScenes))
+            int uploadedScenes = 0;
+
+            // Checking if the scene has unsaved changes
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
-                for (int i = 0; i < activeBuildScenes.Count; i += 1)
+                if (TryGetScenesInBuildSettings(out var activeBuildScenes))
                 {
-                    float progress = (float)i / activeBuildScenes.Count;
-                    EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
-
-                    // Open scene
-                    EditorSceneManager.OpenScene(activeBuildScenes[i].path);
-
-                    // Time needed for updating project validation items in a scene
-                    await Task.Delay(1000);
-
-                    // Check if project has not fixed items
-                    if (ProjectValidation.hasNotFixedItems())
+                    // Checking if at least one build scene has been uploaded
+                    for (int i = 0; i < activeBuildScenes.Count; i++)
                     {
-                        var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
-                        AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                        if (Cognitive3D_Preferences.FindSceneByPath(activeBuildScenes[i].path) != null)
+                        {
+                            ++uploadedScenes;
+                        }
+                    }
+
+                    if (uploadedScenes <= 0)
+                    {
+                        // Warn the user to upload at least one build scene if none have been uploaded
+                        EditorUtility.DisplayDialog(LOG_TAG + "Project Validation Alert", "No build scenes have been uploaded. Please upload at least one scene.", "OK");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < activeBuildScenes.Count; i++)
+                        {
+                            float progress = (float)i / activeBuildScenes.Count;
+                            EditorUtility.DisplayProgressBar(LOG_TAG + "Project Validation", "Verifying scenes...", progress);
+
+                            // Open scene
+                            EditorSceneManager.OpenScene(activeBuildScenes[i].path);
+
+                            // Time needed for updating project validation items in a scene
+                            await Task.Delay(1000);
+
+                            // Check if project has not-fixed items for scenes that has been uploaded and has scene ID
+                            if (Cognitive3D_Preferences.FindSceneByPath(activeBuildScenes[i].path) != null && ProjectValidation.hasNotFixedItems())
+                            {
+                                var sceneLevelItems = ProjectValidation.GetLevelsOfItemsNotFixed().ToList();
+                                AddOrUpdateDictionary(scenesNeedFix, activeBuildScenes[i].path, sceneLevelItems);
+                            }
+                        }
+
+                        // Clear progress bar
+                        EditorUtility.ClearProgressBar();
+
+                        DisplayScenesWithValidationItems();
                     }
                 }
-
-                // Clear progress bar
-                EditorUtility.ClearProgressBar();
-
-                DisplayScenesWithValidationItems();
             }
         }
 

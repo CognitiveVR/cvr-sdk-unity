@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using UnityEngine.XR;
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
 using Unity.XR.CoreUtils;
-using UnityEngine.XR;
-
 #endif
+
+#if C3D_VIVEWAVE
+using Wave.Essence;
+#endif
+
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
 using UnityEditor.XR.LegacyInputHelpers;
 #endif
@@ -27,7 +30,18 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
-        private Transform trackingSpace;
+#if COGNITIVE3D_INCLUDE_COREUTILITIES
+        XROrigin xrOrigin;
+#endif
+
+#if C3D_VIVEWAVE
+        WaveRig waveRig;
+
+#endif
+
+#if C3D_DEFAULT && COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
+        CameraOffset cameraOffset = null;
+#endif
 
         protected override void OnSessionBegin()
         {
@@ -40,8 +54,6 @@ namespace Cognitive3D.Components
         {
             yield return new WaitForSeconds(StartDelay);
             YieldInstruction wait = new WaitForSeconds(Interval);
-
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
 
             //median
             for (int i = 0; i < SampleCount; i++)
@@ -66,7 +78,7 @@ namespace Cognitive3D.Components
         {
             height = 0;
 
-            if (trackingSpace == null)
+            if (BoundaryUtil.TryGetTrackingSpaceTransform(out var trackingSpaceTransform) == false)
             {
                 Debug.LogWarning("Tracking Space not found. Unable to record HMD height.");
                 return false;
@@ -74,11 +86,31 @@ namespace Cognitive3D.Components
 
 #if C3D_OCULUS
             // Calculates height according to camera offset relative to Floor level and rig customization
-            height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
+            height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
+#elif C3D_VIVEWAVE
+            if (waveRig == null)
+            {
+                waveRig = FindObjectOfType<WaveRig>();
+            }
+
+            if (waveRig != null)
+            {
+                if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Device)
+                {
+                    height = GameplayReferences.HMD.position.y + waveRig.CameraYOffset - trackingSpaceTransform.pos.y;
+                }
+                else if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor 
+                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unknown 
+                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.TrackingReference
+                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unbounded) // unknown and tracking gives incorrect values
+                {
+                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
+                }
+            }
+
 #elif C3D_DEFAULT
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
-            XROrigin xrOrigin = null;
             if (xrOrigin == null)
             {
                 xrOrigin = FindObjectOfType<XROrigin>(); 
@@ -90,18 +122,17 @@ namespace Cognitive3D.Components
                 {
                     // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
                     // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
-                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpaceTransform.pos.y;
                 }
                 else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
                 {
                     // Calculates height based on the camera offset relative to Floor level and rig settings
-                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
                 }
             } 
 #endif
 
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
-            CameraOffset cameraOffset = null;
             if (cameraOffset == null)
             {
                 cameraOffset = FindObjectOfType<CameraOffset>();
@@ -111,16 +142,16 @@ namespace Cognitive3D.Components
             {
                 if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
                 {
-                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpaceTransform.pos.y;
                 }
                 else if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
                 {
-                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
                 }
             }
 #endif
-#else
-            height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+#else // C3D_DEFAULT == FALSE
+            height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
 #endif
 
             return true;

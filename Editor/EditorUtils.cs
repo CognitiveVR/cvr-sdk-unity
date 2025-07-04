@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.XR;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Cognitive3D
 {
@@ -30,6 +30,8 @@ namespace Cognitive3D
         private static EditorUtils window;
         private static bool pause;
 
+        private static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
         public static void Init()
         {
             Cognitive3D_Manager.OnSessionBegin += CheckUserActivity;
@@ -50,23 +52,26 @@ namespace Cognitive3D
         // 15 minute wait time starts when user becomes inactive (headset is unmounted)
         private static async void CheckUserActivity()
         {
-            await Task.Delay((int)INTERVAL_IN_SECONDS * 1000);
-            
-            if (EditorApplication.isPlaying)
+            while (EditorApplication.isPlaying)
             {
-                if (!IsUserPresent())
-                {
-                    await WaitForUser();
+                await Task.Delay((int)INTERVAL_IN_SECONDS * 1000);
+                if (!EditorApplication.isPlaying) return;
 
-                    // Check if still in play before initializing the window
-                    if (EditorApplication.isPlaying && !IsUserPresent())
+                if (!IsUserPresent()) //player isn't present
+                {
+                    // Dispose of the previous token before creating a new one
+                    cancellationTokenSource?.Dispose();
+                    cancellationTokenSource = new CancellationTokenSource();
+                    var waitForUserTaskTimeout = await WaitForUser(cancellationTokenSource.Token); //wait until they're back, or time has elapsed
+
+                    if (!EditorApplication.isPlaying) { return; }
+
+                    if (waitForUserTaskTimeout)
                     {
                         OpenWindow(LOG_TAG + "Session Reminder");
-                        await WaitingForUserResponse();
+                        await WaitingForUserResponse(cancellationTokenSource.Token);
                     }
                 }
-
-                CheckUserActivity();
             }       
         }
 
@@ -111,13 +116,15 @@ namespace Cognitive3D
 
         // Waiting for user respond
         // If there is no response, the window will be closed after 5 mins and will exit editor's play mode
-        private static async Task WaitingForUserResponse()
+        private static async Task WaitingForUserResponse(CancellationToken token)
         {
             float time = 0;
 
             // Waiting for 5 minutes
             while(time < WAIT_TIME_USER_RESPONSE_SECONDS && !buttonPressed)
             {
+                if (!EditorApplication.isPlaying || token.IsCancellationRequested) return; // Stop if exiting play mode
+
                 await Task.Yield();
                 time += Time.deltaTime;
             }
@@ -134,17 +141,24 @@ namespace Cognitive3D
 
         // Waiting for user to become active
         // If user become active and put their headset back, wait time will stop
-        private static async Task WaitForUser()
+        private static async Task<bool> WaitForUser(CancellationToken token)
         {
             float time = 0;
 
             // Waiting for 15 minutes
             // If user is active again during wait time, breaks out of wait loop
-            while(time < MAX_USER_INACTIVITY_IN_SECONDS && !IsUserPresent())
+            while (time < MAX_USER_INACTIVITY_IN_SECONDS)
             {
+                if (!EditorApplication.isPlaying || token.IsCancellationRequested) return false; // Stop if exiting play mode
+
+                if (IsUserPresent())
+                {
+                    return false;
+                }
                 await Task.Yield();
                 time += Time.deltaTime;
             }
+            return true;
         }
 
         private static void OnButtonPressed()
@@ -153,34 +167,27 @@ namespace Cognitive3D
             CloseWindow();
         }
 
+        static Vector3 lastPosition;
+
         /// <summary>
         /// Checks whether the headset is currently worn by the user in Editor
         /// </summary>
-        /// TODO: Need support for other SDKs
         private static bool IsUserPresent()
         {
-#if C3D_OCULUS
-            bool isPresent;
-            InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-            currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isPresent);
-            return isPresent;
-#elif C3D_DEFAULT
-            Vector3 velocity;
-            InputDevice currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-
-            currentHmd.TryGetFeatureValue(CommonUsages.deviceVelocity, out velocity);
-
-            if (velocity != Vector3.zero)
-            {
-                return true;
-            }
-            else
+            if (GameplayReferences.HMD == null)
             {
                 return false;
             }
-#else
-            return true;
-#endif
+
+            if (Vector3.Distance(GameplayReferences.HMD.position, lastPosition) < 0.01) // Distance hasn't changed much since last check
+            {
+                return false;
+            }
+            else
+            {
+                lastPosition = GameplayReferences.HMD.position;
+                return true;
+            }
         }
 
         private void OnGUI()

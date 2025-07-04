@@ -1,5 +1,6 @@
 using UnityEngine.XR;
 using UnityEngine;
+using System.Collections;
 
 namespace Cognitive3D.Components
 {
@@ -12,6 +13,8 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Controller Tracking")]
     public class ControllerTracking : AnalyticsComponentBase
     {
+        public InputUtil.ControllerType FallbackControllerType;
+
         private readonly float ControllerTrackingInterval = 1;
 
         /// <summary>
@@ -79,6 +82,21 @@ namespace Cognitive3D.Components
         /// </summary>
         bool rightControllerLostTracking;
 
+        /// <summary>
+        /// Event triggered when controllers are registered as dynamics
+        /// </summary>
+        public static event System.Action OnControllerRegistered;
+
+        /// <summary>
+        /// Flags to track whether the left controller has been registered
+        /// </summary>
+        private bool leftControllerRegistered;
+
+        /// <summary>
+        /// Flags to track whether the right controller has been registered
+        /// </summary>
+        private bool rightControllerRegistered;
+
         protected override void OnSessionBegin()
         {
 #if XRPF
@@ -91,7 +109,81 @@ namespace Cognitive3D.Components
 
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnPreSessionEnd += Cleanup;
+            
+            // Registering controllers
+            Cognitive3D_Manager.OnLevelLoaded += OnLevelLoaded;
+            RegisterControllers();
+        }
+
+        void OnLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool didChangeSceneId)
+        {
+            if (didChangeSceneId && Cognitive3D_Manager.TrackingScene != null)
+            {
+                leftControllerRegistered = false;
+                rightControllerRegistered = false;
+
+                // Registering new controllers
+                RegisterControllers();
+            }
+        }
+
+        void DelayEnable(InputDevice device, XRNode node, bool isValid)
+        {
+            GameplayReferences.OnControllerValidityChange -= DelayEnable;
+            RegisterControllers();
+        }
+
+        void RegisterControllers()
+        {
+            if (!Cognitive3D_Manager.autoInitializePlayerSetup)
+            {
+                InputDevice device;
+                Transform ignore;
+                if (!GameplayReferences.GetControllerInfo(true, out device) || !GameplayReferences.GetControllerTransform(false,out ignore))
+                {
+                    GameplayReferences.OnControllerValidityChange += DelayEnable;
+                }
+                else if (!GameplayReferences.GetControllerInfo(false, out device) || !GameplayReferences.GetControllerTransform(true, out ignore))
+                {
+                    GameplayReferences.OnControllerValidityChange += DelayEnable;
+                }
+                else
+                {
+                    OnControllerRegistered?.Invoke();
+                }
+                return;
+            }
+
+            // Check if the left controller is valid and not yet registered
+                if (!leftControllerRegistered && InputUtil.TryGetInputDevice(XRNode.LeftHand, out InputDevice leftController))
+                {
+                    DynamicManager.RegisterController(XRNode.LeftHand, false, FallbackControllerType);
+                    leftControllerRegistered = true;
+                }
+
+            // Check if the right controller is valid and not yet registered
+            if (!rightControllerRegistered && InputUtil.TryGetInputDevice(XRNode.RightHand, out InputDevice rightController))
+            {
+                DynamicManager.RegisterController(XRNode.RightHand, true, FallbackControllerType);
+                rightControllerRegistered = true;
+            }
+
+            // Invoke event if both controllers are registered
+            if (leftControllerRegistered && rightControllerRegistered)
+            {
+                OnControllerRegistered?.Invoke();
+            }
+
+            // If hand tracking is enabled, update the input state based on the current tracked device
+            // Otherwise, set the controllers' enabled state to true by specifying the input type as Controller
+            if (gameObject.GetComponent<HandTracking>())
+            {
+                DynamicManager.UpdateDynamicInputEnabledState(InputUtil.GetCurrentTrackedDevice());
+            }
+            else
+            {
+                DynamicManager.UpdateDynamicInputEnabledState(InputUtil.InputType.Controller);
+            }
         }
         
         /// <summary>
@@ -130,6 +222,12 @@ namespace Cognitive3D.Components
         /// <param name="xrNodeState">The state of the device</param>
         private void OnTrackingAcquired(XRNodeState xrNodeState)
         {
+            // When a device becomes tracked, check if we need to register controllers
+            if (xrNodeState.nodeType == XRNode.LeftHand || xrNodeState.nodeType == XRNode.RightHand)
+            {
+                RegisterControllers();
+            }
+
             if (xrNodeState.nodeType == XRNode.LeftHand && leftControllerLostTracking)
             {
                 new CustomEvent("c3d.Left Controller regained tracking")
@@ -154,20 +252,18 @@ namespace Cognitive3D.Components
             {
                 currentTime += deltaTime;
                 UpdateCooldownClock(deltaTime);
-                Transform rightControllerTransform;
-                Transform leftControllerTransform;
-                bool wasRightControllerFound = GameplayReferences.GetControllerTransform(false, out leftControllerTransform);
-                bool wasLeftControllerFound = GameplayReferences.GetControllerTransform(true, out rightControllerTransform);
+                bool wasLeftControllerFound = InputUtil.TryGetControllerPosition(XRNode.LeftHand, out var leftHandPosition);
+                bool wasRightControllerFound = InputUtil.TryGetControllerPosition(XRNode.RightHand, out var rightHandPosition);
                 
                 if (wasLeftControllerFound)
                 {
-                    leftControllerToHMD = leftControllerTransform.position - GameplayReferences.HMD.position;
+                    leftControllerToHMD = leftHandPosition - GameplayReferences.HMD.position;
                     leftAngle = Vector3.Angle(leftControllerToHMD, GameplayReferences.HMD.forward);
                 }
 
                 if (wasRightControllerFound)
                 {
-                    rightControllerToHMD = rightControllerTransform.position - GameplayReferences.HMD.position;
+                    rightControllerToHMD = rightHandPosition - GameplayReferences.HMD.position;
                     rightAngle = Vector3.Angle(rightControllerToHMD, GameplayReferences.HMD.forward);
                 }
 
@@ -203,17 +299,34 @@ namespace Cognitive3D.Components
             if (leftCooldownTimer >= LEFT_TRACKING_COOLDOWN_TIME_IN_SECONDS) { inLeftCooldown = false; }
         }
 
-        private void Cleanup()
-        {
-            InputTracking.trackingLost -= OnTrackingLost;
-            InputTracking.trackingAcquired -= OnTrackingAcquired;
-            Cognitive3D_Manager.OnPreSessionEnd -= Cleanup;
-        }
-
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
+#if XRPF
+             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+            {
+                InputTracking.trackingLost -= OnTrackingLost;
+                InputTracking.trackingAcquired -= OnTrackingAcquired;
+            }
+
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
+        }
+
+        private void OnDestroy()
+        {
+#if XRPF
+             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
+#endif
+            {
+                InputTracking.trackingLost -= OnTrackingLost;
+                InputTracking.trackingAcquired -= OnTrackingAcquired;
+            }
+
+            Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+            Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
+            Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
         }
 
         public override string GetDescription()

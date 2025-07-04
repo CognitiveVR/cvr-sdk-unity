@@ -72,26 +72,17 @@ namespace Cognitive3D.Components
         {
             float framesPerSecond = intervalFrameCount / currentTime;
 
-            int lowerCount5Percent = Mathf.CeilToInt(deltaTimes.Count * 0.05f);
             int lowerCount1Percent = Mathf.CeilToInt(deltaTimes.Count * 0.01f);
 
             deltaTimes.Sort();
             deltaTimes.Reverse();
-
-            float lowerTotal5Percent = 0;
-            for (int i = 0; i < lowerCount5Percent; i++)
-            {
-                lowerTotal5Percent += deltaTimes[i];
-            }
             float lowerTotal1Percent = 0;
             for (int i = 0; i < lowerCount1Percent; i++)
             {
                 lowerTotal1Percent += deltaTimes[i];
             }
 
-            float min5Percent = lowerTotal5Percent / (float)lowerCount5Percent;
             float min1Percent = lowerTotal1Percent / (float)lowerCount1Percent;
-            float finalLow5Percent = 1.0f / min5Percent;
             float finalLow1Percent = 1.0f / min1Percent;
 
             float fpsMultiplier = 1;
@@ -114,7 +105,6 @@ namespace Cognitive3D.Components
             }
 #endif
             SensorRecorder.RecordDataPoint("c3d.fps.avg", framesPerSecond * fpsMultiplier);
-            SensorRecorder.RecordDataPoint("c3d.fps.5pl", finalLow5Percent * fpsMultiplier);
             SensorRecorder.RecordDataPoint("c3d.fps.1pl", finalLow1Percent * fpsMultiplier);
             intervalFrameCount = 0;
             currentTime = 0;
@@ -123,7 +113,7 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-            return "Record Frames per Second (FPS) as a sensor, including average, 1% lows and 5% lows";
+            return "Record Frames per Second (FPS) as a sensor, including average, 1% lows";
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()

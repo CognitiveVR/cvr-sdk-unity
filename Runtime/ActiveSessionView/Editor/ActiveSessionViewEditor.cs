@@ -181,6 +181,27 @@ namespace Cognitive3D.ActiveSession
             sc.LineWidth = EditorGUILayout.Slider("Sensor Line Width", sc.LineWidth, 0.001f, 0.03f);
             sc.MaxSensorTimeSpan = EditorGUILayout.Slider("Sensor Timespan", sc.MaxSensorTimeSpan, 10, 120);
 
+            EditorGUILayout.LabelField("Allowed Sensor Names", EditorStyles.boldLabel);
+
+            for (int i = 0; i < sc.allowedSensorNames.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                sc.allowedSensorNames[i] = EditorGUILayout.TextField($"Sensor {i}", sc.allowedSensorNames[i]);
+                
+                if (GUILayout.Button("Remove", GUILayout.Width(60)))
+                {
+                    sc.allowedSensorNames.RemoveAt(i);
+                    i--; // Adjust index after removal
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            // Add button
+            if (GUILayout.Button("Add Sensor"))
+            {
+                sc.allowedSensorNames.Add("");
+            }
+
 
             //internal
             foldout = EditorGUILayout.Foldout(foldout, "Internal");

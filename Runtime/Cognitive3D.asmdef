@@ -17,11 +17,17 @@
         "Unity.XR.Management",
         "Unity.XR.PICO",
         "Unity.XR.Oculus",
+        "Normal.Realtime.Shared",
         "Unity.XR.CoreUtils",
         "UnityEngine.XR.LegacyInputHelpers",
         "Unity.XR.PicoXR",
         "PhotonUnityNetworking",
-        "PhotonRealtime"
+        "PhotonRealtime",
+        "meta.xr.mrutilitykit",
+        "Unity.Netcode.Runtime",
+        "Unity.XR.Hands",
+        "VIVE.OpenXR",
+        "Unity.XR.OpenXR"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -45,6 +51,46 @@
             "name": "com.unity.xr.legacyinputhelpers",
             "expression": "",
             "define": "COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS"
+        },
+        {
+            "name": "com.meta.xr.sdk.core",
+            "expression": "65.0.0",
+            "define": "COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_META_XR_UTILITY"
+        },
+        {
+            "name": "com.unity.netcode.gameobjects",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_UNITY_NETCODE"
+        },
+        {
+            "name": "com.normalvr.normcore",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_NORMCORE"
+        },
+        {
+            "name": "com.unity.xr.hands",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_XR_HANDS"
+        },
+        {
+            "name": "com.meta.xr.sdk.platform",
+            "expression": "",
+            "define": "COGNITIVE3D_META_PLATFORM"
+        },
+        {
+            "name": "com.unity.xr.oculus",
+            "expression": "",
+            "define": "COGNITIVE3D_META_OCULUS_XR"
+        },
+        {
+            "name": "com.htc.upm.vive.openxr",
+            "expression": "2.5.0",
+            "define": "COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER"
         }
     ],
     "noEngineReferences": false

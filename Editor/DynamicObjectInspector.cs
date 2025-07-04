@@ -241,8 +241,11 @@ namespace Cognitive3D
                 if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                 {
                     List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
-                    ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                    UploadCustomIdForAggregation();
+                    bool uploadConfirmed = ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    if (uploadConfirmed)
+                    {
+                        UploadCustomIdForAggregation();
+                    }
                 }
                 EditorGUI.EndDisabledGroup();
 
@@ -259,11 +262,12 @@ namespace Cognitive3D
                     GUILayout.Label("Controller Settings", EditorStyles.boldLabel);
                     EditorGUI.indentLevel++;
                     var dyn = targets[0] as DynamicObject;
-                    dyn.IsController = EditorGUILayout.Toggle(new GUIContent("Is Controller","Visualize on SceneExplorer with a common mesh.\nInclude metadata to display button inputs."),dyn.IsController);
-                    EditorGUI.BeginDisabledGroup(!dyn.IsController);
+                    dyn.inputType = (InputUtil.InputType)EditorGUILayout.EnumPopup(new GUIContent("Input Type","Used if this controller cannot be identified at runtime"),dyn.inputType);
+                    dyn.IsController = dyn.inputType == InputUtil.InputType.Controller || dyn.inputType == InputUtil.InputType.Hand;
+                    EditorGUI.BeginDisabledGroup(dyn.inputType == InputUtil.InputType.None);
                     dyn.IsRight = EditorGUILayout.Toggle("Is Right Hand",dyn.IsRight);
                     dyn.IdentifyControllerAtRuntime = EditorGUILayout.Toggle(new GUIContent("Identify Controller at Runtime","Use Unity's API to try to identify the InputDevice name"), dyn.IdentifyControllerAtRuntime);
-                    dyn.FallbackControllerType = (DynamicObject.ControllerType)EditorGUILayout.EnumPopup(new GUIContent("Fallback Controller Type","Used if this controller cannot be identified at runtime"),dyn.FallbackControllerType);
+                    dyn.FallbackControllerType = (InputUtil.ControllerType)EditorGUILayout.EnumPopup(new GUIContent("Fallback Controller Type","Used if this controller cannot be identified at runtime"),dyn.FallbackControllerType);
                     EditorGUI.EndDisabledGroup();
                     EditorGUI.indentLevel--;
                 }
@@ -323,7 +327,7 @@ namespace Cognitive3D
                 EditorCore.RefreshSceneVersion(delegate ()
                 {
                     AggregationManifest manifest = new AggregationManifest();
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId,
+                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, dyn.IsController,
                         new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                         new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                         new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
@@ -338,7 +342,7 @@ namespace Cognitive3D
                     AggregationManifest manifest = new AggregationManifest();
                     for (int i = 0; i < dyn.IdPool.Ids.Length; i++)
                     {
-                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i],
+                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], dyn.IsController,
                             new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
                             new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
                             new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
@@ -358,6 +362,10 @@ namespace Cognitive3D
 
             foreach(var pool in pools)
             {
+                if (pool.Ids == null || pool.Ids.Length == 0)
+                {
+                    continue;
+                }
                 foreach(var id in pool.Ids)
                 {
                     usedids.Add(id);

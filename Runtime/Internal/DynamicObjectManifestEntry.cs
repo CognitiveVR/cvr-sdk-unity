@@ -20,6 +20,7 @@ namespace Cognitive3D
         public bool isVideo;
         public string videoURL;
 
+        public string inputType;
         public bool isController;
         public string controllerType;
 

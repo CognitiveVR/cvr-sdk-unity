@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
+using System.Collections;
 
 
 //handles network requests at runtime
@@ -17,6 +18,14 @@ namespace Cognitive3D
     [AddComponentMenu("")]
     internal class NetworkManager : MonoBehaviour
     {
+        internal delegate void onNetworkResponse(int responseCode, string url, string responseBody);
+        internal static event onNetworkResponse OnNetworkResponse;
+        internal static void InvokeNetworkResponse(int responseCode, string url, string responseBody)
+        {
+            if (OnNetworkResponse != null)
+                OnNetworkResponse.Invoke(responseCode, url, responseBody);
+        }
+
         //used by posting session data - get all details of the web response
         public delegate void FullResponse(string url, string uploadcontent, int responsecode, string error, string downloadcontent);
         //used by getting exitpoll question set - only need to know the c
@@ -28,19 +37,17 @@ namespace Cognitive3D
         static HashSet<UnityWebRequest> activeRequests = new HashSet<UnityWebRequest>();
 
         internal ICache runtimeCache;
-        internal ILocalExitpoll exitpollCache;
         int lastDataResponse = 0;
 
         const float cacheUploadInterval = 2;
         const float minRetryDelay = 60;
         const float maxRetryDelay = 240;
 
-        internal void Initialize(ICache runtimeCache, ILocalExitpoll exitpollCache)
+        internal void Initialize(ICache runtimeCache)
         {
             DontDestroyOnLoad(gameObject);
             instance = this;
             this.runtimeCache = runtimeCache;
-            this.exitpollCache = exitpollCache;
         }
 
         System.Collections.IEnumerator WaitForExitpollResponse(UnityWebRequest www, string hookname, Response callback, float timeout)
@@ -171,6 +178,9 @@ namespace Cognitive3D
             // Retrieving the most recent response code to initiate the cooldown procedure
             lastResponseCode = responsecode;
 
+            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
+                InvokeNetworkResponse(responsecode, url, text);
+
             if (responsecode == 200)
             {
                 if (runtimeCache == null) { return; }
@@ -187,7 +197,7 @@ namespace Cognitive3D
                     switch (responsecode)
                     {
                         case 400: Util.logError("Network Post Data response code is 400. Bad Request"); break;
-                        case 401: Util.logError("Network Post Data response code is 401. Is APIKEY set?"); break;
+                        case 401: Util.logError("Network Post Data response code is 401. Is the Application Key set?"); break;
                         case 404: Util.logError("There is no scene associated with this SceneID on the dashboard. Please upload the scene using the Scene Setup Window."); break;
                         case -1: Util.logError("Network Post Data could not parse response code. Check upload URL"); break;
                         default: Util.logError("Network Post Data response code is " + responsecode); break;
@@ -260,7 +270,7 @@ namespace Cognitive3D
         /// </summary>
         /// <param name="completedCallback"></param>
         /// <param name="failedCallback"></param>
-        public static void UploadAllLocalData(System.Action completedCallback, System.Action failedCallback)
+        internal static void UploadAllLocalData(System.Action completedCallback, System.Action failedCallback)
         {
             if (!isuploadingfromcache)
             {
@@ -354,7 +364,6 @@ namespace Cognitive3D
         public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
         {
             string url = CognitiveStatics.PostExitpollResponses(questionSetName, questionSetVersion);
-
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
             var request = UnityWebRequest.Put(url, bytes);
             request.method = "POST";
@@ -390,7 +399,7 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode);
+                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode + " \n"+ contents);
             lastDataResponse = (int)www.responseCode;
             if (callback != null)
             {
@@ -459,10 +468,28 @@ namespace Cognitive3D
                 currentDelay = minRetryDelay;
                 lastRequestFailed = false;
             }
-
-            if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("POST REQUEST  "+url + " " + stringcontent);
         }
+
+        internal delegate void GetRequestSuccessCallback(string content);
+        internal void Get(string url, GetRequestSuccessCallback successCallback)
+        {
+            StartCoroutine(SendGetRequest(url, successCallback));
+        }
+
+        IEnumerator SendGetRequest(string url,GetRequestSuccessCallback successCallback)
+        {
+            var req = UnityWebRequest.Get(url);
+            yield return req.SendWebRequest();
+            if (req.responseCode == 200)
+            {
+                var data = req.downloadHandler.text;
+                successCallback(data);
+            }
+            else
+            {
+                Util.logError($"Error in GET request to get subscription. Error type: {req.responseCode.ToString()}");
+            }
+         }
 
         // Writing to cache
         private void WriteToCache(string url, string content)
@@ -482,6 +509,95 @@ namespace Cognitive3D
                 return retryDelay * 2;
             }
             return minRetryDelay;
+        }
+
+        public static void GetRemoteControls(string participantId, Response callback, float timeout)
+        {
+            string url = CognitiveStatics.GetRemoteControlsURL(participantId);
+            var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("X-HTTP-Method-Override", "GET");
+            request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+            request.SendWebRequest();
+
+            instance.StartCoroutine(instance.WaitForRemoteControlsResponse(request, callback, timeout));
+        }
+
+        System.Collections.IEnumerator WaitForRemoteControlsResponse(UnityWebRequest www, Response callback, float timeout)
+        {
+            float time = 0;
+            while (time < timeout)
+            {
+                yield return null;
+                if (www.isDone) break;
+                time += Time.deltaTime;
+            }
+
+            var headers = www.GetResponseHeaders();
+            int responsecode = (int)www.responseCode;
+            lastDataResponse = responsecode;
+            //check cvr header to make sure not blocked by capture portal
+
+#if UNITY_WEBGL
+            //webgl cors issue doesn't seem to accept this required header
+            if (!headers.ContainsKey("cvr-request-time"))
+            {
+                headers.Add("cvr-request-time", string.Empty);
+            }
+#endif
+
+            if (!www.isDone)
+                Util.logWarning("Network::WaitForRemoteControlsResponse timeout");
+            if (responsecode != 200)
+                Util.logWarning("Network::WaitForRemoteControlsResponse responsecode is " + responsecode);
+
+            if (headers != null)
+            {
+                if (!headers.ContainsKey("cvr-request-time"))
+                    Util.logWarning("Network::WaitForRemoteControlsResponse does not contain cvr-request-time header");
+            }
+
+            if (!www.isDone || responsecode != 200 || (headers != null && !headers.ContainsKey("cvr-request-time")))
+            {
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
+                {
+                    string text;
+                    if (Cognitive3D_Manager.remoteControlsHandler.GetRemoteControls(out text))
+                    {
+                        if (callback != null)
+                        {
+                            callback.Invoke(responsecode, "", text);
+                        }
+                    }
+                    else
+                    {
+                        if (callback != null)
+                        {
+                            callback.Invoke(responsecode, "", "");
+                        }
+                    }
+                }
+                else
+                {
+                    if (callback != null)
+                    {
+                        callback.Invoke(responsecode, "", "");
+                    }
+                }
+            }
+            else
+            {
+                if (callback != null)
+                {
+                    callback.Invoke(responsecode, www.error, www.downloadHandler.text);
+                }
+                if (Cognitive3D_Preferences.Instance.LocalStorage)
+                {
+                    Cognitive3D_Manager.remoteControlsHandler.WriteRemoteControls(www.downloadHandler.text);
+                }
+            }
+            www.Dispose();
+            activeRequests.Remove(www);
         }
 
         //skip network cleanup if immediately/manually destroyed

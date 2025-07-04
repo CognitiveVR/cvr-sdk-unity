@@ -306,8 +306,8 @@ namespace Cognitive3D
         {
             //Debug.Log("refresh scene version");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -331,11 +331,11 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
-        private static void GetSceneVersionResponse(int responsecode, string error, string text)
+        internal static void GetSceneVersionResponse(int responsecode, string error, string text)
         {
             if (responsecode != 200)
             {
@@ -369,6 +369,118 @@ namespace Cognitive3D
         }
 
 #region GUI
+        internal class Styles
+        {
+            private const float SmallIconSize = 16.0f;
+            private const float MediumButtonWidth = 64.0f;
+            private const float LargeButtonWidth = 90.0f;
+            private const float IconButtonWidth = 30.0f;
+            internal const float GroupSelectionWidth = 244.0f;
+            internal const float LabelWidth = 96f;
+            internal const float TitleLabelWidth = 196f;
+            private const float IconSize = 16f;
+
+            internal readonly GUIStyle ListLabel = new GUIStyle("TV Selection")
+            {
+                border = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(5, 5, 5, 3),
+                margin = new RectOffset(4, 4, 4, 5)
+            };
+
+            internal readonly GUIStyle IssuesTitleBoldLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
+                fontStyle = FontStyle.Bold,
+                padding = new RectOffset(10, 2, 0, 0)
+            };
+
+            internal readonly GUIStyle IssuesTitleLabel = new GUIStyle(EditorStyles.label)
+            {
+                fontSize = 14,
+                wordWrap = false,
+                stretchWidth = false,
+                padding = new RectOffset(10, 10, 0, 0)
+            };
+
+            internal readonly GUIStyle InlinedIconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(0, 0, 0, 0),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle IconStyle = new GUIStyle(EditorStyles.label)
+            {
+                margin = new RectOffset(5, 5, 4, 5),
+                padding = new RectOffset(0, 0, 0, 0),
+                fixedWidth = SmallIconSize,
+                fixedHeight = SmallIconSize
+            };
+
+            internal readonly GUIStyle MediumButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = MediumButtonWidth,
+            };
+
+            internal readonly GUIStyle LargeButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 2, 2),
+                stretchWidth = false,
+                fixedWidth = LargeButtonWidth,
+            };
+
+            internal readonly GUIStyle IconButton = new GUIStyle(EditorStyles.miniButton)
+            {
+                margin = new RectOffset(0, 10, 0, 0),
+                fixedWidth = IconButtonWidth,
+                fixedHeight = 25
+            };
+
+            internal readonly GUIStyle InfoButton = new GUIStyle
+            {
+                padding = new RectOffset(0, 0, 5, 0)
+            };
+
+            internal readonly GUIStyle SubtitleHelpText = new GUIStyle(EditorStyles.miniLabel)
+            {
+                margin = new RectOffset(10, 0, 0, 0),
+                wordWrap = true
+            };
+
+            internal readonly GUIStyle List = new GUIStyle(EditorStyles.helpBox)
+            {
+                margin = new RectOffset(10, 10, 10, 10),
+                padding = new RectOffset(5, 5, 5, 5),
+            };
+
+            internal readonly GUIStyle foldoutStyle = new GUIStyle(EditorStyles.foldout)
+            {
+                fontStyle = FontStyle.Bold
+            };
+
+            internal readonly GUIStyle ItemDescription = new GUIStyle(GUI.skin.label)
+            {
+                wordWrap = true,
+            };
+        }
+
+        private static Styles _styles;
+        // Delays instantiation of the Styles object until it is first accessed
+        public static Styles styles
+        {
+            get
+            {
+                if (_styles == null)
+                    _styles = new Styles();
+                return _styles;
+            }
+        }
+
         public static Color GreenButton = new Color(0.4f, 1f, 0.4f);
         public static Color BlueishGrey = new Color32(0xE8, 0xEB, 0xFF, 0xFF);
         public static Color CognitiveBlue = new Color32(98, 180, 243, 255);
@@ -413,6 +525,39 @@ namespace Cognitive3D
         #endregion
 
         #region Icons and Textures
+        private static Texture2D _logoDone;
+        public static Texture2D LogoDone
+        {
+            get
+            {
+                if (_logoDone == null)
+                    _logoDone = Resources.Load<Texture2D>("Icons/logo-done");
+                return _logoDone;
+            }
+        }
+
+        private static Texture2D _logoWarning;
+        public static Texture2D LogoWarning
+        {
+            get
+            {
+                if (_logoWarning == null)
+                    _logoWarning = Resources.Load<Texture2D>("Icons/logo-warning");
+                return _logoWarning;
+            }
+        }
+
+        private static Texture2D _logoError;
+        public static Texture2D LogoError
+        {
+            get
+            {
+                if (_logoError == null)
+                    _logoError = Resources.Load<Texture2D>("Icons/logo-error");
+                return _logoError;
+            }
+        }
+
         private static Texture2D _logo;
         public static Texture2D LogoTexture
         {
@@ -668,15 +813,27 @@ namespace Cognitive3D
         }
 
         private static Texture2D _settingsIconWhite;
-        public static Texture2D SettingsIconWhite
+        private static Texture2D _settingsIconBlack;
+        public static Texture2D SettingsIcon2
         {
             get
             {
-                if (_settingsIconWhite == null)
+                if (EditorGUIUtility.isProSkin)
                 {
-                    _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    if (_settingsIconWhite == null)
+                    {
+                        _settingsIconWhite = Resources.Load<Texture2D>("Icons/gear white");
+                    }
+                    return _settingsIconWhite;
                 }
-                return _settingsIconWhite;
+                else
+                {
+                    if (_settingsIconBlack == null)
+                    {
+                        _settingsIconBlack = Resources.Load<Texture2D>("Icons/gear black");
+                    }
+                    return _settingsIconBlack;
+                }
             }
         }
 
@@ -759,6 +916,57 @@ namespace Cognitive3D
 
 #endregion
 
+#region ExitPoll
+        /// <summary>
+        /// This method retrieves the ExitPoll hooks. It checks if the developer key is valid.
+        /// If successful, it sends a request to fetch the ExitPoll hooks and processes the response.
+        /// </summary>
+        public static void RefreshExitPollHooks()
+        {
+            Debug.Log("Refresh exitpoll hooks");
+            //gets the scene version from api and sets it to the current scene
+
+            if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
+
+            string url = CognitiveStatics.GetExitpollHooks();
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            EditorNetwork.Get(url, GetExitPollHooksResponse, headers, true);//AUTH
+        }
+
+        /// <summary>
+        /// Handles the response from the GetExitPollHooks API request.
+        /// </summary>
+        private static void GetExitPollHooksResponse(int responsecode, string error, string text)
+        {
+            if (responsecode != 200)
+            {
+                RefreshSceneVersionComplete = null;
+                //internal server error
+                Debug.LogError("GetExitPollHooksResponse Error [CODE] " + responsecode + " [ERROR] " + error);
+                return;
+            }
+
+            ExitPollHookData[] hooks = Util.GetJsonArray<ExitPollHookData>(text);
+            Util.logDevelopment("Response contains " + hooks.Length + " exitpoll hooks");
+            if (hooks.Length > 0)
+            {
+                ExitPollHooks = hooks;
+            }
+        }
+
+        [System.Serializable]
+        internal class ExitPollHookData
+        {
+            public bool active;
+            public string description;
+            public string name;
+            public string questionSetId;
+        }
+
+        internal static ExitPollHookData[] ExitPollHooks = new ExitPollHookData[] { };
+#endregion
+
 #region Media
 
         /// <summary>
@@ -768,8 +976,8 @@ namespace Cognitive3D
         {
             Debug.Log("refresh media sources");
             //gets the scene version from api and sets it to the current scene
-            string currentSceneName = EditorSceneManager.GetActiveScene().name;
-            var currentSettings = Cognitive3D_Preferences.FindScene(currentSceneName);
+            string currentScenePath = EditorSceneManager.GetActiveScene().path;
+            var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
             if (currentSettings != null)
             {
                 if (!IsDeveloperKeyValid) { Debug.Log("Developer key invalid"); return; }
@@ -786,7 +994,7 @@ namespace Cognitive3D
             }
             else
             {
-                Debug.Log("No scene versions for scene: " + currentSceneName);
+                Debug.Log("No scene versions for scene: " + currentScenePath);
             }
         }
 
@@ -1850,6 +2058,48 @@ namespace Cognitive3D
             }
         }
 
+        internal static void GetUserData(string developerKey, EditorNetwork.Response callback)
+        {
+            if (!string.IsNullOrEmpty(developerKey))
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + developerKey);
+                EditorNetwork.Get("https://" + EditorCore.DisplayValue(DisplayKey.GatewayURL) + "/v0/user", callback, headers, true);
+            }
+            else
+            {
+                callback.Invoke(0, "Invalid Developer Key", "");
+            }
+        }
+
+        [System.Serializable]
+        internal class UserData
+        {
+            public string email;
+            public int userId;
+            public string firstName;
+            public string lastName;
+            public int projectId;
+            public string projectName;
+            public int organizationId;
+            public string organizationName;
+        }
+
+        [System.Serializable]
+        internal class OrganizationData
+        {
+            public string organizationName;
+            public SubscriptionData[] subscriptions;
+        }
+
+        [System.Serializable]
+        internal class SubscriptionData
+        {
+            public long beginning;
+            public long expiration;
+            public string planType;
+            public bool isFreeTrial;
+        }
         #endregion
 
         #region Dynamic Object Aggregation Manifest
@@ -1920,6 +2170,10 @@ namespace Cognitive3D
                 sb.Append("{");
                 sb.Append("\"id\":\"");
                 sb.Append(entry.id);
+                sb.Append("\",");
+
+                sb.Append("\"isController\":\"");
+                sb.Append(entry.isController);
                 sb.Append("\",");
 
                 sb.Append("\"mesh\":\"");

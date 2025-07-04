@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.XR;
 using System.Collections.Generic;
 
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
 using Unity.XR.Oculus;
 #endif
 
@@ -13,7 +13,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Oculus Hardware")]
     public class OculusHardware : AnalyticsComponentBase
     {
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
         XRDisplaySubsystem currentActiveSubsystem;
 
         protected override void OnSessionBegin()
@@ -67,15 +67,15 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
             return "Records Battery level, CPU level, GPU level and Power Saving mode states";
 #else
-            return "Oculus Hardware sensors can only be accessed when using the Oculus Integration SDK";
+            return "Oculus Hardware sensors can only be accessed when using the Oculus XR plugin";
 #endif
         }
         public override bool GetWarning()
         {
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
             return false;
 #else
             return true;

@@ -37,6 +37,8 @@ namespace Cognitive3D.ActiveSession
         public float LineWidth = 0.03f;
         public float MaxSensorTimeSpan = 120;
 
+        public List<string> allowedSensorNames = new List<string>();
+
         public SensorEntry[] SensorEntries;
         public SensorRenderCamera renderCamera;
 
@@ -75,6 +77,15 @@ namespace Cognitive3D.ActiveSession
 
         private void SensorRecorder_OnNewSensorRecorded(string sensorName, float value)
         {
+            //reject sensors if there is an allow list and the sensor is not included
+            if (allowedSensorNames.Count > 0)
+            {
+                if (allowedSensorNames.Contains(sensorName) == false)
+                {
+                    return;
+                }
+            }
+
             for (int i = 0; i < SensorEntries.Length; i++)
             {
                 if (SensorEntries[i].name == sensorName)
@@ -101,21 +112,21 @@ namespace Cognitive3D.ActiveSession
             if (RenderDelayFrameCount < 10) { return; }
             RenderDelayFrameCount = 0;
 
-            foreach (var sensor in SensorRecorder.LastSensorValues)
+            foreach (var lastSensor in SensorRecorder.sensorData)
             {
                 for (int i = 0; i < SensorEntries.Length; i++)
                 {
                     if (SensorEntries[i].active == false) { continue; }
-                    if (sensor.Key != SensorEntries[i].name) { continue; }
-                    SensorEntries[i].TimesValues.Add(new SensorDataPoint(Util.Timestamp(Time.frameCount), sensor.Value));
-                    if (SensorEntries[i].maxValue < sensor.Value)
+                    if (lastSensor.Key != SensorEntries[i].name) { continue; }
+                    SensorEntries[i].TimesValues.Add(new SensorDataPoint(Util.Timestamp(Time.frameCount), lastSensor.Value.LastSensorValue.value));
+                    if (SensorEntries[i].maxValue < lastSensor.Value.LastSensorValue.value)
                     {
-                        SensorEntries[i].maxValue = sensor.Value;
+                        SensorEntries[i].maxValue = lastSensor.Value.LastSensorValue.value;
                         SensorEntries[i].MaxValue.text = SensorEntries[i].maxValue.ToString("0.000");
                     }
-                    if (SensorEntries[i].minValue > sensor.Value)
+                    if (SensorEntries[i].minValue > lastSensor.Value.LastSensorValue.value)
                     {
-                        SensorEntries[i].minValue = sensor.Value;
+                        SensorEntries[i].minValue = lastSensor.Value.LastSensorValue.value;
                         SensorEntries[i].MinValue.text = SensorEntries[i].minValue.ToString("0.000");
                     }
                 }

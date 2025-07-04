@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
+using System.Threading.Tasks;
 
 namespace Cognitive3D
 {
@@ -26,7 +27,28 @@ namespace Cognitive3D
             All = 0,
         }
 
+        /// <summary>
+        /// Represents possible actions that can be taken on project validation items (Used for button text).
+        /// </summary>
+        internal enum ItemAction
+        {
+            None = 0,
+            // Related fix action is performed automatically once the "Fix" button is pressed, with no developer or user involvement required.
+            Fix = 1,
+            // Requires updates and adjustments in the project or scene by developers or users once the "Edit" button is pressed
+            Edit = 2,
+            // Necessary action is performed automatically once the "Apply" button is pressed, with no developer or user involvement required (used for recommonded items).
+            Apply = 3
+        }
+
         internal static readonly ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();
+
+        internal delegate void onProjectValidationUpdate();
+        /// <summary>
+        /// Event used to signal that project validation items have been updated.
+        /// </summary>
+        internal static event onProjectValidationUpdate OnProjectValidationUpdate;
+        internal static void InvokeProjectValidationUpdateEvent() { if (OnProjectValidationUpdate != null) { OnProjectValidationUpdate.Invoke(); } }
 
         /// <summary>
         /// Add an <see cref="ProjectValidationItem"/> to project validation checklist items
@@ -45,9 +67,9 @@ namespace Cognitive3D
         /// <param name="fixmessage">Description of the fix for the item</param>
         /// <param name="isFixed">Checks if item is fixed or not</param>
         /// <param name="fixAction">Delegate that validates the item</param>
-        internal static void AddItem(ItemLevel level, ItemCategory category, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null)
+        internal static void AddItem(ItemLevel level, ItemCategory category, ItemAction actionType, string message, string fixmessage, Func<bool> checkAction, Action fixAction = null, bool isIgnored = false)
         {
-            var newItem = new ProjectValidationItem(level, category, message, fixmessage, checkAction, fixAction);
+            var newItem = new ProjectValidationItem(level, category, actionType, message, fixmessage, checkAction, fixAction, isIgnored);
             AddItem(newItem);
         }
 
@@ -57,6 +79,22 @@ namespace Cognitive3D
         internal static IEnumerable<ProjectValidationItem> GetAllItems()
         {
             return registry.GetAllItems();
+        }
+
+        // <summary>
+        /// Gets all <see cref="ProjectValidationItem"/>s are ignored or not
+        /// </summary>
+        internal static IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored)
+        {
+            return registry.GetIgnoredItems(isIgnored);
+        }
+
+        // <summary>
+        /// Gets <see cref="ProjectValidationItem"/>s are ignored or not related to a level
+        /// </summary>
+        internal static IEnumerable<ProjectValidationItem> GetIgnoredItems(bool isIgnored, ItemLevel level)
+        {
+            return registry.GetIgnoredItems(isIgnored, level);
         }
 
         /// <summary>
@@ -112,7 +150,107 @@ namespace Cognitive3D
             Scene currentScene = SceneManager.GetActiveScene();
             EditorSceneManager.SaveScene(currentScene);
 
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            ProjectValidation.RegenerateItems();
+        }
+
+        /// <summary>
+        /// Ignores <see cref="ProjectValidationItem"/> item
+        /// </summary>
+        /// <param name="item"></param>
+        internal static void IgnoreItem(ProjectValidationItem item, bool ignoreStatus)
+        {
+            item.isIgnored = ignoreStatus;
+            if (ignoreStatus == true)
+            {
+                ProjectValidationLog.AddIgnoreItem(item.message);
+            }
+            else
+            {
+                ProjectValidationLog.RemoveIgnoreItem(item.message);
+            }
+            
+            ProjectValidation.RegenerateItems();
+        }
+
+        /// <summary>
+        /// Sets ignored <see cref="ProjectValidationItem"/> items from log
+        /// </summary>
+        internal static void SetIgnoredItemsFromLog()
+        {
+            registry.SetIgnoredItemsFromLog(ProjectValidationLog.GetLogIgnoreItems());
+        }
+
+        /// <summary>
+        /// Removes a <see cref="ProjectValidationItem"/> item from registry
+        /// </summary>
+        internal static void RemoveItem(Hash128 id)
+        {
+            registry.RemoveItem(id);
+        }
+
+        /// <summary>
+        /// Updates the message of a validation item that contain the specified message
+        /// </summary>
+        /// <param name="oldmessage">The message to search for in the validation items</param>
+        /// <param name="newmessage">The new message to replace the old message with</param>
+        internal static async void UpdateItemMessage(string oldMessage, string newMessage)
+        {
+            foreach (var item in registry.GetAllItems())
+            {
+                if (item.message.Contains(oldMessage))
+                {
+                    item.message = newMessage;
+                }
+            }
+
+            // Add a brief delay to ensure updates are processed
+            await Task.Delay(600);
+
+            // Trigger the GUI update
+            ProjectValidationGUI.UpdateItemLevelMessage(oldMessage, newMessage);
+        }
+
+        /// <summary>
+        /// Reevaluates all validation items and updates their fixed status
+        /// </summary>
+        /// Save this function for later
+        public static void UpdateItemFixedStatus()
+        {
+            var items = registry.GetAllItems();
+            foreach (var item in items)
+            {
+                item.isFixed = item.checkAction();
+            }
+        }
+
+        /// <summary>
+        /// Regenerates the validation item list by clearing the existing items and rebuilding the list
+        /// </summary>
+        public static void RegenerateItems()
+        {
+            Reset();
+            ProjectValidationItems.DelayAndInitializeProjectValidation();
+        }
+
+        /// <summary>
+        /// Resets project validation window GUI
+        /// </summary>
+        internal static void ResetGUI()
+        {
+            ProjectValidationGUI.Reset();
+        }
+
+        /// <summary>
+        /// Resets ignored <see cref="ProjectValidationItem"/> items
+        /// </summary>
+        internal static void ResetIgnoredItems()
+        {
+            var ignoredItems =  registry.GetIgnoredItems(true);
+
+            foreach (var item in ignoredItems)
+            {
+                item.isIgnored = false;
+            }
         }
 
         /// <summary>
@@ -121,6 +259,31 @@ namespace Cognitive3D
         internal static void Reset()
         {
             registry.Clear();
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a list of controller names from the active scene.
+        /// If no controllers are found, the function returns false
+        /// </summary>
+        /// <param name="controllerNamesList">An output list of controller names if found</param>
+        /// <returns>Returns true if controllers are found, otherwise false</returns>
+        internal static bool TryGetControllers(out List<String> controllerNamesList)
+        {
+            controllerNamesList = new List<string>();
+            ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
+            if (controllers.Count <= 0)
+            {
+                return false;
+            }
+
+            foreach (var controller in controllers)
+            {
+                if (controller.IsController)
+                {
+                    controllerNamesList.Add(controller.name);
+                }
+            }
+            return controllerNamesList.Count > 0;
         }
 
         /// <summary>

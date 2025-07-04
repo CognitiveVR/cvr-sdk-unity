@@ -295,6 +295,9 @@ namespace Cognitive3D.UnityGLTF
 		public static bool ExportNames = true; //MUST BE TRUE
 		public static bool RequireExtensions = false; //PROBABLY FALSE
 
+		readonly string[] mainTextureNameStarts = new string[] { "_diffuse", "_albedo", "_main", "_maincolor", "_color", "_base", "diffuse", "albedo", "main", "maincolor", "base", "color" };
+		readonly string[] mainTextureNameEnds = new string[] { "map", "tex", "texture", "" };
+
 		public Cognitive3D.DynamicObject Dynamic;
 
 		/// <summary>
@@ -894,35 +897,38 @@ namespace Cognitive3D.UnityGLTF
 #if C3D_HDRP
 			var lightData = unityLight.GetComponent<UnityEngine.Rendering.HighDefinition.HDAdditionalLightData>();
 
-			//nits only used on arealights, which we don't support
+			// Units only used on arealights, which we don't support
 			float unityUnitAmount = 0;
 
-			//1000 lumen ~1 unity light unit
-            switch (lightData.lightUnit)
-            {
-                case UnityEngine.Rendering.HighDefinition.LightUnit.Lumen:
-					unityUnitAmount = lightData.intensity / 1000f;
-					break;
-                case UnityEngine.Rendering.HighDefinition.LightUnit.Candela:
-					unityUnitAmount = lightData.intensity / 79.5f;
-					break;
-                case UnityEngine.Rendering.HighDefinition.LightUnit.Lux:
-					unityUnitAmount = lightData.intensity / 79.5f;
-					break;
-                case UnityEngine.Rendering.HighDefinition.LightUnit.Nits: //nits only used on arealights, which we don't support
-					break;
-                case UnityEngine.Rendering.HighDefinition.LightUnit.Ev100:
-					unityUnitAmount = lightData.intensity / 9.31f;
-					break;
-            }
-			if (unityUnitAmount > 1)
+			if (lightData != null)
 			{
-				//light falloff is different. simplify to log10
-				light.intensity = Mathf.Log10(unityUnitAmount)+1;
-			}
-			else
-            {
-				light.intensity = unityUnitAmount;
+				//1000 lumen ~1 unity light unit
+				switch (lightData.lightUnit)
+				{
+					case UnityEngine.Rendering.HighDefinition.LightUnit.Lumen:
+						unityUnitAmount = lightData.intensity / 1000f;
+						break;
+					case UnityEngine.Rendering.HighDefinition.LightUnit.Candela:
+						unityUnitAmount = lightData.intensity / 79.5f;
+						break;
+					case UnityEngine.Rendering.HighDefinition.LightUnit.Lux:
+						unityUnitAmount = lightData.intensity / 79.5f;
+						break;
+					case UnityEngine.Rendering.HighDefinition.LightUnit.Nits: //nits only used on arealights, which we don't support
+						break;
+					case UnityEngine.Rendering.HighDefinition.LightUnit.Ev100:
+						unityUnitAmount = lightData.intensity / 9.31f;
+						break;
+				}
+				if (unityUnitAmount > 1)
+				{
+					//light falloff is different. simplify to log10
+					light.intensity = Mathf.Log10(unityUnitAmount)+1;
+				}
+				else
+				{
+					light.intensity = unityUnitAmount;
+				}
 			}
 
 			//improvement - add support for kelvin effecting colour
@@ -1202,11 +1208,76 @@ namespace Cognitive3D.UnityGLTF
 			{
 				shaderProperties.FillProperties(this, material, materialObj);
 			}
-			else
+			else //fallback
 			{
-				//fall back to unity's standard shader properties
-				shaderProperties = MaterialExportPropertyCollection["Standard"];
-				shaderProperties.FillProperties(this, material, materialObj);
+				//do a search combining common texture names to try and find a match
+				//this fallback ignores:
+					//color
+					//occlusion, metallic (no metalness), roughness (no smoothness)
+					//opacity and blending (except for standard Unity property names)
+					//backface culling
+					//normal
+					//emission
+
+				var pbr = new PbrMetallicRoughness() { MetallicFactor = 0, RoughnessFactor = 1.0f };
+				bool foundMainTexture = false;
+				string fallbackMainTextureName = string.Empty;
+				foreach (var tempPropertyName in materialObj.GetTexturePropertyNames())
+				{
+					foreach (var s in mainTextureNameStarts)
+					{
+						foreach (var e in mainTextureNameEnds)
+						{
+							string checkProperty = s + e;
+							if (tempPropertyName.ToLower() == checkProperty)
+							{
+								var tempTexture = materialObj.GetTexture(tempPropertyName);
+								if (tempTexture != null)
+								{
+									foundMainTexture = true;
+									pbr.BaseColorTexture = ExportTextureInfo(tempTexture, TextureMapType.Main, false, string.Empty);
+									ExportTextureTransform(pbr.BaseColorTexture, materialObj, tempPropertyName);
+									material.PbrMetallicRoughness = pbr;
+									fallbackMainTextureName = tempPropertyName;
+
+									//check for standard alpha/masking properties
+									material.DoubleSided = materialObj.HasProperty("_Cull") && materialObj.GetInt("_Cull") == (float)CullMode.Off;
+
+									if (materialObj.HasProperty("_Cutoff"))
+									{
+										material.AlphaCutoff = materialObj.GetFloat("_Cutoff");
+									}
+
+									switch (materialObj.GetTag("RenderType", false, ""))
+									{
+										case "TransparentCutout":
+											material.AlphaMode = AlphaMode.MASK;
+											break;
+										case "Transparent":
+											material.AlphaMode = AlphaMode.BLEND;
+											break;
+										default:
+											material.AlphaMode = AlphaMode.OPAQUE;
+											break;
+									}
+									break;
+								}
+							}
+							if (foundMainTexture) { break; }
+						}
+						if (foundMainTexture) { break; }
+					}
+					if (foundMainTexture) { break; }
+				}
+
+				if (foundMainTexture)
+				{
+					Util.logDevelopment("Exported Material " + materialObj.name + " using " + fallbackMainTextureName + " as main texture");
+				}
+				else
+				{
+					Util.logDevelopment("Exported Material " + materialObj.name + " could not find valid main texture");
+				}
 			}
 
 			_materials.Add(materialObj);

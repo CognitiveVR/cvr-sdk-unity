@@ -65,14 +65,29 @@ namespace Cognitive3D.Components
             }
         }
 
+        double? removedTimestamp;
+
         void HandleHMDMounted()
         {
+            double currentTimestamp = Util.Timestamp();
+
+            // Check if headset was previously removed and timestamp is valid
+            if (removedTimestamp.HasValue && currentTimestamp > removedTimestamp)
+            {
+                CustomEvent equippedEvent = new CustomEvent("c3d.User equipped headset").SetProperty("Seconds headset was removed", currentTimestamp - removedTimestamp);
+                equippedEvent.Send();
+                return;
+            }
+
             CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
         }
 
         void HandleHMDUnmounted()
         {
             CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
+
+            // Store the removal timestamp
+            removedTimestamp = Util.Timestamp();
         }
 
         void CheckUserPresence()
@@ -86,11 +101,18 @@ namespace Cognitive3D.Components
                 {
                     if (isUserCurrentlyPresent && !wasUserPresentPreviously) // put on headset after removing
                     {
-                        CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
+                        double currentTimestamp = Util.Timestamp();
+                        if (removedTimestamp.HasValue && currentTimestamp > removedTimestamp)
+                        {
+                            CustomEvent equippedEvent = new CustomEvent("c3d.User equipped headset").SetProperty("Seconds headset was removed", currentTimestamp - removedTimestamp);
+                            equippedEvent.Send();
+                        }
                         wasUserPresentPreviously = true;
                     }
                     else if (!isUserCurrentlyPresent && wasUserPresentPreviously) // removing headset
                     {
+                        // Store the removal timestamp
+                        removedTimestamp = Util.Timestamp();
                         CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
                         wasUserPresentPreviously = false;
                     }

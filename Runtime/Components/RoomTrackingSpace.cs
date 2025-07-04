@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Cognitive3D
 {
     [DisallowMultipleComponent]
-    [AddComponentMenu("")]
+    [AddComponentMenu("Cognitive3D/Internal/Room Tracking Space")]
     public class RoomTrackingSpace : MonoBehaviour
     {
         public static event Action<int, Transform> TrackingSpaceChanged;
@@ -19,24 +19,27 @@ namespace Cognitive3D
         /// <summary>
         /// Set tracking space when the RoomTrackingSpace is enabled
         /// </summary>
-        private void OnEnable()
+        private void Start()
         {
-            trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
-            cachedTrackingSpace = transform;
-
-            if (!Cognitive3D_Manager.IsInitialized)
+            if (Cognitive3D_Manager.Instance != null)
             {
-                Cognitive3D_Manager.OnSessionBegin += InvokeTrackingSpaceChanged;
-                return;
+                trackingSpaceIndex = Cognitive3D_Manager.Instance.trackingSpaceIndex;
+                cachedTrackingSpace = transform;
+
+                if (!Cognitive3D_Manager.IsInitialized)
+                {
+                    Cognitive3D_Manager.OnSessionBegin += InvokeTrackingSpaceChanged;
+                    return;
+                }
+
+                InvokeTrackingSpaceChanged();
             }
-            
-            InvokeTrackingSpaceChanged();
         }
 
         /// <summary>
         /// Reset tracking space to null
         /// </summary>
-        private void OnDisable()
+        private void OnDestroy()
         {
             cachedTrackingSpace = null;
             InvokeTrackingSpaceChanged();
@@ -45,7 +48,11 @@ namespace Cognitive3D
 
         private void InvokeTrackingSpaceChanged()
         {
-            TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+            if (cachedTrackingSpace != null)
+            {
+                TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+                GameplayReferences.RoomTrackingSpaceTransform = transform;
+            }
         }
     }
 }

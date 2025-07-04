@@ -1,4 +1,7 @@
+using UnityEngine;
 using UnityEditor;
+using Cognitive3D.Components;
+using UnityEngine.UIElements;
 
 namespace Cognitive3D
 {
@@ -12,15 +15,14 @@ namespace Cognitive3D
         {
         }
 
-        [MenuItem("Cognitive3D/Project Validation", false, 1)]
-        static void OpenProjectSetupTool()
+        public static void OpenProjectSetupTool()
         {
             OpenSettingsWindow();
         }
 
         public static void OpenSettingsWindow()
         {
-            ProjectValidationItems.UpdateProjectValidationItemStatus();
+            SegmentAnalytics.TrackEvent("ProjectValidationWindow_Opened", "ProjectValidationWindow");
             SettingsService.OpenProjectSettings(SettingsPath);
         }
 
@@ -28,6 +30,11 @@ namespace Cognitive3D
         public static SettingsProvider CreateProjectValidationSettingsProvider()
         {
             return new ProjectValidationSettingsProvider(SettingsPath, SettingsScope.Project);
+        }
+
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+            ProjectValidation.RegenerateItems();
         }
 
         public override void OnGUI(string searchContext)

@@ -11,6 +11,7 @@ namespace Cognitive3D
         readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
         internal static void Init()
         {
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -18,17 +19,18 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
-            currentPage = Page.Welcome;
+            window.currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
 
         internal static void Init(Page page)
         {
-            currentPage = page;
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
+            window.currentPage = page;
             window.Show();
 
             window.LoadKeys();
@@ -39,6 +41,7 @@ namespace Cognitive3D
 
         internal static void Init(Rect position)
         {
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(500, 550);
             window.maxSize = new Vector2(500, 550);
@@ -47,7 +50,7 @@ namespace Cognitive3D
 
             window.LoadKeys();
             window.GetSelectedSDKs();
-            currentPage = Page.Welcome;
+            window.currentPage = Page.Welcome;
 
             ExportUtility.ClearUploadSceneSettings();
         }
@@ -63,11 +66,11 @@ namespace Cognitive3D
             Recompile,
             Wave,
             NextSteps,
-            PhotonMultiplayerSetup,
+            MultiplayerSetup,
             DynamicSetup,
         }
-        private static Page _currentPage;
-        public static Page currentPage {
+        private Page _currentPage;
+        public Page currentPage {
             get {
                 return _currentPage;
             }
@@ -115,8 +118,8 @@ namespace Cognitive3D
                 case Page.DynamicSetup:
                     DynamicUpdate();
                     break;
-                case Page.PhotonMultiplayerSetup:
-                    PhotonMultiplayerSetup();
+                case Page.MultiplayerSetup:
+                    MultiplayerSetup();
                     break;
                 default:
                     throw new System.NotSupportedException();
@@ -281,6 +284,7 @@ namespace Cognitive3D
         {
             if (responseCode != 200)
             {
+                SegmentAnalytics.TrackEvent("InvalidDevKey_ProjectSetup_" + responseCode, "ProjectSetupAPIPage");
                 Debug.LogError("GetApplicationKeyResponse response code: " + responseCode + " error: " + error);
                 return;
             }
@@ -290,6 +294,7 @@ namespace Cognitive3D
             {
                 JsonUtility.FromJson<ApplicationKeyResponseData>(text);
                 isResponseJsonValid = true;
+                SegmentAnalytics.TrackEvent("ValidDevKey_ProjectSetup", "ProjectSetupAPIPage");
             }
             catch
             {
@@ -303,6 +308,7 @@ namespace Cognitive3D
             //display popup if application key is set but doesn't match the response
             if (!string.IsNullOrEmpty(apikey) && apikey != responseData.apiKey)
             {
+                SegmentAnalytics.TrackEvent("APIKeyMismatch_ProjectSetup", "ProjectSetupAPIPage");
                 var result = EditorUtility.DisplayDialog("Application Key Mismatch", "Do you want to use the latest Application Key available on the Dashboard?", "Ok", "No");
                 if (result)
                 {
@@ -311,24 +317,9 @@ namespace Cognitive3D
             }
             else
             {
+                SegmentAnalytics.TrackEvent("APIKeyFound_ProjectSetup", "ProjectSetupAPIPage");
                 apikey = responseData.apiKey;
             }
-        }
-
-        [System.Serializable]
-        private class OrganizationData
-        {
-            public string organizationName;
-            public SubscriptionData[] subscriptions;
-        }
-
-        [System.Serializable]
-        private class SubscriptionData
-        {
-            public long beginning;
-            public long expiration;
-            public string planType;
-            public bool isFreeTrial;
         }
 
         private System.DateTime UnixTimeStampToDateTime(long unixTimeStamp)
@@ -349,7 +340,7 @@ namespace Cognitive3D
             // Check if response data is valid
             try
             {
-                JsonUtility.FromJson<OrganizationData>(text);
+                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
                 isResponseJsonValid = true;
             }
             catch
@@ -359,7 +350,7 @@ namespace Cognitive3D
                 return;
             }
 
-            OrganizationData organizationDetails = JsonUtility.FromJson< OrganizationData>(text);
+            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
             if (organizationDetails == null)
             {
                 Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
@@ -451,7 +442,7 @@ namespace Cognitive3D
         {
             new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
             new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
-            new SDKDefine("Oculus Integration 32.0+","C3D_OCULUS", "Adds Social Features and Eye Tracking" ),
+            new SDKDefine("Meta XR All-in-One 64+","C3D_OCULUS", "Adds Passthrough, Hand Tracking, Eye Tracking and optional Oculus ID and Subscription Features.\nOculus Integration 53+ is also supported" ),
             new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT", "Adds Eye Tracking and Sensors" ),
             new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Adds Eyetracking for the Vive Pro Eye" ), //previously C3D_VIVEPROEYE
             new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR", "Adds Eye Tracking for Varjo Headsets"),
@@ -605,11 +596,13 @@ namespace Cognitive3D
                         if (Event.current.shift) //add
                         {
                             selectedsdks.Add(SDKNamesDefines[i].Define);
+                            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage");
                         }
                         else //set
                         {
                             selectedsdks.Clear();
                             selectedsdks.Add(SDKNamesDefines[i].Define);
+                            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage");
                         }
                     }
                 }
@@ -818,8 +811,12 @@ namespace Cognitive3D
             }
 
             //calculate fill amount
-            float fillAmount = (float)(EditorApplication.timeSinceStartup - compileStartTime) / 10f;
-            fillAmount = Mathf.Clamp(fillAmount, 0.02f, 1f);
+            float compileDifference = (float)(EditorApplication.timeSinceStartup - compileStartTime);
+
+            //scale the loading bar so it never entirely fills
+            float fillAmount = Mathf.Log10(compileDifference);
+            fillAmount = Mathf.Clamp(fillAmount,0.02f, 0.95f);
+            var compileDurationBox = new Rect(30, 120, 440, 30);
             var progressBackground = new Rect(30, 150, 440, 30);
             var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);
 
@@ -836,10 +833,11 @@ namespace Cognitive3D
             //display ui elements
             GUI.Box(progressBackground, "", "box");
             GUI.Box(progressPartial, "", "button");
-            GUI.Label(progressBackground, compileDuration, "image_centered");
+            GUI.Label(compileDurationBox, compileDuration, "image_centered");
 
             //done
             if (EditorApplication.isCompiling) { return; }
+            SegmentAnalytics.TrackEvent("RecompileCompleted_RecompilePage", "ProjectSetupRecompilePage");
             compileStartTime = -1;
 
             currentPage++;
@@ -855,6 +853,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(150, 100, 200, 30), "Quick Scene Setup"))
             {
                 SceneSetupWindow.Init(position);
+                SegmentAnalytics.TrackEvent("QuickSceneSetupSelected_ProjectSetupNextStepsPage", "QuickSceneSetup");
                 Close();
             }
 
@@ -862,6 +861,7 @@ namespace Cognitive3D
             if (GUI.Button(new Rect(150, 320, 200, 30), "Advanced Scene Setup"))
             {
                 //show dynamic page
+                SegmentAnalytics.TrackEvent("AdvancedSceneSetupSelected_ProjectSetupNextStepsPage", "AdvancedSceneSetup");
                 currentPage = Page.DynamicSetup;
             }
         }
@@ -871,7 +871,19 @@ namespace Cognitive3D
 #else
         bool wantPhotonPunSupport = false;
 #endif
-        void PhotonMultiplayerSetup()
+
+#if C3D_NETCODE
+        bool wantNetcodeSupport = true;
+#else
+        bool wantNetcodeSupport = false;
+#endif
+
+#if C3D_NORMCORE
+        bool wantNormcoreSupport = true;
+#else
+        bool wantNormcoreSupport = false;
+#endif
+        void MultiplayerSetup()
         {
             GUI.Label(steptitlerect, "MUTLIPLAYER SUPPORT", "steptitle");
             GUI.Label(new Rect(30, 30, 440, 440), "You can enable multiplayer support here. Select the package or framework you are using below.", "normallabel");
@@ -880,22 +892,58 @@ namespace Cognitive3D
             GUI.Label(new Rect(140, 90, 440, 440), "Photon PUN 2*", "normallabel");
             GUI.Label(new Rect(30, 420, 440, 440), "*Please ensure that there is only a single instance of Cognitive3D_Manager across your multiplayer scenes", "caption");
             GUI.Label(new Rect(30, 475, 440, 440), "If you require support for other multiplayer frameworks, please get in touch.", "caption");
-            Rect infoRect1 = new Rect(320, 85, 30, 30);
-            GUI.Label(infoRect1, new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
+            GUI.Label(new Rect(320, 85, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
 
-            Rect checkboxRect1 = new Rect(105, 85, 30, 30);
             if (wantPhotonPunSupport)
             {
-                if (GUI.Button(checkboxRect1, EditorCore.BoxCheckmark, "image_centered"))
+                if (GUI.Button(new Rect(105, 85, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
                 {
                     wantPhotonPunSupport = false;
                 }
             }
             else
             {
-                if (GUI.Button(checkboxRect1, EditorCore.BoxEmpty, "image_centered"))
+                if (GUI.Button(new Rect(105, 85, 30, 30), EditorCore.BoxEmpty, "image_centered"))
                 {
                     wantPhotonPunSupport = true;
+                }
+            }
+
+            // Netcode
+            GUI.Label(new Rect(140, 130, 440, 440), "Unity Netcode for Gameobjects", "normallabel");
+            GUI.Label(new Rect(400, 125, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Unity Netcode for Gameobjects. Requires Unity Netcode Runtime assemblies."), "image_centered");
+
+            if (wantNetcodeSupport)
+            {
+                if (GUI.Button(new Rect(105, 125, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantNetcodeSupport = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(105, 125, 30, 30), EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantNetcodeSupport = true;
+                }
+            }
+
+            // Normcore
+            GUI.Label(new Rect(140, 170, 440, 440), "Normcore", "normallabel");
+            GUI.Label(new Rect(320, 165, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Normcore. Requires Normal Realtime assemblies."), "image_centered");
+
+            if (wantNormcoreSupport)
+            {
+                if (GUI.Button(new Rect(105, 165, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
+                {
+                    wantNormcoreSupport = false;
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(105, 165, 30, 30), EditorCore.BoxEmpty, "image_centered"))
+                {
+                    wantNormcoreSupport = true;
                 }
             }
         }
@@ -984,7 +1032,6 @@ namespace Cognitive3D
                     break;
                 case Page.Organization:
                     onclick += () => SaveApplicationKey();
-                    onclick += () => UnityEditor.VSAttribution.Cognitive3D.VSAttribution.SendAttributionEvent("Login", "Cognitive3D", apikey);
                     buttonDisabled = apikey == null || string.IsNullOrEmpty(apikey);
                     if (buttonDisabled)
                     {
@@ -996,7 +1043,8 @@ namespace Cognitive3D
                     }
                     break;
                 case Page.SDKSelection:
-                    onclick = () => currentPage = Page.PhotonMultiplayerSetup;
+                    onclick += () => SegmentAnalytics.TrackEvent("SDKDefineSelected_SDKDefinePage", "ProjectSetupSDKDefinePage");
+                    onclick += () => currentPage = Page.MultiplayerSetup;
                     break;
                 case Page.Recompile:
                     onclick = null;
@@ -1031,19 +1079,46 @@ namespace Cognitive3D
                     break;
                 case Page.Wave:
                     break;
-                case Page.PhotonMultiplayerSetup:
+                case Page.MultiplayerSetup:
                     if (wantPhotonPunSupport)
                     { 
                         if (!selectedsdks.Contains("C3D_PHOTON"))
                         {
                             selectedsdks.Add("C3D_PHOTON");
                         }
+                        onclick += () => SegmentAnalytics.TrackEvent("PhotonPUN2SupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
                     }
                     else
                     { 
                         selectedsdks.Remove("C3D_PHOTON");
                     }
-                    onclick += () => currentPage = Page.Recompile;
+
+                    if (wantNetcodeSupport)
+                    { 
+                        if (!selectedsdks.Contains("C3D_NETCODE"))
+                        {
+                            selectedsdks.Add("C3D_NETCODE");
+                        }
+                        onclick += () => SegmentAnalytics.TrackEvent("NetcodeSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_NETCODE");
+                    }
+
+                    if (wantNormcoreSupport)
+                    { 
+                        if (!selectedsdks.Contains("C3D_NORMCORE"))
+                        {
+                            selectedsdks.Add("C3D_NORMCORE");
+                        }
+                        onclick += () => SegmentAnalytics.TrackEvent("NormcoreSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
+                    }
+                    else
+                    { 
+                        selectedsdks.Remove("C3D_NORMCORE");
+                    }
+                    onclick += () => currentPage = Page.Glia;
                     break;
                 default:
                     throw new System.NotSupportedException();
@@ -1087,7 +1162,7 @@ namespace Cognitive3D
                 case Page.SRAnipal:
                 case Page.Wave:
                 case Page.NextSteps:
-                    if (wantPhotonPunSupport) { onclick = () => currentPage = Page.PhotonMultiplayerSetup; }
+                    if (wantPhotonPunSupport || wantNetcodeSupport || wantNormcoreSupport) { onclick = () => currentPage = Page.MultiplayerSetup; }
                     else { onclick = () => currentPage = Page.SDKSelection; }
                     break;
                 case Page.DynamicSetup:
@@ -1099,7 +1174,7 @@ namespace Cognitive3D
                 case Page.Recompile:
                     buttonDisabled = true;
                     break;
-                case Page.PhotonMultiplayerSetup:
+                case Page.MultiplayerSetup:
                     onclick += () => currentPage = Page.SDKSelection;
                     break;
                 default:

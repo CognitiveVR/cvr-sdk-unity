@@ -48,6 +48,12 @@ namespace Cognitive3D
         {
             if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
+                if (Cognitive3D.Components.BoundaryUtil.TryGetTrackingSpaceTransform(out var trackingSpaceTransform))
+                {
+                    floorPos = trackingSpaceTransform.pos;
+                    return true;
+                }
+                
                 if (cameraRoot == null)
                 {
                     cameraRoot = GameplayReferences.HMD.root;

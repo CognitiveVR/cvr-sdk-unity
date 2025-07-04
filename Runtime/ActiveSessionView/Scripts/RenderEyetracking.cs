@@ -42,7 +42,7 @@ namespace Cognitive3D.ActiveSession
         public int FixationRenderLayer = 3; //unnamed internal layer
         public int Mask = 8;
         Cognitive3D.FixationRecorder fixationRecorder;
-        Cognitive3D.GazeBase gazeBase;
+        IGazeRecorder gazeBase;
         Camera FixationCamera;
         Transform TargetCameraTransform;
         Camera FollowCamera;
@@ -68,7 +68,7 @@ namespace Cognitive3D.ActiveSession
             FixationCamera = GetComponent<Camera>();
             fixationRecorder = Cognitive3D_Manager.Instance.fixationRecorder;
 
-            gazeBase = Cognitive3D_Manager.Instance.gazeBase;
+            gazeBase = Cognitive3D_Manager.Instance.gaze;
             FixationMaterial.color = FixationColor;
             SaccadeMaterial.color = SaccadeColor;
 
@@ -108,7 +108,7 @@ namespace Cognitive3D.ActiveSession
             Cognitive3D_Manager.OnSessionBegin -= Core_InitEvent;
 
             fixationRecorder = Cognitive3D_Manager.Instance.fixationRecorder;
-            gazeBase = Cognitive3D_Manager.Instance.gazeBase;
+            gazeBase = Cognitive3D_Manager.Instance.gaze;
 
             if (fixationRecorder != null)
             {
