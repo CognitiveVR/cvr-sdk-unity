@@ -10,13 +10,12 @@ using System.Linq;
 namespace Cognitive3D
 {
     [DisallowMultipleComponent]
-    [AddComponentMenu("Cognitive3D/Components/Cognitive3D_AndroidPlugin")]
+    [AddComponentMenu("Cognitive3D/Components/AndroidPlugin")]
     public class AndroidPlugin : AnalyticsComponentBase
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        internal static bool isInitialized;
         internal static AndroidJavaObject plugin;
-        internal static AndroidJavaObject plugininstance;
+        internal static AndroidJavaObject Instance;
         string pluginName = "com.c3d.androidjavaplugin.Plugin";
 
         string folderPath;
@@ -25,6 +24,9 @@ namespace Cognitive3D
         string writeDataFilePath;
 
         ICache runtimeCache;
+
+        internal static event Action OnInstanceCreated;
+        internal static bool isInitialized;
 
         protected override void OnSessionBegin()
         {
@@ -71,37 +73,39 @@ namespace Cognitive3D
             if (plugin != null)
             {
                 // Create an instance of the Java class
-                plugininstance = new AndroidJavaObject(pluginName);
+                Instance = new AndroidJavaObject(pluginName);
             }
         }
 
         public void InitAndroidPlugin()
         {
-            if (plugininstance != null)
+            if (Instance != null)
             {
 
-                plugininstance.Call("initSessionData", 
-                    CognitiveStatics.ApplicationKey, 
-                    Cognitive3D_Manager.DeviceId, 
-                    Util.Timestamp(Time.frameCount), 
+                Instance.Call("initSessionData",
+                    CognitiveStatics.ApplicationKey,
+                    Cognitive3D_Manager.DeviceId,
+                    Util.Timestamp(Time.frameCount),
                     Cognitive3D_Manager.SessionID,
                     Cognitive3D_Manager.TrackingSceneId,
                     Cognitive3D_Manager.TrackingSceneVersionNumber,
                     CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
-                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber)
+                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
+                    CognitiveStatics.PostAudioData()
                 );
 
-                plugininstance.Call("initAndroidPlugin", 
-                    GetCurrentActivity(), 
+                Instance.Call("initAndroidPlugin",
+                    GetCurrentActivity(),
                     currentFilePath,
                     previousSessionFilePath,
                     writeDataFilePath
                 );
 
-                var pluginVersion = plugininstance.Call<string>("getAndroidPluginVersionInfo");
+                var pluginVersion = Instance.Call<string>("getAndroidPluginVersionInfo");
                 Cognitive3D_Manager.SetSessionProperty("c3d.app.androidPlugin.version", pluginVersion);
 
                 isInitialized = true;
+                OnInstanceCreated?.Invoke();
             }
         }
 
@@ -115,7 +119,7 @@ namespace Cognitive3D
         {
             if (didChangeSceneId)
             {
-                plugininstance.Call("onTrackingSceneChanged", 
+                Instance.Call("onTrackingSceneChanged", 
                     Cognitive3D_Manager.TrackingSceneId, 
                     Cognitive3D_Manager.TrackingSceneVersionNumber,
                     CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
@@ -128,7 +132,7 @@ namespace Cognitive3D
         private void LogFileHasContent()
         {
             // Check if the folder exists
-            if (plugininstance != null)
+            if (Instance != null)
             {
                 // Check crash logs
                 if (Directory.Exists(folderPath))
@@ -157,7 +161,7 @@ namespace Cognitive3D
                                     crashTimestamp = Util.ExtractUnixTime(lines[5]);
                                 }
 
-                                plugininstance.Call("sendCrashEvents", 
+                                Instance.Call("sendCrashEvents", 
                                     lines[0],
                                     lines[1],
                                     lines[2],
@@ -167,7 +171,7 @@ namespace Cognitive3D
                                     file
                                 );
 
-                                plugininstance.Call("sendCrashGaze", 
+                                Instance.Call("sendCrashGaze", 
                                     lines[0],
                                     lines[1],
                                     lines[2],
@@ -182,7 +186,7 @@ namespace Cognitive3D
                                 if (currentFilePath != file)
                                 {
                                     // No crash logs
-                                    plugininstance.Call("deleteLogFile", file);
+                                    Instance.Call("deleteLogFile", file);
                                 }
                             }
                         }
@@ -197,7 +201,7 @@ namespace Cognitive3D
 
                     if (lines.Length > 0)
                     {
-                        plugininstance.Call("sendEndSessionEvents", 
+                        Instance.Call("sendEndSessionEvents", 
                             lines[0],
                             lines[1],
                             lines[2],
@@ -210,7 +214,7 @@ namespace Cognitive3D
                 }
 
                 // Write current session data into a log file (used for next session)
-                plugininstance.Call("writeSessionDataIntoLogFile", 
+                Instance.Call("writeSessionDataIntoLogFile", 
                     previousSessionFilePath,
                     false
                 );
@@ -232,9 +236,9 @@ namespace Cognitive3D
         {
             if (!Cognitive3D_Manager.IsInitialized) { return; }
 
-            if (plugininstance != null)
+            if (Instance != null)
             {
-                plugininstance.Call("sendPauseEvent", paused);
+                Instance.Call("sendPauseEvent", paused);
             }
             else
             {
@@ -246,11 +250,11 @@ namespace Cognitive3D
 
         void OnApplicationQuit()
         {
-            plugininstance.Call("sendEndSessionEvents");
+            Instance.Call("sendEndSessionEvents");
         }
-#endif   
+#endif
 
-    public override string GetDescription()
+        public override string GetDescription()
         {
 #if UNITY_ANDROID
             return "Captures crash logs on Android devices. It is not functional during Unity Editor sessions.";
@@ -258,7 +262,7 @@ namespace Cognitive3D
             return "Android crash logging plugin only works when the build target is set to Android.";
 #endif
         }
-        
+
         public override bool GetWarning()
         {
 #if UNITY_ANDROID
