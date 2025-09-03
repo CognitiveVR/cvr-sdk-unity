@@ -188,6 +188,11 @@ namespace Cognitive3D
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/remotevariables?identifier=", userId);
         }
 
+        internal static string PostAudioData()
+        {
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/audio");
+        }
+
         /// <summary>
         /// Creates the GET request endpoint with access token and search parameters
         /// </summary>
