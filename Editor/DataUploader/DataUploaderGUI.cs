@@ -130,7 +130,8 @@ namespace Cognitive3D
             {
                 string destination = string.Empty;
                 string content = string.Empty;
-                if (ic.PeekContent(ref destination, ref content))
+                bool sendAsBytes = false;
+                if (ic.PeekContent(ref destination, ref content, ref sendAsBytes))
                 {
                     if (!string.IsNullOrEmpty(destination) && !string.IsNullOrEmpty(content))
                     {
@@ -170,7 +171,8 @@ namespace Cognitive3D
                     {
                         string destination = string.Empty;
                         string content = string.Empty;
-                        if (ic.PeekContent(ref destination, ref content))
+                        bool sendAsBytes = false;
+                        if (ic.PeekContent(ref destination, ref content, ref sendAsBytes))
                         {
                             ic.PopContent();
                             ic.WriteContent(destination, content);
@@ -181,7 +183,8 @@ namespace Cognitive3D
                 {
                     string destination = string.Empty;
                     string content = string.Empty;
-                    if (ic.PeekContent(ref destination, ref content))
+                    bool sendAsBytes = false;
+                    if (ic.PeekContent(ref destination, ref content, ref sendAsBytes))
                     {
                         ic.PopContent();
                         ic.WriteContent(destination, content);

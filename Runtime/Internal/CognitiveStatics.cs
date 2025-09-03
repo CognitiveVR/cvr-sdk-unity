@@ -190,7 +190,7 @@ namespace Cognitive3D
 
         internal static string PostAudioData()
         {
-            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/audio");
+            return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/audioBin");
         }
 
         /// <summary>
