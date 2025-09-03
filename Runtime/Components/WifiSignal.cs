@@ -21,9 +21,9 @@ namespace Cognitive3D
 
         private void Cognitive3D_Manager_OnTick()
         {
-            if (AndroidPlugin.isInitialized && AndroidPlugin.plugininstance != null)
+            if (AndroidPlugin.isInitialized && AndroidPlugin.Instance != null)
             {
-                var currentRSSI = AndroidPlugin.plugininstance.Call<int>("getWifiSignalStrength");
+                var currentRSSI = AndroidPlugin.Instance.Call<int>("getWifiSignalStrength");
 
                 // Sends sensor data on change
                 if (currentRSSI != prevRSSI)
