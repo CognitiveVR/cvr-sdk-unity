@@ -997,6 +997,17 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _audioRecordingIcon;
+        public static Texture2D AudioRecordingIcon
+        {
+            get
+            {
+                if (_audioRecordingIcon == null)
+                    _audioRecordingIcon = Resources.Load<Texture2D>("Features/Icons/audio-recording");
+                return _audioRecordingIcon;
+            }
+        }
+
         private static Texture2D _socialPlatformIcon;
         public static Texture2D SocialPlatformIcon
         {

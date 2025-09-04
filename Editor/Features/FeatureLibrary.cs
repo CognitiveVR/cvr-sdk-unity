@@ -204,7 +204,29 @@ namespace Cognitive3D
                         )
                     },
                     new MediaDetailGUI()
-                )
+                ),
+                new FeatureData(
+                    "Audio Recording",
+                    "Set up Audio Recorder to capture speech via the device’s microphone",
+                    EditorCore.AudioRecordingIcon,
+                    () =>
+                    {
+                        setFeatureIndex(8);
+                        SegmentAnalytics.TrackEvent("AudioRecordingWindow_Opened", "AudioRecordingWindow", "new");
+                    },
+                    new List<FeatureAction>
+                    {
+                        new FeatureAction(
+                            FeatureActionType.LinkTo,
+                            "Link to Audio Recording documentation",
+                            () =>
+                            {
+                                Application.OpenURL("https://docs.cognitive3d.com/unity/");
+                            }
+                        )
+                    },
+                    new AudioRecordingDetailGUI()
+                ),
             };
         }
 
