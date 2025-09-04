@@ -168,7 +168,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
-                            sendAsBytes = tempDest.Contains("audioBin");
+                            sendAsBytes = tempDest.Contains("audio");
                             return true;
                         }
                     }
@@ -202,7 +202,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
-                            sendAsBytes = tempDest.Contains("audioBin");
+                            sendAsBytes = tempDest.Contains("audio");
                             return true;
                         }
                     }
