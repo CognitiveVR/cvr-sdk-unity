@@ -202,6 +202,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
+                            sendAsBytes = tempDest.Contains("audioBin");
                             return true;
                         }
                     }

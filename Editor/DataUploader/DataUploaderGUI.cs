@@ -135,8 +135,18 @@ namespace Cognitive3D
                 {
                     if (!string.IsNullOrEmpty(destination) && !string.IsNullOrEmpty(content))
                     {
-                        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-                        uploadRequest = UnityWebRequest.Put(destination, bytes);
+                        if (!sendAsBytes)
+                        {
+                            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                            uploadRequest = UnityWebRequest.Put(destination, bytes);
+                            uploadRequest.SetRequestHeader("Content-Type", "application/json");
+                        }
+                        else
+                        {
+                            var bytes = System.Convert.FromBase64String(content);
+                            uploadRequest = UnityWebRequest.Put(destination, bytes);
+                            uploadRequest.SetRequestHeader("Content-Type", "application/octet-stream");
+                        }
                         uploadRequest.method = "POST";
                         uploadRequest.SetRequestHeader("Content-Type", "application/json");
                         uploadRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
