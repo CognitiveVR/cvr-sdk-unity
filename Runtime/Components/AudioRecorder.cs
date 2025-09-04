@@ -16,7 +16,14 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-            AndroidPlugin.OnInstanceCreated += AndroidPlugin_OnInstanceCreated;
+            if (AndroidPlugin.isInitialized)
+            {
+                AndroidPlugin_OnInstanceCreated();
+            }
+            else
+            {
+                AndroidPlugin.OnInstanceCreated += AndroidPlugin_OnInstanceCreated;
+            }
         }
 
         /// <summary>
