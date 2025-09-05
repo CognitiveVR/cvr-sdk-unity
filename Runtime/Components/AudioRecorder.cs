@@ -33,6 +33,11 @@ namespace Cognitive3D.Components
         private void AndroidPlugin_OnInstanceCreated()
         {
             AndroidPlugin.OnInstanceCreated -= AndroidPlugin_OnInstanceCreated;
+            // Request permission if not already granted
+            if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+            {
+                Application.RequestUserAuthorization(UserAuthorization.Microphone);
+            }
             // Audio Recording
             AndroidPlugin.Instance.Call("startAudioRecording");
         }
