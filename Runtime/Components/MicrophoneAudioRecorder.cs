@@ -6,8 +6,8 @@ namespace Cognitive3D.Components
 {
     [RequireComponent(typeof(AndroidPlugin))]
     [DisallowMultipleComponent]
-    [AddComponentMenu("Cognitive3D/Components/AudioRecorder")]
-    public class AudioRecorder : AnalyticsComponentBase
+    [AddComponentMenu("Cognitive3D/Components/MicrophoneAudioRecorder")]
+    public class MicrophoneAudioRecorder : AnalyticsComponentBase
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         /// <summary>

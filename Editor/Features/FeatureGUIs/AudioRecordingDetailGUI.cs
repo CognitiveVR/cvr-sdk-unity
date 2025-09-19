@@ -36,10 +36,10 @@ namespace Cognitive3D
             GUILayout.Label("Add to Cognitive3D_Manager prefab", EditorCore.styles.FeatureTitle);
             GUILayout.Label("Adds the Audio Recorder component to the Cognitive3D_Manager prefab to record the audio.", EditorStyles.wordWrappedLabel);
 
-            var btnLabel = FeatureLibrary.TryGetComponent<Cognitive3D.Components.AudioRecorder>() ? "Remove Audio Recorder" : "Add Audio Recorder";
+            var btnLabel = FeatureLibrary.TryGetComponent<Cognitive3D.Components.MicrophoneAudioRecorder>() ? "Remove Audio Recorder" : "Add Audio Recorder";
             if (GUILayout.Button(btnLabel, GUILayout.Height(30)))
             {
-                FeatureLibrary.AddOrRemoveComponent<Cognitive3D.Components.AudioRecorder>();
+                FeatureLibrary.AddOrRemoveComponent<Cognitive3D.Components.MicrophoneAudioRecorder>();
             }
         }
     }
