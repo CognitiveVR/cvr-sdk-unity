@@ -61,7 +61,7 @@ namespace Cognitive3D.Components
 #if UNITY_ANDROID
     return "Captures user speech via the device’s microphone on Android. This feature is unavailable when running in the Unity Editor.";
 #else
-    return "The audio recorder is supported only when the build target is set to Android.";
+    return "The microphone audio recorder is supported only when the build target is set to Android.";
 #endif
         }
 

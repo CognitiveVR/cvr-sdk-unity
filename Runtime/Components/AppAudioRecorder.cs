@@ -9,8 +9,8 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/AppAudioRecorder")]
     public class AppAudioRecorder : AnalyticsComponentBase
     {
+#if UNITY_ANDROID && !UNITY_EDITOR
         // Audio settings - Send 48kHz directly to Android
-        private const int UNITY_SAMPLE_RATE = 48000;
         private const int CHANNELS = 1; // Mono
 
         // AAC frame size for proper encoding
@@ -26,7 +26,6 @@ namespace Cognitive3D.Components
         private float maxSilenceBeforeFlush = 2f; // Flush after 2 seconds of silence
         private bool hasActiveAudio = false;
 
-        [FormerlySerializedAs("audioChannel")]
         public string audioChannelName = "default";
 
         // Audio data queue for thread safety
@@ -79,8 +78,6 @@ namespace Cognitive3D.Components
                 // Reset silence tracking
                 silenceDuration = 0f;
                 hasActiveAudio = false;
-
-                Util.logDebug($"AudioCapture ({audioChannelName}): Recording initialized/resumed");
             }
             catch (System.Exception e)
             {
@@ -206,7 +203,6 @@ namespace Cognitive3D.Components
                 try
                 {
                     AndroidPlugin.Instance.Call("finalizeRecording", audioChannelName, timestamp);
-                    Util.logDebug($"AudioCapture ({audioChannelName}): Recording flushed due to silence");
                 }
                 catch (System.Exception e)
                 {
@@ -245,8 +241,6 @@ namespace Cognitive3D.Components
                         AndroidPlugin.Instance?.Call("finalizeRecording", audioChannelName, GetCurrentTimeMs());
                         AndroidPlugin.Instance?.Call("cleanup", audioChannelName);
                         isInitialized = false;
-
-                        Util.logDebug($"AudioCapture ({audioChannelName}): Recording paused and finalized");
                     }
                     catch (System.Exception e)
                     {
@@ -281,8 +275,6 @@ namespace Cognitive3D.Components
 
                 // Reinitialize recording
                 InitializeRecording();
-
-                Util.logDebug($"AudioCapture ({audioChannelName}): Recording resumed after pause");
             }
             catch (System.Exception e)
             {
@@ -300,7 +292,6 @@ namespace Cognitive3D.Components
                     AndroidPlugin.Instance?.Call("finalizeRecording", audioChannelName, GetCurrentTimeMs());
                     AndroidPlugin.Instance?.Call("cleanup", audioChannelName);
                     isInitialized = false;
-                    Util.logDebug($"AudioCapture ({audioChannelName}): Recording manually stopped");
                 }
                 catch (System.Exception e)
                 {
@@ -316,8 +307,7 @@ namespace Cognitive3D.Components
                 InitializeRecording();
             }
         }
-
-        public bool IsRecording => isInitialized;
+#endif
 
         /// <summary>
         /// Description to display in inspector
