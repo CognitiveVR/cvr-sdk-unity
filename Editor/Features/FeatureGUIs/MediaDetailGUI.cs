@@ -50,7 +50,7 @@ namespace Cognitive3D
 
             EditorGUILayout.Space(10);
 
-            GUILayout.Label("2.Add Media Component", EditorCore.styles.FeatureTitle);
+            GUILayout.Label("2. Add Media Component", EditorCore.styles.FeatureTitle);
             GUILayout.Label("Select a GameObject in your scene and click below to add the Media component.", EditorStyles.wordWrappedLabel);
 
             if (GUILayout.Button("Add Media to Selected", GUILayout.Height(30)))
