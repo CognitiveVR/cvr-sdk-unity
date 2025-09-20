@@ -9,6 +9,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/AppAudioRecorder")]
     public class AppAudioRecorder : AnalyticsComponentBase
     {
+        public string audioChannelName = "default";
 #if UNITY_ANDROID && !UNITY_EDITOR
         // Audio settings - Send 48kHz directly to Android
         private const int CHANNELS = 1; // Mono
@@ -25,8 +26,6 @@ namespace Cognitive3D.Components
         private float silenceDuration = 0f;
         private float maxSilenceBeforeFlush = 2f; // Flush after 2 seconds of silence
         private bool hasActiveAudio = false;
-
-        public string audioChannelName = "default";
 
         // Audio data queue for thread safety
         private ConcurrentQueue<AudioData> audioQueue = new ConcurrentQueue<AudioData>();
