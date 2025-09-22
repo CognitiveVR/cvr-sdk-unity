@@ -207,7 +207,7 @@ namespace Cognitive3D
                 ),
                 new FeatureData(
                     "Audio Recording",
-                    "Set up Audio Recorder to capture speech via the device’s microphone",
+                    "Set up Audio Recorder to capture speech from microphone or app audio",
                     EditorCore.AudioRecordingIcon,
                     () =>
                     {
