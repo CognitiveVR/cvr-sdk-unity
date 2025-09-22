@@ -11,7 +11,10 @@ namespace Cognitive3D
         private string channelName = "default";
 
         private Vector2 scrollPos;
-        
+
+
+        bool audioSourceExist = true;
+
         AppAudioRecorder[] _appAudioRecorders;
         AppAudioRecorder[] appAudioRecorders
         {
@@ -74,16 +77,30 @@ namespace Cognitive3D
             channelName = EditorGUILayout.TextField(channelName);
             GUILayout.EndHorizontal();
 
-            EditorGUILayout.HelpBox(
-                "Select GameObjects with AudioSource components, enter a unique channel name, then click Add.",
-                MessageType.Info
-            );
+            if (audioSourceExist)
+            {
+                EditorGUILayout.HelpBox(
+                    "Select GameObjects with AudioSource components, enter a unique channel name, then click Add.",
+                    MessageType.Info
+                );
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "Failed to add the component. No AudioSource component found on selected GameObject(s).",
+                    MessageType.Warning
+                );
+            }
 
             EditorGUI.BeginDisabledGroup(Selection.gameObjects.Length == 0 || string.IsNullOrEmpty(channelName));
             if (GUILayout.Button($"Add to {Selection.gameObjects.Length} Selected GameObject(s)", GUILayout.Height(25)))
             {
-                AttachAppAudioRecorderToSelected(channelName);
-                RefreshList();
+                audioSourceExist = CheckAudioSourceComponent();
+                if (audioSourceExist)
+                {
+                    AttachAppAudioRecorderToSelected(channelName);
+                    RefreshList();
+                }
             }
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndVertical();
@@ -195,6 +212,7 @@ namespace Cognitive3D
         private void RefreshList()
         {
             _appAudioRecorders = null;
+            audioSourceExist = true;
         }
 
         #region Audio Utilities
@@ -212,6 +230,19 @@ namespace Cognitive3D
                     obj.GetComponent<AppAudioRecorder>().audioChannelName = channelName;
                 }
             }
+        }
+
+        internal static bool CheckAudioSourceComponent()
+        {
+            foreach (var obj in Selection.gameObjects)
+            {
+                if (!obj.GetComponent<AudioSource>())
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
         #endregion
     }
