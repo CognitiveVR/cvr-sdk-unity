@@ -67,6 +67,9 @@ namespace Cognitive3D.Components
             InitializeRecording();
         }
 
+        /// <summary>
+        /// Initializes the Android audio codec for recording
+        /// </summary>
         private void InitializeRecording()
         {
             try
@@ -84,6 +87,9 @@ namespace Cognitive3D.Components
             }
         }
 
+        /// <summary>
+        /// Called automatically by Unity's audio system for each audio frame
+        /// </summary>
         private void OnAudioFilterRead(float[] data, int channels)
         {
             if (!isInitialized) return;
