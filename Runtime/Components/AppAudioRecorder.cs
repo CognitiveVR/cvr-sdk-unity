@@ -76,6 +76,7 @@ namespace Cognitive3D.Components
             {
                 AndroidPlugin.Instance.Call("initCodec", audioChannelName);
                 isInitialized = true;
+                Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", true);
 
                 // Reset silence tracking
                 silenceDuration = 0f;

@@ -40,6 +40,7 @@ namespace Cognitive3D.Components
             }
             // Audio Recording
             AndroidPlugin.Instance.Call("startAudioRecording");
+            Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", true);
         }
 
         /// <summary>
