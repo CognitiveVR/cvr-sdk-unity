@@ -2068,7 +2068,7 @@ namespace Cognitive3D.Serialization
         internal static void WriteDynamicManifestEntry(DynamicData data)
         {
             if (!IsInitialized) { return; }
-            DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName);
+            DynamicObjectManifestEntry dome = new DynamicObjectManifestEntry(data.Id, data.Name, data.MeshName, data.SyncID, data.OwnerID);
 
             queuedManifest.Enqueue(dome);
             DynamicSnapshotsCount++;
@@ -2383,8 +2383,21 @@ namespace Cognitive3D.Serialization
             JsonUtil.SetString("fileType", "gltf", builder);
             //JsonUtil.SetString("fileType", DynamicObjectManifestEntry.FileType, builder);
 
+            if (!string.IsNullOrEmpty(entry.SyncId))
+            {
+                builder.Append(",");
+                JsonUtil.SetString("multiplayerSyncId", entry.SyncId, builder);
+            }
+
+            if (!string.IsNullOrEmpty(entry.OwnerId))
+            {
+                builder.Append(",");
+                JsonUtil.SetString("multiplayerAvatarId", entry.OwnerId, builder);
+            }
+
             if (entry.isVideo)
             {
+                builder.Append(",");
                 JsonUtil.SetString("externalVideoSource", entry.videoURL, builder);
             }
 
