@@ -27,6 +27,9 @@ namespace Cognitive3D.Components
         private float maxSilenceBeforeFlush = 2f; // Flush after 2 seconds of silence
         private bool hasActiveAudio = false;
 
+        // Cache delta time for audio thread access
+        private float cachedDeltaTime = 0f;
+
         // Audio data queue for thread safety
         private ConcurrentQueue<AudioData> audioQueue = new ConcurrentQueue<AudioData>();
 
@@ -121,6 +124,9 @@ namespace Cognitive3D.Components
         {
             if (!isInitialized) return;
 
+            // Cache delta time for audio thread access
+            cachedDeltaTime = Time.unscaledDeltaTime;
+
             long currentTime = GetCurrentTimeMs();
 
             while (audioQueue.TryDequeue(out var audioData))
@@ -144,10 +150,14 @@ namespace Cognitive3D.Components
                 // Convert to PCM16 using AudioUtil
                 int bytesWritten = AudioUtil.ConvertToPCM16(samples, offset, samplesToProcess, chunkBuffer);
 
+                // Convert byte[] to sbyte[] for Android JNI
+                sbyte[] signedBuffer = new sbyte[bytesWritten];
+                Buffer.BlockCopy(chunkBuffer, 0, signedBuffer, 0, bytesWritten);
+
                 // Send 48kHz PCM data to Android
                 try
                 {
-                    AndroidPlugin.Instance?.Call("handlePCM", chunkBuffer, audioChannelName, bytesWritten, timestamp);
+                    AndroidPlugin.Instance?.Call("handlePCM", signedBuffer, audioChannelName, bytesWritten, timestamp);
                 }
                 catch (System.Exception e)
                 {
@@ -187,7 +197,7 @@ namespace Cognitive3D.Components
             }
             else if (hasActiveAudio)
             {
-                silenceDuration += Time.unscaledDeltaTime;
+                silenceDuration += cachedDeltaTime;
             }
         }
 
