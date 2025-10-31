@@ -1,5 +1,5 @@
 using UnityEngine;
-# if FUSION2
+#if FUSION2
 using Fusion;
 
 namespace Cognitive3D.Components

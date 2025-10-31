@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 
-# if FUSION2
+#if FUSION2
 using Fusion;
 using Fusion.Sockets;
 using Fusion.Photon.Realtime;
