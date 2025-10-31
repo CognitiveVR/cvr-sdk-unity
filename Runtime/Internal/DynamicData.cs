@@ -19,6 +19,8 @@ namespace Cognitive3D
         //true if customid was set on dynamicobject component. used to skip setting dynamicobjectid from shared list
         public bool UseCustomId;
         public string Id;
+        public string SyncID;
+        public string OwnerID;
 
         public Vector3 LastPosition;
         public Quaternion LastRotation;
@@ -62,7 +64,7 @@ namespace Cognitive3D
         public bool IsRightHand;
         public string ControllerType;
 
-        public DynamicData(string name, string customid, string meshname, Transform transform, Vector3 position, Quaternion rotation, Vector3 scale, float posThreshold, float rotThreshold, float scaleThreshold, float updateInterval, bool iscontroller, string inputType, string controllerType, bool isRightHand)
+        public DynamicData(string name, string customid, string meshname, Transform transform, Vector3 position, Quaternion rotation, Vector3 scale, float posThreshold, float rotThreshold, float scaleThreshold, float updateInterval, bool iscontroller, string inputType, string controllerType, bool isRightHand, string syncId = "", string ownerId = "")
         {
             if (string.IsNullOrEmpty(customid))
             {
@@ -74,6 +76,9 @@ namespace Cognitive3D
                 Id = customid;
                 UseCustomId = true;
             }
+
+            SyncID = syncId;
+            OwnerID = ownerId;
             Name = name;
             MeshName = meshname;
             Transform = transform;
@@ -112,6 +117,9 @@ namespace Cognitive3D
                 Id = customid;
                 UseCustomId = true;
             }
+
+            SyncID = "";
+            OwnerID = "";
             Name = name;
             MeshName = meshname;
             Transform = null; // Since this constructor doesn’t take a Transform
