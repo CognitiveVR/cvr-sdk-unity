@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.0.0";
+        public static readonly string SDK_VERSION = "2.1.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -398,6 +398,8 @@ namespace Cognitive3D
 #elif C3D_OMNICEPT
         SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "HP Omnicept");
+#elif COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
+        SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
 #endif
             //eye tracker addons
 #if C3D_SRANIPAL

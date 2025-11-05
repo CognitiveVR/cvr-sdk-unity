@@ -195,7 +195,28 @@ namespace Cognitive3D
 
                     GUILayout.Space(10);
 
-                    EditorGUILayout.HelpBox($"Current SDK: {availableXrSdks.Keys.ElementAt(selectedSDKIndex)}", MessageType.Info);
+                    if (EditorCore.HasC3DDefine(out var c3dSymbols))
+                    {
+                        var readableNames = new List<string>();
+                        foreach (var symbol in c3dSymbols)
+                        {
+                            var sdkName = availableXrSdks.FirstOrDefault(kvp => kvp.Value == symbol).Key;
+                            readableNames.Add(string.IsNullOrEmpty(sdkName) ? symbol : sdkName);
+                        }
+                        string currentDefines = string.Join(", ", readableNames);
+                        EditorGUILayout.HelpBox($"XR SDK setup complete. Currently configured for: {currentDefines}", MessageType.Info);
+                    }
+                    else
+                    {
+                        if (selectedSDKIndex >= 0 && selectedSDKIndex < availableXrSdks.Count)
+                        {
+                            EditorGUILayout.HelpBox($"XR SDK requires compilation. Click 'Compile and Finish' below to apply {availableXrSdks.Keys.ElementAt(selectedSDKIndex)} configuration.", MessageType.Warning);
+                        }
+                        else
+                        {
+                            EditorGUILayout.HelpBox("No XR SDK selected. Please select an SDK from the dropdown above.", MessageType.Warning);
+                        }
+                    }
                 });
 #endregion
 
@@ -533,6 +554,13 @@ namespace Cognitive3D
         double compileStartTime = -1;
         void SetXRSDK()
         {
+            // Validate selectedSDKIndex is within bounds
+            if (selectedSDKIndex < 0 || selectedSDKIndex >= availableXrSdks.Count)
+            {
+                Debug.LogError("Invalid SDK index. Please ensure XR SDK is properly selected.");
+                return;
+            }
+
             SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage", "new");
             EditorCore.SetPlayerDefine(availableXrSdks.Values.ElementAt(selectedSDKIndex));
 
@@ -549,6 +577,12 @@ namespace Cognitive3D
 
         private bool XRSDKNeedsUpdate()
         {
+            // Validate selectedSDKIndex is within bounds
+            if (selectedSDKIndex < 0 || selectedSDKIndex >= availableXrSdks.Count)
+            {
+                return false;
+            }
+            
             if (EditorCore.HasC3DDefine(out var c3dSymbols))
             {
                 string selectedSdk = availableXrSdks.Values.ElementAt(selectedSDKIndex);
@@ -633,7 +667,7 @@ namespace Cognitive3D
             {
                 if (package.name == "com.openvr")
                 {
-                    packageName = "SteamVR/OpenVR";
+                    packageName = "SteamVR (OpenVR)";
                     selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                     return;
                 }
@@ -642,7 +676,7 @@ namespace Cognitive3D
             var SteamVRAssets = AssetDatabase.FindAssets("t:assemblydefinitionasset steamvr");
             if (SteamVRAssets.Length > 0)
             {
-                packageName = "SteamVR/OpenVR";
+                packageName = "SteamVR (OpenVR)";
                 selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                 return;
             }

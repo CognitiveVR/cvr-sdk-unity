@@ -2,7 +2,7 @@
 
 Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
 
-Height Task ID(s) (If applicable):
+Linear Issue ID(s) (If applicable):
 
 ## Type of change
 
@@ -25,3 +25,4 @@ Height Task ID(s) (If applicable):
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] I have assigned this PR to myself in GitHub
 - [ ] I have assigned and notified Reviewers for this PR
+- [ ] I have asked GitHub Copilot to review this PR

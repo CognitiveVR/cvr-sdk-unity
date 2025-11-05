@@ -2602,6 +2602,53 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Gets a readable copy of a texture for thumbnails
+        /// </summary>
+        static Texture2D GetReadableTextureThumbnail(Texture2D source)
+        {
+            if (source == null) return null;
+
+            try
+            {
+                RenderTexture tmp = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
+                Graphics.Blit(source, tmp);
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = tmp;
+
+                Texture2D readable = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
+                readable.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
+                readable.Apply();
+
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(tmp);
+                return readable;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Exception in GetReadableTextureThumbnail: " + ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Resizes a texture to target dimensions
+        /// </summary>
+        static Texture2D ResizeTexture(Texture2D source, int targetWidth, int targetHeight)
+        {
+            RenderTexture rt = RenderTexture.GetTemporary(targetWidth, targetHeight, 0, RenderTextureFormat.ARGB32);
+            RenderTexture.active = rt;
+            Graphics.Blit(source, rt);
+
+            Texture2D result = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
+            result.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
+            result.Apply();
+
+            RenderTexture.active = null;
+            RenderTexture.ReleaseTemporary(rt);
+            return result;
+        }
+
+        /// <summary>
         /// set layer mask on dynamic object, create temporary camera
         /// render to texture and save to file
         /// </summary>
@@ -2609,6 +2656,40 @@ namespace Cognitive3D
         {
             Dictionary<GameObject, int> originallayers = new Dictionary<GameObject, int>();
             var dynamic = target.GetComponent<Cognitive3D.DynamicObject>();
+
+            // Special handling for UI Images - use sprite texture directly
+            var uiImage = target.GetComponent<UnityEngine.UI.Image>();
+            if (uiImage != null && uiImage.sprite != null)
+            {
+                Texture2D thumbnail = GetReadableTextureThumbnail(uiImage.sprite.texture);
+                if (thumbnail != null)
+                {
+                    // Resize to 512x512 for consistency
+                    Texture2D resized = ResizeTexture(thumbnail, 512, 512);
+                    File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", resized.EncodeToPNG());
+                    return;
+                }
+            }
+
+#if C3D_TMPRO
+            // Special handling for TextMeshProUGUI - render using canvas baking
+            var tmpUI = target.GetComponent<TMPro.TextMeshProUGUI>();
+            if (tmpUI != null)
+            {
+                RectTransform rectTransform = target.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    float width = rectTransform.rect.width * rectTransform.lossyScale.x;
+                    float height = rectTransform.rect.height * rectTransform.lossyScale.y;
+                    Texture2D thumbnail = ExportUtility.TextureBakeCanvasUIElement(target.transform, width, height, 512);
+                    if (thumbnail != null)
+                    {
+                        File.WriteAllBytes("Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + "Dynamic" + Path.DirectorySeparatorChar + dynamic.MeshName + Path.DirectorySeparatorChar + "cvr_object_thumbnail.png", thumbnail.EncodeToPNG());
+                        return;
+                    }
+                }
+            }
+#endif
 
             //choose layer
             int layer = FindUnusedLayer();

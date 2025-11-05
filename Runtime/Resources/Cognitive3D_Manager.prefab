@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 921151381915925955}
   - component: {fileID: 921151381915925952}
+  - component: {fileID: -4101859877525816271}
   - component: {fileID: 921151381915925953}
   - component: {fileID: 921151381915925966}
   - component: {fileID: 5875531524829262885}
@@ -64,6 +65,23 @@ MonoBehaviour:
   StartupDelayTime: 0
   trackingSpace: {fileID: 0}
   trackingSpaceIndex: 0
+--- !u!114 &-4101859877525816271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921151381915925960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 212466b0cb9cd0543af9f18d19102de1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DrawDebugLines: 0
+  enableCanvasGaze: 0
+  canvasCacheBehaviour: 0
+  canvasRefreshBehaviour: 1
+  targetCanvases: []
 --- !u!114 &921151381915925953
 MonoBehaviour:
   m_ObjectHideFlags: 0

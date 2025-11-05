@@ -239,7 +239,7 @@ namespace Cognitive3D
                 }
             }
 #endif
-                UnityEngine.XR.Eyes eyes;
+            UnityEngine.XR.Eyes eyes;
             var centereye = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye);
 
             if (centereye.TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
@@ -269,5 +269,29 @@ namespace Cognitive3D
             return Cognitive3D.GameplayReferences.HMD.forward;
         }
 #endif
+
+        /// <summary>
+        /// Helper method to record gaze on a UI Image dynamic object
+        /// </summary>
+        internal static void RecordUIImageGaze(DynamicObject uiImageDynamic, Vector3 uiImageLocalPos, Vector3 uiImageWorldPos, Ray ray)
+        {
+            GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), uiImageDynamic.GetId(), uiImageLocalPos, ray.origin, GameplayReferences.HMD.rotation);
+        }
+
+        /// <summary>
+        /// Helper method to record gaze on a canvas (dynamic or world)
+        /// </summary>
+        internal static void RecordCanvasGaze(DynamicObject canvasDynamic, RectTransform canvasRectHit, Vector3 canvasHitWorldPosition, Ray ray)
+        {
+            if (canvasDynamic != null) //dynamic canvas
+            {
+                var canvasLocal = canvasRectHit.InverseTransformPoint(canvasHitWorldPosition);
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), canvasDynamic.GetId(), canvasLocal, ray.origin, GameplayReferences.HMD.rotation);
+            }
+            else //world canvas
+            {
+                GazeCore.RecordGazePoint(Util.Timestamp(Time.frameCount), canvasHitWorldPosition, GameplayReferences.HMD.position, GameplayReferences.HMD.rotation);
+            }
+        }
     }
 }

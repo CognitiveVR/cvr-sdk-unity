@@ -1138,6 +1138,8 @@ namespace Cognitive3D
                         {
                             props += "{\"enabled\":true}";
                         }
+                        writeScale = true;
+                        array[index].LastScale = scale;
                     }
 
                     if (array[index].remove)

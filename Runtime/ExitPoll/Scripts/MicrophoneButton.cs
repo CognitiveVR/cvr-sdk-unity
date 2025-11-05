@@ -65,6 +65,7 @@ namespace Cognitive3D
 
                 if (_currentRecordTime <= 0)
                 {
+                    ExitPollManager.OnMicrophoneRecordingTimeUp.Invoke();
                     StopRecording();
                 }
             }
@@ -129,6 +130,7 @@ namespace Cognitive3D
             _currentRecordTime = RecordTime;
             _recording = true;
             buttonPrompt.text = "Recording...";
+            ExitPollManager.OnMicrophoneRecordingBegin.Invoke();
         }
 
         void StopRecording()

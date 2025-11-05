@@ -311,6 +311,7 @@ namespace Cognitive3D
 
         private static void Cleanup()
         {
+            OnSurveyComplete.Invoke();
             currentExitpollData = null;
             exitpollResponseProperties.Clear();
             exitpollEventProperties.Clear();
