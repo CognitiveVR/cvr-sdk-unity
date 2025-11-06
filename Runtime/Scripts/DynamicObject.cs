@@ -99,9 +99,20 @@ namespace Cognitive3D
         public bool SyncWithPlayerGazeTick;
         private bool hasInitialized;
 
+        private bool isNetworkedObject;
+
         void DelayEnable(InputDevice device, XRNode node, bool isValid)
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
+            OnEnable();
+        }
+
+        void DelayEnableForNetwork(GameObject obj)
+        {
+            // Only process if this is the same GameObject
+            if (obj != gameObject) return;
+
+            MultiplayerUtil.OnNetworkObjectValid -= DelayEnableForNetwork;
             OnEnable();
         }
 
@@ -111,6 +122,19 @@ namespace Cognitive3D
             if (hasInitialized) { return; }
             StartingScale = transform.lossyScale;
             string registerMeshName = MeshName;
+
+            // Check if this is a networked object and if the network ID is not yet valid
+            isNetworkedObject = MultiplayerUtil.IsNetworkedObject(gameObject);
+            if (isNetworkedObject)
+            {
+                MultiplayerUtil.AddNetworkedDynamicObject(gameObject);
+                if (!MultiplayerUtil.IsNetworkObjectValid(gameObject))
+                {
+                    // NetworkObject is not valid yet, delay registration
+                    MultiplayerUtil.OnNetworkObjectValid += DelayEnableForNetwork;
+                    return;
+                }
+            }
 
             IsController = inputType == InputUtil.InputType.Controller || inputType == InputUtil.InputType.Hand;
 
@@ -186,7 +210,20 @@ namespace Cognitive3D
                 registerid = CustomId;
             }
 
-            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, inputType.ToString(), controllerDisplayType.ToString(), IsRight);
+            var syncID = "";
+            var ownerID = "";
+            if (isNetworkedObject)
+            {
+                if (MultiplayerUtil.IsPlayerAvatar(gameObject))
+                {
+                    ownerID = MultiplayerUtil.GetOwnerId(gameObject);
+                }
+                else
+                {
+                    syncID = MultiplayerUtil.GetNetworkId(gameObject);
+                }
+            }
+            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, inputType.ToString(), controllerDisplayType.ToString(), IsRight, syncID, ownerID);
 
             DataId = Data.Id;
 
@@ -397,6 +434,7 @@ namespace Cognitive3D
         private void OnDisable()
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
+            MultiplayerUtil.OnNetworkObjectValid -= DelayEnableForNetwork;
 
             PhysicsGaze.OnGazeTick -= SyncWithGazeTick;
 
@@ -418,13 +456,14 @@ namespace Cognitive3D
             DynamicManager.SetTransform(DataId, transform);
 
             Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
-            
+
             hasInitialized = false;
         }
 
         private void OnDestroy()
         {
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
+            MultiplayerUtil.OnNetworkObjectValid -= DelayEnableForNetwork;
 
             PhysicsGaze.OnGazeTick -= SyncWithGazeTick;
 
