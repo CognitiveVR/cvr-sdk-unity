@@ -20,14 +20,12 @@ namespace Cognitive3D
             {
                 return true;
             }
-#endif
-#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
-            if (obj.GetComponent<Unity.Netcode.NetworkObject>())
+#elif COGNITIVE3D_INCLUDE_UNITY_NETCODE
+            if (obj.GetComponent<Unity.Netcode.NetworkObject>() || obj.GetComponent<Unity.Netcode.Components.NetworkTransform>())
             {
                 return true;
             }
-#endif
-#if COGNITIVE3D_INCLUDE_NORMCORE
+#elif COGNITIVE3D_INCLUDE_NORMCORE
             if (obj.GetComponent<Normal.Realtime.RealtimeView>())
             {
                 return true;
@@ -57,6 +55,19 @@ namespace Cognitive3D
             {
                 OnNetworkObjectValid?.Invoke(obj);
             }
+        }
+
+        internal static bool IsNetworkObjectValid(GameObject obj)
+        {
+            if (!IsNetworkedObject(obj)) return false;
+
+            var networkedComponent = obj.GetComponent<NetworkedDynamicObjectBase>();
+            if (networkedComponent != null)
+            {
+                return networkedComponent.IsNetworkObjectValid();
+            }
+
+            return false;
         }
 
         /// <summary>
