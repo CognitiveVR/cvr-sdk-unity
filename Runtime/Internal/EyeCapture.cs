@@ -17,7 +17,7 @@ namespace Cognitive3D
         //this should be true if gazing at sky. within fixation angle, but position will just mess up the average
         public bool SkipPositionForFixationAverage = false;
         public Vector3 HmdPosition;
-        public long Time;
+        public long Time; //unixtime in milliseconds
 
         public bool Discard; //empty or impossible values
         public bool EyesClosed; //blinking or eyes closed
