@@ -75,7 +75,7 @@ namespace Cognitive3D.ActiveSession
             canvasHackObject = canvasHackField.GetValue(null);
         }
 
-        private void SensorRecorder_OnNewSensorRecorded(string sensorName, float value)
+        private void SensorRecorder_OnNewSensorRecorded(string sensorName, float value, double time)
         {
             //reject sensors if there is an allow list and the sensor is not included
             if (allowedSensorNames.Count > 0)
