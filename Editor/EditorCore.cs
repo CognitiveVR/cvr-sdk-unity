@@ -2989,6 +2989,16 @@ namespace Cognitive3D
             public long expiration;
             public string planType;
             public bool isFreeTrial;
+
+            public EntitlementData entitlements;
+        }
+
+        [System.Serializable]
+        internal class EntitlementData
+        {
+            public bool can_access_session_audio;
+            public bool can_access_eye_tracking;
+            public bool can_create_ab_test;
         }
         #endregion
 

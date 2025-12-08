@@ -20,16 +20,26 @@ namespace Cognitive3D
         internal static int projectID;
         private static int userID;
 
+        internal static List<FeatureData> features = new List<FeatureData>();
+        internal delegate void refreshFeatureStates();
+        /// <summary>
+        /// Called just after a session has begun
+        /// </summary>
+        internal static event refreshFeatureStates RefreshFeatureStates;
+        private static void InvokeRefreshFeatureStatesEvent() { if (RefreshFeatureStates != null) { RefreshFeatureStates.Invoke(); } }
+
         internal static List<FeatureData> CreateFeatures(System.Action<int> setFeatureIndex)
         {
             if (!string.IsNullOrEmpty(EditorCore.DeveloperKey))
             {
                 EditorCore.GetUserData(EditorCore.DeveloperKey, GetUserResponse);
+                EditorCore.CheckForExpiredDeveloperKey(EditorCore.DeveloperKey, GetDevKeyResponse);
             }
 
-            return new List<FeatureData>
+            return features = new List<FeatureData>
             {
                 new FeatureData(
+                    false,
                     "Dynamic Objects",
                     "Manage and track specific Dynamic Objects in the current scene",
                     EditorCore.DynamicsIcon,
@@ -52,6 +62,7 @@ namespace Cognitive3D
                     new DynamicObjectDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "ExitPoll Survey",
                     "Set up ExitPoll surveys to collect and view user feedback",
                     EditorCore.ExitpollIcon,
@@ -74,6 +85,7 @@ namespace Cognitive3D
                     new ExitpollDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Remote Controls",
                     "Set up variables to customize app behavior for different users",
                     EditorCore.RemoteControlsIcon,
@@ -96,6 +108,7 @@ namespace Cognitive3D
                     new RemoteControlsDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Social Platform",
                     "Set up a Social Platform to capture user and app identity data",
                     EditorCore.SocialPlatformIcon,
@@ -118,6 +131,7 @@ namespace Cognitive3D
                     new SocialPlatformDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Custom Events",
                     "API reference and examples for recording custom events",
                     EditorCore.CustomEventIcon,
@@ -140,6 +154,7 @@ namespace Cognitive3D
                     new CustomEventDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Sensors",
                     "API reference and examples for recording custom sensors",
                     EditorCore.SensorIcon,
@@ -162,6 +177,7 @@ namespace Cognitive3D
                     new SensorDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Multiplayer",
                     "Set up Multiplayer to track server-client player activity and analytics",
                     EditorCore.MultiplayerIcon,
@@ -184,6 +200,7 @@ namespace Cognitive3D
                     new MultiplayerDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Media and 360 Video",
                     "Set up Media to track gaze on images and videos",
                     EditorCore.MediaIcon,
@@ -206,6 +223,7 @@ namespace Cognitive3D
                     new MediaDetailGUI()
                 ),
                 new FeatureData(
+                    false,
                     "Audio Recording",
                     "Set up Audio Recorder to capture speech from microphone or app audio",
                     EditorCore.AudioRecordingIcon,
@@ -230,18 +248,30 @@ namespace Cognitive3D
             };
         }
 
-        private static void GetUserResponse(int responseCode, string error, string text)
+        internal static void UpdateAllFeatureAvailability(bool isEnabled)
         {
-            var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
-            if (responseCode != 200)
+            if (features.Count <= 0) return;
+
+            foreach (var feature in features)
             {
-                Util.logDevelopment("Failed to retrieve user data" + responseCode + "  " + error);
+                feature.isEnabled = isEnabled;
             }
 
-            if (responseCode == 200 && userdata != null)
+            InvokeRefreshFeatureStatesEvent();
+        }
+
+        internal static void UpdateFeatureAvailability(string featureName, bool isEnabled)
+        {
+            if (features.Count <= 0) return;
+
+            foreach (var feature in features)
             {
-                userID = userdata.userId;
-                projectID = userdata.projectId;
+                if (feature.Title.Contains(featureName))
+                {
+                    feature.isEnabled = isEnabled;
+                    InvokeRefreshFeatureStatesEvent();
+                    break;
+                }
             }
         }
 
@@ -261,7 +291,7 @@ namespace Cognitive3D
 
             if (prefabContents.GetComponent<T>() != null)
             {
-                Object.DestroyImmediate(prefabContents.GetComponent<T>());
+                UnityEngine.Object.DestroyImmediate(prefabContents.GetComponent<T>());
             }
             else
             {
@@ -293,10 +323,73 @@ namespace Cognitive3D
 
             return hasComponent;
         }
+
+#region Callback Responses
+        private static void GetUserResponse(int responseCode, string error, string text)
+        {
+            var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+            if (responseCode != 200)
+            {
+                Util.logDevelopment("Failed to retrieve user data" + responseCode + "  " + error);
+            }
+
+            if (responseCode == 200 && userdata != null)
+            {
+                userID = userdata.userId;
+                projectID = userdata.projectId;
+            }
+        }
+
+        static void GetDevKeyResponse(int responseCode, string error, string text)
+        {
+            if (responseCode == 200)
+            {
+                //dev key is fine
+                UpdateAllFeatureAvailability(true);
+                EditorCore.CheckSubscription(EditorCore.DeveloperKey, GetSubscriptionResponse);
+                return;
+            }
+
+            UpdateAllFeatureAvailability(false);
+            Debug.LogError("Developer Key invalid or expired. Response code: " + responseCode + " error: " + error);
+        }
+
+        private static void GetSubscriptionResponse(int responseCode, string error, string text)
+        {
+            UpdateFeatureAvailability("Audio Recording", false);
+            if (responseCode != 200)
+            {
+                Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
+                return;
+            }
+
+            // Check if response data is valid
+            try
+            {
+                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+            }
+            catch
+            {
+                Debug.LogError("Invalid JSON response");
+                return;
+            }
+
+            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+            if (organizationDetails != null && 
+                organizationDetails.subscriptions != null &&
+                organizationDetails.subscriptions.Length > 0 && 
+                organizationDetails.subscriptions[0].entitlements != null &&
+                organizationDetails.subscriptions[0].entitlements.can_access_session_audio)
+            {
+                UpdateFeatureAvailability("Audio Recording", true);
+            }
+        }
+#endregion
     }
 
     internal class FeatureData
     {
+        internal bool isEnabled;
         internal string Title;
         internal string Description;
         internal Texture2D Icon;
@@ -306,8 +399,9 @@ namespace Cognitive3D
 
         internal IFeatureDetailGUI DetailGUI;
 
-        internal FeatureData(string title, string description, Texture2D icon, System.Action onClick, List<FeatureAction> actions, IFeatureDetailGUI detailGUI = null)
+        internal FeatureData(bool isEnabled, string title, string description, Texture2D icon, System.Action onClick, List<FeatureAction> actions, IFeatureDetailGUI detailGUI = null)
         {
+            this.isEnabled = isEnabled;
             Title = title;
             Description = description;
             Icon = icon;
