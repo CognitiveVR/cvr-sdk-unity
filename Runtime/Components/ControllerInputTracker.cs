@@ -348,7 +348,7 @@ namespace Cognitive3D.Components
             		copy.Add(CurrentLeftButtonStates[i]);
             	}
                 CurrentLeftButtonStates.Clear();
-            	if (Cognitive3D_Manager.autoInitializePlayerSetup)
+            	if (Cognitive3D_Manager.Instance.autoInitializePlayerSetup)
                     DynamicManager.RecordControllerEvent(false, copy);
                 else
                     DynamicManager.RecordControllerEvent(LeftHandDynamicObject.GetId(), copy);
@@ -361,7 +361,7 @@ namespace Cognitive3D.Components
                     copy.Add(CurrentRightButtonStates[i]);
                 }
                 CurrentRightButtonStates.Clear();
-                if (Cognitive3D_Manager.autoInitializePlayerSetup)
+                if (Cognitive3D_Manager.Instance.autoInitializePlayerSetup)
                     DynamicManager.RecordControllerEvent(true, copy);
                 else
                     DynamicManager.RecordControllerEvent(RightHandDynamicObject.GetId(), copy);

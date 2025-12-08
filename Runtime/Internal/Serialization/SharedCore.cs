@@ -1783,6 +1783,7 @@ namespace Cognitive3D.Serialization
 
             // Clear and prepare for next batch
             trackingSpaces.Clear();
+            boundaryShapes.Clear();
             boundarybuilder.Clear();
             boundarybuilder.Append("{\"data\":[");
         }

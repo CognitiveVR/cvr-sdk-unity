@@ -666,6 +666,37 @@ namespace Cognitive3D
             );
 #elif C3D_DEFAULT
 
+#if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
+            var viveFeature = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android).
+                                GetFeature<VIVE.OpenXR.VIVEFocus3Feature>();
+
+            if (viveFeature != null && viveFeature.enabled)
+            {
+                // Check hand tracking
+                var handTrackingFeature = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android)
+                                            .GetFeature<VIVE.OpenXR.Hand.ViveHandTracking>();
+                
+                if (handTrackingFeature != null)
+                {
+                    ProjectValidation.AddItem(
+                        level: ProjectValidation.ItemLevel.Required,
+                        category: CATEGORY,
+                        actionType: ProjectValidation.ItemAction.Fix,
+                        message: "VIVE Hand Tracking is not enabled in OpenXR settings. Hand tracking data will not be recorded. Enable VIVE Hand Tracking Support?",
+                        fixmessage: "VIVE Hand Tracking Support is enabled in OpenXR settings.",
+                        checkAction: () =>
+                        {
+                            return handTrackingFeature.enabled;
+                        },
+                        fixAction: () =>
+                        {
+                            handTrackingFeature.enabled = true;
+                        }
+                    );
+                }
+            }
+#endif
+
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
             ProjectValidation.FindComponentInActiveScene<XROrigin>(out var xrorigins);
 

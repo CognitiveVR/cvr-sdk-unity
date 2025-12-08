@@ -11,6 +11,11 @@ namespace Cognitive3D.Components
     {
 #if ((C3D_OCULUS || C3D_DEFAULT || C3D_VIVEWAVE || C3D_PICOXR) && !UNITY_EDITOR) || C3D_STEAMVR2
         /// <summary>
+        /// Track whether the boundary has been initialized in this session
+        /// </summary>
+        private static bool boundaryInitializedThisSession = false;
+
+        /// <summary>
         /// The previous list of coordinates (local to tracking space) describing the boundary <br/>
         /// Used for comparison to determine if the boundary changed
         /// </summary>
@@ -52,30 +57,53 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+            boundaryInitializedThisSession = false; // Reset for new session
             StartCoroutine(InitializeBoundaryRecordWithDelay());
+        }
+
+        void OnLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool didChangeSceneId)
+        {
+            if (didChangeSceneId && Cognitive3D_Manager.TrackingScene != null)
+            {
+                StartCoroutine(InitializeBoundaryRecordWithDelay());
+            }
         }
 
         private IEnumerator InitializeBoundaryRecordWithDelay()
         {
+            // Prevent race condition: claim initialization immediately before delay
+            // If multiple coroutines start (e.g., from rapid session start + level load),
+            // only the first one should register event handlers
+            bool shouldInitialize = !boundaryInitializedThisSession;
+            if (shouldInitialize)
+            {
+                boundaryInitializedThisSession = true;
+            }
+
             yield return new WaitForSeconds(INITIALIZATION_DELAY_SECONDS);
 
-            // The rest of your original OnSessionBegin code
-            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
-            Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
-
-            // Get initial values of boundary and tracking space
+            // Always record boundary shape and tracking space on scene load (including first scene)
             currentBoundaryPoints = BoundaryUtil.GetCurrentBoundaryPoints();
-            previousBoundaryPoints = currentBoundaryPoints; // since there is no "previous"
+            previousBoundaryPoints = currentBoundaryPoints;
 
-            // Initialize the string builder to an appropriate size based on boundary points
+            // Only initialize once per session (on first scene)
+            if (shouldInitialize)
+            {
+                // Always initialize the string builder, even if there are no boundary points
+                int numPoints = (currentBoundaryPoints != null) ? currentBoundaryPoints.Length : 4; // Default to 4 if no boundary
+                CoreInterface.InitializeBoundary(numPoints + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * numPoints));
+
+                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+                Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;
+                Cognitive3D_Manager.OnLevelLoaded += OnLevelLoaded;
+            }
+
             if (currentBoundaryPoints != null)
             {
-                CoreInterface.InitializeBoundary(currentBoundaryPoints.Length + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * currentBoundaryPoints.Length));
-                // Record initial boundary shape
                 CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
             }
 
-            // Record initial tracking space position and rotation
+            // Record tracking space position and rotation
             if (BoundaryUtil.TryGetTrackingSpaceTransform(out var customTransform))
             {
                 CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
@@ -133,8 +161,10 @@ namespace Cognitive3D.Components
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
+            Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
             Cognitive3D_Manager.OnTick -= Cognitive3D_Manager_OnTick;
+            boundaryInitializedThisSession = false; // Reset for next session
         }
 #endif
 

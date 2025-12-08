@@ -145,13 +145,13 @@ namespace Cognitive3D.Serialization
 
             if (centimeterLimit)
             {
-                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[0]));
+                builder.Append(pos[0].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
                 builder.Append(",");
-                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[1]));
+                builder.Append(pos[1].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
                 builder.Append(",");
-                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[2]));
+                builder.Append(pos[2].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
             }
             else

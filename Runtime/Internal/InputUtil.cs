@@ -537,7 +537,7 @@ namespace Cognitive3D
             InputDevices.GetDevices(devices);
             foreach (var device in devices)
             {
-                if (device.characteristics.HasFlag(InputDeviceCharacteristics.Controller))
+                if ((device.characteristics & InputDeviceCharacteristics.Controller) != 0)
                 {
                     return InputType.Controller;
                 }

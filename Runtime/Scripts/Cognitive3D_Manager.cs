@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.1.0";
+        public static readonly string SDK_VERSION = "2.1.5";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -224,6 +224,12 @@ namespace Cognitive3D
             if (TrackingScene == null)
             {
                 Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
+            }
+
+            // Record the start time for the initial scene
+            if (!string.IsNullOrEmpty(scene.path) && !SceneStartTimeDict.ContainsKey(scene.path))
+            {
+                SceneStartTimeDict.Add(scene.path, Time.time);
             }
 
             // TODO: support for additive scenes? According to doc, it'll be somehow considered single mode

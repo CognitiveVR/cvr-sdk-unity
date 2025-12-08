@@ -241,11 +241,11 @@ namespace Cognitive3D
                 if (GUILayout.Button("Upload Mesh", "ButtonRight", GUILayout.Height(30)))
                 {
                     List<GameObject> uploadList = new List<GameObject>(Selection.gameObjects);
-                    bool uploadConfirmed = ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
-                    if (uploadConfirmed)
+                    System.Action uploadMeshesOnManifest = delegate
                     {
-                        UploadCustomIdForAggregation();
-                    }
+                        ExportUtility.UploadSelectedDynamicObjectMeshes(uploadList, true);
+                    };
+                    UploadCustomIdForAggregation(uploadMeshesOnManifest);
                 }
                 EditorGUI.EndDisabledGroup();
 
@@ -318,38 +318,62 @@ namespace Cognitive3D
             serializedObject.ApplyModifiedProperties();
         }
 
-        void UploadCustomIdForAggregation()
+        void UploadCustomIdForAggregation(System.Action callback)
         {
             var dyn = target as DynamicObject;
+
+            if (dyn.idSource == DynamicObject.IdSourceType.GeneratedID)
+            {
+                callback?.Invoke();
+                return;
+            }
+
             if (dyn.idSource == DynamicObject.IdSourceType.CustomID)
             {
                 Debug.Log("Cognitive3D Dynamic Object: upload custom id to scene");
-                EditorCore.RefreshSceneVersion(delegate ()
-                {
-                    AggregationManifest manifest = new AggregationManifest();
-                    manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.CustomId, dyn.IsController,
-                        new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
-                        new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
-                        new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                    EditorCore.UploadManifest(manifest, null);
-                });
+                UploadManifestWithIds(dyn, new[] { dyn.CustomId }, callback);
             }
             else if (dyn.IdPool != null)
             {
                 Debug.Log("Cognitive3D Dynamic Object: Upload id pool to scene");
-                EditorCore.RefreshSceneVersion(delegate ()
-                {
-                    AggregationManifest manifest = new AggregationManifest();
-                    for (int i = 0; i < dyn.IdPool.Ids.Length; i++)
-                    {
-                        manifest.objects.Add(new AggregationManifest.AggregationManifestEntry(dyn.gameObject.name, dyn.MeshName, dyn.IdPool.Ids[i], dyn.IsController,
-                            new float[3] { dyn.transform.lossyScale.x, dyn.transform.lossyScale.y, dyn.transform.lossyScale.z },
-                            new float[3] { dyn.transform.position.x, dyn.transform.position.y, dyn.transform.position.z },
-                            new float[4] { dyn.transform.rotation.x, dyn.transform.rotation.y, dyn.transform.rotation.z, dyn.transform.rotation.w }));
-                    }
-                    EditorCore.UploadManifest(manifest, null);
-                });
+                UploadManifestWithIds(dyn, dyn.IdPool.Ids, callback);
             }
+            else
+            {
+                callback?.Invoke();
+            }
+        }
+
+        void UploadManifestWithIds(DynamicObject dyn, string[] ids, System.Action callback)
+        {
+            EditorCore.RefreshSceneVersion(() =>
+            {
+                var manifest = new AggregationManifest();
+                foreach (var id in ids)
+                {
+                    var entry = CreateManifestEntry(dyn, id);
+                    manifest.objects.Add(entry);
+                }
+                EditorCore.UploadManifest(manifest, callback);
+            });
+        }
+
+        AggregationManifest.AggregationManifestEntry CreateManifestEntry(DynamicObject dyn, string id)
+        {
+            var transform = dyn.transform;
+            var scale = new float[] { transform.lossyScale.x, transform.lossyScale.y, transform.lossyScale.z };
+            var position = new float[] { transform.position.x, transform.position.y, transform.position.z };
+            var rotation = new float[] { transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w };
+
+            return new AggregationManifest.AggregationManifestEntry(
+                dyn.gameObject.name,
+                dyn.MeshName,
+                id,
+                dyn.IsController,
+                scale,
+                position,
+                rotation
+            );
         }
 
         void CheckCustomId()

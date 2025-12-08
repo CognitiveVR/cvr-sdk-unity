@@ -1668,7 +1668,7 @@ namespace Cognitive3D
                     if (!isSetupComplete)
                     {
                         // Automatically append input bindings for SteamVR
-                        appearDisabled = !Cognitive3D_Manager.autoInitializePlayerSetup;
+                        appearDisabled = Cognitive3D_Manager.Instance == null || !Cognitive3D_Manager.Instance.autoInitializePlayerSetup;
                         needsConfirmation = appearDisabled;
                         onclick += () => AppendSteamVRBindings();
                     }
