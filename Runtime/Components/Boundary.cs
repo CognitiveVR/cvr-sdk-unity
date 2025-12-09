@@ -20,6 +20,17 @@ namespace Cognitive3D.Components
             }
         }
 
+        public delegate void onBoundarySend();
+        //used by active session view
+        public static event onBoundarySend OnBoundarySend;
+        internal static void InvokeBoundarySend()
+        {
+            if (OnBoundarySend != null)
+            {
+                OnBoundarySend.Invoke();
+            }
+        }
+
 #if ((C3D_OCULUS || C3D_DEFAULT || C3D_VIVEWAVE || C3D_PICOXR) && !UNITY_EDITOR) || C3D_STEAMVR2
         /// <summary>
         /// Track whether the boundary has been initialized in this session
