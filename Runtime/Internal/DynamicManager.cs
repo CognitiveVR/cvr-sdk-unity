@@ -43,7 +43,7 @@ namespace Cognitive3D
                 if (ActiveDynamicObjectsArray[i].active)
                 {
                     CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
-                    InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
+                    InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                 }
             }
         }
@@ -1382,13 +1382,13 @@ namespace Cognitive3D
                             {
                                 //DynamicObjectCore.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
                                 CoreInterface.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
-                                InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
+                                InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                             }
                             else
                             {
                                 //DynamicObjectCore.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
                                 CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
-                                InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
+                                InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                             }
                         }
                     }

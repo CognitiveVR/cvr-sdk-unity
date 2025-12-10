@@ -378,7 +378,7 @@ namespace Cognitive3D
 				if (startTimestamp == 0)
 					startTimestamp = currentData1.timestamp;
 				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
-				var final = epochStart + MsSincestart;
+				var final = epochStart + MsSincestart / 1000;
 				return final;
 			}
 			else if (useDataQueue2)
@@ -386,7 +386,7 @@ namespace Cognitive3D
 				if (startTimestamp == 0)
 					startTimestamp = currentData2.timestamp;
 				var MsSincestart = currentData2.timestamp - startTimestamp; //milliseconds since start
-				var final = epochStart + MsSincestart;
+				var final = epochStart + MsSincestart / 1000;
 				return final;
 			}
 			return Util.Timestamp();
@@ -497,7 +497,7 @@ namespace Cognitive3D
             //currentData.captureTime //nanoseconds. steady clock
             long sinceStart = currentData.captureTime - startTimestamp;
             sinceStart = (sinceStart / 1000000); //remove NANOSECONDS
-            var final = epochStart + sinceStart;
+            var final = epochStart + sinceStart / 1000;
             return final;
         }
 
