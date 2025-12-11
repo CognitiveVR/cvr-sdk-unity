@@ -94,6 +94,13 @@ namespace Cognitive3D
             }
             if (BeginSessionAutomatically)
             {
+#if XRPF
+                // Wait for xrpf agreement before starting session
+                while (!XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+                {
+                    yield return null;
+                }
+#endif
                 BeginSession();
             }
         }
