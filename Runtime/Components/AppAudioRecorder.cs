@@ -75,6 +75,14 @@ namespace Cognitive3D.Components
         /// </summary>
         private void InitializeRecording()
         {
+#if XRPF
+            // Early check for XRPF audio permission
+            if (!XRPF.PrivacyFramework.Agreement.IsAudioDataAllowed)
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", false);
+                return; // Don't proceed with setting up audio recording
+            }
+#endif
             try
             {
                 AndroidPlugin.Instance.Call("initCodec", audioChannelName);

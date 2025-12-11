@@ -33,6 +33,14 @@ namespace Cognitive3D.Components
         private void AndroidPlugin_OnInstanceCreated()
         {
             AndroidPlugin.OnInstanceCreated -= AndroidPlugin_OnInstanceCreated;
+#if XRPF
+            // Early check for XRPF audio permission
+            if (!XRPF.PrivacyFramework.Agreement.IsAudioDataAllowed)
+            {
+                Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", false);
+                return; // Don't proceed with setting up audio recording
+            }
+#endif
             // Request permission if not already granted
             if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
             {
