@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -112,9 +113,8 @@ namespace Cognitive3D
 
         internal static CommonDynamicMesh GetControllerMeshName(string xrDeviceName, bool isRight)
         {
-            if (xrDeviceName.Contains("Vive Wand")
-                || xrDeviceName.Contains("Vive. Controller MV")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+            var vivePatterns = new[] { "Vive Wand", "Vive. Controller MV", "VIVE Focus 3 Controller OpenXR" };
+            if (vivePatterns.Any(p => xrDeviceName.Contains(p)) || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
             {
                 return CommonDynamicMesh.ViveController;
             }
@@ -207,9 +207,8 @@ namespace Cognitive3D
         //used by controller input tracker to determine how to record input names
         internal static ControllerDisplayType GetControllerPopupName(string xrDeviceName, bool isRight)
         {
-            if (xrDeviceName.Contains("Vive Wand")
-                || xrDeviceName.Contains("Vive. Controller MV")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+            var vivePatterns = new[] { "Vive Wand", "Vive. Controller MV", "VIVE Focus 3 Controller OpenXR" };
+            if (vivePatterns.Any(p => xrDeviceName.Contains(p)) || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
             {
                 return ControllerDisplayType.vive_controller;
             }
@@ -508,38 +507,33 @@ namespace Cognitive3D
                 return InputType.None;
             }
 #elif C3D_DEFAULT
-    #if COGNITIVE3D_INCLUDE_XR_HANDS
-            UnityEngine.XR.Hands.XRHandSubsystem activeHandSubsystem = null;
-
-            // Fetch all available XRHandSubsystems
-            var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
-            SubsystemManager.GetSubsystems(subsystems);
-
-            foreach (var subsystem in subsystems)
-            {
-                if (subsystem.running)
-                {
-                    activeHandSubsystem = subsystem;
-                    break;
-                }
-            }
-
-            if (activeHandSubsystem != null)
-            {
-                if (activeHandSubsystem.leftHand.isTracked || activeHandSubsystem.rightHand.isTracked)
-                {
-                    return InputType.Hand;
-                }
-            }
-    #endif
-
             List<InputDevice> devices = new List<InputDevice>();
-            InputDevices.GetDevices(devices);
-            foreach (var device in devices)
+
+            // Check for controllers first - they take priority when actively tracked
+            InputDevices.GetDevicesWithCharacteristics(
+                InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand,
+                devices);
+
+            if (devices.Count > 0 && devices[0].isValid)
             {
-                if ((device.characteristics & InputDeviceCharacteristics.Controller) != 0)
+                // Verify controller is actually being tracked
+                if (devices[0].TryGetFeatureValue(CommonUsages.isTracked, out bool isTracked) && isTracked)
                 {
                     return InputType.Controller;
+                }
+            }
+
+            // Check for hand tracking if no active controllers
+            devices.Clear();
+            InputDevices.GetDevicesWithCharacteristics(
+                InputDeviceCharacteristics.HandTracking, devices);
+
+            if (devices.Count > 0 && devices[0].isValid)
+            {
+                // Verify hand is actually being tracked
+                if (devices[0].TryGetFeatureValue(CommonUsages.isTracked, out bool isTracked) && isTracked)
+                {
+                    return InputType.Hand;
                 }
             }
 
@@ -658,28 +652,21 @@ namespace Cognitive3D
             {
                 case InputType.Controller:
                     return GetDefaultNodePosition(node);
-
-#if COGNITIVE3D_INCLUDE_XR_HANDS
                 case InputType.Hand:
-                    var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
-                    SubsystemManager.GetSubsystems(subsystems);
-
-                    foreach (var subsystem in subsystems)
+                    List<InputDevice> handDevices = new List<InputDevice>();
+                    InputDevices.GetDevicesWithCharacteristics(
+                        InputDeviceCharacteristics.HandTracking | 
+                        (node == XRNode.RightHand ? InputDeviceCharacteristics.Right : InputDeviceCharacteristics.Left),
+                        handDevices);
+                    
+                    if (handDevices.Count > 0 && handDevices[0].isValid)
                     {
-                        if (!subsystem.running) continue;
-
-                        var hand = node == XRNode.RightHand ? subsystem.rightHand : subsystem.leftHand;
-                        if (hand.isTracked)
+                        if (handDevices[0].TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 pos))
                         {
-                            var wrist = hand.GetJoint(UnityEngine.XR.Hands.XRHandJointID.Wrist);
-                            if (wrist.TryGetPose(out var pose))
-                            {
-                                return pose.position;
-                            }
+                            return pos;
                         }
                     }
                     break;
-#endif
             }
 #endif
             // Default fallback for retrieving controller positions
@@ -817,28 +804,21 @@ namespace Cognitive3D
             {
                 case InputType.Controller:
                     return GetDefaultNodeRotation(node);
-
-    #if COGNITIVE3D_INCLUDE_XR_HANDS
                 case InputType.Hand:
-                    var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
-                    SubsystemManager.GetSubsystems(subsystems);
+                    List<InputDevice> handDevices = new List<InputDevice>();
+                    InputDevices.GetDevicesWithCharacteristics(
+                        InputDeviceCharacteristics.HandTracking |
+                        (node == XRNode.RightHand ? InputDeviceCharacteristics.Right : InputDeviceCharacteristics.Left),
+                        handDevices);
 
-                    foreach (var subsystem in subsystems)
+                    if (handDevices.Count > 0 && handDevices[0].isValid)
                     {
-                        if (!subsystem.running) continue;
-
-                        var hand = node == XRNode.RightHand ? subsystem.rightHand : subsystem.leftHand;
-                        if (hand.isTracked)
+                        if (handDevices[0].TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion rot))
                         {
-                            var wrist = hand.GetJoint(UnityEngine.XR.Hands.XRHandJointID.Wrist);
-                            if (wrist.TryGetPose(out var pose))
-                            {
-                                return pose.rotation;
-                            }
+                            return rot;
                         }
                     }
                     break;
-    #endif
             }
 #endif
             // Default fallback for retrieving controller rotations
