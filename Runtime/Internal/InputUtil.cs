@@ -815,7 +815,8 @@ namespace Cognitive3D
                     {
                         if (handDevices[0].TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion rot))
                         {
-                            return rot;
+                            var offsetRot = Quaternion.Euler(90, 0, 0);
+                            return rot * offsetRot;
                         }
                     }
                     break;
