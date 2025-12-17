@@ -93,6 +93,15 @@ namespace Cognitive3D.Components
 
         private IEnumerator InitializeBoundaryRecordWithDelay()
         {
+            // Prevent race condition: claim initialization immediately before delay
+            // If multiple coroutines start (e.g., from rapid session start + level load),
+            // only the first one should register event handlers
+            bool shouldInitialize = !boundaryInitializedThisSession;
+            if (shouldInitialize)
+            {
+                boundaryInitializedThisSession = true;
+            }
+
             yield return new WaitForSeconds(INITIALIZATION_DELAY_SECONDS);
 
             // Always record boundary shape and tracking space on scene load (including first scene)
@@ -100,13 +109,11 @@ namespace Cognitive3D.Components
             previousBoundaryPoints = currentBoundaryPoints;
 
             // Only initialize once per session (on first scene)
-            if (!boundaryInitializedThisSession)
+            if (shouldInitialize)
             {
                 // Always initialize the string builder, even if there are no boundary points
                 int numPoints = (currentBoundaryPoints != null) ? currentBoundaryPoints.Length : 4; // Default to 4 if no boundary
                 CoreInterface.InitializeBoundary(numPoints + (int)Mathf.Ceil(NUM_BOUNDARY_POINTS_GRACE_FOR_STRINGBUILDER * numPoints));
-
-                boundaryInitializedThisSession = true;
 
                 Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
                 Cognitive3D_Manager.OnTick += Cognitive3D_Manager_OnTick;

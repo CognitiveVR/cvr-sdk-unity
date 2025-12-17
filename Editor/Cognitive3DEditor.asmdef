@@ -25,7 +25,8 @@
         "Unity.XR.PicoXR",
         "meta.xr.mrutilitykit",
         "Unity.Netcode.Runtime",
-        "Normal.Realtime.Shared"
+        "Normal.Realtime.Shared",
+        "VIVE.OpenXR"
     ],
     "includePlatforms": [
         "Editor"
@@ -91,6 +92,11 @@
             "name": "com.meta.xr.sdk.platform",
             "expression": "",
             "define": "COGNITIVE3D_META_PLATFORM"
+        },
+        {
+            "name": "com.htc.upm.vive.openxr",
+            "expression": "2.5.0",
+            "define": "COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER"
         }
     ],
     "noEngineReferences": false
