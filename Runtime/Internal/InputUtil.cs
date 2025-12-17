@@ -507,6 +507,32 @@ namespace Cognitive3D
                 return InputType.None;
             }
 #elif C3D_DEFAULT
+    #if COGNITIVE3D_INCLUDE_XR_HANDS
+            UnityEngine.XR.Hands.XRHandSubsystem activeHandSubsystem = null;
+
+            // Fetch all available XRHandSubsystems
+            var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
+            SubsystemManager.GetSubsystems(subsystems);
+
+
+            foreach (var subsystem in subsystems)
+            {
+                if (subsystem.running)
+
+                {
+                    activeHandSubsystem = subsystem;
+                    break;
+                }
+            }
+
+            if (activeHandSubsystem != null)
+            {
+                if (activeHandSubsystem.leftHand.isTracked || activeHandSubsystem.rightHand.isTracked)
+                {
+                    return InputType.Hand;
+                }
+            }
+    #endif
             List<InputDevice> devices = new List<InputDevice>();
 
             // Check for controllers first - they take priority when actively tracked
@@ -666,6 +692,25 @@ namespace Cognitive3D
                             return pos;
                         }
                     }
+    #if COGNITIVE3D_INCLUDE_XR_HANDS
+                    var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
+                    SubsystemManager.GetSubsystems(subsystems);
+
+                    foreach (var subsystem in subsystems)
+                    {
+                        if (!subsystem.running) continue;
+
+                        var hand = node == XRNode.RightHand ? subsystem.rightHand : subsystem.leftHand;
+                        if (hand.isTracked)
+                        {
+                            var wrist = hand.GetJoint(UnityEngine.XR.Hands.XRHandJointID.Wrist);
+                            if (wrist.TryGetPose(out var pose))
+                            {
+                                return pose.position;
+                            }
+                        }
+                    }
+    #endif
                     break;
             }
 #endif
@@ -819,6 +864,25 @@ namespace Cognitive3D
                             return rot * offsetRot;
                         }
                     }
+    #if COGNITIVE3D_INCLUDE_XR_HANDS
+                    var subsystems = new List<UnityEngine.XR.Hands.XRHandSubsystem>();
+                    SubsystemManager.GetSubsystems(subsystems);
+
+                    foreach (var subsystem in subsystems)
+                    {
+                        if (!subsystem.running) continue;
+
+                        var hand = node == XRNode.RightHand ? subsystem.rightHand : subsystem.leftHand;
+                        if (hand.isTracked)
+                        {
+                            var wrist = hand.GetJoint(UnityEngine.XR.Hands.XRHandJointID.Wrist);
+                            if (wrist.TryGetPose(out var pose))
+                            {
+                                return pose.rotation;
+                            }
+                        }
+                    }
+    #endif
                     break;
             }
 #endif
