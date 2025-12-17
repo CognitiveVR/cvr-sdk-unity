@@ -113,8 +113,8 @@ namespace Cognitive3D
 
         internal static CommonDynamicMesh GetControllerMeshName(string xrDeviceName, bool isRight)
         {
-            var vivePatterns = new[] { "Vive Wand", "Vive. Controller MV", "VIVE Focus 3 Controller OpenXR" };
-            if (vivePatterns.Any(p => xrDeviceName.Contains(p)) || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+            if (xrDeviceName.Contains("Vive Wand")
+                || xrDeviceName.Contains("Vive. Controller MV"))
             {
                 return CommonDynamicMesh.ViveController;
             }
@@ -158,15 +158,14 @@ namespace Cognitive3D
                     return CommonDynamicMesh.OculusQuestTouchRight;
                 }
             }
-            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
+                || ((xrDeviceName.Equals("HTC Vive Controller OpenXR") || xrDeviceName.Contains("VIVE Focus 3 Controller OpenXR")) && isRight == false)
                 || xrDeviceName.Contains("WVR_CR_Left"))
-                && !isRight)
             {
                 return CommonDynamicMesh.ViveFocusControllerLeft;
             }
             if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
+                || ((xrDeviceName.Equals("HTC Vive Controller OpenXR") || xrDeviceName.Contains("VIVE Focus 3 Controller OpenXR")) && isRight == true)
                 || xrDeviceName.Contains("WVR_CR_Right"))
                 && isRight)
             {
@@ -192,11 +191,13 @@ namespace Cognitive3D
             {
                 return CommonDynamicMesh.PicoNeo3ControllerRight;
             }
-            if (xrDeviceName.Equals("PICO Controller-Left"))
+            if (xrDeviceName.Equals("PICO Controller-Left")
+                || (xrDeviceName.Equals("PICO4 Touch Controller OpenXR") && isRight == false))
             {
                 return CommonDynamicMesh.PicoNeo4ControllerLeft;
             }
-            if (xrDeviceName.Equals("PICO Controller-Right"))
+            if (xrDeviceName.Equals("PICO Controller-Right")
+                || (xrDeviceName.Equals("PICO4 Touch Controller OpenXR") && isRight == true))
             {
                 return CommonDynamicMesh.PicoNeo4ControllerRight;
             }
@@ -207,8 +208,8 @@ namespace Cognitive3D
         //used by controller input tracker to determine how to record input names
         internal static ControllerDisplayType GetControllerPopupName(string xrDeviceName, bool isRight)
         {
-            var vivePatterns = new[] { "Vive Wand", "Vive. Controller MV", "VIVE Focus 3 Controller OpenXR" };
-            if (vivePatterns.Any(p => xrDeviceName.Contains(p)) || xrDeviceName.Equals("HTC Vive Controller OpenXR"))
+            if (xrDeviceName.Contains("Vive Wand")
+                || xrDeviceName.Contains("Vive. Controller MV"))
             {
                 return ControllerDisplayType.vive_controller;
             }
@@ -279,23 +280,25 @@ namespace Cognitive3D
             {
                 return ControllerDisplayType.pico_neo_3_eye_controller_right;
             }
-            if (xrDeviceName.Equals("PICO Controller-Left"))
+            if (xrDeviceName.Equals("PICO Controller-Left")
+                || (xrDeviceName.Equals("PICO4 Touch Controller OpenXR") && isRight == false))
             {
                 return ControllerDisplayType.pico_neo_4_eye_controller_left;
             }
-            if (xrDeviceName.Equals("PICO Controller-Right"))
+            if (xrDeviceName.Equals("PICO Controller-Right")
+                || (xrDeviceName.Equals("PICO4 Touch Controller OpenXR") && isRight == true))
             {
                 return ControllerDisplayType.pico_neo_4_eye_controller_right;
             }
-            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
-                || xrDeviceName.Contains("WVR_CR_Left")))
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Left")
+                || ((xrDeviceName.Equals("HTC Vive Controller OpenXR") || xrDeviceName.Contains("VIVE Focus 3 Controller OpenXR")) && isRight == false)
+                || xrDeviceName.Contains("WVR_CR_Left"))
             {
                 return ControllerDisplayType.vive_focus_controller_left;
             }
-            if ((xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
-                || xrDeviceName.Equals("HTC Vive Controller OpenXR")
-                || xrDeviceName.Contains("WVR_CR_Right")))
+            if (xrDeviceName.Equals("OpenVR Controller(vive_cosmos_controller) - Right")
+                || ((xrDeviceName.Equals("HTC Vive Controller OpenXR") || xrDeviceName.Contains("VIVE Focus 3 Controller OpenXR")) && isRight == true)
+                || xrDeviceName.Contains("WVR_CR_Right"))
             {
                 return ControllerDisplayType.vive_focus_controller_right;
             }
