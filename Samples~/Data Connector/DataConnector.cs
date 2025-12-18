@@ -1,8 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Cognitive3D;
 using System;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
 
 /// <summary>
 /// a tool for organizing data collected from the SDK in real time to be PULLED into other tools (like ML models)
@@ -43,6 +43,42 @@ public class DataConnector : MonoBehaviour
             this.hmdpoint = hmdpoint;
             this.hmdrotation = hmdrotation;
         }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("objectid");
+            sb.Append(",");
+            sb.Append("gazepoint");
+            sb.Append(",");
+            sb.Append("hmdpoint");
+            sb.Append(",");
+            sb.Append("hmdrotation");
+            sb.Append(",");
+            sb.Append("hitSky");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(objectid);
+            sb.Append(",");
+            sb.Append(gazepoint);
+            sb.Append(",");
+            sb.Append(hmdpoint);
+            sb.Append(",");
+            sb.Append(hmdrotation);
+            sb.Append(",");
+            sb.Append(hitSky);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
     }
 
     [Serializable]
@@ -63,6 +99,42 @@ public class DataConnector : MonoBehaviour
             this.WorldPosition = WorldPosition;
             this.LocalPosition = LocalPosition;
         }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("DurationMs");
+            sb.Append(",");
+            sb.Append("IsLocal");
+            sb.Append(",");
+            sb.Append("DynamicObjectId");
+            sb.Append(",");
+            sb.Append("WorldPosition");
+            sb.Append(",");
+            sb.Append("LocalPosition");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(DurationMs);
+            sb.Append(",");
+            sb.Append(IsLocal);
+            sb.Append(",");
+            sb.Append(DynamicObjectId);
+            sb.Append(",");
+            sb.Append(WorldPosition);
+            sb.Append(",");
+            sb.Append(LocalPosition);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
     }
 
     [Serializable]
@@ -71,22 +143,66 @@ public class DataConnector : MonoBehaviour
         public FixationRecorder.EyeDataType type;
         public Vector3 hmdPos;
         public Vector3 worldPoint;
-        public bool isLocal;
         public string hitDynamicId;
         public Vector3 localPoint;
-        public Vector2 screenspace;
+        public Vector2 screenPos;
+        public Vector2 viewportPos;
         public double timestamp;
 
-        public EyeData(FixationRecorder.EyeDataType type, Vector3 hmdPos, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenspace, double timestamp)
+        public EyeData(FixationRecorder.EyeDataType type, Vector3 hmdPos, Vector3 worldPoint, string hitDynamicId, Vector3 localPoint, Vector2 screenPos, Vector2 viewportPos, double timestamp)
         {
             this.type = type;
             this.hmdPos = hmdPos;
             this.worldPoint = worldPoint;
-            this.isLocal = isLocal;
             this.hitDynamicId = hitDynamicId;
             this.localPoint = localPoint;
-            this.screenspace = screenspace;
+            this.screenPos = screenPos;
+            this.viewportPos = viewportPos;
             this.timestamp = timestamp;
+        }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("type");
+            sb.Append(",");
+            sb.Append("hmdPos");
+            sb.Append(",");
+            sb.Append("worldPoint");
+            sb.Append(",");
+            sb.Append("hitDynamicId");
+            sb.Append(",");
+            sb.Append("localPoint");
+            sb.Append(",");
+            sb.Append("screenPos");
+            sb.Append(",");
+            sb.Append("viewportPos");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(type);
+            sb.Append(",");
+            sb.Append(hmdPos);
+            sb.Append(",");
+            sb.Append(worldPoint);
+            sb.Append(",");
+            sb.Append(hitDynamicId);
+            sb.Append(",");
+            sb.Append(localPoint);
+            sb.Append(",");
+            sb.Append(screenPos);
+            sb.Append(",");
+            sb.Append(viewportPos);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
         }
     }
 
@@ -98,17 +214,53 @@ public class DataConnector : MonoBehaviour
         public Vector3 pos;
         public string dynamicObjectId;
         public double timestamp;
-        public int count;
+        public int propertyCount;
         public KeyValuePair<string, object>[] keyValuePairs;
 
-        public EventData(string name, Vector3 pos, string dynamicObjectId, double timestamp, int count, KeyValuePair<string, object>[] keyValuePairs)
+        public EventData(string name, Vector3 pos, string dynamicObjectId, double timestamp, int propertyCount, KeyValuePair<string, object>[] keyValuePairs)
         {
             this.name = name;
             this.pos = pos;
             this.dynamicObjectId = dynamicObjectId;
             this.timestamp = timestamp;
-            this.count = count;
+            this.propertyCount = propertyCount;
             this.keyValuePairs = keyValuePairs;
+        }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("name");
+            sb.Append(",");
+            sb.Append("pos");
+            sb.Append(",");
+            sb.Append("dynamicObjectId");
+            sb.Append(",");
+            sb.Append("propertyCount");
+            sb.Append(",");
+            sb.Append("keyValuePairs");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(name);
+            sb.Append(",");
+            sb.Append(pos);
+            sb.Append(",");
+            sb.Append(dynamicObjectId);
+            sb.Append(",");
+            sb.Append(propertyCount);
+            sb.Append(",");
+            sb.Append(keyValuePairs);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
         }
     }
 
@@ -131,6 +283,42 @@ public class DataConnector : MonoBehaviour
             this.rot = rot;
             this.scale = scale;
         }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("name");
+            sb.Append(",");
+            sb.Append("mesh");
+            sb.Append(",");
+            sb.Append("pos");
+            sb.Append(",");
+            sb.Append("rot");
+            sb.Append(",");
+            sb.Append("scale");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(name);
+            sb.Append(",");
+            sb.Append(mesh);
+            sb.Append(",");
+            sb.Append(pos);
+            sb.Append(",");
+            sb.Append(rot);
+            sb.Append(",");
+            sb.Append(scale);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
     }
 
     [Serializable]
@@ -146,24 +334,80 @@ public class DataConnector : MonoBehaviour
             this.sensorValue = sensorValue;
             this.timestamp = time;
         }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("sensorName");
+            sb.Append(",");
+            sb.Append("sensorValue");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(sensorName);
+            sb.Append(",");
+            sb.Append(sensorValue);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
     }
 
     [Serializable]
     public class BoundaryData
     {
-        public double time;
+        public double timestamp;
         public Vector3 pos;
         public Quaternion rot;
         public int pointCount;
         public Vector3[] points;
 
-        public BoundaryData(double time, Vector3 pos, Quaternion rot, int pointCount, Vector3[] points)
+        public BoundaryData(double timestamp, Vector3 pos, Quaternion rot, int pointCount, Vector3[] points)
         {
-            this.time = time;
+            this.timestamp = timestamp;
             this.pos = pos;
             this.rot = rot;
             this.pointCount = pointCount;
             this.points = points;
+        }
+        public static string CSVHeader()
+        {
+            var sb = new StringBuilder();
+            sb.Append("timestamp");
+            sb.Append(",");
+            sb.Append("pos");
+            sb.Append(",");
+            sb.Append("rot");
+            sb.Append(",");
+            sb.Append("pointCount");
+            sb.Append(",");
+            sb.Append("points");
+            return sb.ToString();
+        }
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+            sb.Append(timestamp);
+            sb.Append(",");
+            sb.Append(pos);
+            sb.Append(",");
+            sb.Append(rot);
+            sb.Append(",");
+            sb.Append(pointCount);
+            sb.Append(",");
+            sb.Append(points);
+            return sb.ToString();
+        }
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
         }
     }
 
@@ -187,7 +431,7 @@ public class DataConnector : MonoBehaviour
 
     #region utilities
 
-    public static string SessionName
+    public static string SessionID
     {
         get
         {
@@ -279,6 +523,7 @@ public class DataConnector : MonoBehaviour
     {
         gazeData.Clear();
         fixationData.Clear();
+        eyeData.Clear();
         customEventData.Clear();
         dynamicData.Clear();
         sensorData.Clear();
@@ -307,9 +552,9 @@ public class DataConnector : MonoBehaviour
         fixationData.Add(new FixationData(((double)fixation.StartMs / 1000.0), fixation.DurationMs, fixation.IsLocal, fixation.DynamicObjectId, fixation.WorldPosition, fixation.LocalPosition));
     }
 
-    private void FixationRecorder_OnEyeDataRecorded(FixationRecorder.EyeDataType type, Vector3 start, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenspace, double unixTime)
+    private void FixationRecorder_OnEyeDataRecorded(FixationRecorder.EyeDataType type, Vector3 start, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenPos, Vector2 viewportPos, double unixTime)
     {
-        eyeData.Add(new EyeData(type, start, worldPoint, isLocal, hitDynamicId, localPoint, screenspace, unixTime));
+        eyeData.Add(new EyeData(type, start, worldPoint, hitDynamicId, localPoint, screenPos, viewportPos, unixTime));
     }
 
     private void CustomEvent_OnCustomEventRecorded(string name, Vector3 pos, List<KeyValuePair<string, object>> properties, string dynamicObjectId, double time)
