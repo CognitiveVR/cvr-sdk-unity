@@ -23,7 +23,8 @@ namespace Cognitive3D
         public bool EyesClosed; //blinking or eyes closed
         public bool OutOfRange; //compared to linkedFixation
         public bool OffTransform; //compared to linkedFixation
-        public Vector2 ScreenPos;
+        public Vector2 ScreenPos; //screen position in pixels
+        public Vector2 ViewportPos; //normalized 0 to 1
 
         //only used for setting a reference in the fixation, for display on the active session view screen
         public Transform HitDynamicTransform;
