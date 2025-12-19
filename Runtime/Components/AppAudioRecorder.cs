@@ -99,7 +99,7 @@ namespace Cognitive3D.Components
                 audioQueue.Enqueue(new AudioData
                 {
                     samples = processedData,
-                    timestamp = 0
+                    timestamp = GetCurrentTimeMs()
                 });
             }
         }
@@ -108,11 +108,9 @@ namespace Cognitive3D.Components
         {
             if (!isInitialized) return;
 
-            long currentTime = GetCurrentTimeMs();
-
             while (audioQueue.TryDequeue(out var audioData))
             {
-                ProcessAudioData(audioData.samples, currentTime);
+                ProcessAudioData(audioData.samples, audioData.timestamp);
             }
         }
 
@@ -218,7 +216,9 @@ namespace Cognitive3D.Components
 
             try
             {
-                // Clear stale audio from before pause
+                // Discard any audio captured between finalizeRecording() and full pause.
+                // This audio is orphaned (no active codec session) and would have stale timestamps.
+                // Valid audio was already flushed in OnApplicationPause(true) before finalization.
                 while (audioQueue.TryDequeue(out _)) { }
                 InitializeRecording();
             }

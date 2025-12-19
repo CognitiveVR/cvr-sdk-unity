@@ -239,7 +239,7 @@ namespace Cognitive3D
                             "Link to Audio Recording documentation",
                             () =>
                             {
-                                Application.OpenURL("https://docs.cognitive3d.com/unity/");
+                                Application.OpenURL("https://docs.cognitive3d.com/unity/audio-recording/");
                             }
                         )
                     },
@@ -364,17 +364,17 @@ namespace Cognitive3D
             }
 
             // Check if response data is valid
+            EditorCore.OrganizationData organizationDetails;
             try
             {
-                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
+                organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
             }
-            catch
+            catch (System.Exception ex)
             {
-                Debug.LogError("Invalid JSON response");
+                Debug.LogError("Invalid JSON response: " + ex.Message);
                 return;
             }
 
-            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
             if (organizationDetails != null && 
                 organizationDetails.subscriptions != null &&
                 organizationDetails.subscriptions.Length > 0 && 

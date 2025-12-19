@@ -40,7 +40,7 @@ namespace Cognitive3D
                 GUIContent buttonContent = new GUIContent(EditorCore.ExternalIcon, "Open Audio Recording documentation");
                 if (GUI.Button(iconRect, buttonContent, EditorCore.styles.InfoButton))
                 {
-                    Application.OpenURL("https://docs.cognitive3d.com/unity/");
+                    Application.OpenURL("https://docs.cognitive3d.com/unity/audio-recording");
                 }
 
                 GUILayout.FlexibleSpace(); // Push content to the left
@@ -190,15 +190,13 @@ namespace Cognitive3D
             GUILayout.FlexibleSpace();
 
             // Remove button
-            if (GUILayout.Button(new GUIContent("Remove", "Remove the App Audio Recorder component from this GameObject"), EditorStyles.miniButton, GUILayout.Width(60)))
-            {
-                if (EditorUtility.DisplayDialog("Remove App Audio Recorder",
+            if (GUILayout.Button(new GUIContent("Remove", "Remove the App Audio Recorder component from this GameObject"), EditorStyles.miniButton, GUILayout.Width(60)) &&
+                EditorUtility.DisplayDialog("Remove App Audio Recorder",
                     $"Remove App Audio Recorder from '{obj.gameObject.name}'?",
                     "Remove", "Cancel"))
-                {
-                    Undo.DestroyObjectImmediate(obj);
-                    RefreshList();
-                }
+            {
+                Undo.DestroyObjectImmediate(obj);
+                RefreshList();
             }
 
             GUILayout.Space(30);
