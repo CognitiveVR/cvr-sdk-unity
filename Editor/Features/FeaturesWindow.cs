@@ -22,7 +22,7 @@ namespace Cognitive3D
             FeaturesWindow window = (FeaturesWindow)EditorWindow.GetWindow(typeof(FeaturesWindow), true, "Feature Builder (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
             window.minSize = new Vector2(600, 800);
             window.Show();
-            window.CheckDevKey();
+            FeatureLibrary.RefreshFeatureStates += window.Repaint;
         }
 
         private List<FeatureData> features;
@@ -76,6 +76,11 @@ namespace Cognitive3D
             });
 
             EditorCore.RefreshMediaSources();
+        }
+
+        private void OnDisable()
+        {
+            FeatureLibrary.RefreshFeatureStates -= Repaint;
         }
 
         private void OnGUI()
@@ -157,12 +162,12 @@ namespace Cognitive3D
                 );
             }
 
-            EditorGUI.BeginDisabledGroup(!devKeyValid);
             foreach (var feature in features)
             {
+                EditorGUI.BeginDisabledGroup(!feature.isEnabled);
                 DrawFeatureButton(feature);
+                EditorGUI.EndDisabledGroup();
             }
-            EditorGUI.EndDisabledGroup();
         }
 
         private void DrawFeatureButton(FeatureData featureData)
@@ -273,32 +278,6 @@ namespace Cognitive3D
             {
                 slidingBackward = true;
             }
-        }
-
-        private void CheckDevKey()
-        {
-            var developerKey = EditorCore.DeveloperKey;
-            var apiKey = EditorCore.GetPreferences().ApplicationKey;
-
-            if (!string.IsNullOrEmpty(developerKey) && !string.IsNullOrEmpty(apiKey))
-            {
-                EditorCore.CheckForExpiredDeveloperKey(developerKey, GetDevKeyResponse);
-            }
-        }
-#endregion
-
-#region Callback Responses
-        void GetDevKeyResponse(int responseCode, string error, string text)
-        {
-            if (responseCode == 200)
-            {
-                //dev key is fine
-                devKeyValid = true;
-                return;
-            }
-
-            Debug.LogError("Developer Key invalid or expired. Response code: " + responseCode + " error: " + error);
-            devKeyValid = false;
         }
 #endregion
     }

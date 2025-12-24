@@ -89,7 +89,7 @@ namespace Cognitive3D
                 if (Cognitive3D_Preferences.Instance.LocalStorage)
                 {
                     string text;
-                    if (Cognitive3D_Manager.ExitpollHandler.GetExitpoll(hookname,out text))
+                    if (Cognitive3D_Manager.ExitpollHandler.GetExitpoll(hookname, out text))
                     {
                         if (callback != null)
                         {
@@ -149,7 +149,7 @@ namespace Cognitive3D
 
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("response code to "+www.url + "  " + www.responseCode);
+                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode);
             lastDataResponse = (int)www.responseCode;
             if (callback != null)
             {
@@ -233,7 +233,7 @@ namespace Cognitive3D
 
 
             if (responsecode == 200)
-            {  
+            {
                 CacheRequest.Dispose();
                 CacheRequest = null;
                 CacheResponseAction = null;
@@ -276,12 +276,12 @@ namespace Cognitive3D
             {
                 Util.logDevelopment("NETWORK UploadAllLocalData");
                 if (string.IsNullOrEmpty(CognitiveStatics.ApplicationKey))
-                CognitiveStatics.Initialize();
+                    CognitiveStatics.Initialize();
 
                 //upload from local storage
                 if (!Cognitive3D_Preferences.Instance.LocalStorage) { if (failedCallback != null) { failedCallback.Invoke(); } Util.logDevelopment("Local Cache is disabled"); return; }
 
-                if (instance.runtimeCache == null){return;}
+                if (instance.runtimeCache == null) { return; }
 
                 cacheCompletedAction = completedCallback;
                 cacheFailedAction = failedCallback;
@@ -311,18 +311,28 @@ namespace Cognitive3D
 
             string url = "";
             string content = "";
+            bool sendAsBytes = false;
             if (runtimeCache != null)
             {
-                if (runtimeCache.PeekContent(ref url, ref content))
+                if (runtimeCache.PeekContent(ref url, ref content, ref sendAsBytes))
                 {
                     isuploadingfromcache = true;
                     //lc.GetCachedDataPoint(out url, out content);
-                    
+
                     //wait for post response
-                    var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
-                    CacheRequest = UnityWebRequest.Put(url, bytes);
+                    if (!sendAsBytes)
+                    {
+                        var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                        CacheRequest = UnityWebRequest.Put(url, bytes);
+                        CacheRequest.SetRequestHeader("Content-Type", "application/json");
+                    }
+                    else
+                    {
+                        var bytes = System.Convert.FromBase64String(content);
+                        CacheRequest = UnityWebRequest.Put(url, bytes);
+                        CacheRequest.SetRequestHeader("Content-Type", "application/octet-stream");
+                    }
                     CacheRequest.method = "POST";
-                    CacheRequest.SetRequestHeader("Content-Type", "application/json");
                     CacheRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
                     CacheRequest.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
                     CacheRequest.SendWebRequest();
@@ -342,7 +352,7 @@ namespace Cognitive3D
                 }
             }
         }
-        
+
         /// <summary>
         /// uses the Response 'callback' when the question set is recieved from the dashboard. if offline, tries to get question set from local cache
         /// </summary>
@@ -358,7 +368,7 @@ namespace Cognitive3D
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
             request.SendWebRequest();
 
-            instance.StartCoroutine(instance.WaitForExitpollResponse(request, hookname, callback,timeout));
+            instance.StartCoroutine(instance.WaitForExitpollResponse(request, hookname, callback, timeout));
         }
 
         public static void PostExitpollAnswers(string stringcontent, string questionSetName, int questionSetVersion)
@@ -399,7 +409,7 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Preferences.Instance.EnableDevLogging)
-                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode + " \n"+ contents);
+                Util.logDevelopment("response code to " + www.url + "  " + www.responseCode + " \n" + contents);
             lastDataResponse = (int)www.responseCode;
             if (callback != null)
             {
@@ -427,7 +437,7 @@ namespace Cognitive3D
         bool lastRequestFailed;
         float clockTime;
         float currentDelay = minRetryDelay;
-        
+
         internal async void Post(string url, string stringcontent)
         {
             // Cooldown procedure
@@ -456,7 +466,7 @@ namespace Cognitive3D
             request.SendWebRequest();
 #endif
             activeRequests.Add(request);
-            await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback,true);
+            await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback, true);
 
             // Triggering cooldown process when the response code is either 500 or 0
             // Response code 0 indicates a disconnection from the internet
@@ -479,7 +489,7 @@ namespace Cognitive3D
             StartCoroutine(SendGetRequest(url, successCallback));
         }
 
-        IEnumerator SendGetRequest(string url,GetRequestSuccessCallback successCallback)
+        IEnumerator SendGetRequest(string url, GetRequestSuccessCallback successCallback)
         {
             var req = UnityWebRequest.Get(url);
             yield return req.SendWebRequest();
@@ -492,11 +502,11 @@ namespace Cognitive3D
             {
                 Util.logError($"Error in GET request to get subscription. Error type: {req.responseCode.ToString()}");
             }
-         }
+        }
 
         // Writing to cache
         private void WriteToCache(string url, string content)
-        {            
+        {
             if (runtimeCache.CanWrite(url, content))
             {
                 runtimeCache.WriteContent(url, content);
@@ -669,5 +679,12 @@ namespace Cognitive3D
             }
             activeRequests.Clear();
         }
+    }
+    
+    public class CachedWebRequest
+    {
+        public string url;
+        public string content;
+        public bool sendAsBytes;
     }
 }

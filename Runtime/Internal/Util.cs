@@ -109,12 +109,21 @@ namespace Cognitive3D
         }
 
         /// <summary>
-		/// Get the Unix timestamp
+		/// Get the Unix timestamp in seconds
 		/// </summary>
 		internal static double Timestamp()
 		{
 			TimeSpan span = DateTime.UtcNow - epoch;
 			return span.TotalSeconds;
+		}
+
+        /// <summary>
+		/// Get the Unix timestamp in milliseconds
+		/// </summary>
+		internal static double TimestampMS()
+		{
+			TimeSpan span = DateTime.UtcNow - epoch;
+			return span.TotalMilliseconds;
 		}
 
         /// <summary>
