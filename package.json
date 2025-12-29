@@ -38,6 +38,11 @@
 			"displayName": "Exitpoll Customization",
 			"description": "Copy of Exitpoll Prefabs that can be configured for your project's own visual style",
 			"path": "Samples~/Exitpoll Customization"
+		},
+		{
+			"displayName": "Data Connector",
+			"description": "Sample script for listening to all data collected by Cognitive3D SDK. Intended for realtime machine learning application",
+			"path": "Samples~/Data Connector"
 		}
 	]
 }
