@@ -413,12 +413,12 @@ public class DataConnector : MonoBehaviour
 
     #endregion
 
-    public List<GazeData> gazeData;
-    public List<FixationData> fixationData;
-    public List<EyeData> eyeData;
-    public List<EventData> customEventData;
-    public List<DynamicData> dynamicData;
-    public List<SensorData> sensorData;
+    public List<GazeData> gazeData = new List<GazeData>();
+    public List<FixationData> fixationData = new List<FixationData>();
+    public List<EyeData> eyeData = new List<EyeData>();
+    public List<EventData> customEventData = new List<EventData>();
+    public List<DynamicData> dynamicData = new List<DynamicData>();
+    public List<SensorData> sensorData = new List<SensorData>();
     public List<BoundaryData> boundaryData;
 
     public bool IncludeGaze;
@@ -439,7 +439,7 @@ public class DataConnector : MonoBehaviour
         }
     }
 
-    static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static double CurrentTimestamp()
     {
         TimeSpan span = DateTime.UtcNow - epoch;
@@ -494,6 +494,11 @@ public class DataConnector : MonoBehaviour
     }
 
     private void OnDisable()
+    {
+        EndListening();
+    }
+
+    private void OnDestroy()
     {
         EndListening();
     }
