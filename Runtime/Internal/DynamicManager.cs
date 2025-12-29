@@ -18,6 +18,17 @@ namespace Cognitive3D
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
+        public delegate void onDynamicRecorded(string name, string mesh, double time, Vector3 pos, Quaternion rot, Vector3 scale);
+        //used by active session view
+        public static event onDynamicRecorded OnDynamicRecorded;
+        internal static void InvokeDynamicRecorded(string name, string mesh, double time, Vector3 pos, Quaternion rot, Vector3 scale)
+        {
+            if (OnDynamicRecorded != null)
+            {
+                OnDynamicRecorded.Invoke(name, mesh, time, pos, rot, scale);
+            }
+        }
+
         internal static void Initialize()
         {
             Cognitive3D_Manager.OnUpdate -= OnUpdate;
@@ -30,7 +41,10 @@ namespace Cognitive3D
             for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
             {
                 if (ActiveDynamicObjectsArray[i].active)
+                {
                     CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                    InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
+                }
             }
         }
 
@@ -135,7 +149,10 @@ namespace Cognitive3D
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteDynamicManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
@@ -420,7 +437,10 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteControllerManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         internal static void RegisterController(DynamicData data)
@@ -455,7 +475,10 @@ namespace Cognitive3D
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteControllerManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         internal static void RegisterHand(XRNode hand, bool isRight, string registerId = "")
@@ -503,7 +526,10 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteControllerManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         internal static DynamicData GetInputDynamicData(InputUtil.InputType type, bool isRight)
@@ -673,6 +699,7 @@ namespace Cognitive3D
                     ActiveDynamicObjectsArray[i].Properties = null;
                 }
                 CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
+                InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
             }
         }
 
@@ -768,6 +795,7 @@ namespace Cognitive3D
                     }
                     
                     CoreInterface.WriteDynamicController(ActiveInputsArray[i], props, false, builder.ToString(),Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
                 }
             }
             
@@ -996,6 +1024,7 @@ namespace Cognitive3D
                         ActiveDynamicObjectsArray[i].Properties = null;
                     }
                     CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[i], props, writeScale, Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                 }
             }
         }
@@ -1161,6 +1190,7 @@ namespace Cognitive3D
                     }
 
                     CoreInterface.WriteDynamic(array[index], props, writeScale, Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(array[index].Id, array[index].MeshName, Util.Timestamp(Time.frameCount), array[index].LastPosition, array[index].LastRotation, array[index].LastScale);
                 }
 
                 if (array[index].remove)
@@ -1279,6 +1309,7 @@ namespace Cognitive3D
                     }
 
                     CoreInterface.WriteDynamic(array[index], props, false, Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(array[index].Id, array[index].MeshName, Util.Timestamp(Time.frameCount), array[index].LastPosition, array[index].LastRotation, array[index].LastScale);
                 }
 
                 if (array[index].remove)
@@ -1351,11 +1382,13 @@ namespace Cognitive3D
                             {
                                 //DynamicObjectCore.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
                                 CoreInterface.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
+                                InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                             }
                             else
                             {
                                 //DynamicObjectCore.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
                                 CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                                InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                             }
                         }
                     }

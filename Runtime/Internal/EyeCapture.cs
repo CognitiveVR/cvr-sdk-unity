@@ -17,13 +17,14 @@ namespace Cognitive3D
         //this should be true if gazing at sky. within fixation angle, but position will just mess up the average
         public bool SkipPositionForFixationAverage = false;
         public Vector3 HmdPosition;
-        public long Time;
+        public long Time; //unixtime in milliseconds
 
         public bool Discard; //empty or impossible values
         public bool EyesClosed; //blinking or eyes closed
         public bool OutOfRange; //compared to linkedFixation
         public bool OffTransform; //compared to linkedFixation
-        public Vector2 ScreenPos;
+        public Vector2 ScreenPos; //screen position in pixels
+        public Vector2 ViewportPos; //normalized 0 to 1
 
         //only used for setting a reference in the fixation, for display on the active session view screen
         public Transform HitDynamicTransform;

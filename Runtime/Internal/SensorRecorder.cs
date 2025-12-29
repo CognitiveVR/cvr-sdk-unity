@@ -123,7 +123,7 @@ namespace Cognitive3D
             CoreInterface.InitializeSensor(sensorName, HzRate);
 
             if (OnNewSensorRecorded != null)
-                OnNewSensorRecorded(sensorName, initialValue);
+                OnNewSensorRecorded(sensorName, initialValue, Util.Timestamp(Time.frameCount));
         }
 
         /// <summary>
@@ -200,12 +200,12 @@ namespace Cognitive3D
                 CoreInterface.RecordSensor(category, value, unixTimestamp);
 
                 if (OnNewSensorRecorded != null)
-                    OnNewSensorRecorded(category, value);
+                    OnNewSensorRecorded(category, value, unixTimestamp);
             }
         }
 
         //used by active session view
-        public delegate void onNewSensorRecorded(string sensorName, float sensorValue);
+        public delegate void onNewSensorRecorded(string sensorName, float sensorValue, double time);
         public static event onNewSensorRecorded OnNewSensorRecorded;
 
         //happens after the network has sent the request, before any response

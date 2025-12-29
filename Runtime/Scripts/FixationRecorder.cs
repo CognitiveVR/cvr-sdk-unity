@@ -64,6 +64,11 @@ namespace Cognitive3D
             return (long)(Cognitive3D.Util.Timestamp() * 1000);
         }
 
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
+        }
+
         int lastProcessedFrame;
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -120,6 +125,11 @@ namespace Cognitive3D
         long EyeCaptureTimestamp()
         {
             return (long)(Cognitive3D.Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -361,6 +371,27 @@ namespace Cognitive3D
 			return (long)(Util.Timestamp() * 1000);
 		}
 
+        double EyeCaptureTimestampSeconds()
+        {
+            if (useDataQueue1)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData1.timestamp;
+				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart + MsSincestart / 1000;
+				return final;
+			}
+			else if (useDataQueue2)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData2.timestamp;
+				var MsSincestart = currentData2.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart + MsSincestart / 1000;
+				return final;
+			}
+			return Util.Timestamp();
+        }
+
         int lastProcessedFrame;
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -461,6 +492,15 @@ namespace Cognitive3D
             return (long)final;
         }
         
+        double EyeCaptureTimestampSeconds()
+        {
+            //currentData.captureTime //nanoseconds. steady clock
+            long sinceStart = currentData.captureTime - startTimestamp;
+            sinceStart = (sinceStart / 1000000); //remove NANOSECONDS
+            var final = epochStart + sinceStart / 1000;
+            return final;
+        }
+
         int lastQueueFrame = 0;
         Queue<Varjo.XR.VarjoEyeTracking.GazeData> queuedData = new Queue<Varjo.XR.VarjoEyeTracking.GazeData>();
 
@@ -544,6 +584,10 @@ namespace Cognitive3D
             return currentData.timestamp;
         }
 
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
+        }
         
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -584,6 +628,11 @@ namespace Cognitive3D
         {
             //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -646,6 +695,11 @@ namespace Cognitive3D
         {
             //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -741,6 +795,11 @@ namespace Cognitive3D
         long EyeCaptureTimestamp()
         {
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -878,6 +937,11 @@ namespace Cognitive3D
         long EyeCaptureTimestamp()
         {
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -1057,6 +1121,7 @@ namespace Cognitive3D
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                EyeCaptures[index].ViewportPos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(world);
                 SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
 
                 //IMPROVEMENT allocate this at startup
@@ -1087,6 +1152,7 @@ namespace Cognitive3D
                     EyeCaptures[index].OffTransform = false;
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
                     DisplayGazePoints.Update();
+                    InvokeEyeDataRecord(EyeDataType.HitWorld, EyeCaptures[index].HmdPosition, EyeCaptures[index].WorldPosition, true, hitDynamic.GetId(), EyeCaptures[index].LocalPosition, EyeCaptures[index].ScreenPos, EyeCaptures[index].ViewportPos, EyeCaptureTimestampSeconds());
                 }
                 else
                 {
@@ -1098,6 +1164,7 @@ namespace Cognitive3D
                     EyeCaptures[index].OffTransform = false;
                     EyeCaptures[index].HitDynamicId = string.Empty;
                     DisplayGazePoints.Update();
+                    InvokeEyeDataRecord(EyeDataType.HitObject, EyeCaptures[index].HmdPosition, EyeCaptures[index].WorldPosition, false, string.Empty, Vector3.zero, EyeCaptures[index].ScreenPos, EyeCaptures[index].ViewportPos, EyeCaptureTimestampSeconds());
                 }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
@@ -1108,9 +1175,11 @@ namespace Cognitive3D
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].WorldPosition = world;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                EyeCaptures[index].ViewportPos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(world);
                 if (SaccadeScreenPoints.Count > 0)
                     SaccadeScreenPoints.RemoveAt(0);
                 EyeCaptures[index].OffTransform = true;
+                InvokeEyeDataRecord(EyeDataType.HitNothing, EyeCaptures[index].HmdPosition, Vector3.zero, false, string.Empty, Vector3.zero, EyeCaptures[index].ScreenPos, EyeCaptures[index].ViewportPos, EyeCaptureTimestampSeconds());
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
@@ -1121,6 +1190,7 @@ namespace Cognitive3D
                 EyeCaptures[index].OffTransform = true;
                 if (SaccadeScreenPoints.Count > 0)
                     SaccadeScreenPoints.RemoveAt(0);
+                InvokeEyeDataRecord(EyeDataType.Invalid, EyeCaptures[index].HmdPosition, Vector3.zero, false, string.Empty, Vector3.zero, Vector3.zero, Vector3.zero, EyeCaptureTimestampSeconds());
             }
 
             if (SaccadeScreenPoints.Count > 15)
@@ -1210,6 +1280,23 @@ namespace Cognitive3D
             }
 
             return false;
+        }
+
+        //used for optional data connector script to indicate the type of eye tracking
+        public enum EyeDataType
+        {
+            Invalid, //eye tracking not calibrated, eyes not tracking because of blinking, etc
+            HitWorld,
+            HitObject,
+            HitNothing //hit the sky
+        }
+
+        public delegate void onEyeDataRecorded(EyeDataType type, Vector3 start, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenPos, Vector2 viewportPos, double unixTime);
+        public static event onEyeDataRecorded OnEyeDataRecorded;
+        internal static void InvokeEyeDataRecord(EyeDataType type, Vector3 start, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenPos, Vector2 viewportPos, double unixTime)
+        {
+            if (OnEyeDataRecorded != null)
+                OnEyeDataRecorded.Invoke(type, start, worldPoint, isLocal, hitDynamicId, localPoint, screenPos, viewportPos, unixTime);
         }
 
         public delegate void onFixationRecord(Fixation fixation);
