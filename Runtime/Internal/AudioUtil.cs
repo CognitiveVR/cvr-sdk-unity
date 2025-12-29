@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
-    internal class AudioUtil
+    internal static class AudioUtil
     {
         /// <summary>
         /// Convert stereo audio data to mono by averaging channels
