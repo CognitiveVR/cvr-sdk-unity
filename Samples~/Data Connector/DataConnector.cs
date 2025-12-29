@@ -413,13 +413,20 @@ public class DataConnector : MonoBehaviour
 
     #endregion
 
+    [HideInInspector]
     public List<GazeData> gazeData = new List<GazeData>();
+    [HideInInspector]
     public List<FixationData> fixationData = new List<FixationData>();
+    [HideInInspector]
     public List<EyeData> eyeData = new List<EyeData>();
+    [HideInInspector]
     public List<EventData> customEventData = new List<EventData>();
+    [HideInInspector]
     public List<DynamicData> dynamicData = new List<DynamicData>();
+    [HideInInspector]
     public List<SensorData> sensorData = new List<SensorData>();
-    public List<BoundaryData> boundaryData;
+    [HideInInspector]
+    public List<BoundaryData> boundaryData = new List<BoundaryData>();
 
     public bool IncludeGaze;
     public bool IncludeFixation;
