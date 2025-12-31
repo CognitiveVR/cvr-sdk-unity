@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.1.5";
+        public static readonly string SDK_VERSION = "2.2.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -94,6 +94,13 @@ namespace Cognitive3D
             }
             if (BeginSessionAutomatically)
             {
+#if XRPF
+                // Wait for xrpf agreement before starting session
+                while (!XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+                {
+                    yield return null;
+                }
+#endif
                 BeginSession();
             }
         }
@@ -350,6 +357,7 @@ namespace Cognitive3D
                 SetSessionProperty("xrpf.allowed.bio.data", XRPF.PrivacyFramework.Agreement.IsBioDataAllowed);
                 SetSessionProperty("xrpf.allowed.spatial.data", XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed);
                 SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
+                SetSessionProperty("xrpf.allowed.audio.data", XRPF.PrivacyFramework.Agreement.IsAudioDataAllowed);
             }
 #endif
 #endregion

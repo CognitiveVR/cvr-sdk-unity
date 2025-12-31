@@ -143,7 +143,7 @@ namespace Cognitive3D
         //manually keep track of how many write batches there are, instead of constantly opening/closing filestreams
         int numberWriteBatches = 0;
 
-        public bool PeekContent(ref string Destination, ref string body)
+        public bool PeekContent(ref string Destination, ref string body, ref bool sendAsBytes)
         {
             //if there's content in data_read, do that
             //otherwise, if there's content in write, merge files
@@ -168,6 +168,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
+                            sendAsBytes = tempDest.Contains("audio");
                             return true;
                         }
                     }
@@ -201,6 +202,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
+                            sendAsBytes = tempDest.Contains("audio");
                             return true;
                         }
                     }

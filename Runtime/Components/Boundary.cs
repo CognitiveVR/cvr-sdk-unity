@@ -9,6 +9,28 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Boundary")]
     public class Boundary : AnalyticsComponentBase
     {
+        public delegate void onBoundaryRecorded(double time, Vector3 pos, Quaternion rot, Vector3[] points);
+        //used by active session view
+        public static event onBoundaryRecorded OnBoundaryRecorded;
+        internal static void InvokeBoundaryRecorded(double time, Vector3 pos, Quaternion rot, Vector3[] points)
+        {
+            if (OnBoundaryRecorded != null)
+            {
+                OnBoundaryRecorded.Invoke(time, pos, rot, points);
+            }
+        }
+
+        public delegate void onBoundarySend();
+        //used by active session view
+        public static event onBoundarySend OnBoundarySend;
+        internal static void InvokeBoundarySend()
+        {
+            if (OnBoundarySend != null)
+            {
+                OnBoundarySend.Invoke();
+            }
+        }
+
 #if ((C3D_OCULUS || C3D_DEFAULT || C3D_VIVEWAVE || C3D_PICOXR) && !UNITY_EDITOR) || C3D_STEAMVR2
         /// <summary>
         /// Track whether the boundary has been initialized in this session
@@ -109,6 +131,8 @@ namespace Cognitive3D.Components
                 CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
                 lastRecordedTrackingSpacePosition = customTransform.pos;
                 previousTrackingSpaceRotation = customTransform.rot;
+
+                InvokeBoundaryRecorded(Util.Timestamp(Time.frameCount), customTransform.pos, customTransform.rot, currentBoundaryPoints);
             }
         }
 
@@ -130,6 +154,7 @@ namespace Cognitive3D.Components
                         CoreInterface.RecordTrackingSpaceTransform(customTransform, Util.Timestamp(Time.frameCount));
                         lastRecordedTrackingSpacePosition = customTransform.pos;
                         previousTrackingSpaceRotation = customTransform.rot;
+                        InvokeBoundaryRecorded(Util.Timestamp(Time.frameCount), customTransform.pos, customTransform.rot, BoundaryUtil.GetCurrentBoundaryPoints());
                     }
                 }
 
@@ -141,6 +166,7 @@ namespace Cognitive3D.Components
                     {         
                         previousBoundaryPoints = currentBoundaryPoints;
                         CoreInterface.RecordBoundaryShape(currentBoundaryPoints, Util.Timestamp(Time.frameCount));
+                        InvokeBoundaryRecorded(Util.Timestamp(Time.frameCount), customTransform.pos, customTransform.rot, currentBoundaryPoints);
                     }
                 }
             }
@@ -157,6 +183,8 @@ namespace Cognitive3D.Components
                 Quaternion.Euler(trackingSpaceTransform.rot.x, GameplayReferences.HMD.rotation.y, trackingSpaceTransform.rot.z));
             CoreInterface.RecordTrackingSpaceTransform(recenteredTransform, Util.Timestamp(Time.frameCount));
             CoreInterface.RecordBoundaryShape(BoundaryUtil.GetCurrentBoundaryPoints(), Util.Timestamp(Time.frameCount));
+
+            InvokeBoundaryRecorded(Util.Timestamp(Time.frameCount), recenteredTransform.pos, recenteredTransform.rot, BoundaryUtil.GetCurrentBoundaryPoints());
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
@@ -168,7 +196,7 @@ namespace Cognitive3D.Components
         }
 #endif
 
-#region Inspector Utils
+        #region Inspector Utils
         public override bool GetWarning()
         {
 #if C3D_OCULUS || C3D_DEFAULT || C3D_VIVEWAVE || C3D_PICOXR || C3D_STEAMVR2

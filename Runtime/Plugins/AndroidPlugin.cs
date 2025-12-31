@@ -90,7 +90,8 @@ namespace Cognitive3D
                     Cognitive3D_Manager.TrackingSceneId,
                     Cognitive3D_Manager.TrackingSceneVersionNumber,
                     CognitiveStatics.PostEventData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
-                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber)
+                    CognitiveStatics.PostGazeData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber),
+                    CognitiveStatics.PostAudioData()
                 );
 
                 Instance.Call("initAndroidPlugin",

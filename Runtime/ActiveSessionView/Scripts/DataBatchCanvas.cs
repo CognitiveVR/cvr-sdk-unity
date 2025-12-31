@@ -13,6 +13,7 @@ namespace Cognitive3D.ActiveSession
         public Text FixationSendText;
         public Text DynamicSendText;
         public Text SensorSendText;
+        public Text BoundarySendText;
 
         void Start()
         {
@@ -28,13 +29,17 @@ namespace Cognitive3D.ActiveSession
             FixationRecorder.OnFixationSend += FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend += DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend += SensorRecorder_OnSensorSend;
+            Cognitive3D.Components.Boundary.OnBoundarySend += Boundary_OnBoundarySend;
         }
+
+
 
         float EventTimeSinceSend = -1;
         float GazeTimeSinceSend = -1;
         float FixationTimeSinceSend = -1;
         float DynamicTimeSinceSend = -1;
         float SensorTimeSinceSend = -1;
+        float BoundaryTimeSinceSend = -1;
 
         public Color noDataColor;
         public Color normalColor;
@@ -115,6 +120,18 @@ namespace Cognitive3D.ActiveSession
             }
             #endregion
 
+            #region Boundary
+            if (BoundaryTimeSinceSend < 0)
+            {
+                BoundarySendText.color = noDataColor;
+                BoundarySendText.text = neverSentString;
+            }
+            else
+            {
+                UpdateText(BoundarySendText, ref BoundaryTimeSinceSend);
+            }
+            #endregion
+
             timeSinceLastTick = 0;
         }
 
@@ -171,6 +188,11 @@ namespace Cognitive3D.ActiveSession
             EventTimeSinceSend = 0;
         }
 
+        private void Boundary_OnBoundarySend()
+        {
+            BoundaryTimeSinceSend = 0;
+        }
+
         private void OnDestroy()
         {
             CustomEvent.OnCustomEventSend -= CustomEvent_OnCustomEventSend;
@@ -178,6 +200,7 @@ namespace Cognitive3D.ActiveSession
             FixationRecorder.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend -= SensorRecorder_OnSensorSend;
+            Components.Boundary.OnBoundarySend -= Boundary_OnBoundarySend;
         }
 
         private void Core_EndSessionEvent()
@@ -187,6 +210,7 @@ namespace Cognitive3D.ActiveSession
             FixationRecorder.OnFixationSend -= FixationCore_OnFixationSend;
             DynamicManager.OnDynamicObjectSend -= DynamicManager_OnDynamicObjectSend;
             SensorRecorder.OnSensorSend -= SensorRecorder_OnSensorSend;
+            Components.Boundary.OnBoundarySend -= Boundary_OnBoundarySend;
         }
     }
 }

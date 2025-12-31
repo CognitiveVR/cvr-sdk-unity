@@ -997,6 +997,17 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _audioRecordingIcon;
+        public static Texture2D AudioRecordingIcon
+        {
+            get
+            {
+                if (_audioRecordingIcon == null)
+                    _audioRecordingIcon = Resources.Load<Texture2D>("Features/Icons/audio-recording");
+                return _audioRecordingIcon;
+            }
+        }
+
         private static Texture2D _socialPlatformIcon;
         public static Texture2D SocialPlatformIcon
         {
@@ -2978,6 +2989,16 @@ namespace Cognitive3D
             public long expiration;
             public string planType;
             public bool isFreeTrial;
+
+            public EntitlementData entitlements;
+        }
+
+        [System.Serializable]
+        internal class EntitlementData
+        {
+            public bool can_access_session_audio;
+            public bool can_access_eye_tracking;
+            public bool can_create_ab_test;
         }
         #endregion
 
