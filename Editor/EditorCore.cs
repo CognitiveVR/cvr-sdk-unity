@@ -2254,7 +2254,7 @@ namespace Cognitive3D
 
             var files = Directory.GetFiles(sceneExportDirectory);
             bool hasBin = false;
-            bool hasGltf = false; ;
+            bool hasGltf = false;
             foreach (var f in files)
             {
                 if (f.EndsWith("scene.bin"))
