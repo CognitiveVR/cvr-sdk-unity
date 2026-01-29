@@ -75,6 +75,11 @@ namespace Cognitive3D
             return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes";
         }
 
+        internal static string PostNewScene(string sceneId)
+        {
+            return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes?sceneid=" + sceneId + "&sdkType=UNITY";
+        }
+
         //POST upload and replace existing scene
         //https://data.cognitive3d.com/v0/scenes/[sceneId]
         internal static string PostUpdateScene(string sceneid)
