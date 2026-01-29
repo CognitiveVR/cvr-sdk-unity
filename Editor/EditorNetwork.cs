@@ -159,8 +159,19 @@ namespace Cognitive3D
                 {
                     if (EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress))
                     {
+                        // User clicked cancel
                         EditorWebRequests[i].Request.Abort();
                         EditorUtility.ClearProgressBar();
+
+                        // Notify callback with cancelled status
+                        if (EditorWebRequests[i].Response != null)
+                        {
+                            EditorWebRequests[i].Response.Invoke(-1, "Upload cancelled by user", null);
+                        }
+
+                        EditorWebRequests.RemoveAt(i);
+                        Debug.Log("<color=yellow>Upload cancelled by user.</color>");
+                        return;
                     }
                 }
                 if (!EditorWebRequests[i].Request.isDone) 
