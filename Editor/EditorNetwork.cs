@@ -87,6 +87,26 @@ namespace Cognitive3D
         }
 
         //post a request immediately and listen for a response callback
+        public static void Put(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
+        {
+            var p = UnityWebRequest.Put(url, bytecontent);
+            p.disposeUploadHandlerOnDispose = true;
+            p.disposeDownloadHandlerOnDispose = true;
+            p.method = "PUT";
+            p.SetRequestHeader("X-HTTP-Method-Override", "PUT");
+            foreach (var v in headers)
+            {
+                p.SetRequestHeader(v.Key, v.Value);
+            }
+            p.SendWebRequest();
+
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo, progressCallback));
+
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
+        //post a request immediately and listen for a response callback
         public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
         {
             var p = UnityWebRequest.Put(url, bytecontent);
