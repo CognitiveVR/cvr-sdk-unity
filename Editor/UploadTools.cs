@@ -126,11 +126,21 @@ namespace Cognitive3D
             if (sceneIndex < entries.Count)
             {
                 float progress = (float)sceneIndex / entries.Count;
-                UnityEditor.EditorUtility.DisplayProgressBar(
+                bool cancelled = UnityEditor.EditorUtility.DisplayCancelableProgressBar(
                     "Uploading Scenes",
                     $"Processing {System.IO.Path.GetFileNameWithoutExtension(entries[sceneIndex].path)}...",
                     progress
                 );
+
+                if (cancelled)
+                {
+                    Debug.Log("<color=yellow>Scene upload cancelled by user.</color>");
+                    isExporting = false;
+                    UnityEditor.EditorApplication.update -= Update;
+                    UnityEditor.EditorUtility.ClearProgressBar();
+                    return;
+                }
+
                 UnityEditor.SceneView.RepaintAll();
             }
 
