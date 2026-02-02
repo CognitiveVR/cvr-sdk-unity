@@ -126,6 +126,23 @@ namespace Cognitive3D
             }
         }
 
+        public static void AddSceneSettings(UnityEngine.SceneManagement.Scene scene, string sceneId, int versionNumber)
+        {
+            if (scene == null || string.IsNullOrEmpty(scene.name)) { return; }
+            var foundSettings = Instance.sceneSettings.Find(x => x.ScenePath == scene.path);
+            if (foundSettings != null)
+            {
+                foundSettings.SceneId = sceneId;
+                foundSettings.VersionNumber = versionNumber;
+                foundSettings.SceneName = scene.name;
+                foundSettings.ScenePath = scene.path;
+            }
+            else
+            {
+                instance.sceneSettings.Add(new SceneSettings(sceneId, versionNumber, scene.name, scene.path));
+            }
+        }
+
         public static void AddSceneSettings(Cognitive3D_Preferences newInstance, string name, string path)
         {
             //skip. this should onyl be called automatically at the construction of preferences
@@ -171,6 +188,14 @@ namespace Cognitive3D
 
             public SceneSettings(string name, string path)
             {
+                SceneName = name;
+                ScenePath = path;
+            }
+
+            public SceneSettings(string sceneId, int versionNumber, string name, string path)
+            {
+                SceneId = sceneId;
+                VersionNumber = versionNumber;
                 SceneName = name;
                 ScenePath = path;
             }
