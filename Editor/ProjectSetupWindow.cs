@@ -844,7 +844,7 @@ namespace Cognitive3D
                 var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
                 if (responseCode == 200 && userdata != null)
                 {
-                    devKeyStatusMessage = $"Organization name: {userdata.organizationName}";
+                    devKeyStatusMessage = $"Organization name: {userdata.organizationName} \nProject name: {userdata.projectName}";
                     long expiration = userdata.keyExpiresAt;
                     int daysRemaining = GetDaysUntilExpiry(expiration);
 
