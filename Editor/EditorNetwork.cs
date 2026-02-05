@@ -86,14 +86,42 @@ namespace Cognitive3D
             EditorApplication.update += EditorQueueUpdate;
         }
 
-        //post a request immediately and listen for a response callback
-        public static void Put(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
+        /// <summary>
+        /// PUT request that streams directly from a file path instead of loading into memory.
+        /// Uses UploadHandlerFile for memory-efficient uploads of large files.
+        /// </summary>
+        public static void PutFile(string url, string filePath, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Put", string requestInfo = "", System.Action<float> progressCallback = null)
         {
-            var p = UnityWebRequest.Put(url, bytecontent);
+            var p = new UnityWebRequest(url, "PUT");
+            p.uploadHandler = new UploadHandlerFile(filePath);
+            p.downloadHandler = new DownloadHandlerBuffer();
             p.disposeUploadHandlerOnDispose = true;
             p.disposeDownloadHandlerOnDispose = true;
-            p.method = "PUT";
             p.SetRequestHeader("X-HTTP-Method-Override", "PUT");
+            foreach (var v in headers)
+            {
+                p.SetRequestHeader(v.Key, v.Value);
+            }
+            p.SendWebRequest();
+
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo, progressCallback));
+
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
+        /// <summary>
+        /// POST request that streams directly from a file path instead of loading into memory.
+        /// Uses UploadHandlerFile for memory-efficient uploads of large files.
+        /// </summary>
+        public static void PostFile(string url, string filePath, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
+        {
+            var p = new UnityWebRequest(url, "POST");
+            p.uploadHandler = new UploadHandlerFile(filePath);
+            p.downloadHandler = new DownloadHandlerBuffer();
+            p.disposeUploadHandlerOnDispose = true;
+            p.disposeDownloadHandlerOnDispose = true;
+            p.SetRequestHeader("X-HTTP-Method-Override", "POST");
             foreach (var v in headers)
             {
                 p.SetRequestHeader(v.Key, v.Value);
