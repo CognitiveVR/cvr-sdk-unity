@@ -75,6 +75,13 @@ namespace Cognitive3D
 
         private Vector2 scrollPos;
 
+        // Foldout states for each section
+        private bool devKeysUnfolded = true;
+        private bool xrSdkUnfolded;
+        private bool playerSetupUnfolded;
+        private bool sceneTrackingUnfolded;
+        private bool sceneUploadUnfolded;
+
         private bool selectAll;
         private bool uploadSceneGeometry = true; // Default to true - upload geometry
         private readonly List<SceneEntry> sceneEntries = new List<SceneEntry>();
@@ -122,7 +129,7 @@ namespace Cognitive3D
                 completenessStatus = keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Developer and App Keys", statusIcon, true, () =>
+                DrawFoldout("Developer and App Keys", statusIcon, ref devKeysUnfolded, () =>
                 {
                     GUILayout.Label("Enter your developer key:", EditorCore.styles.DescriptionPadding);
                     developerKey = EditorGUILayout.TextField("Developer Key", developerKey);
@@ -162,10 +169,10 @@ namespace Cognitive3D
 
                 EditorGUI.BeginDisabledGroup(!keysSet);
 #region XR SDK
-                completenessStatus = autoSelectXR;
+                completenessStatus = autoSelectXR && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("XR SDK Setup", statusIcon, keysSet, () =>
+                DrawFoldout("XR SDK Setup", statusIcon, ref xrSdkUnfolded, () =>
                 {
                     GUILayout.Label(
                     "By default, XR plugins are auto-detected, and features are enabled based on the packages present in the project.",
@@ -222,10 +229,10 @@ namespace Cognitive3D
 #endregion
 
 #region Player Setup
-                completenessStatus = EditorCore.GetPreferences().AutoPlayerSetup;
+                completenessStatus = EditorCore.GetPreferences().AutoPlayerSetup && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Player Setup", statusIcon, keysSet, () =>
+                DrawFoldout("Player Setup", statusIcon, ref playerSetupUnfolded, () =>
                 {
                     GUILayout.Label(
                     "By default, key player objects, including the camera (HMD), tracking space, and controllers are automatically detected and tracked.",
@@ -287,10 +294,10 @@ namespace Cognitive3D
 #endregion
 
 #region Scene Tracking
-                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0;
+                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0 && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Scene Tracking", statusIcon, keysSet, () =>
+                DrawFoldout("Scene Tracking", statusIcon, ref sceneTrackingUnfolded, () =>
                 {
                     GUILayout.Label("Select which scenes from Build Settings you want to track. Selected scenes will be registered on the dashboard.", EditorCore.styles.DescriptionPadding);
 
@@ -409,10 +416,10 @@ namespace Cognitive3D
 #endregion
 
 #region Scene Upload
-                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0;
+                completenessStatus = uploadSceneGeometry && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Scene Geometry Upload", statusIcon, keysSet, () =>
+                DrawFoldout("Scene Geometry Upload", statusIcon, ref sceneUploadUnfolded, () =>
                 {
                     GUILayout.Label("Upload scene geometry to visualize user sessions in 3D on the dashboard. This is recommended for the best analytics experience.", EditorCore.styles.DescriptionPadding);
 
@@ -440,12 +447,12 @@ namespace Cognitive3D
             DrawFooter(footerRect);
         }
 
-        private void DrawFoldout(string title, Texture2D icon, bool foldout, Action drawContent)
+        private void DrawFoldout(string title, Texture2D icon, ref bool foldout, Action drawContent)
         {
             using (var scope = new EditorGUILayout.VerticalScope(EditorCore.styles.List))
             {
                 GUILayout.BeginHorizontal();
-                EditorGUILayout.Foldout(foldout, title, true);
+                foldout = EditorGUILayout.Foldout(foldout, title, true);
                 if (icon != null)
                 {
                     GUILayout.Label(icon, EditorCore.styles.InlinedIconStyle);
@@ -467,6 +474,25 @@ namespace Cognitive3D
         Texture2D GetStatusIcon(bool condition)
         {
             return condition ? EditorCore.CompleteCheckmark : EditorCore.CircleWarning;
+        }
+
+        private void InitializeFoldStates()
+        {
+            if (keysSet)
+            {
+                // Fold completed sections, unfold incomplete ones
+                xrSdkUnfolded = !autoSelectXR;  // Fold when auto-select is enabled
+                playerSetupUnfolded = !EditorCore.GetPreferences().AutoPlayerSetup;  // Fold when auto-setup is enabled
+                sceneTrackingUnfolded = true;
+                sceneUploadUnfolded = true;
+            }
+            else
+            {
+                xrSdkUnfolded = false;
+                playerSetupUnfolded = false;
+                sceneTrackingUnfolded = false;
+                sceneUploadUnfolded = false;
+            }
         }
 
         private void DrawColumnSeparator()
@@ -565,6 +591,7 @@ namespace Cognitive3D
             if (!string.IsNullOrEmpty(developerKey) && !string.IsNullOrEmpty(apiKey))
             {
                 keysSet = true;
+                InitializeFoldStates();
             }
         }
 
@@ -867,6 +894,7 @@ namespace Cognitive3D
                 apiKeyFromDashboard = apiKey;
                 SaveApplicationKey();
             }
+            SaveDevKey();
             Repaint();
         }
 
