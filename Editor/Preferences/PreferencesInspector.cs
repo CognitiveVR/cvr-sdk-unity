@@ -178,7 +178,13 @@ namespace Cognitive3D
                     var scenePath = element.FindPropertyRelative("ScenePath").stringValue;
                     if (string.IsNullOrEmpty(scenePath) || !UploadTools.EnsureSceneReady(scenePath)) return;
 
-                    UploadTools.UploadSceneAndDynamics(true, true, true, true, true);
+                    UploadTools.UploadSceneAndDynamicsInternal(
+                        uploadExportedDynamics: true, 
+                        exportAndUploadDynamicsFromScene: true, 
+                        uploadSceneGeometry: true, 
+                        uploadThumbnail: true, 
+                        useOptimizedUpload: true,
+                        showPopups: true);
                 }
 
                 // Open on Dashboard button

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace Cognitive3D
 {
@@ -62,6 +63,12 @@ namespace Cognitive3D
         static bool exportDynamics;
 
         /// <summary>
+        /// If true, export and upload scene geometry <br/>
+        /// Otherwise, just upload empty GLTF/BIN placeholder files
+        /// </summary>
+        static bool exportSceneGeometry;
+
+        /// <summary>
         /// Set to false until user clicks export button <br/>
         /// User's click sets it to true <br/>
         /// Once export complete, this variable is set back to false
@@ -97,18 +104,22 @@ namespace Cognitive3D
             return selectedScenes;
         }
 
-        internal static void UploadScenes(List<SceneEntry> scenes)
+        internal static void UploadScenes(List<SceneEntry> scenes, bool uploadGeometry)
         {
-            // Asking user if they want to include dynamics for all scenes
-            bool includeDynamics = EditorUtility.DisplayDialog(
-                "Export and Upload Dynamics",
-                "Do you want to include dynamics for all selected scenes in this upload? (Recommended)\n\n" +
-                "You can also upload dynamics later via Dynamic Objects > Feature Builder.",
-                "Yes",
-                "No"
-            );
+            if (uploadGeometry)
+            {
+                // Asking user if they want to include dynamics for all scenes
+                bool includeDynamics = EditorUtility.DisplayDialog(
+                    "Export and Upload Dynamics",
+                    "Do you want to include dynamics for all selected scenes in this upload? (Recommended)\n\n" +
+                    "You can also upload dynamics later via Dynamic Objects > Feature Builder.",
+                    "Yes",
+                    "No"
+                );
 
-            exportDynamics = includeDynamics;
+                exportDynamics = includeDynamics;
+            }
+            exportSceneGeometry = uploadGeometry;
 
             entries = scenes;
             sceneIndex = 0;
@@ -123,7 +134,8 @@ namespace Cognitive3D
             if (!isExporting)
                 return;
 
-            if (sceneIndex < entries.Count)
+            // Only show batch progress bar during Init state - export and upload have their own progress indicators
+            if (sceneIndex < entries.Count && sceneUploadState == SceneManagementUploadState.Init)
             {
                 float progress = (float)sceneIndex / entries.Count;
                 bool cancelled = UnityEditor.EditorUtility.DisplayCancelableProgressBar(
@@ -193,35 +205,47 @@ namespace Cognitive3D
                     return;
 
                 case SceneManagementUploadState.Export:
+                    // Clear batch progress bar - export has its own progress indicators
+                    EditorUtility.ClearProgressBar();
                     EditorApplication.delayCall += () =>
                     {
                         string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
                         var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
 
                         if (currentSettings == null)
-                            Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+                        {
+                            using var md5 = System.Security.Cryptography.MD5.Create();
+                            byte[] bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(currentScenePath));
+                            string sceneId = new System.Guid(bytes).ToString();
 
-                        float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
-
-                        if (sceneSize < 1)
-                        {
-                            SegmentAnalytics.TrackEvent("ExportingSceneLess1MB_SceneExportPage", "SceneExportPage", "new");
-                        }
-                        else if (sceneSize >= 1 && sceneSize <= 500)
-                        {
-                            SegmentAnalytics.TrackEvent("ExportingSceneLessOrEqual500MB_SceneExportPage", "SceneExportPage", "new");
-                        }
-                        else // sceneSize > 500
-                        {
-                            SegmentAnalytics.TrackEvent("ExportingSceneGreater500MB_SceneExportPage", "SceneExportPage", "new");
+                            Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);                
                         }
 
-                        ExportUtility.ExportGLTFScene(false);
+                        // Check if geometry should be exported
+                        if (exportSceneGeometry)
+                        {
+                            float sceneSize = EditorCore.GetSceneFileSize(Cognitive3D_Preferences.FindCurrentScene());
 
-                        string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                        string path = EditorCore.GetSubDirectoryPath(fullName);
-                        ExportUtility.GenerateSettingsFile(path, fullName);
-                        DebugInformationWindow.WriteDebugToFile(path + "debug.log");
+                            if (sceneSize < 1)
+                            {
+                                SegmentAnalytics.TrackEvent("ExportingSceneLess1MB_SceneExportPage", "SceneExportPage", "new");
+                            }
+                            else if (sceneSize >= 1 && sceneSize <= 500)
+                            {
+                                SegmentAnalytics.TrackEvent("ExportingSceneLessOrEqual500MB_SceneExportPage", "SceneExportPage", "new");
+                            }
+                            else // sceneSize > 500
+                            {
+                                SegmentAnalytics.TrackEvent("ExportingSceneGreater500MB_SceneExportPage", "SceneExportPage", "new");
+                            }
+
+                            ExportUtility.ExportGLTFScene(false);
+
+                            string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
+                            string path = EditorCore.GetSubDirectoryPath(fullName);
+                            ExportUtility.GenerateSettingsFile(path, fullName);
+                            DebugInformationWindow.WriteDebugToFile(path + "debug.log");
+                        }
 
                         UnityEditor.EditorUtility.SetDirty(EditorCore.GetPreferences());
                         UnityEditor.AssetDatabase.SaveAssets();
@@ -238,8 +262,23 @@ namespace Cognitive3D
                     return;
 
                 case SceneManagementUploadState.StartUpload:
+                    // Clear any progress bar - upload has its own progress indicators
+                    EditorUtility.ClearProgressBar();
                     CompletedUpload = false;
-                    UploadSceneAndDynamics(exportDynamics, exportDynamics, true, true);
+                    if (exportSceneGeometry)
+                    {
+                        UploadSceneAndDynamicsInternal(
+                        uploadExportedDynamics: exportDynamics, 
+                        exportAndUploadDynamicsFromScene: exportDynamics, 
+                        uploadSceneGeometry: true, 
+                        uploadThumbnail: true, 
+                        useOptimizedUpload: true,
+                        showPopups: false);
+                    }
+                    else
+                    {
+                        CompletedUpload = true;
+                    }
                     sceneUploadState = SceneManagementUploadState.Uploading;
                     return;
 
@@ -264,51 +303,38 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Upload exported scene and optionally, dynamics
+        /// Consolidated internal method for uploading scenes and dynamics
+        /// Supports both optimized (two-phase) and legacy (single-phase) upload strategies
         /// </summary>
-        /// <param name="uploadExportedDynamics">If true, upload dynamics from export directory</param>
-        /// <param name="exportAndUploadDynamicsFromScene">If true, exports dynamics from scene, and uploads them</param>
-        /// <param name="uploadSceneGeometry">If true, upload scene geometry</param>
-        /// <param name="uploadThumbnail">If true, upload scene thumbnail</param>
-        /// <param name="showPopups">If true, show popups (use false for automation)</param>
-        internal static void UploadSceneAndDynamics(bool uploadExportedDynamics, bool exportAndUploadDynamicsFromScene, bool uploadSceneGeometry, bool uploadThumbnail, bool showPopups = false)
+        internal static void UploadSceneAndDynamicsInternal(
+            bool uploadExportedDynamics,
+            bool exportAndUploadDynamicsFromScene,
+            bool uploadSceneGeometry,
+            bool uploadThumbnail,
+            bool useOptimizedUpload,
+            bool showPopups = false)
         {
-            System.Action completedmanifestupload = delegate
+            // Step 5: Upload dynamics and manifest
+            System.Action completedManifestUpload = delegate
             {
-                if (uploadExportedDynamics)
-                {
-                    ExportUtility.UploadAllDynamicObjectMeshes(showPopups);
-                }
-                else if (exportAndUploadDynamicsFromScene)
-                {
-                    List<string> dynamicMeshNames = new List<string>();
-                    var dynamicObjectsInScene = GetDynamicObjectsInScene();
-                    foreach (var dyn in dynamicObjectsInScene)
-                    {
-                        dynamicMeshNames.Add(dyn.MeshName);
-                    }
-                    ExportUtility.UploadDynamicObjects(dynamicMeshNames, showPopups);
-                }
+                HandleDynamicsUpload(uploadExportedDynamics, exportAndUploadDynamicsFromScene, showPopups);
                 CompletedUpload = true;
             };
 
-            // Fifth: upload manifest
+            // Step 4: Upload manifest after scene version is refreshed
             System.Action completedRefreshSceneVersion = delegate
             {
                 if (uploadExportedDynamics || exportAndUploadDynamicsFromScene)
                 {
-                    //TODO ask if dev wants to upload disabled dynamic objects as well (if there are any)
-                    AggregationManifest manifest = new AggregationManifest();
-                    manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
-                    EditorCore.UploadManifest(manifest, completedmanifestupload, completedmanifestupload);
+                    UploadManifestForDynamics(completedManifestUpload);
                 }
                 else
                 {
-                    completedmanifestupload.Invoke();
+                    completedManifestUpload.Invoke();
                 }
             };
 
-            // Fourth upload dynamics
+            // Step 3: Export and upload dynamics after scene upload completes
             System.Action<int> completeSceneUpload = delegate (int responseCode)
             {
                 if (responseCode == 200 || responseCode == 201)
@@ -317,12 +343,16 @@ namespace Cognitive3D
                     {
                         ExportAllDynamicsInScene();
                     }
-                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion); // likely completed in previous step, but just in case
+                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion);
+                }
+                else
+                {
+                    CompletedUpload = true;
                 }
                 ProjectValidation.RegenerateItems();
             };
 
-            //third upload scene
+            // Step 2: Upload scene geometry after screenshot is saved
             System.Action completeScreenshot = delegate
             {
                 Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
@@ -334,37 +364,30 @@ namespace Cognitive3D
 
                 if (uploadSceneGeometry)
                 {
+                    bool shouldProceed = true;
                     if (showPopups)
                     {
-                        if (string.IsNullOrEmpty(current.SceneId))
+                        shouldProceed = ShowUploadConfirmationDialog(current);
+                    }
+
+                    if (shouldProceed)
+                    {
+                        sceneUploadProgress = 0;
+                        sceneUploadStartTime = EditorApplication.timeSinceStartup;
+
+                        // Choose upload strategy based on parameter
+                        if (useOptimizedUpload)
                         {
-                            // NEW SCENE
-                            if (EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel"))
-                            {
-                                sceneUploadProgress = 0;
-                                sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
-                            }
+                            UploadDecimatedSceneOptimized(current, completeSceneUpload, null);
                         }
                         else
                         {
-                            // NEW SCENE VERSION
-                            if (EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel"))
-                            {
-                                sceneUploadProgress = 0;
-                                sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
-                            }
+                            UploadDecimatedScene(current, completeSceneUpload, null);
                         }
-                    }
-                    else // UPLOAD WITHOUT POPUPS
-                    {
-                        ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
                     }
                 }
                 else
                 {
-                    //check to upload the thumbnail (without the scene geo)
                     if (uploadThumbnail)
                     {
                         EditorCore.UploadSceneThumbnail(current);
@@ -373,7 +396,7 @@ namespace Cognitive3D
                 }
             };
 
-            //second save screenshot
+            // Step 1: Save screenshot and refresh scene version
             System.Action completedRefreshSceneVersion1 = delegate
             {
                 if (uploadThumbnail)
@@ -382,14 +405,69 @@ namespace Cognitive3D
                 }
                 else
                 {
-                    //use the existing screenshot (assuming it exists)
                     completeScreenshot.Invoke();
-                    completeScreenshot = null;
                 }
             };
 
             CompletedUpload = false;
             EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+        }
+
+        /// <summary>
+        /// Helper method to handle dynamics upload based on configuration
+        /// </summary>
+        private static void HandleDynamicsUpload(bool uploadExportedDynamics, bool exportAndUploadDynamicsFromScene, bool showPopups)
+        {
+            if (uploadExportedDynamics)
+            {
+                ExportUtility.UploadAllDynamicObjectMeshes(showPopups);
+            }
+            else if (exportAndUploadDynamicsFromScene)
+            {
+                List<string> dynamicMeshNames = GetDynamicMeshNames();
+                ExportUtility.UploadDynamicObjects(dynamicMeshNames, showPopups);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to upload manifest for dynamic objects
+        /// </summary>
+        private static void UploadManifestForDynamics(System.Action onComplete)
+        {
+            AggregationManifest manifest = new AggregationManifest();
+            manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
+            EditorCore.UploadManifest(manifest, onComplete, onComplete);
+        }
+
+        /// <summary>
+        /// Extract dynamic mesh names from scene
+        /// </summary>
+        private static List<string> GetDynamicMeshNames()
+        {
+            List<string> dynamicMeshNames = new List<string>();
+            var dynamicObjectsInScene = GetDynamicObjectsInScene();
+            foreach (var dyn in dynamicObjectsInScene)
+            {
+                dynamicMeshNames.Add(dyn.MeshName);
+            }
+            return dynamicMeshNames;
+        }
+
+        /// <summary>
+        /// Show upload confirmation dialog based on scene state
+        /// </summary>
+        private static bool ShowUploadConfirmationDialog(Cognitive3D_Preferences.SceneSettings current)
+        {
+            if (string.IsNullOrEmpty(current.SceneId))
+            {
+                // NEW SCENE
+                return EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel");
+            }
+            else
+            {
+                // NEW SCENE VERSION
+                return EditorUtility.DisplayDialog("Upload New Version", "Upload a new version of this existing scene? Will archive previous version", "Ok", "Cancel");
+            }
         }
 
         static float sceneUploadProgress;
@@ -438,33 +516,13 @@ namespace Cognitive3D
 
         internal static void ExportAllDynamicsInScene()
         {
-            List<DynamicObject> dynsInSceneList = new List<DynamicObject>();
-
-            // This array HAS TO BE reinitialized here because
-            // this function can be from other places and
-            // we cannot guarantee that it has been initialized
-            var dynamicObjectsInScene = GetDynamicObjectsInScene();
-            foreach (var dyn in dynamicObjectsInScene)
-            {
-                dynsInSceneList.Add(dyn);
-            }
-            ExportUtility.ExportDynamicObjects(dynsInSceneList);
+            var dynamicsInScene = GetDynamicObjectsInScene();
+            ExportUtility.ExportDynamicObjects(dynamicsInScene);
         }
 
         internal static void ExportAndUploadAllDynamicsInScene()
         {
-            List<DynamicObject> dynsInSceneList = new List<DynamicObject>();
-
-            // This array HAS TO BE reinitialized here because
-            // this function can be from other places and
-            // we cannot guarantee that it has been initialized
-            var dynamicObjectsInScene = GetDynamicObjectsInScene();
-            foreach (var dyn in dynamicObjectsInScene)
-            {
-                dynsInSceneList.Add(dyn);
-            }
-            ExportUtility.ExportDynamicObjects(dynsInSceneList);
-
+            ExportAllDynamicsInScene();
             UploadDynamics(true, true);
         }
 
@@ -472,29 +530,14 @@ namespace Cognitive3D
         {
             void OnManifestUploadComplete()
             {
-                if (uploadExportedDynamics)
-                {
-                    ExportUtility.UploadAllDynamicObjectMeshes(showPopups);
-                }
-                else if (exportAndUploadDynamicsFromScene)
-                {
-                    var dynamicMeshNames = new List<string>();
-                    var dynamicObjectsInScene = GetDynamicObjectsInScene();
-                    foreach (var dyn in dynamicObjectsInScene)
-                    {
-                        dynamicMeshNames.Add(dyn.MeshName);
-                    }
-                    ExportUtility.UploadDynamicObjects(dynamicMeshNames, showPopups);
-                }
+                HandleDynamicsUpload(uploadExportedDynamics, exportAndUploadDynamicsFromScene, showPopups);
             }
 
             void OnSceneVersionRefreshed()
             {
                 if (uploadExportedDynamics || exportAndUploadDynamicsFromScene)
                 {
-                    AggregationManifest manifest = new AggregationManifest();
-                    manifest.AddOrReplaceDynamic(GetDynamicObjectsInScene());
-                    EditorCore.UploadManifest(manifest, OnManifestUploadComplete, OnManifestUploadComplete);
+                    UploadManifestForDynamics(OnManifestUploadComplete);
                 }
                 else
                 {
@@ -591,6 +634,660 @@ namespace Cognitive3D
                 });
             });
         }
+        #endregion
+
+        /// <summary>
+        /// Optimized upload method that splits scene upload into two phases:
+        /// Phase 1: Core files (gltf, bin, settings.json) + screenshot as multipart form
+        /// Phase 2: Auxiliary files (textures, debug.log) as gzip compressed archive
+        /// This reduces payload size and allows backend to process geometry immediately while textures upload
+        /// </summary>
+        public static void UploadDecimatedSceneOptimized(Cognitive3D_Preferences.SceneSettings settings, System.Action<int> uploadComplete, System.Action<float> progressCallback)
+        {
+            if (settings == null)
+            {
+                uploadComplete?.Invoke(0); // Notify caller upload was skipped
+                return;
+            }
+
+            UploadSceneSettingsOptimized = settings;
+            UploadCompleteOptimized = uploadComplete;
+            UploadProgressCallbackOptimized = progressCallback;
+
+            bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId);
+            bool uploadConfirmed = false;
+            string sceneName = settings.SceneName;
+            string[] filePaths = new string[] { };
+
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
+            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+
+            if (SceneExportDirExists)
+            {
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
+            }
+
+            // Confirm upload dialog
+            if ((!SceneExportDirExists || filePaths.Length <= 1))
+            {
+                if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + settings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
+                {
+                    uploadConfirmed = true;
+                    // Create settings.json file
+                    string objPath = EditorCore.GetSubDirectoryPath(sceneName);
+                    Directory.CreateDirectory(objPath);
+
+                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+                    File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                    string debugContent = DebugInformationWindow.GetDebugContents();
+                    File.WriteAllText(objPath + "debug.log", debugContent);
+                }
+            }
+            else
+            {
+                uploadConfirmed = true;
+            }
+
+            if (!uploadConfirmed)
+            {
+                UploadCompleteOptimized?.Invoke(0); // Notify caller upload was cancelled
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            // Classify files into core and auxiliary
+            List<string> coreFiles;
+            List<string> auxiliaryFiles;
+            string screenshotFile;
+            ClassifyFiles(sceneName, sceneExportDirectory, out coreFiles, out auxiliaryFiles, out screenshotFile);
+
+            // Store auxiliary files for Phase 2
+            AuxiliaryFilesForPhase2 = auxiliaryFiles.ToArray();
+
+            // Build list of files with field names for streaming multipart
+            var filesWithFieldNames = new List<(string filePath, string fieldName, string fileName)>();
+
+            foreach (var f in coreFiles)
+            {
+                if (f.ToLower().EndsWith(".ds_store"))
+                {
+                    continue;
+                }
+                filesWithFieldNames.Add((f, "file", null));
+            }
+
+            // Add screenshot with custom field name
+            if (!string.IsNullOrEmpty(screenshotFile) && File.Exists(screenshotFile))
+            {
+                filesWithFieldNames.Add((screenshotFile, "screenshot", "screenshot.png"));
+                Util.logDebug("Added screenshot to Phase 1");
+            }
+            else
+            {
+                Util.logWarning("SceneExportWindow Upload can't find screenshot file");
+            }
+
+            string boundary;
+            string tempMultipartPath = CreateStreamingMultipartFile(filesWithFieldNames, out boundary, "Preparing core files (Phase 1)");
+            if (string.IsNullOrEmpty(tempMultipartPath))
+            {
+                Debug.LogError("Failed to create multipart file for Phase 1");
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+                return;
+            }
+            TempMultipartFilePath = tempMultipartPath;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            string uploadMessage = hasExistingSceneId ? "Uploading core files (Phase 1)" : "Uploading new scene (Phase 1)";
+            var url = hasExistingSceneId ?
+                CognitiveStatics.PostUpdateScene(settings.SceneId):
+                CognitiveStatics.PostNewScene(settings.SceneName);
+            EditorNetwork.PostFile(url, tempMultipartPath, PostSceneUploadResponsePhase1, headers, true, "Upload", uploadMessage, WrapProgressCallback(0.0f, 0.5f));
+        }
+
+        /// <summary>
+        /// Callback from UploadDecimatedSceneOptimized Phase 1 (core files upload)
+        /// On success, proceeds to Phase 2 (auxiliary files upload)
+        /// </summary>
+        static void PostSceneUploadResponsePhase1(int responseCode, string error, string text)
+        {
+            CleanupTempFile();
+
+            if (responseCode != 200 && responseCode != 201)
+            {
+                Debug.LogError("Scene Upload Phase 1 Error: " + error);
+                SegmentAnalytics.TrackEvent("UploadingSceneError" + responseCode + "_Phase1", "SceneSetupSceneUploadPage");
+                if (responseCode != 100) // User cancelled
+                    EditorUtility.DisplayDialog("Error Uploading Scene", "Phase 1 failed with code " + responseCode + ".\n\nSee Console for details", "Ok");
+                UploadCompleteOptimized?.Invoke(responseCode);
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            // Check for internal server error
+            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
+            {
+                Debug.LogError("Scene Upload Phase 1 Error:" + text);
+                EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene (Phase 1). \n\nSee Console for more details", "Ok");
+                UploadCompleteOptimized?.Invoke(responseCode);
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            UploadSceneSettingsOptimized.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            GUI.FocusControl("NULL");
+            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+            AssetDatabase.SaveAssets();
+
+            SegmentAnalytics.TrackEvent("UploadingSceneComplete_Phase1", "SceneSetupSceneUploadPage");
+            StartPhase2Upload();
+        }
+
+        /// <summary>
+        /// Initiates Phase 2 upload for auxiliary files using streaming multipart.
+        /// Builds multipart body on disk by streaming files in small chunks (4KB buffer).
+        /// This approach keeps memory usage minimal (~4KB) while maintaining backend compatibility.
+        /// Skips upload if there are no auxiliary files.
+        /// </summary>
+        static void StartPhase2Upload()
+        {
+            // Skip Phase 2 if there are no auxiliary files
+            if (AuxiliaryFilesForPhase2 == null || AuxiliaryFilesForPhase2.Length == 0)
+            {
+                Util.logDebug("No auxiliary files to upload. Skipping Phase 2.");
+                UploadCompleteOptimized?.Invoke(200);
+
+                Debug.Log("<color=green>Scene Upload Complete!</color>");
+                SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+                props.buttonName = "SceneSetupSceneUploadPage";
+                props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber + 1);
+                SegmentAnalytics.TrackEvent("UploadingSceneComplete_Optimized", props);
+
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            // Convert auxiliary files to tuple format with default "file" field name
+            var filesWithFieldNames = new List<(string filePath, string fieldName, string fileName)>();
+            foreach (var filePath in AuxiliaryFilesForPhase2)
+            {
+                filesWithFieldNames.Add((filePath, "file", null));
+            }
+
+            string boundary;
+            string tempMultipartPath = CreateStreamingMultipartFile(filesWithFieldNames, out boundary, "Preparing auxiliary files (Phase 2)");
+            if (string.IsNullOrEmpty(tempMultipartPath))
+            {
+                Debug.LogError("Failed to create multipart file for Phase 2");
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+                return;
+            }
+            TempMultipartFilePath = tempMultipartPath;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            string url = CognitiveStatics.PostUpdateScene(UploadSceneSettingsOptimized.SceneId);
+            EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUploadResponsePhase2, headers, true, "Upload", "Uploading auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
+        }
+
+        /// <summary>
+        /// Creates a multipart form data file on disk by streaming source files in small chunks.
+        /// Memory usage is limited to the buffer size (~4KB) regardless of total file sizes.
+        /// </summary>
+        /// <param name="filesWithFieldNames">List of (filePath, fieldName, overrideFileName) tuples. If overrideFileName is null, uses actual filename.</param>
+        /// <param name="boundary">Output: the boundary string used in the multipart format</param>
+        /// <param name="progressMessage">Optional message to display in progress bar</param>
+        /// <returns>Path to the created multipart file, or null if creation failed</returns>
+        private static string CreateStreamingMultipartFile(List<(string filePath, string fieldName, string fileName)> filesWithFieldNames, out string boundary, string progressMessage = "Preparing upload files")
+        {
+            boundary = MultipartBoundaryPrefix + System.DateTime.Now.Ticks.ToString("x");
+            string outputPath = Path.Combine(Path.GetTempPath(), "cognitive3d_multipart_" + System.DateTime.Now.Ticks + ".bin");
+            byte[] buffer = new byte[StreamingBufferSize];
+
+            // Calculate total size for progress reporting
+            long totalSize = 0;
+            foreach (var (filePath, _, _) in filesWithFieldNames)
+            {
+                if (File.Exists(filePath))
+                {
+                    FileInfo fi = new FileInfo(filePath);
+                    totalSize += fi.Length;
+                }
+            }
+
+            try
+            {
+                long processedSize = 0;
+                int fileIndex = 0;
+
+                using (FileStream outputStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, StreamingBufferSize))
+                {
+                    byte[] boundaryBytes = System.Text.Encoding.UTF8.GetBytes("--" + boundary + "\r\n");
+                    byte[] crlf = System.Text.Encoding.UTF8.GetBytes("\r\n");
+
+                    foreach (var (filePath, fieldName, overrideFileName) in filesWithFieldNames)
+                    {
+                        if (!File.Exists(filePath))
+                        {
+                            Debug.LogWarning("Skipping missing file: " + filePath);
+                            continue;
+                        }
+
+                        string name = overrideFileName ?? Path.GetFileName(filePath);
+                        if (name.ToLower().EndsWith(".ds_store"))
+                            continue;
+
+                        fileIndex++;
+                        float progress = totalSize > 0 ? (float)processedSize / totalSize : (float)fileIndex / filesWithFieldNames.Count;
+                        EditorUtility.DisplayProgressBar("Preparing Upload", progressMessage + $" ({fileIndex}/{filesWithFieldNames.Count})", progress);
+
+                        outputStream.Write(boundaryBytes, 0, boundaryBytes.Length);
+
+                        string header = "Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + name + "\"\r\n" +
+                                        "Content-Type: application/octet-stream\r\n\r\n";
+                        byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(header);
+                        outputStream.Write(headerBytes, 0, headerBytes.Length);
+
+                        using (FileStream sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, StreamingBufferSize))
+                        {
+                            long fileSize = sourceStream.Length;
+                            int bytesRead;
+                            while ((bytesRead = sourceStream.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                outputStream.Write(buffer, 0, bytesRead);
+                                processedSize += bytesRead;
+
+                                // Update progress bar periodically
+                                if (totalSize > 0 && processedSize % (StreamingBufferSize * 10) == 0)
+                                {
+                                    progress = (float)processedSize / totalSize;
+                                    EditorUtility.DisplayProgressBar("Preparing Upload", progressMessage + $" ({fileIndex}/{filesWithFieldNames.Count})", progress);
+                                }
+                            }
+                        }
+
+                        outputStream.Write(crlf, 0, crlf.Length);
+                    }
+
+                    byte[] finalBoundary = System.Text.Encoding.UTF8.GetBytes("--" + boundary + "--\r\n");
+                    outputStream.Write(finalBoundary, 0, finalBoundary.Length);
+                }
+
+                EditorUtility.ClearProgressBar();
+                return outputPath;
+            }
+            catch (System.Exception ex)
+            {
+                EditorUtility.ClearProgressBar();
+                Debug.LogError("Failed to create streaming multipart file: " + ex.Message);
+                if (File.Exists(outputPath))
+                    File.Delete(outputPath);
+                return null;
+            }
+        }
+
+        // Constants for streaming multipart upload
+        private const int StreamingBufferSize = 4096; // 4KB buffer
+        private const string MultipartBoundaryPrefix = "----Cognitive3DBoundary";
+
+        /// <summary>
+        /// Path to the current temporary multipart file (reused for both phases)
+        /// </summary>
+        static string TempMultipartFilePath;
+
+        /// <summary>
+        /// Callback from Phase 2 (auxiliary files upload)
+        /// Phase 1 already succeeded, so report success even if Phase 2 fails
+        /// </summary>
+        static void PostSceneUploadResponsePhase2(int responseCode, string error, string text)
+        {
+            CleanupTempFile();
+
+            if (responseCode != 200 && responseCode != 201)
+            {
+                Debug.LogWarning("Phase 2 failed (textures may be missing), but core scene uploaded successfully. Error: " + error);
+                SegmentAnalytics.TrackEvent("UploadingSceneError" + responseCode + "_Phase2", "SceneSetupSceneUploadPage");
+            }
+            else
+            {
+                SegmentAnalytics.TrackEvent("UploadingSceneComplete_Phase2", "SceneSetupSceneUploadPage");
+            }
+
+            UploadCompleteOptimized?.Invoke(200);
+
+            Debug.Log("<color=green>Scene Upload Complete!</color>");
+            SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+            props.buttonName = "SceneSetupSceneUploadPage";
+            props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber + 1);
+            SegmentAnalytics.TrackEvent("UploadingSceneComplete_Optimized", props);
+
+            CleanupOptimizedUploadState();
+        }
+
+        /// <summary>
+        /// Cleans up the temporary multipart file used for streaming upload
+        /// </summary>
+        private static void CleanupTempFile()
+        {
+            if (!string.IsNullOrEmpty(TempMultipartFilePath) && File.Exists(TempMultipartFilePath))
+            {
+                try
+                {
+                    File.Delete(TempMultipartFilePath);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning("Failed to delete temporary file: " + ex.Message);
+                }
+            }
+            TempMultipartFilePath = null;
+        }
+    
+        // State variables for optimized two-phase upload
+        static Cognitive3D_Preferences.SceneSettings UploadSceneSettingsOptimized;
+        static System.Action<int> UploadCompleteOptimized;
+        static System.Action<float> UploadProgressCallbackOptimized;
+        static string[] AuxiliaryFilesForPhase2;
+
+        /// <summary>
+        /// Classifies export files into core scene files (gltf, bin, settings.json) and auxiliary files (textures, debug.log)
+        /// </summary>
+        private static void ClassifyFiles(
+            string sceneName,
+            string sceneExportDirectory,
+            out List<string> coreFiles,
+            out List<string> auxiliaryFiles,
+            out string screenshotFile)
+        {
+            coreFiles = new List<string>();
+            auxiliaryFiles = new List<string>();
+            screenshotFile = null;
+
+            if (!Directory.Exists(sceneExportDirectory))
+            {
+                return;
+            }
+
+            string[] allFiles = Directory.GetFiles(sceneExportDirectory);
+
+            foreach (var filePath in allFiles)
+            {
+                string fileName = Path.GetFileName(filePath);
+                string lowerFileName = fileName.ToLower();
+
+                // Skip system files
+                if (lowerFileName.EndsWith(".ds_store") || lowerFileName.EndsWith(".meta"))
+                    continue;
+
+                // Core files: scene.gltf, scene.bin, settings.json
+                if (lowerFileName == "scene.gltf" || lowerFileName == sceneName.ToLower() + ".gltf" ||
+                    lowerFileName == "scene.bin" || lowerFileName == sceneName.ToLower() + ".bin" ||
+                    lowerFileName == "settings.json")
+                {
+                    coreFiles.Add(filePath);
+                }
+                // Auxiliary files: textures and debug log
+                else if (lowerFileName.EndsWith(".png") || lowerFileName == "debug.log")
+                {
+                    auxiliaryFiles.Add(filePath);
+                }
+            }
+
+            // Get screenshot from screenshot subdirectory
+            string screenshotDir = sceneExportDirectory + "screenshot";
+            if (Directory.Exists(screenshotDir))
+            {
+                string[] screenshots = Directory.GetFiles(screenshotDir);
+                if (screenshots.Length > 0)
+                {
+                    screenshotFile = screenshots[0];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Wraps a progress callback to remap progress from 0-1 to a specific range (min to max)
+        /// </summary>
+        private static System.Action<float> WrapProgressCallback(float min, float max)
+        {
+            if (UploadProgressCallbackOptimized == null)
+                return null;
+
+            return (progress) =>
+            {
+                float mappedProgress = min + (progress * (max - min));
+                UploadProgressCallbackOptimized?.Invoke(mappedProgress);
+            };
+        }
+
+        /// <summary>
+        /// Cleans up static state variables used during optimized upload
+        /// </summary>
+        private static void CleanupOptimizedUploadState()
+        {
+            UploadSceneSettingsOptimized = null;
+            UploadCompleteOptimized = null;
+            UploadProgressCallbackOptimized = null;
+            AuxiliaryFilesForPhase2 = null;
+
+            // Safety net cleanup for temp streaming file
+            CleanupTempFile();
+        }
+
+        #region (Old) Upload Scene
+
+        static System.Action<int> UploadComplete;
+        //displays popup window confirming upload, then uploads the files
+
+        /// <summary>
+        /// displays confirmation popup
+        /// reads files from export directory and sends POST request to backend
+        /// invokes uploadComplete if upload actually starts and PostSceneUploadResponse callback gets 200/201 responsecode
+        /// </summary>
+        public static void UploadDecimatedScene(Cognitive3D_Preferences.SceneSettings settings, System.Action<int> uploadComplete, System.Action<float> progressCallback)
+        {
+            //if uploadNewScene POST
+            //else PUT to sceneexplorer/sceneid
+
+            if (settings == null) { UploadSceneSettings = null; return; }
+
+            UploadSceneSettings = settings;
+
+            bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId);
+
+            bool uploadConfirmed = false;
+            string sceneName = settings.SceneName;
+            string[] filePaths = new string[] { };
+
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
+            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+
+            if (SceneExportDirExists)
+            {
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
+            }
+
+            //custom confirm upload popup windows
+            if ((!SceneExportDirExists || filePaths.Length <= 1))
+            {
+                if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + settings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
+                {
+                    uploadConfirmed = true;
+                    //create a json.settings file in the directory
+                    string objPath = EditorCore.GetSubDirectoryPath(sceneName);
+
+                    Directory.CreateDirectory(objPath);
+
+                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+                    File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                    string debugContent = DebugInformationWindow.GetDebugContents();
+                    File.WriteAllText(objPath + "debug.log", debugContent);
+                }
+            }
+            else
+            {
+                uploadConfirmed = true;
+            }
+
+            if (!uploadConfirmed)
+            {
+                UploadSceneSettings = null;
+                return; //just exit now
+            }
+
+            //after confirmation because uploading an empty scene creates a settings.json file
+            if (Directory.Exists(sceneExportDirectory))
+            {
+                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
+            }
+
+            string[] screenshotPath = new string[0];
+            if (Directory.Exists(sceneExportDirectory + "screenshot"))
+            {
+                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
+            }
+            else
+            {
+                Util.logDebug("SceneExportWindow Upload can't find directory to screenshot");
+            }
+
+            string fileList = "Upload Files:\n";
+            WWWForm wwwForm = new WWWForm();
+            foreach (var f in filePaths)
+            {
+                if (f.ToLower().EndsWith(".ds_store"))
+                {
+                    Util.logDebug("skip file " + f);
+                    continue;
+                }
+
+                fileList += f + "\n";
+
+                var data = File.ReadAllBytes(f);
+                wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
+            }
+
+            Util.logDebug(fileList);
+
+            if (screenshotPath.Length == 0)
+            {
+                Util.logDebug("SceneExportWindow Upload can't find files in screenshot directory");
+            }
+            else
+            {
+                wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
+            }
+
+            if (hasExistingSceneId) //upload new verison of existing scene
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                if (EditorCore.IsDeveloperKeyValid)
+                {
+                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+                    foreach (var v in wwwForm.headers)
+                    {
+                        headers[v.Key] = v.Value;
+                    }
+                }
+                EditorNetwork.Post(CognitiveStatics.PostUpdateScene(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
+            }
+            else //upload as new scene
+            {
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                if (EditorCore.IsDeveloperKeyValid)
+                {
+                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+                    foreach (var v in wwwForm.headers)
+                    {
+                        headers[v.Key] = v.Value;
+                    }
+                }
+                EditorNetwork.Post(CognitiveStatics.PostNewScene(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
+            }
+
+            UploadComplete = uploadComplete;
+        }
+
+        /// <summary>
+        /// callback from UploadDecimatedScene
+        /// </summary>
+        static void PostSceneUploadResponse(int responseCode, string error, string text)
+        {
+            Util.logDebug("UploadScene Response. [RESPONSE CODE] " + responseCode
+                + (!string.IsNullOrEmpty(error) ? " [ERROR] " + error : "")
+                + (!string.IsNullOrEmpty(text) ? " [TEXT] " + text : ""));
+
+            if (responseCode != 200 && responseCode != 201)
+            {
+                Debug.LogError("Scene Upload Error " + error);
+                SegmentAnalytics.TrackEvent("UploadingSceneError" + responseCode + "_SceneUploadPage", "SceneSetupSceneUploadPage");
+                if (responseCode != 100) //ie user cancelled upload
+                {
+                    EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
+                }
+                UploadComplete.Invoke(responseCode);
+                UploadSceneSettings = null;
+                UploadComplete = null;
+                return;
+            }
+
+            //response can be <!DOCTYPE html><html lang=en><head><meta charset=utf-8><title>Error</title></head><body><pre>Internal Server Error</pre></body></html>
+            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
+            {
+                Debug.LogError("Scene Upload Error:" + text);
+                EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene. \n\nSee Console for more details", "Ok");
+                UploadComplete.Invoke(responseCode);
+                UploadSceneSettings = null;
+                UploadComplete = null;
+                return;
+            }
+
+            string responseText = text.Replace("\"", "");
+            if (!string.IsNullOrEmpty(responseText)) //uploading a new version returns empty. uploading a new scene returns sceneid
+            {
+                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+                UploadSceneSettings.SceneId = responseText;
+                AssetDatabase.SaveAssets();
+            }
+
+            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            GUI.FocusControl("NULL");
+            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+            AssetDatabase.SaveAssets();
+
+            if (UploadComplete != null)
+            {
+                UploadComplete.Invoke(responseCode);
+            }
+            UploadComplete = null;
+
+            Debug.Log("<color=green>Scene Upload Complete!</color>");
+            SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+            props.buttonName = "SceneSetupSceneUploadPage";
+            props.SetProperty("sceneVersion", UploadSceneSettings.VersionNumber+1);
+            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", props);
+        }
+
+        static Cognitive3D_Preferences.SceneSettings UploadSceneSettings;
+        /// <summary>
+        /// SceneSettings for the currently uploading scene
+        /// </summary>
+        public static void ClearUploadSceneSettings() //sometimes not set to null when init window quits
+        {
+            UploadSceneSettings = null;
+        }
+
         #endregion
     }
 
@@ -751,6 +1448,6 @@ namespace Cognitive3D
                 }
             }
         }
-    }
     #endregion
+    }
 }
