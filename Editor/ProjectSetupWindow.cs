@@ -485,14 +485,15 @@ namespace Cognitive3D
 
             bool xrSdkNeedsUpdate = XRSDKNeedsUpdate();
             var selectedScenes = UploadTools.GetSelectedScenes(sceneEntries);
-            bool hasScenesToUpload = selectedScenes.Count > 0;
+            bool hasScenesSelected = selectedScenes.Count > 0;
+            bool hasScenesToUpload = hasScenesSelected && uploadSceneGeometry;
 
-            string footerButtonText = GetFooterButtonText(hasScenesToUpload, xrSdkNeedsUpdate);
+            string footerButtonText = GetFooterButtonText(hasScenesSelected, hasScenesToUpload, xrSdkNeedsUpdate);
 
             EditorGUI.BeginDisabledGroup(!keysSet); // disable if keySet is false
             if (GUILayout.Button(footerButtonText, GUILayout.Width(140), GUILayout.Height(30)))
             {
-                HandleFooterButtonClick(hasScenesToUpload, xrSdkNeedsUpdate, selectedScenes);
+                HandleFooterButtonClick(hasScenesSelected, xrSdkNeedsUpdate, selectedScenes);
                 Close();  // Close the window
             }
             EditorGUI.EndDisabledGroup();
@@ -503,12 +504,16 @@ namespace Cognitive3D
             GUILayout.EndArea();
         }
 
-        private string GetFooterButtonText(bool hasScenesToUpload, bool xrSdkNeedsUpdate)
+        private string GetFooterButtonText(bool hasScenesSelected, bool hasScenesToUpload, bool xrSdkNeedsUpdate)
         {
             if (hasScenesToUpload && xrSdkNeedsUpdate)
                 return "Upload and Compile";
             if (hasScenesToUpload)
                 return "Upload and Finish";
+            if (hasScenesSelected && !hasScenesToUpload && xrSdkNeedsUpdate)
+                return "Register and Compile";
+            if (hasScenesSelected && !hasScenesToUpload)
+                return "Register and Finish";
             if (xrSdkNeedsUpdate)
                 return "Compile and Finish";
             return "Finish";
@@ -516,9 +521,9 @@ namespace Cognitive3D
 
         private bool xrSdkPendingAfterUpload;
 
-        private void HandleFooterButtonClick(bool hasScenesToUpload, bool xrSdkNeedsUpdate, List<SceneEntry> selectedScenes)
+        private void HandleFooterButtonClick(bool hasScenesSelected, bool xrSdkNeedsUpdate, List<SceneEntry> selectedScenes)
         {
-            if (hasScenesToUpload)
+            if (hasScenesSelected)
             {
                 if (xrSdkNeedsUpdate && !xrSdkPendingAfterUpload)
                 {
@@ -531,7 +536,7 @@ namespace Cognitive3D
             }
             else if (xrSdkNeedsUpdate)
             {
-                // No scenes to upload, set XR SDK
+                // No scenes selected, set XR SDK
                 ApplyXRSDKAndWaitForCompile();
             }
         }
