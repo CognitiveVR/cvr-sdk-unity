@@ -76,6 +76,7 @@ namespace Cognitive3D
         private Vector2 scrollPos;
 
         private bool selectAll;
+        private bool uploadSceneGeometry = true; // Default to true - upload geometry
         private readonly List<SceneEntry> sceneEntries = new List<SceneEntry>();
 
         private void OnGUI()
@@ -285,13 +286,16 @@ namespace Cognitive3D
                 });
 #endregion
 
-#region Scene Upload
+#region Scene Tracking
                 completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Scene Upload", statusIcon, keysSet, () =>
+                DrawFoldout("Scene Tracking", statusIcon, keysSet, () =>
                 {
-                    GUILayout.Label("Configure which scenes from the Build Settings should be prepared and uploaded. Ensure all the scenes you want to track are added to the Build Settings.", EditorCore.styles.DescriptionPadding);
+                    GUILayout.Label("Select which scenes from Build Settings you want to track. Selected scenes will be registered on the dashboard.", EditorCore.styles.DescriptionPadding);
+
+                    GUILayout.Space(5);
+
                     GUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding);
 
                     // Warning icon
@@ -394,7 +398,34 @@ namespace Cognitive3D
                     }
 
                     GUILayout.EndScrollView();
+
+                    // Display count of selected scenes
+                    int selectedCount = sceneEntries.Count(s => s.selected);
+                    int totalCount = sceneEntries.Count;
+                    GUILayout.Label($"{selectedCount} out of {totalCount} scenes selected for tracking", EditorCore.styles.ItemDescription);
+
                     EditorGUILayout.EndVertical();
+                });
+#endregion
+
+#region Scene Upload
+                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0;
+                statusIcon = GetStatusIcon(completenessStatus);
+
+                DrawFoldout("Scene Geometry Upload", statusIcon, keysSet, () =>
+                {
+                    GUILayout.Label("Upload scene geometry to visualize user sessions in 3D on the dashboard. This is recommended for the best analytics experience.", EditorCore.styles.DescriptionPadding);
+
+                    // Geometry upload option
+                    GUILayout.BeginHorizontal();
+                    uploadSceneGeometry = EditorGUILayout.ToggleLeft(
+                        new GUIContent("Upload Scene Geometry (Recommended)", "Enable to export and upload actual 3D geometry."),
+                        uploadSceneGeometry,
+                        EditorStyles.boldLabel
+                    );
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.Space(10);
                 });
 #endregion
 
@@ -496,7 +527,7 @@ namespace Cognitive3D
                     UploadTools.OnUploadScenesComplete += ApplyXRSDKAndWaitForCompile;
                 }
 
-                UploadTools.UploadScenes(selectedScenes);
+                UploadTools.UploadScenes(selectedScenes, uploadSceneGeometry);
             }
             else if (xrSdkNeedsUpdate)
             {
@@ -786,6 +817,7 @@ namespace Cognitive3D
                 devKeyStatusType = MessageType.Error;
                 keysSet = false;
             }
+            Repaint();
         }
 
         private void GetApplicationKeyResponse(int responseCode, string error, string text)
@@ -830,6 +862,7 @@ namespace Cognitive3D
                 apiKeyFromDashboard = apiKey;
                 SaveApplicationKey();
             }
+            Repaint();
         }
 
         private void GetUserResponse(int responseCode, string error, string text)
@@ -876,8 +909,10 @@ namespace Cognitive3D
             catch
             {
                 Debug.LogError("Invalid JSON response");
+                Repaint();
                 return;
             }
+            Repaint();
         }
 #endregion
         }
