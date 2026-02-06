@@ -903,7 +903,7 @@ namespace Cognitive3D.UnityGLTF
 			if (lightData != null)
 			{
 				//1000 lumen ~1 unity light unit
-#if UNITY_6000_3_OR_NEWER
+#if UNITY_6000_0_OR_NEWER
 				switch (unityLight.lightUnit)
 				{
 					case UnityEngine.Rendering.LightUnit.Lumen:
