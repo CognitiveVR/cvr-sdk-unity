@@ -21,7 +21,7 @@ namespace Cognitive3D
             SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow", "new");
 
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.minSize = new Vector2(600, 800);
+            window.minSize = new Vector2(650, 900);
             window.Show();
 
             window.LoadKeys();
@@ -432,7 +432,7 @@ namespace Cognitive3D
                     );
                     GUILayout.EndHorizontal();
 
-                    GUILayout.Space(10);
+                    GUILayout.Space(5);
                 });
 #endregion
 
