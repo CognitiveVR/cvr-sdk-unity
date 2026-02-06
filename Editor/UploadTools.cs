@@ -410,7 +410,19 @@ namespace Cognitive3D
             };
 
             CompletedUpload = false;
-            EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+
+            // Only refresh scene version if scene has been successfully uploaded before (has VersionId > 0)
+            // SceneId alone isn't enough - scene might be in preferences but not on backend yet
+            var currentSettings = Cognitive3D_Preferences.FindCurrentScene();
+            if (currentSettings != null && currentSettings.VersionId > 0)
+            {
+                EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
+            }
+            else
+            {
+                // New scene or never uploaded - skip refresh and proceed directly
+                completedRefreshSceneVersion1.Invoke();
+            }
         }
 
         /// <summary>
@@ -745,9 +757,9 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             string uploadMessage = hasExistingSceneId ? "Uploading core files (Phase 1)" : "Uploading new scene (Phase 1)";
-            var url = hasExistingSceneId ?
+            var url = (hasExistingSceneId && settings.VersionId > 0) ?
                 CognitiveStatics.PostUpdateScene(settings.SceneId):
-                CognitiveStatics.PostNewScene(settings.SceneName);
+                CognitiveStatics.PostNewScene(settings.SceneId);
             EditorNetwork.PostFile(url, tempMultipartPath, PostSceneUploadResponsePhase1, headers, true, "Upload", uploadMessage, WrapProgressCallback(0.0f, 0.5f));
         }
 
