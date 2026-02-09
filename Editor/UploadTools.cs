@@ -319,6 +319,12 @@ namespace Cognitive3D
             {
                 HandleDynamicsUpload(uploadExportedDynamics, exportAndUploadDynamicsFromScene, showPopups);
                 CompletedUpload = true;
+
+                // Invoke completion event if not part of a batch upload
+                if (!isExporting)
+                {
+                    InvokeUploadScenesCompleteEvent();
+                }
             };
 
             // Step 4: Upload manifest after scene version is refreshed
@@ -348,6 +354,12 @@ namespace Cognitive3D
                 else
                 {
                     CompletedUpload = true;
+
+                    // Invoke completion event even on failure if not part of a batch upload
+                    if (!isExporting)
+                    {
+                        InvokeUploadScenesCompleteEvent();
+                    }
                 }
                 ProjectValidation.RegenerateItems();
             };
@@ -414,7 +426,7 @@ namespace Cognitive3D
             // Only refresh scene version if scene has been successfully uploaded before (has VersionId > 0)
             // SceneId alone isn't enough - scene might be in preferences but not on backend yet
             var currentSettings = Cognitive3D_Preferences.FindCurrentScene();
-            if (currentSettings != null && currentSettings.VersionId > 0)
+            if (currentSettings != null)
             {
                 EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
             }
@@ -666,7 +678,7 @@ namespace Cognitive3D
             UploadCompleteOptimized = uploadComplete;
             UploadProgressCallbackOptimized = progressCallback;
 
-            bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId);
+            bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId) && settings.VersionId > 0;
             bool uploadConfirmed = false;
             string sceneName = settings.SceneName;
             string[] filePaths = new string[] { };
@@ -757,7 +769,7 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             string uploadMessage = hasExistingSceneId ? "Uploading core files (Phase 1)" : "Uploading new scene (Phase 1)";
-            var url = (hasExistingSceneId && settings.VersionId > 0) ?
+            var url = hasExistingSceneId ?
                 CognitiveStatics.PostUpdateScene(settings.SceneId):
                 CognitiveStatics.PostNewScene(settings.SceneId);
             EditorNetwork.PostFile(url, tempMultipartPath, PostSceneUploadResponsePhase1, headers, true, "Upload", uploadMessage, WrapProgressCallback(0.0f, 0.5f));
