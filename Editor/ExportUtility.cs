@@ -26,53 +26,6 @@ namespace Cognitive3D
         public Vector3 originalScale;
     }
 
-    //returned from get scene version. contains info about all versions of a single scene
-    public class SceneVersionCollection
-    {
-        public long createdAt;
-        public long updatedAt;
-        public string id;
-        public List<SceneVersion> versions = new List<SceneVersion>();
-        public string customerId;
-        public string sceneName;
-        public bool isPublic;
-
-        public SceneVersion GetLatestVersion()
-        {
-            int latest = 0;
-            SceneVersion latestscene = null;
-            if (versions == null) { Debug.LogError("SceneVersionCollection versions is null!"); return null; }
-            for (int i = 0; i < versions.Count; i++)
-            {
-                if (versions[i].versionNumber > latest)
-                {
-                    latest = versions[i].versionNumber;
-                    latestscene = versions[i];
-                }
-            }
-            return latestscene;
-        }
-
-        public SceneVersion GetVersion(int versionnumber)
-        {
-            var sceneversion = versions.Find(delegate (SceneVersion obj) { return obj.versionNumber == versionnumber; });
-            return sceneversion;
-        }
-    }
-
-    //a specific version of a scene
-    [System.Serializable]
-    public class SceneVersion
-    {
-        public long createdAt;
-        public long updatedAt;
-        public int id;
-        public int versionNumber;
-        public float scale;
-        public string sdkVersion;
-        public int sessionCount;
-    }
-
     public static class ExportUtility
     {
         private enum ExportQuadType

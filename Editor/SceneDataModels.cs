@@ -49,4 +49,18 @@ namespace Cognitive3D
             return sceneversion;
         }
     }
+
+    //a specific version of a scene
+    [System.Serializable]
+    public class SceneVersion
+    {
+        public long createdAt;
+        public long updatedAt;
+        public int id;
+        public string sceneId;
+        public int versionNumber;
+        public float scale;
+        public string sdkVersion;
+        public int sessionCount;
+    }
 }
