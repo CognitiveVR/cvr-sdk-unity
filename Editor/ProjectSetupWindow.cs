@@ -21,7 +21,7 @@ namespace Cognitive3D
             SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow", "new");
 
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.minSize = new Vector2(650, 900);
+            window.minSize = new Vector2(600, 800);
             window.Show();
 
             window.LoadKeys();
@@ -80,10 +80,8 @@ namespace Cognitive3D
         private bool xrSdkUnfolded;
         private bool playerSetupUnfolded;
         private bool sceneTrackingUnfolded;
-        private bool sceneUploadUnfolded;
 
         private bool selectAll;
-        private bool uploadSceneGeometry = true; // Default to true - upload geometry
         private readonly List<SceneEntry> sceneEntries = new List<SceneEntry>();
 
         private void OnGUI()
@@ -303,22 +301,6 @@ namespace Cognitive3D
 
                     GUILayout.Space(5);
 
-                    GUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding);
-
-                    // Warning icon
-                    GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.Width(35), GUILayout.Height(35));
-                    GUILayout.Label(
-                        "For additive scenes, make sure to follow the setup instructions in the documentation.",
-                        EditorCore.styles.HelpBoxLabel
-                    );
-
-                    if (GUILayout.Button(EditorCore.ExternalLinkIcon, EditorCore.styles.ExternalLink))
-                    {
-                        Application.OpenURL("https://docs.cognitive3d.com/unity/scenes/#additive-scene-loading");
-                    }
-                    GUILayout.FlexibleSpace(); // Push content to the left
-                    GUILayout.EndHorizontal();
-
                     if (EditorBuildSettings.scenes.Length == 0)
                     {
                         GUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding);
@@ -415,27 +397,6 @@ namespace Cognitive3D
                 });
 #endregion
 
-#region Scene Upload
-                completenessStatus = uploadSceneGeometry && keysSet;
-                statusIcon = GetStatusIcon(completenessStatus);
-
-                DrawFoldout("Scene Geometry Upload", statusIcon, ref sceneUploadUnfolded, () =>
-                {
-                    GUILayout.Label("Upload scene geometry to visualize user sessions in 3D on the dashboard. This is recommended for the best analytics experience.", EditorCore.styles.DescriptionPadding);
-
-                    // Geometry upload option
-                    GUILayout.BeginHorizontal();
-                    uploadSceneGeometry = EditorGUILayout.ToggleLeft(
-                        new GUIContent("Upload Scene Geometry (Recommended)", "Enable to export and upload actual 3D geometry."),
-                        uploadSceneGeometry,
-                        EditorStyles.boldLabel
-                    );
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.Space(5);
-                });
-#endregion
-
                 EditorGUI.EndDisabledGroup();
             }
 
@@ -484,14 +445,12 @@ namespace Cognitive3D
                 xrSdkUnfolded = !autoSelectXR;  // Fold when auto-select is enabled
                 playerSetupUnfolded = !EditorCore.GetPreferences().AutoPlayerSetup;  // Fold when auto-setup is enabled
                 sceneTrackingUnfolded = true;
-                sceneUploadUnfolded = true;
             }
             else
             {
                 xrSdkUnfolded = false;
                 playerSetupUnfolded = false;
                 sceneTrackingUnfolded = false;
-                sceneUploadUnfolded = false;
             }
         }
 
@@ -512,9 +471,8 @@ namespace Cognitive3D
             bool xrSdkNeedsUpdate = XRSDKNeedsUpdate();
             var selectedScenes = UploadTools.GetSelectedScenes(sceneEntries);
             bool hasScenesSelected = selectedScenes.Count > 0;
-            bool hasScenesToUpload = hasScenesSelected && uploadSceneGeometry;
 
-            string footerButtonText = GetFooterButtonText(hasScenesSelected, hasScenesToUpload, xrSdkNeedsUpdate);
+            string footerButtonText = GetFooterButtonText(hasScenesSelected, xrSdkNeedsUpdate);
 
             EditorGUI.BeginDisabledGroup(!keysSet); // disable if keySet is false
             if (GUILayout.Button(footerButtonText, GUILayout.Width(140), GUILayout.Height(30)))
@@ -530,15 +488,11 @@ namespace Cognitive3D
             GUILayout.EndArea();
         }
 
-        private string GetFooterButtonText(bool hasScenesSelected, bool hasScenesToUpload, bool xrSdkNeedsUpdate)
+        private string GetFooterButtonText(bool hasScenesSelected, bool xrSdkNeedsUpdate)
         {
-            if (hasScenesToUpload && xrSdkNeedsUpdate)
-                return "Upload and Compile";
-            if (hasScenesToUpload)
-                return "Upload and Finish";
-            if (hasScenesSelected && !hasScenesToUpload && xrSdkNeedsUpdate)
+            if (hasScenesSelected && xrSdkNeedsUpdate)
                 return "Register and Compile";
-            if (hasScenesSelected && !hasScenesToUpload)
+            if (hasScenesSelected)
                 return "Register and Finish";
             if (xrSdkNeedsUpdate)
                 return "Compile and Finish";
@@ -558,7 +512,7 @@ namespace Cognitive3D
                     UploadTools.OnUploadScenesComplete += ApplyXRSDKAndWaitForCompile;
                 }
 
-                UploadTools.UploadScenes(selectedScenes, uploadSceneGeometry);
+                UploadTools.UploadScenes(selectedScenes, false);
             }
             else if (xrSdkNeedsUpdate)
             {
