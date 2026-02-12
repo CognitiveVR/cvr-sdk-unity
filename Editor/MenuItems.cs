@@ -92,5 +92,16 @@ namespace Cognitive3D
         {
             Application.OpenURL("https://discord.gg/x38sNUdDRH");
         }
+        [MenuItem("Cognitive3D/Setup Notification/Show Setup Notification", false, 125)]
+        private static void ShowNotificationMenuItem()
+        {
+            PostSetupDialog.ShowNotification();
+        }
+        [MenuItem("Cognitive3D/Setup Notification/Reset Setup Notification", false, 130)]
+        private static void ResetNotificationMenuItem()
+        {
+            PostSetupDialog.ResetForTesting();
+            Debug.Log("Setup notification preferences have been reset. The notification will appear on the next project setup.");
+        }
     }
 }

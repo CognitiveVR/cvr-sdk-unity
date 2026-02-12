@@ -511,6 +511,11 @@ namespace Cognitive3D
                     xrSdkPendingAfterUpload = true;
                     UploadTools.OnUploadScenesComplete += ApplyXRSDKAndWaitForCompile;
                 }
+                else
+                {
+                    // Scenes will be uploaded, no compilation needed - show notification after upload
+                    UploadTools.OnUploadScenesComplete += OnSetupCompleteAfterUpload;
+                }
 
                 UploadTools.UploadScenes(selectedScenes, false);
             }
@@ -519,6 +524,12 @@ namespace Cognitive3D
                 // No scenes selected, set XR SDK
                 ApplyXRSDKAndWaitForCompile();
             }
+        }
+
+        private void OnSetupCompleteAfterUpload()
+        {
+            UploadTools.OnUploadScenesComplete -= OnSetupCompleteAfterUpload;
+            PostSetupDialog.MarkSetupComplete();
         }
         #endregion
 
@@ -709,6 +720,10 @@ namespace Cognitive3D
             UploadTools.OnUploadScenesComplete -= ApplyXRSDKAndWaitForCompile;
             xrSdkPendingAfterUpload = false;
 
+            // Set pending notification flag BEFORE compilation starts
+            // The SetupNotificationInitializer will show the notification after recompile
+            EditorPrefs.SetBool("Cognitive3D_PendingNotification", true);
+
             SetXRSDK();
             compileStartTime = EditorApplication.timeSinceStartup;
             EditorApplication.update += MonitorCompileAfterXRSDKChange;
@@ -728,6 +743,9 @@ namespace Cognitive3D
             EditorApplication.update -= MonitorCompileAfterXRSDKChange;
             EditorUtility.ClearProgressBar();
             compileStartTime = -1;
+
+            // Note: Setup completion flag was already set before compilation
+            // SetupNotificationInitializer will show the notification after recompile
         }
         #endregion
         #region Build Setting Scene Utilities

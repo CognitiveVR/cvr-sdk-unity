@@ -941,6 +941,39 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _logoCheckmark;
+        public static Texture2D LogoCheckmark
+        {
+            get
+            {
+                if (_logoCheckmark == null)
+                    _logoCheckmark = Resources.Load<Texture2D>("logo-checkmark");
+                return _logoCheckmark;
+            }
+        }
+
+        private static Texture2D _sceneGeometryIcon;
+        public static Texture2D SceneGeometryIcon
+        {
+            get
+            {
+                if (_sceneGeometryIcon == null)
+                    _sceneGeometryIcon = Resources.Load<Texture2D>("Icons/scene-geometry-icon");
+                return _sceneGeometryIcon;
+            }
+        }
+
+        private static Texture2D _exploreFeaturesIcon;
+        public static Texture2D ExploreFeaturesIcon
+        {
+            get
+            {
+                if (_exploreFeaturesIcon == null)
+                    _exploreFeaturesIcon = Resources.Load<Texture2D>("Icons/explore-features-icon");
+                return _exploreFeaturesIcon;
+            }
+        }
+
         private static Texture2D _background;
         public static Texture2D BackgroundTexture
         {
