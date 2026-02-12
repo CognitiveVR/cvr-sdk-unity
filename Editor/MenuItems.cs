@@ -22,12 +22,17 @@ namespace Cognitive3D
         {
             ProjectValidationSettingsProvider.OpenSettingsWindow();
         }
-        [MenuItem("Cognitive3D/Preferences", priority = 20)]
+        [MenuItem("Cognitive3D/Scene Manager", priority = 20)]
+        static void Cognitive3DSceneManagerSetup()
+        {
+            SceneManagerWindow.Init();
+        }
+        [MenuItem("Cognitive3D/Preferences", priority = 25)]
         static void Cognitive3DPreferences()
         {
             PreferencesSettingsProvider.OpenSettingsWindow();
         }
-        [MenuItem("Cognitive3D/Data Uploader", priority = 25)]
+        [MenuItem("Cognitive3D/Data Uploader", priority = 30)]
         static void Cognitive3DDataUploader()
         {
             DataUploaderSettingsProvider.OpenSettingsWindow();
