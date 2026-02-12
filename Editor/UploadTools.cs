@@ -687,7 +687,7 @@ namespace Cognitive3D
             }
 
             // Confirm upload dialog
-            if ((!SceneExportDirExists || filePaths.Length <= 1))
+            if (!SceneExportDirExists || filePaths.Length <= 1)
             {
                 if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + settings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
                 {
@@ -768,6 +768,214 @@ namespace Cognitive3D
                 CognitiveStatics.PostUpdateScene(settings.SceneId):
                 CognitiveStatics.PostNewScene(settings.SceneId);
             EditorNetwork.PostFile(url, tempMultipartPath, PostSceneUploadResponsePhase1, headers, true, "Upload", uploadMessage, WrapProgressCallback(0.0f, 0.5f));
+        }
+
+        /// <summary>
+        /// Force update method that always uses PUT with force parameter for both phases
+        /// Used when updating an existing scene version without creating a new version
+        /// </summary>
+        public static void UpdateDecimatedSceneOptimized(Cognitive3D_Preferences.SceneSettings settings, System.Action<int> uploadComplete, System.Action<float> progressCallback)
+        {
+            if (settings == null)
+            {
+                uploadComplete?.Invoke(0);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(settings.SceneId) || settings.VersionNumber <= 0)
+            {
+                Debug.LogError("Cannot force update: Scene must have existing SceneId and VersionNumber");
+                uploadComplete?.Invoke(0);
+                return;
+            }
+
+            UploadSceneSettingsOptimized = settings;
+            UploadCompleteOptimized = uploadComplete;
+            UploadProgressCallbackOptimized = progressCallback;
+
+            string sceneName = settings.SceneName;
+            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
+            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
+
+            if (!SceneExportDirExists || Directory.GetFiles(sceneExportDirectory).Length <= 1)
+            {
+                if (!EditorUtility.DisplayDialog("Force Update Scene", "Scene " + settings.SceneName + " has no exported geometry. Update anyway?", "Yes", "No"))
+                {
+                    UploadCompleteOptimized?.Invoke(0);
+                    CleanupOptimizedUploadState();
+                    return;
+                }
+
+                // Create settings.json file
+                string objPath = EditorCore.GetSubDirectoryPath(sceneName);
+                Directory.CreateDirectory(objPath);
+
+                string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+                File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
+
+                string debugContent = DebugInformationWindow.GetDebugContents();
+                File.WriteAllText(objPath + "debug.log", debugContent);
+            }
+
+            // Classify files
+            List<string> coreFiles;
+            List<string> auxiliaryFiles;
+            string screenshotFile;
+            ClassifyFiles(sceneName, sceneExportDirectory, out coreFiles, out auxiliaryFiles, out screenshotFile);
+
+            AuxiliaryFilesForPhase2 = auxiliaryFiles.ToArray();
+
+            // Build multipart file list
+            var filesWithFieldNames = new List<(string filePath, string fieldName, string fileName)>();
+
+            foreach (var f in coreFiles)
+            {
+                if (f.ToLower().EndsWith(".ds_store"))
+                    continue;
+                filesWithFieldNames.Add((f, "file", null));
+            }
+
+            // Add screenshot
+            if (!string.IsNullOrEmpty(screenshotFile) && File.Exists(screenshotFile))
+            {
+                filesWithFieldNames.Add((screenshotFile, "screenshot", "screenshot.png"));
+                Util.logDebug("Added screenshot to Phase 1");
+            }
+            else
+            {
+                Util.logWarning("SceneExportWindow Upload can't find screenshot file");
+            }
+
+            string boundary;
+            string tempMultipartPath = CreateStreamingMultipartFile(filesWithFieldNames, out boundary, "Preparing core files for update (Phase 1)");
+            if (string.IsNullOrEmpty(tempMultipartPath))
+            {
+                Debug.LogError("Failed to create multipart file for Phase 1");
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+                return;
+            }
+            TempMultipartFilePath = tempMultipartPath;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            // Always use PUT with force parameter for Phase 1
+            string url = CognitiveStatics.PostUpdateSceneForce(settings.SceneId, settings.VersionNumber);
+            EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase1, headers, true, "Update", "Force updating scene (Phase 1)", WrapProgressCallback(0.0f, 0.5f));
+        }
+
+        /// <summary>
+        /// Callback from UpdateDecimatedSceneOptimized Phase 1
+        /// </summary>
+        static void PostSceneUpdateResponsePhase1(int responseCode, string error, string text)
+        {
+            CleanupTempFile();
+
+            if (responseCode != 200 && responseCode != 201)
+            {
+                Debug.LogError("Scene Update Phase 1 Error: " + error);
+                SegmentAnalytics.TrackEvent("UpdatingSceneError" + responseCode + "_Phase1", "SceneSetupSceneUpdatePage");
+                if (responseCode != 100)
+                    EditorUtility.DisplayDialog("Error Updating Scene", "Phase 1 failed with code " + responseCode + ".\n\nSee Console for details", "Ok");
+                UploadCompleteOptimized?.Invoke(responseCode);
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
+            {
+                Debug.LogError("Scene Update Phase 1 Error:" + text);
+                EditorUtility.DisplayDialog("Error Updating Scene", "There was an internal error updating the scene (Phase 1). \n\nSee Console for more details", "Ok");
+                UploadCompleteOptimized?.Invoke(responseCode);
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            UploadSceneSettingsOptimized.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            GUI.FocusControl("NULL");
+            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+            AssetDatabase.SaveAssets();
+
+            SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Phase1", "SceneSetupSceneUpdatePage");
+            StartPhase2Update();
+        }
+
+        /// <summary>
+        /// Initiates Phase 2 for forced update (auxiliary files)
+        /// </summary>
+        static void StartPhase2Update()
+        {
+            if (AuxiliaryFilesForPhase2 == null || AuxiliaryFilesForPhase2.Length == 0)
+            {
+                Util.logDebug("No auxiliary files to update. Skipping Phase 2.");
+                UploadCompleteOptimized?.Invoke(200);
+
+                Debug.Log("<color=green>Scene Update Complete!</color>");
+                SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+                props.buttonName = "SceneSetupSceneUpdatePage";
+                props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber);
+                SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Optimized", props);
+
+                CleanupOptimizedUploadState();
+                return;
+            }
+
+            var filesWithFieldNames = new List<(string filePath, string fieldName, string fileName)>();
+            foreach (var filePath in AuxiliaryFilesForPhase2)
+            {
+                filesWithFieldNames.Add((filePath, "file", null));
+            }
+
+            string boundary;
+            string tempMultipartPath = CreateStreamingMultipartFile(filesWithFieldNames, out boundary, "Preparing auxiliary files for update (Phase 2)");
+            if (string.IsNullOrEmpty(tempMultipartPath))
+            {
+                Debug.LogError("Failed to create multipart file for Phase 2");
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+                return;
+            }
+            TempMultipartFilePath = tempMultipartPath;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            // Always use PUT with force parameter for Phase 2
+            string url = CognitiveStatics.PostUpdateSceneForce(UploadSceneSettingsOptimized.SceneId, UploadSceneSettingsOptimized.VersionNumber);
+            EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase2, headers, true, "Update", "Force updating auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
+        }
+
+        /// <summary>
+        /// Callback from UpdateDecimatedSceneOptimized Phase 2
+        /// </summary>
+        static void PostSceneUpdateResponsePhase2(int responseCode, string error, string text)
+        {
+            CleanupTempFile();
+
+            if (responseCode != 200 && responseCode != 201)
+            {
+                Debug.LogWarning("Phase 2 failed (textures may be missing), but core scene updated successfully. Error: " + error);
+                SegmentAnalytics.TrackEvent("UpdatingSceneError" + responseCode + "_Phase2", "SceneSetupSceneUpdatePage");
+            }
+            else
+            {
+                SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Phase2", "SceneSetupSceneUpdatePage");
+            }
+
+            UploadCompleteOptimized?.Invoke(200);
+
+            Debug.Log("<color=green>Scene Update Complete!</color>");
+            SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
+            props.buttonName = "SceneSetupSceneUpdatePage";
+            props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber);
+            SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Optimized", props);
+
+            CleanupOptimizedUploadState();
         }
 
         /// <summary>
