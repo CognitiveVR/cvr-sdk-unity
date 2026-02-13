@@ -335,7 +335,7 @@ namespace Cognitive3D
             DrawLegendDot(StatusGray, "Not Exported");
             GUILayout.Space(12);
 
-            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh List and Update Versions"), EditorStyles.toolbarButton, GUILayout.Width(30)))
+            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh List and Update Scene Versions"), EditorStyles.toolbarButton, GUILayout.Width(30)))
             {
                 // Full refresh - load from preferences AND fetch latest versions from API
                 RefreshSceneList(fetchVersions: true);
