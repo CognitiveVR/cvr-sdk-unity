@@ -150,6 +150,22 @@ namespace Cognitive3D
 
             GUILayout.Space(6);
 
+            // ─── Contextual help message ───
+            if (!exported)
+            {
+                EditorGUILayout.HelpBox("Export the scene geometry first, then upload it to the dashboard.", MessageType.Info);
+            }
+            else if (exported && !uploaded)
+            {
+                EditorGUILayout.HelpBox("Scene geometry exported. Upload it to the dashboard for 3D session visualization.", MessageType.Info);
+            }
+            else if (uploaded)
+            {
+                EditorGUILayout.HelpBox("Scene is uploaded and ready. You can update the scene with new geometry or view it on the dashboard.", MessageType.Info);
+            }
+
+            GUILayout.Space(6);
+
             // ─── Step indicator ───
             DrawStepIndicator(exported, uploaded);
 
@@ -189,16 +205,6 @@ namespace Cognitive3D
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.EndHorizontal();
-
-            // ─── Contextual help message ───
-            if (!exported)
-            {
-                EditorGUILayout.HelpBox("Export the scene geometry first, then upload it to the dashboard.", MessageType.Info);
-            }
-            else if (!configured)
-            {
-                EditorGUILayout.HelpBox("Scene is not configured. Upload will create a new scene entry.", MessageType.Info);
-            }
 
             EditorGUILayout.EndVertical();
         }
@@ -383,15 +389,11 @@ namespace Cognitive3D
             DrawColumnSeparator();
 
             // Scene ID header
-            GUILayout.Label("Scene ID", GUILayout.Width(200));
+            GUILayout.Label("Scene ID", GUILayout.Width(250));
             DrawColumnSeparator();
 
             // Version header
-            GUILayout.Label("Version", EditorCore.styles.CenteredLabel, GUILayout.Width(50));
-            DrawColumnSeparator();
-
-            // Actions header
-            GUILayout.Label("Actions", EditorCore.styles.CenteredLabel, GUILayout.Width(100));
+            GUILayout.Label("Version", EditorCore.styles.CenteredLabel, GUILayout.Width(100));
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -471,8 +473,8 @@ namespace Cognitive3D
             GUILayout.Label(entry.sceneName, labelStyle, GUILayout.Width(130), GUILayout.Height(26));
 
             // Scene ID (truncated) - vertically centered
-            string idDisplay = string.IsNullOrEmpty(entry.sceneId) ? "Not Set" : TruncateId(entry.sceneId, 20);
-            GUILayout.Label(idDisplay, labelStyle, GUILayout.Width(200), GUILayout.Height(26));
+            string idDisplay = string.IsNullOrEmpty(entry.sceneId) ? "Not Set" : TruncateId(entry.sceneId, 25);
+            GUILayout.Label(idDisplay, labelStyle, GUILayout.Width(250), GUILayout.Height(26));
 
             // Version Number - centered both vertically and horizontally
             string versionDisplay = entry.versionNumber > 0 ? entry.versionNumber.ToString() : "-";
@@ -480,25 +482,9 @@ namespace Cognitive3D
             {
                 alignment = TextAnchor.MiddleCenter
             };
-            GUILayout.Label(versionDisplay, centeredStyle, GUILayout.Width(50), GUILayout.Height(26));
+            GUILayout.Label(versionDisplay, centeredStyle, GUILayout.Width(100), GUILayout.Height(26));
 
             GUILayout.FlexibleSpace();
-
-            // Actions: Gear menu + Dashboard
-            if (GUILayout.Button(new GUIContent(EditorCore.SettingsIcon2, "Scene Actions"), GUILayout.Width(32), GUILayout.Height(22)))
-            {
-                ShowActionsMenu(entry);
-            }
-
-            bool canOpenDashboard = !string.IsNullOrEmpty(entry.sceneId) && entry.versionNumber > 0;
-            EditorGUI.BeginDisabledGroup(!canOpenDashboard);
-            if (GUILayout.Button(new GUIContent(EditorCore.ExternalIcon, "Open in Dashboard"), GUILayout.Width(32), GUILayout.Height(22)))
-            {
-                OpenSceneDashboard(entry);
-            }
-            EditorGUI.EndDisabledGroup();
-
-            GUILayout.Space(2);
             EditorGUILayout.EndHorizontal();
 
             // ─── Expanded details + inline actions ───
@@ -560,31 +546,44 @@ namespace Cognitive3D
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(20);
 
-            if (GUILayout.Button("Export", GUILayout.Width(80), GUILayout.Height(22)))
+            if (GUILayout.Button(new GUIContent("Open", "Opens the scene in project"), GUILayout.Width(80), GUILayout.Height(22)))
+            {
+                if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.OpenScene(entry.scenePath);
+                }
+            }
+
+            if (GUILayout.Button(new GUIContent("Export", "Exports the scene"), GUILayout.Width(80), GUILayout.Height(22)))
             {
                 ExportScene(entry);
             }
 
             EditorGUI.BeginDisabledGroup(!isExported);
-            if (GUILayout.Button("Upload New", GUILayout.Width(90), GUILayout.Height(22)))
+            if (GUILayout.Button(new GUIContent("Upload New", "Uploads a new version of the scene"), GUILayout.Width(90), GUILayout.Height(22)))
             {
                 UploadScene(entry);
             }
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.BeginDisabledGroup(!isExported || !isUploaded);
-            if (GUILayout.Button("Update Version", GUILayout.Width(100), GUILayout.Height(22)))
+            if (GUILayout.Button(new GUIContent("Update Version", "Updates the version of the scene"), GUILayout.Width(100), GUILayout.Height(22)))
             {
                 UpdateScene(entry);
             }
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.BeginDisabledGroup(!isUploaded);
-            if (GUILayout.Button("Dashboard", GUILayout.Width(80), GUILayout.Height(22)))
+            if (GUILayout.Button(new GUIContent("Dashboard", "Opens the scene on dashboard"), GUILayout.Width(80), GUILayout.Height(22)))
             {
                 OpenSceneDashboard(entry);
             }
             EditorGUI.EndDisabledGroup();
+
+            if (GUILayout.Button(new GUIContent("Remove", "Removes the tracked scene from Cognitive3D preferences file"), GUILayout.Width(80), GUILayout.Height(22)))
+            {
+                RemoveSceneFromTracking(entry);
+            }
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -598,42 +597,6 @@ namespace Cognitive3D
             if (string.IsNullOrEmpty(id) || id.Length <= maxLength)
                 return id;
             return id.Substring(0, maxLength) + "...";
-        }
-
-        private void ShowActionsMenu(SceneEntry entry)
-        {
-            GenericMenu menu = new GenericMenu();
-
-            bool canExport = !string.IsNullOrEmpty(entry.scenePath);
-            if (canExport)
-                menu.AddItem(new GUIContent("Export Scene"), false, () => ExportScene(entry));
-            else
-                menu.AddDisabledItem(new GUIContent("Export Scene"));
-
-            bool canUpload = entry.hasExportFiles && !string.IsNullOrEmpty(entry.sceneId);
-            if (canUpload)
-                menu.AddItem(new GUIContent("Upload New Scene"), false, () => UploadScene(entry));
-            else
-                menu.AddDisabledItem(new GUIContent("Upload New Scene"));
-
-            bool canUpdate = entry.hasExportFiles && !string.IsNullOrEmpty(entry.sceneId) && entry.versionId > 0;
-            if (canUpdate)
-                menu.AddItem(new GUIContent("Update Existing Version"), false, () => UpdateScene(entry));
-            else
-                menu.AddDisabledItem(new GUIContent("Update Existing Version"));
-
-            menu.AddSeparator("");
-
-            bool canOpenDashboard = !string.IsNullOrEmpty(entry.sceneId) && entry.versionId > 0;
-            if (canOpenDashboard)
-                menu.AddItem(new GUIContent("Open on Dashboard"), false, () => OpenSceneDashboard(entry));
-            else
-                menu.AddDisabledItem(new GUIContent("Open on Dashboard"));
-
-            menu.AddSeparator("");
-            menu.AddItem(new GUIContent("Remove from Tracking"), false, () => RemoveSceneFromTracking(entry));
-
-            menu.ShowAsContext();
         }
 
         #endregion
