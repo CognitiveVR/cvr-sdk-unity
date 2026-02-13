@@ -173,6 +173,27 @@ namespace Cognitive3D
             EditorApplication.update += EditorUpdate;
         }
 
+        //patch a request immediately and listen for a response callback
+        public static void Patch(string url, string stringcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Patch", string requestInfo = "")
+        {
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
+            var p = UnityWebRequest.Put(url, bytes);
+            p.disposeUploadHandlerOnDispose = true;
+            p.disposeDownloadHandlerOnDispose = true;
+            p.method = "PATCH";
+            p.SetRequestHeader("X-HTTP-Method-Override", "PATCH");
+            foreach (var v in headers)
+            {
+                p.SetRequestHeader(v.Key, v.Value);
+            }
+            p.SendWebRequest();
+
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
+
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
         //update all outstanding web requests
         static void EditorUpdate()
         {

@@ -315,97 +315,100 @@ namespace Cognitive3D
             bool showPopups = false,
             System.Action onComplete = null)
         {
-            // Step 5: Upload dynamics and manifest
-            System.Action completedManifestUpload = delegate
-            {
-                HandleDynamicsUpload(uploadExportedDynamics, exportAndUploadDynamicsFromScene, showPopups);
-                CompletedUpload = true;
+            CompletedUpload = false;
 
-                // Invoke completion callback if provided (for standalone uploads)
-                onComplete?.Invoke();
-            };
-
-            // Step 4: Upload manifest after scene version is refreshed
-            System.Action completedRefreshSceneVersion = delegate
+            // Step 0: Initial version check - do this FIRST before any other work
+            System.Action startUploadWorkflow = delegate
             {
-                if (uploadExportedDynamics || exportAndUploadDynamicsFromScene)
+                // Step 5: Upload dynamics and manifest
+                System.Action completedManifestUpload = delegate
                 {
-                    UploadManifestForDynamics(completedManifestUpload);
-                }
-                else
-                {
-                    completedManifestUpload.Invoke();
-                }
-            };
-
-            // Step 3: Export and upload dynamics after scene upload completes
-            System.Action<int> completeSceneUpload = delegate (int responseCode)
-            {
-                if (responseCode == 200 || responseCode == 201)
-                {
-                    if (exportAndUploadDynamicsFromScene)
-                    {
-                        ExportAllDynamicsInScene();
-                    }
-                    EditorCore.RefreshSceneVersion(completedRefreshSceneVersion);
-                }
-                else
-                {
+                    HandleDynamicsUpload(uploadExportedDynamics, exportAndUploadDynamicsFromScene, showPopups);
                     CompletedUpload = true;
 
-                    // Invoke completion callback even on error (for standalone uploads)
+                    // Invoke completion callback if provided (for standalone uploads)
                     onComplete?.Invoke();
-                }
-                ProjectValidation.RegenerateItems();
-            };
+                };
 
-            // Step 2: Upload scene geometry after screenshot is saved
-            System.Action completeScreenshot = delegate
-            {
-                Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
-                if (current == null)
+                // Step 4: Upload manifest after scene version is refreshed
+                System.Action completedRefreshSceneVersion = delegate
                 {
-                    Debug.LogError("Trying to upload to a scene with no settings");
-                    return;
-                }
-
-                if (uploadSceneGeometry)
-                {
-                    bool shouldProceed = true;
-                    if (showPopups)
+                    if (uploadExportedDynamics || exportAndUploadDynamicsFromScene)
                     {
-                        shouldProceed = ShowUploadConfirmationDialog(current);
+                        UploadManifestForDynamics(completedManifestUpload);
                     }
-
-                    if (shouldProceed)
+                    else
                     {
-                        sceneUploadProgress = 0;
-                        sceneUploadStartTime = EditorApplication.timeSinceStartup;
+                        completedManifestUpload.Invoke();
+                    }
+                };
 
-                        // Choose upload strategy based on parameter
-                        if (useOptimizedUpload)
+                // Step 3: Export and upload dynamics after scene upload completes
+                System.Action<int> completeSceneUpload = delegate (int responseCode)
+                {
+                    if (responseCode == 200 || responseCode == 201)
+                    {
+                        if (exportAndUploadDynamicsFromScene)
                         {
-                            UploadDecimatedSceneOptimized(current, completeSceneUpload, null);
+                            ExportAllDynamicsInScene();
                         }
-                        else
-                        {
-                            UploadDecimatedScene(current, completeSceneUpload, null);
-                        }
+                        EditorCore.RefreshSceneVersion(completedRefreshSceneVersion);
                     }
-                }
-                else
-                {
-                    if (uploadThumbnail)
+                    else
                     {
-                        EditorCore.UploadSceneThumbnail(current);
-                    }
-                    completeSceneUpload.Invoke(200);
-                }
-            };
+                        CompletedUpload = true;
 
-            // Step 1: Save screenshot and refresh scene version
-            System.Action completedRefreshSceneVersion1 = delegate
-            {
+                        // Invoke completion callback even on error (for standalone uploads)
+                        onComplete?.Invoke();
+                    }
+                    ProjectValidation.RegenerateItems();
+                };
+
+                // Step 2: Upload scene geometry after screenshot is saved
+                System.Action completeScreenshot = delegate
+                {
+                    Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
+                    if (current == null)
+                    {
+                        Debug.LogError("Trying to upload to a scene with no settings");
+                        return;
+                    }
+
+                    if (uploadSceneGeometry)
+                    {
+                        bool shouldProceed = true;
+                        if (showPopups)
+                        {
+                            shouldProceed = ShowUploadConfirmationDialog(current);
+                        }
+
+                        if (shouldProceed)
+                        {
+                            sceneUploadProgress = 0;
+                            sceneUploadStartTime = EditorApplication.timeSinceStartup;
+
+                            // Choose upload strategy based on parameter
+                            if (useOptimizedUpload)
+                            {
+                                UploadDecimatedSceneOptimized(current, completeSceneUpload, null);
+                            }
+                            else
+                            {
+                                UploadDecimatedScene(current, completeSceneUpload, null);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (uploadThumbnail)
+                        {
+                            EditorCore.UploadSceneThumbnail(current);
+                        }
+                        completeSceneUpload.Invoke(200);
+                    }
+                };
+
+                // Step 1: Save screenshot
                 if (uploadThumbnail)
                 {
                     EditorCore.SaveScreenshot(EditorCore.GetSceneRenderTexture(), UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, completeScreenshot);
@@ -416,19 +419,15 @@ namespace Cognitive3D
                 }
             };
 
-            CompletedUpload = false;
-
-            // Only refresh scene version if scene has been successfully uploaded before (has VersionId > 0)
-            // SceneId alone isn't enough - scene might be in preferences but not on backend yet
+            // INITIAL STEP: Quick version check before starting upload workflow
             var currentSettings = Cognitive3D_Preferences.FindCurrentScene();
-            if (currentSettings != null && currentSettings.VersionId > 0)
+            if (currentSettings != null)
             {
-                EditorCore.RefreshSceneVersion(completedRefreshSceneVersion1);
-            }
-            else
-            {
-                // New scene or never uploaded - skip refresh and proceed directly
-                completedRefreshSceneVersion1.Invoke();
+                // Scene exists on server - do quick version check first
+                EditorCore.RefreshSceneVersion(delegate
+                {
+                    startUploadWorkflow.Invoke();
+                });
             }
         }
 
@@ -965,6 +964,9 @@ namespace Cognitive3D
             else
             {
                 SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Phase2", "SceneSetupSceneUpdatePage");
+
+                // Update scene name after successful update
+                UpdateSceneName(UploadSceneSettingsOptimized.SceneId, UploadSceneSettingsOptimized.SceneName);
             }
 
             UploadCompleteOptimized?.Invoke(200);
@@ -1188,6 +1190,9 @@ namespace Cognitive3D
             else
             {
                 SegmentAnalytics.TrackEvent("UploadingSceneComplete_Phase2", "SceneSetupSceneUploadPage");
+
+                // Update scene name after successful upload
+                UpdateSceneName(UploadSceneSettingsOptimized.SceneId, UploadSceneSettingsOptimized.SceneName);
             }
 
             UploadCompleteOptimized?.Invoke(200);
@@ -1218,6 +1223,45 @@ namespace Cognitive3D
                 }
             }
             TempMultipartFilePath = null;
+        }
+
+        /// <summary>
+        /// Updates the scene name on the server after scene upload or update completes
+        /// </summary>
+        private static void UpdateSceneName(string sceneId, string sceneName)
+        {
+            if (string.IsNullOrEmpty(sceneId) || string.IsNullOrEmpty(sceneName))
+            {
+                Util.logDebug("UpdateSceneName: Missing sceneId or sceneName, skipping update");
+                return;
+            }
+
+            string url = CognitiveStatics.PostUpdateScene(sceneId);
+            string jsonBody = "{\"sceneName\":\"" + sceneName + "\"}";
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (EditorCore.IsDeveloperKeyValid)
+            {
+                headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
+            }
+            headers.Add("Content-Type", "application/json");
+
+            EditorNetwork.Patch(url, jsonBody, UpdateSceneNameResponse, headers, false, "Patch", "Updating scene name");
+        }
+
+        /// <summary>
+        /// Callback from UpdateSceneName PATCH request
+        /// </summary>
+        static void UpdateSceneNameResponse(int responseCode, string error, string text)
+        {
+            if (responseCode != 200 && responseCode != 201)
+            {
+                Debug.LogWarning("Failed to update scene name. Error: " + error);
+            }
+            else
+            {
+                Util.logDebug("Scene name updated successfully");
+            }
         }
     
         // State variables for optimized two-phase upload
