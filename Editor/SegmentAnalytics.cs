@@ -62,6 +62,7 @@ namespace Cognitive3D
         {
             var _userTraits = new SegmentUserTraits();
             _userTraits.sdkVersion = Cognitive3D_Manager.SDK_VERSION;
+            _userTraits.unityVersion = Application.unityVersion;
             if (userData != null)
             {
                 _userTraits.name = $"{userData.firstName} {userData.lastName}";
@@ -241,6 +242,7 @@ namespace Cognitive3D
             public string name;
             public string email;
             public string sdkVersion;
+            public string unityVersion;
             public int projectId;
             public string projectName;
         }
