@@ -16,7 +16,6 @@ namespace Cognitive3D
         private static readonly Color StatusGreen = new Color(0.42f, 0.74f, 0.42f);
         private static readonly Color StatusYellow = new Color(0.77f, 0.66f, 0.30f);
         private static readonly Color StatusGray = new Color(0.5f, 0.5f, 0.5f);
-        private static readonly Color StatusRed = new Color(0.7f, 0.35f, 0.35f);
         private static readonly Color SeparatorColor = new Color(0.15f, 0.15f, 0.15f);
         private static readonly Color ExpandedBgColor = new Color(0.18f, 0.22f, 0.28f, 0.5f);
 
