@@ -31,8 +31,11 @@ namespace Cognitive3D
 
         void OnEnable()
         {
-            // Light refresh - only load from preferences, don't fetch versions from API
-            RefreshSceneList(fetchVersions: false);
+            // Load scene list from preferences, then update existing scene version data from API
+            EditorCore.UpdateExistingSceneVersions(() =>
+            {
+                RefreshSceneList(fetchVersions: false);
+            });
         }
 
         #region Visual Elements
@@ -335,7 +338,7 @@ namespace Cognitive3D
             DrawLegendDot(StatusGray, "Not Exported");
             GUILayout.Space(12);
 
-            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh List and Update Scene Versions"), EditorStyles.toolbarButton, GUILayout.Width(30)))
+            if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh List and Update Scene Versions from Dashboard"), EditorStyles.toolbarButton, GUILayout.Width(30)))
             {
                 // Full refresh - load from preferences AND fetch latest versions from API
                 RefreshSceneList(fetchVersions: true);
