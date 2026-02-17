@@ -720,6 +720,11 @@ namespace Cognitive3D
             UploadTools.OnUploadScenesComplete -= ApplyXRSDKAndWaitForCompile;
             xrSdkPendingAfterUpload = false;
 
+            // Ensure preferences (including any newly added scene settings) are
+            // fully serialized to disk before triggering recompilation
+            EditorUtility.SetDirty(EditorCore.GetPreferences());
+            AssetDatabase.SaveAssets();
+
             // Set pending notification flag BEFORE compilation starts
             // The SetupNotificationInitializer will show the notification after recompile
             EditorPrefs.SetBool("Cognitive3D_PendingNotification", true);
