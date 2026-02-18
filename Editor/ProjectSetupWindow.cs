@@ -491,9 +491,9 @@ namespace Cognitive3D
         private string GetFooterButtonText(bool hasScenesSelected, bool xrSdkNeedsUpdate)
         {
             if (hasScenesSelected && xrSdkNeedsUpdate)
-                return "Register and Compile";
+                return "Apply and Compile";
             if (hasScenesSelected)
-                return "Register and Finish";
+                return "Apply and Finish";
             if (xrSdkNeedsUpdate)
                 return "Compile and Finish";
             return "Finish";
