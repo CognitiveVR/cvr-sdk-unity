@@ -575,75 +575,30 @@ namespace Cognitive3D
         /// Matches by SceneId and VersionNumber, then fills in missing fields such as VersionId.
         /// Does not add or remove any scene settings entries.
         /// </summary>
-        /// <param name="onComplete">Callback invoked after the request completes.</param>
-        public static void UpdateExistingSceneVersions(Action onComplete)
+        /// <param name="callback">Callback invoked after the request completes.</param>
+        public static void UpdateExistingSceneVersions(EditorNetwork.Response callback)
         {
             if (Cognitive3D_Preferences.Instance.sceneSettings.Count == 0)
             {
-                onComplete?.Invoke();
+                // No API call needed. Treat as success so buttons remain usable
+                callback?.Invoke(200, null, null);
                 return;
             }
 
             if (!IsDeveloperKeyValid)
             {
                 Debug.Log("Developer key invalid");
-                onComplete?.Invoke();
+                callback?.Invoke(0, "Developer key invalid", null);
                 return;
             }
 
             string url = CognitiveStatics.GetScenes();
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("Authorization", "APIKEY:DEVELOPER " + DeveloperKey);
-
-            EditorNetwork.Get(url, (responseCode, error, text) =>
+            Dictionary<string, string> headers = new Dictionary<string, string>
             {
-                UpdateExistingSceneVersionsResponse(responseCode, error, text);
-                onComplete?.Invoke();
-            }, headers, true, "Update Existing Scene Versions");
-        }
+                { "Authorization", "APIKEY:DEVELOPER " + DeveloperKey }
+            };
 
-        private static void UpdateExistingSceneVersionsResponse(int responseCode, string error, string text)
-        {
-            if (responseCode != 200)
-            {
-                return;
-            }
-
-            var wrappedJson = "{\"scenes\":" + text + "}";
-            var collection = JsonUtility.FromJson<ScenesCollectionList>(wrappedJson);
-
-            if (collection == null || collection.scenes == null)
-            {
-                Util.logWarning("Failed to parse scenes collection from response");
-                return;
-            }
-
-            bool hasUpdates = false;
-            foreach (var sceneSetting in Cognitive3D_Preferences.Instance.sceneSettings)
-            {
-                if (sceneSetting == null || string.IsNullOrEmpty(sceneSetting.SceneId))
-                    continue;
-
-                foreach (var sceneCollection in collection.scenes)
-                {
-                    if (sceneCollection.sdkFacingId == sceneSetting.SceneId)
-                    {
-                        var matchingVersion = sceneCollection.GetVersion(sceneSetting.VersionNumber);
-                        if (matchingVersion != null)
-                        {
-                            sceneSetting.VersionId = matchingVersion.id;
-                            hasUpdates = true;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if (hasUpdates)
-            {
-                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
-                AssetDatabase.SaveAssets();
-            }
+            EditorNetwork.Get(url, callback, headers, true, "Update Existing Scene Versions");
         }
 
         internal static void GetSceneVersionResponse(int responsecode, string error, string text)

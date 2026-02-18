@@ -11,6 +11,7 @@ namespace Cognitive3D
         private bool refreshList = true;
         private bool shouldFetchVersions = true;
         private SceneEntry expandedEntry = null;
+        private bool buttonsEnabled = false;
 
         // Status icon colors
         private static readonly Color StatusGreen = new Color(0.42f, 0.74f, 0.42f);
@@ -31,10 +32,7 @@ namespace Cognitive3D
         void OnEnable()
         {
             // Load scene list from preferences, then update existing scene version data from API
-            EditorCore.UpdateExistingSceneVersions(() =>
-            {
-                RefreshSceneList(fetchVersions: false);
-            });
+            EditorCore.UpdateExistingSceneVersions(UpdateExistingSceneVersionsResponse);
         }
 
         #region Visual Elements
@@ -52,6 +50,8 @@ namespace Cognitive3D
 
             EditorGUILayout.Space(8);
 
+            EditorGUI.BeginDisabledGroup(!buttonsEnabled);
+
             // ─── Current Scene Panel ───
             DrawCurrentSceneSection();
 
@@ -64,6 +64,8 @@ namespace Cognitive3D
 
             // ─── All Scenes Table ───
             DrawAllScenesSection();
+
+            EditorGUI.EndDisabledGroup();
 
             GUILayout.EndVertical();
         }
@@ -828,6 +830,54 @@ namespace Cognitive3D
                 EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
                 // Light refresh - just update local list after removal
                 RefreshSceneList(fetchVersions: false);
+            }
+        }
+
+        private void UpdateExistingSceneVersionsResponse(int responseCode, string error, string text)
+        {
+            buttonsEnabled = responseCode == 200;
+            RefreshSceneList(fetchVersions: false);
+            Repaint();
+
+            if (responseCode != 200)
+            {
+                return;
+            }
+
+            var wrappedJson = "{\"scenes\":" + text + "}";
+            var collection = JsonUtility.FromJson<ScenesCollectionList>(wrappedJson);
+
+            if (collection == null || collection.scenes == null)
+            {
+                Util.logWarning("Failed to parse scenes collection from response");
+                return;
+            }
+
+            bool hasUpdates = false;
+            foreach (var sceneSetting in Cognitive3D_Preferences.Instance.sceneSettings)
+            {
+                if (sceneSetting == null || string.IsNullOrEmpty(sceneSetting.SceneId))
+                    continue;
+
+                foreach (var sceneCollection in collection.scenes)
+                {
+                    if (sceneCollection.sdkFacingId == sceneSetting.SceneId)
+                    {
+                        var matchingVersion = sceneCollection.GetVersion(sceneSetting.VersionNumber);
+                        if (matchingVersion != null)
+                        {
+                            sceneSetting.VersionId = matchingVersion.id;
+                            hasUpdates = true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (hasUpdates)
+            {
+                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+                AssetDatabase.SaveAssets();
             }
         }
         #endregion
