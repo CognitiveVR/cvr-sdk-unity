@@ -787,25 +787,28 @@ namespace Cognitive3D
             var scenePath = entry.scenePath;
             if (string.IsNullOrEmpty(scenePath) || !UploadTools.EnsureSceneReady(scenePath)) return;
 
-            VersionSelectionWindow.ShowWindow(entry, (selectedVersion, selectedVersionId) =>
+            EditorApplication.delayCall += () =>
             {
-                int originalVersion = entry.sceneSettings.VersionNumber;
-                int originalVersionId = entry.sceneSettings.VersionId;
-
-                entry.sceneSettings.VersionNumber = selectedVersion;
-                entry.sceneSettings.VersionId = selectedVersionId;
-
-                UploadTools.UpdateDecimatedSceneOptimized(entry.sceneSettings, (responseCode) =>
+                VersionSelectionWindow.ShowWindow(entry, (selectedVersion, selectedVersionId) =>
                 {
-                    entry.sceneSettings.VersionNumber = originalVersion;
-                    entry.sceneSettings.VersionId = originalVersionId;
+                    int originalVersion = entry.sceneSettings.VersionNumber;
+                    int originalVersionId = entry.sceneSettings.VersionId;
 
-                    if (responseCode == 200 || responseCode == 201)
+                    entry.sceneSettings.VersionNumber = selectedVersion;
+                    entry.sceneSettings.VersionId = selectedVersionId;
+
+                    UploadTools.UpdateDecimatedSceneOptimized(entry.sceneSettings, (responseCode) =>
                     {
-                        OnUploadComplete();
-                    }
-                }, null);
-            });
+                        entry.sceneSettings.VersionNumber = originalVersion;
+                        entry.sceneSettings.VersionId = originalVersionId;
+
+                        if (responseCode == 200 || responseCode == 201)
+                        {
+                            OnUploadComplete();
+                        }
+                    }, null);
+                });
+            };
         }
 
         private void OpenSceneDashboard(SceneEntry entry)
