@@ -124,7 +124,7 @@ namespace Cognitive3D
             {
                 var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScene.path);
                 bool hasExportFiles = currentSettings != null && EditorCore.HasSceneExportFiles(currentSettings);
-                bool isUploaded = currentSettings != null && currentSettings.VersionId > 0;
+                bool isUploaded = currentSettings != null && !string.IsNullOrEmpty(currentSettings.backendSceneId);
 
                 // Status badge
                 DrawStatusBadge(hasExportFiles, isUploaded);
@@ -203,8 +203,7 @@ namespace Cognitive3D
             EditorGUI.BeginDisabledGroup(!configured || !uploaded);
             if (GUILayout.Button(new GUIContent(EditorCore.ExternalIcon, "Open in Dashboard"), GUILayout.Width(34), GUILayout.Height(30)))
             {
-                string url = CognitiveStatics.GetSceneUrl(settings.SceneId, settings.VersionNumber);
-                Application.OpenURL(url);
+                OpenSceneDashboard(settings);
             }
             EditorGUI.EndDisabledGroup();
 
@@ -412,7 +411,7 @@ namespace Cognitive3D
         private void DrawSceneRow(SceneEntry entry)
         {
             bool isExpanded = expandedEntry == entry;
-            bool isUploaded = !string.IsNullOrEmpty(entry.sceneId) && entry.versionId > 0;
+            bool isUploaded = entry.sceneSettings != null && !string.IsNullOrEmpty(entry.sceneSettings.backendSceneId);
             bool isExported = entry.hasExportFiles;
 
             EditorGUILayout.BeginVertical();
@@ -580,7 +579,7 @@ namespace Cognitive3D
             EditorGUI.BeginDisabledGroup(!isUploaded);
             if (GUILayout.Button(new GUIContent("Dashboard", "Opens the scene on dashboard"), GUILayout.Width(80), GUILayout.Height(22)))
             {
-                OpenSceneDashboard(entry);
+                OpenSceneDashboard(entry.sceneSettings);
             }
             EditorGUI.EndDisabledGroup();
 
@@ -811,9 +810,9 @@ namespace Cognitive3D
             };
         }
 
-        private void OpenSceneDashboard(SceneEntry entry)
+        private void OpenSceneDashboard(Cognitive3D_Preferences.SceneSettings sceneSettings)
         {
-            string url = CognitiveStatics.GetSceneUrl(entry.sceneId, entry.versionNumber);
+            string url = CognitiveStatics.GetSceneUrl(sceneSettings.backendSceneId, sceneSettings.VersionNumber);
             Application.OpenURL(url);
         }
 
@@ -870,6 +869,7 @@ namespace Cognitive3D
                         if (matchingVersion != null)
                         {
                             sceneSetting.VersionId = matchingVersion.id;
+                            sceneSetting.backendSceneId = sceneCollection.id;
                             hasUpdates = true;
                         }
                         break;
