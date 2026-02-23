@@ -556,6 +556,7 @@ namespace Cognitive3D
                         {
                             sceneSetting.VersionId = latestVersion.id;
                             sceneSetting.VersionNumber = latestVersion.versionNumber;
+                            sceneSetting.backendSceneId = sceneCollection.id;
                             hasUpdates = true;
                         }
                         break;

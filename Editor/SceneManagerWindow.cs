@@ -649,6 +649,7 @@ namespace Cognitive3D
                 EditorCore.RefreshAllScenesVersion(() =>
                 {
                     refreshList = true;
+                    Repaint();
                 });
             }
 
@@ -820,6 +821,7 @@ namespace Cognitive3D
         {
             // Full refresh - fetch latest versions from API after upload
             RefreshSceneList(fetchVersions: true);
+            Repaint();
         }
 
         private void RemoveSceneFromTracking(SceneEntry entry)
