@@ -843,7 +843,7 @@ namespace Cognitive3D
             RefreshSceneList(fetchVersions: false);
             Repaint();
 
-            if (responseCode != 200)
+            if (responseCode != 200 || string.IsNullOrEmpty(text))
             {
                 return;
             }
