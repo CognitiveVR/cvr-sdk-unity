@@ -312,7 +312,7 @@ namespace Cognitive3D
             bool uploadSceneGeometry,
             bool uploadThumbnail,
             bool useOptimizedUpload,
-            bool showPopups = false,
+            bool showPopups,
             System.Action onComplete = null)
         {
             CompletedUpload = false;
@@ -1129,7 +1129,6 @@ namespace Cognitive3D
 
                         using (FileStream sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, StreamingBufferSize))
                         {
-                            long fileSize = sourceStream.Length;
                             int bytesRead;
                             while ((bytesRead = sourceStream.Read(buffer, 0, buffer.Length)) > 0)
                             {
@@ -1433,7 +1432,7 @@ namespace Cognitive3D
                 Util.logDebug("SceneExportWindow Upload can't find directory to screenshot");
             }
 
-            string fileList = "Upload Files:\n";
+            System.Text.StringBuilder fileList = new System.Text.StringBuilder("Upload Files:\n");
             WWWForm wwwForm = new WWWForm();
             foreach (var f in filePaths)
             {
@@ -1443,13 +1442,14 @@ namespace Cognitive3D
                     continue;
                 }
 
-                fileList += f + "\n";
+                fileList.Append(f);
+                fileList.Append('\n');
 
                 var data = File.ReadAllBytes(f);
                 wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
             }
 
-            Util.logDebug(fileList);
+            Util.logDebug(fileList.ToString());
 
             if (screenshotPath.Length == 0)
             {

@@ -10,8 +10,8 @@ namespace Cognitive3D
         private readonly List<SceneEntry> sceneEntries = new List<SceneEntry>();
         private bool refreshList = true;
         private bool shouldFetchVersions = true;
-        private SceneEntry expandedEntry = null;
-        private bool buttonsEnabled = false;
+        private SceneEntry expandedEntry;
+        private bool buttonsEnabled;
 
         // Status icon colors
         private static readonly Color StatusGreen = new Color(0.42f, 0.74f, 0.42f);

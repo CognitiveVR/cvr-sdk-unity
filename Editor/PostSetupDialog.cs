@@ -42,7 +42,7 @@ namespace Cognitive3D
         private const string DO_NOT_SHOW_AGAIN_KEY = "Cognitive3D_DoNotShowSetupNotification";
 
         private static PostSetupDialog window;
-        private bool doNotShowAgain = false;
+        private bool doNotShowAgain;
 
         public static void MarkSetupComplete()
         {
