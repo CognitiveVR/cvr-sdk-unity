@@ -798,18 +798,15 @@ namespace Cognitive3D
 
             EditorApplication.delayCall += () =>
             {
-                VersionSelectionWindow.ShowWindow(entry, (selectedVersion, selectedVersionId) =>
+                VersionSelectionWindow.ShowWindow(entry, (selectedVersion) =>
                 {
                     int originalVersion = entry.sceneSettings.VersionNumber;
-                    int originalVersionId = entry.sceneSettings.VersionId;
 
                     entry.sceneSettings.VersionNumber = selectedVersion;
-                    entry.sceneSettings.VersionId = selectedVersionId;
 
                     UploadTools.UpdateDecimatedSceneOptimized(entry.sceneSettings, (responseCode) =>
                     {
                         entry.sceneSettings.VersionNumber = originalVersion;
-                        entry.sceneSettings.VersionId = originalVersionId;
 
                         if (responseCode == 200 || responseCode == 201)
                         {
@@ -911,21 +908,17 @@ namespace Cognitive3D
         private class VersionSelectionWindow : EditorWindow
         {
             private SceneEntry sceneEntry;
-            private System.Action<int, int> onConfirm;
+            private System.Action<int> onConfirm;
             private int selectedVersion;
-            private int selectedVersionId;
             private string versionInput = "";
-            private string versionIdInput = "";
 
-            public static void ShowWindow(SceneEntry entry, System.Action<int, int> confirmCallback)
+            public static void ShowWindow(SceneEntry entry, System.Action<int> confirmCallback)
             {
                 VersionSelectionWindow window = GetWindow<VersionSelectionWindow>(true, "Update Scene Version", true);
                 window.sceneEntry = entry;
                 window.onConfirm = confirmCallback;
                 window.selectedVersion = entry.versionNumber;
-                window.selectedVersionId = entry.versionId;
                 window.versionInput = entry.versionNumber.ToString();
-                window.versionIdInput = entry.versionId.ToString();
                 window.minSize = new Vector2(450, 300);
                 window.maxSize = new Vector2(450, 300);
                 window.ShowModal();
@@ -983,13 +976,12 @@ namespace Cognitive3D
 
                 bool canConfirm = int.TryParse(versionInput, out selectedVersion) &&
                                   selectedVersion >= 1 &&
-                                  selectedVersion <= sceneEntry.versionNumber &&
-                                  selectedVersionId > 0;
+                                  selectedVersion <= sceneEntry.versionNumber;
 
                 EditorGUI.BeginDisabledGroup(!canConfirm);
                 if (GUILayout.Button("Update Version", GUILayout.Width(120)))
                 {
-                    onConfirm?.Invoke(selectedVersion, selectedVersionId);
+                    onConfirm?.Invoke(selectedVersion);
                     Close();
                 }
                 EditorGUI.EndDisabledGroup();

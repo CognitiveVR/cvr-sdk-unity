@@ -513,7 +513,7 @@ namespace Cognitive3D
                 }
                 else
                 {
-                    // Scenes will be uploaded, no compilation needed - show notification after upload
+                    // Scenes will be added to preferences, no compilation needed - show notification after registration
                     UploadTools.OnUploadScenesComplete += OnSetupCompleteAfterUpload;
                 }
 

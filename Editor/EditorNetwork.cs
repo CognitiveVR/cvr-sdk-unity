@@ -219,7 +219,7 @@ namespace Cognitive3D
                         // Notify callback with cancelled status
                         if (EditorWebRequests[i].Response != null)
                         {
-                            EditorWebRequests[i].Response.Invoke(-1, "Upload cancelled by user", null);
+                            EditorWebRequests[i].Response.Invoke(100, "Upload cancelled by user", "");
                         }
 
                         // Properly dispose the request before removing

@@ -64,7 +64,6 @@ namespace Cognitive3D
 
         /// <summary>
         /// If true, export and upload scene geometry <br/>
-        /// Otherwise, just upload empty GLTF/BIN placeholder files
         /// </summary>
         static bool exportSceneGeometry;
 
@@ -212,13 +211,13 @@ namespace Cognitive3D
                         string currentScenePath = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
                         var currentSettings = Cognitive3D_Preferences.FindSceneByPath(currentScenePath);
 
-                        if (currentSettings == null)
+                        if (currentSettings == null || string.IsNullOrEmpty(currentSettings.SceneId))
                         {
                             using var md5 = System.Security.Cryptography.MD5.Create();
                             byte[] bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(currentScenePath));
                             string sceneId = new System.Guid(bytes).ToString();
 
-                            Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);                
+                            Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);
                         }
 
                         // Check if geometry should be exported
@@ -428,6 +427,11 @@ namespace Cognitive3D
                 {
                     startUploadWorkflow.Invoke();
                 });
+            }
+            else
+            {
+                // New/untracked scene - no version to check, start workflow directly
+                startUploadWorkflow.Invoke();
             }
         }
 
@@ -884,7 +888,7 @@ namespace Cognitive3D
                 return;
             }
 
-            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
+            if (!string.IsNullOrEmpty(text) && (text.Contains("Internal Server Error") || text.Contains("Bad Request")))
             {
                 Debug.LogError("Scene Update Phase 1 Error:" + text);
                 EditorUtility.DisplayDialog("Error Updating Scene", "There was an internal error updating the scene (Phase 1). \n\nSee Console for more details", "Ok");
@@ -1000,7 +1004,7 @@ namespace Cognitive3D
             }
 
             // Check for internal server error
-            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
+            if (!string.IsNullOrEmpty(text) && (text.Contains("Internal Server Error") || text.Contains("Bad Request")))
             {
                 Debug.LogError("Scene Upload Phase 1 Error:" + text);
                 EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene (Phase 1). \n\nSee Console for more details", "Ok");
@@ -1513,8 +1517,7 @@ namespace Cognitive3D
                 return;
             }
 
-            //response can be <!DOCTYPE html><html lang=en><head><meta charset=utf-8><title>Error</title></head><body><pre>Internal Server Error</pre></body></html>
-            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
+            if (!string.IsNullOrEmpty(text) && (text.Contains("Internal Server Error") || text.Contains("Bad Request")))
             {
                 Debug.LogError("Scene Upload Error:" + text);
                 EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene. \n\nSee Console for more details", "Ok");

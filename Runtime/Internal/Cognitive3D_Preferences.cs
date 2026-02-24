@@ -186,7 +186,7 @@ namespace Cognitive3D
             public int VersionNumber; //post session data
             public int VersionId; //attribution. exitpoll?
             [HideInInspector]
-            internal string backendSceneId; //used as part of the URL to open the scene in the dashboard
+            public string backendSceneId; //used as part of the URL to open the scene in the dashboard
 
             public SceneSettings(string name, string path)
             {
