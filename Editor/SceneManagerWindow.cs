@@ -341,7 +341,7 @@ namespace Cognitive3D
             if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh List and Update Scene Versions from Dashboard"), EditorStyles.toolbarButton, GUILayout.Width(30)))
             {
                 // Full refresh - load from preferences AND fetch latest versions from API
-                RefreshSceneList(fetchVersions: true);
+                RefreshSceneList();
             }
             EditorGUILayout.EndHorizontal();
 
@@ -423,7 +423,7 @@ namespace Cognitive3D
             if (Event.current.type == EventType.Repaint)
             {
                 int idx = sceneEntries.IndexOf(entry);
-                if (idx % 2 == 1)
+                if (idx % 2 != 0)
                 {
                     EditorGUI.DrawRect(rowRect, new Color(0, 0, 0, 0.1f));
                 }
