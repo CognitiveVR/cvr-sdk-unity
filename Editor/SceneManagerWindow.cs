@@ -760,6 +760,15 @@ namespace Cognitive3D
             ExportUtility.GenerateSettingsFile(path, fullName);
             DebugInformationWindow.WriteDebugToFile(path + "debug.log");
 
+            // Add Cognitive3D_Manager to the scene if it doesn't exist
+            var found = Object.FindFirstObjectByType<Cognitive3D_Manager>();
+            if (found == null)
+            {
+                GameObject c3dManagerPrefab = EditorCore.GetCognitive3DManagerPrefab();
+                PrefabUtility.InstantiatePrefab(c3dManagerPrefab);
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+            }
+
             EditorUtility.SetDirty(EditorCore.GetPreferences());
             UnityEditor.AssetDatabase.SaveAssets();
 
