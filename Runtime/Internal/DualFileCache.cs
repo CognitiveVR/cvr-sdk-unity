@@ -27,8 +27,8 @@ namespace Cognitive3D
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            read_filestream = new FileStream(path + "data_read", FileMode.OpenOrCreate);
-            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate);
+            read_filestream = new FileStream(path + "data_read", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             //get number of batches in write file
             var reader2 = new StreamReader(write_filestream);
@@ -37,7 +37,7 @@ namespace Cognitive3D
             numberWriteBatches = i / 2;
             reader2.Close();
             write_filestream.Close();
-            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate);
+            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             //merge write file into read file (if there's content in the write file)
 

@@ -80,16 +80,31 @@ namespace Cognitive3D
         }
 
         static int uploadDelayFrames = 0;
+        static ICache activeUploadCache;
         private static void DelayUploadCache()
         {
             uploadDelayFrames--;
             if (uploadDelayFrames < 0)
             {
                 EditorApplication.update -= DelayUploadCache;
+                // Skip if a previous upload session still has the cache open
+                if (activeUploadCache != null) { return; }
                 ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 if (ic.HasContent())
-                    new EditorDataUploader(ic);
+                {
+                    activeUploadCache = ic;
+                    new EditorDataUploader(ic, OnEditorUploadComplete);
+                }
+                else
+                {
+                    ic.Close();
+                }
             }
+        }
+
+        static void OnEditorUploadComplete()
+        {
+            activeUploadCache = null;
         }
 
         public static DynamicObjectIdPool[] _cachedPoolAssets;

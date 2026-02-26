@@ -14,9 +14,11 @@ namespace Cognitive3D
 		int attemptedUploads;
 
 		ICache cacheSource;
-		public EditorDataUploader(ICache cache)
+		System.Action onComplete;
+		public EditorDataUploader(ICache cache, System.Action completionCallback = null)
         {
 			cacheSource = cache;
+			onComplete = completionCallback;
 			numberOfBatches = cache.NumberOfBatches();
 			EditorApplication.update += Editor_Update;
 		}
@@ -93,12 +95,14 @@ namespace Cognitive3D
 					Util.logDevelopment("Editor attempted to upload everything");
 					EditorApplication.update -= Editor_Update;
 					cacheSource.Close();
+					onComplete?.Invoke();
 				}
 				if (!cacheSource.HasContent())
                 {
 					Util.logDevelopment("Editor has no more session data to upload");
 					EditorApplication.update -= Editor_Update;
 					cacheSource.Close();
+					onComplete?.Invoke();
 				}
             }
         }
