@@ -739,19 +739,12 @@ namespace Cognitive3D
 
             if (currentSettings == null)
             {
-                using var md5 = System.Security.Cryptography.MD5.Create();
-                byte[] bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(currentScenePath));
-                string sceneId = new System.Guid(bytes).ToString();
-
-                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);                
+                string sceneId = EditorCore.GenerateSceneIdFromPath(currentScenePath);
+                Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);
             }
             else if (string.IsNullOrEmpty(currentSettings.SceneId))
             {
-                using var md5 = System.Security.Cryptography.MD5.Create();
-                byte[] bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(currentScenePath));
-                string sceneId = new System.Guid(bytes).ToString();
-
-                currentSettings.SceneId = sceneId;
+                currentSettings.SceneId = EditorCore.GenerateSceneIdFromPath(currentScenePath);
             }
 
             string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;

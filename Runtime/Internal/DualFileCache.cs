@@ -351,6 +351,14 @@ namespace Cognitive3D
         {
             // Sanitize: cache format requires exactly 2 lines per entry.
             // Any embedded newlines would corrupt the line-pair structure.
+            bool hadNewlines =
+                (Destination != null && (Destination.Contains("\n") || Destination.Contains("\r"))) ||
+                (body != null && (body.Contains("\n") || body.Contains("\r")));
+            if (hadNewlines)
+            {
+                Util.logWarning("Newline characters detected in cache entry data. Newlines will be stripped from Destination/body before writing to the local data cache. This may indicate an upstream formatting issue.");
+            }
+            
             Destination = Destination.Replace("\n", "").Replace("\r", "");
             body = body.Replace("\n", "").Replace("\r", "");
 

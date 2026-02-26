@@ -3290,6 +3290,16 @@ namespace Cognitive3D
             var worldToLocalMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one).inverse;
             return worldToLocalMatrix.MultiplyPoint3x4(position);
         }
+
+        /// <summary>
+        /// Generates a deterministic scene ID from a scene path using MD5 hashing.
+        /// </summary>
+        internal static string GenerateSceneIdFromPath(string scenePath)
+        {
+            using var md5 = System.Security.Cryptography.MD5.Create();
+            byte[] bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(scenePath));
+            return new System.Guid(bytes).ToString();
+        }
     }
 
     public static class ColorExtensions

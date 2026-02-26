@@ -2148,6 +2148,18 @@ namespace Cognitive3D.Serialization
             }
         }
 
+        /// <summary>
+        /// Holds cross-thread state for a single worker invocation.
+        /// volatile Done/Error provide acquire-release ordering so the main
+        /// thread sees Json after observing Done == true.
+        /// </summary>
+        private class ThreadResult
+        {
+            public volatile bool Done = true;
+            public volatile bool Error;
+            public string Json;
+        }
+
         //TODO eventually this should just be a loop on a thread, not a coroutine
         static IEnumerator CheckWriteJson()
         {
@@ -2163,8 +2175,8 @@ namespace Cognitive3D.Serialization
                     int manifestCount = Mathf.Min(queuedManifest.Count, totalDataToWrite);
                     int count = Mathf.Min(queuedSnapshots.Count, totalDataToWrite - manifestCount);
 
-                    bool threadDone = true;
-                    bool encounteredError = false;
+                    var manifestResult = new ThreadResult();
+                    var snapshotResult = new ThreadResult();
 
                     builder.Append("{");
 
@@ -2188,10 +2200,9 @@ namespace Cognitive3D.Serialization
                     JsonUtil.SetString("formatversion", "1.0", builder);
 
                     //manifest entries
-                    string manifestJson = null;
                     if (manifestCount > 0)
                     {
-                        threadDone = false;
+                        manifestResult.Done = false;
                         Queue<DynamicObjectManifestEntry> copyQueue = new Queue<DynamicObjectManifestEntry>(queuedManifest);
 
                         new Thread(() =>
@@ -2207,37 +2218,36 @@ namespace Cognitive3D.Serialization
                                     var manifestentry = copyQueue.Dequeue();
                                     SetManifestEntry(manifestentry, threadBuilder);
                                 }
-                                manifestJson = threadBuilder.ToString();
+                                manifestResult.Json = threadBuilder.ToString();
                             }
                             catch
                             {
-                                encounteredError = true;
+                                manifestResult.Error = true;
                             }
-                            threadDone = true;
+                            manifestResult.Done = true;
                         }).Start();
 
-                        while (!threadDone && !encounteredError)
+                        while (!manifestResult.Done && !manifestResult.Error)
                         {
                             yield return null;
                         }
 
                         // Assemble on main thread only
-                        if (manifestJson != null)
+                        if (manifestResult.Json != null)
                         {
                             builder.Append(",\"manifest\":{");
-                            builder.Append(manifestJson);
+                            builder.Append(manifestResult.Json);
                             builder.Append("}");
                         }
                     }
 
                     //check if this logic can be skipped because it will be invalidated
-                    if (!InterruptThread && !encounteredError)
+                    if (!InterruptThread && !manifestResult.Error)
                     {
                         //snapshots
-                        string snapshotJson = null;
                         if (count > 0)
                         {
-                            threadDone = false;
+                            snapshotResult.Done = false;
 
                             Queue<DynamicObjectSnapshot> copyQueue = new Queue<DynamicObjectSnapshot>(queuedSnapshots);
                             new Thread(() =>
@@ -2253,32 +2263,32 @@ namespace Cognitive3D.Serialization
                                         var snap = copyQueue.Dequeue();
                                         SetSnapshot(snap, threadBuilder);
                                     }
-                                    snapshotJson = threadBuilder.ToString();
+                                    snapshotResult.Json = threadBuilder.ToString();
                                 }
                                 catch
                                 {
-                                    encounteredError = true;
+                                    snapshotResult.Error = true;
                                 }
-                                threadDone = true;
+                                snapshotResult.Done = true;
                             }).Start();
 
-                            while (!threadDone && !encounteredError)
+                            while (!snapshotResult.Done && !snapshotResult.Error)
                             {
                                 yield return null;
                             }
 
                             // Assemble on main thread only
-                            if (snapshotJson != null)
+                            if (snapshotResult.Json != null)
                             {
                                 builder.Append(",\"data\":[");
-                                builder.Append(snapshotJson);
+                                builder.Append(snapshotResult.Json);
                                 builder.Append("]");
                             }
                         }
                         builder.Append("}");
                     }
 
-                    if (!InterruptThread && !encounteredError)
+                    if (!InterruptThread && !manifestResult.Error && !snapshotResult.Error)
                     {
                         //if this coroutine reached here and the thread hasn't been interrupted (from flushdata) and encounter no errors
                         //then remove entries and snapshots from real queues
