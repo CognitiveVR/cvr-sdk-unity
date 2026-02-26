@@ -733,6 +733,7 @@ namespace Cognitive3D
         void OnDestroy()
         {
             if (instance != this) { return; }
+            Application.wantsToQuit -= WantsToQuit;
             if (!Application.isPlaying) { return; }
 
             if (IsInitialized)
@@ -753,6 +754,7 @@ namespace Cognitive3D
             {
                 return true;
             }
+            if (this == null) { return true; }
             if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));
