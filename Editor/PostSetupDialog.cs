@@ -199,7 +199,11 @@ namespace Cognitive3D
             EditorGUILayout.EndVertical();
         }
 
-        public static void ResetForTesting()
+        /// <summary>
+        /// Clears the "do not show again" preference so the setup notification will appear again.
+        /// Intended for testing only — do not call in normal workflows.
+        /// </summary>
+        internal static void ResetForTesting()
         {
             EditorPrefs.DeleteKey(DO_NOT_SHOW_AGAIN_KEY);
         }

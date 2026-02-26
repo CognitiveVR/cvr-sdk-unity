@@ -1046,6 +1046,9 @@ namespace Cognitive3D
             if (!Cognitive3D_Manager.IsInitialized) { return; }
             if (string.IsNullOrEmpty(Cognitive3D_Manager.TrackingSceneId)) { return; }
 
+            InputUtil.InputType currentInputType = InputUtil.GetCurrentTrackedDevice();
+            if (currentInputType == InputUtil.InputType.None) { return; }
+
             // Check thresholds and set dirty flag for controllers that moved
             // Similar to RecordDynamic, but force write on gaze tick
             for (int i = 0; i < ActiveInputsArray.Length; i++)
@@ -1092,7 +1095,7 @@ namespace Cognitive3D
             // Uses separate inputIndex to avoid conflicts with dynamic object processing
             inputIndex = 0;
             int numTicks = 0;
-            ProcessInputDynamicArray(ref ActiveInputsArray, InputUtil.GetCurrentTrackedDevice(), 0, ref numTicks);
+            ProcessInputDynamicArray(ref ActiveInputsArray, currentInputType, 0, ref numTicks);
         }
 
         //iterate through all dynamic objects

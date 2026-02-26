@@ -644,10 +644,14 @@ namespace Cognitive3D
                 {
                     if (sceneCollection.sdkFacingId == settings.SceneId)
                     {
-                        settings.VersionId = sceneCollection.GetLatestVersion().id;
-                        settings.VersionNumber = sceneCollection.GetLatestVersion().versionNumber;
-                        EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
-                        AssetDatabase.SaveAssets();
+                        var latestVersion = sceneCollection.GetLatestVersion();
+                        if (latestVersion != null)
+                        {
+                            settings.VersionId = latestVersion.id;
+                            settings.VersionNumber = latestVersion.versionNumber;
+                            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+                            AssetDatabase.SaveAssets();
+                        }
                         break;
                     }
                 }

@@ -699,7 +699,8 @@ namespace Cognitive3D
                     string objPath = EditorCore.GetSubDirectoryPath(sceneName);
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+                    string escapedSceneName = settings.SceneName.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
+                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + escapedSceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                     string debugContent = DebugInformationWindow.GetDebugContents();
@@ -770,7 +771,17 @@ namespace Cognitive3D
             var url = (hasExistingSceneId && settings.VersionId > 0) ?
                 CognitiveStatics.PostUpdateScene(settings.SceneId):
                 CognitiveStatics.PostNewScene(settings.SceneId);
-            EditorNetwork.PostFile(url, tempMultipartPath, PostSceneUploadResponsePhase1, headers, true, "Upload", uploadMessage, WrapProgressCallback(0.0f, 0.5f));
+            try
+            {
+                EditorNetwork.PostFile(url, tempMultipartPath, PostSceneUploadResponsePhase1, headers, true, "Upload", uploadMessage, WrapProgressCallback(0.0f, 0.5f));
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError("Failed to start scene upload Phase 1: " + ex.Message);
+                CleanupTempFile();
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+            }
         }
 
         /// <summary>
@@ -813,7 +824,8 @@ namespace Cognitive3D
                 string objPath = EditorCore.GetSubDirectoryPath(sceneName);
                 Directory.CreateDirectory(objPath);
 
-                string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+                string escapedSceneName = settings.SceneName.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
+                string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + escapedSceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
                 File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                 string debugContent = DebugInformationWindow.GetDebugContents();
@@ -867,7 +879,17 @@ namespace Cognitive3D
 
             // Always use PUT with force parameter for Phase 1
             string url = CognitiveStatics.PostUpdateSceneForce(settings.SceneId, settings.VersionNumber);
-            EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase1, headers, true, "Update", "Force updating scene (Phase 1)", WrapProgressCallback(0.0f, 0.5f));
+            try
+            {
+                EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase1, headers, true, "Update", "Force updating scene (Phase 1)", WrapProgressCallback(0.0f, 0.5f));
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError("Failed to start force update Phase 1: " + ex.Message);
+                CleanupTempFile();
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+            }
         }
 
         /// <summary>
@@ -950,7 +972,17 @@ namespace Cognitive3D
 
             // Always use PUT with force parameter for Phase 2
             string url = CognitiveStatics.PostUpdateSceneForce(UploadSceneSettingsOptimized.SceneId, UploadSceneSettingsOptimized.VersionNumber);
-            EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase2, headers, true, "Update", "Force updating auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
+            try
+            {
+                EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase2, headers, true, "Update", "Force updating auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError("Failed to start force update Phase 2: " + ex.Message);
+                CleanupTempFile();
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+            }
         }
 
         /// <summary>
@@ -1070,7 +1102,17 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             string url = CognitiveStatics.PostUpdateScene(UploadSceneSettingsOptimized.SceneId);
-            EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUploadResponsePhase2, headers, true, "Upload", "Uploading auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
+            try
+            {
+                EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUploadResponsePhase2, headers, true, "Upload", "Uploading auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError("Failed to start scene upload Phase 2: " + ex.Message);
+                CleanupTempFile();
+                UploadCompleteOptimized?.Invoke(500);
+                CleanupOptimizedUploadState();
+            }
         }
 
         /// <summary>
@@ -1402,7 +1444,8 @@ namespace Cognitive3D
 
                     Directory.CreateDirectory(objPath);
 
-                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
+                    string escapedSceneName = settings.SceneName.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
+                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + escapedSceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
                     File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
 
                     string debugContent = DebugInformationWindow.GetDebugContents();
