@@ -1970,8 +1970,8 @@ namespace Cognitive3D.Serialization
 
         static int DynamicJsonPart;
         //marks the looping coroutine as 'ready' to pull data from the queue on a separate thread
-        static bool ReadyToWriteJson;
-        static bool InterruptThread;
+        static volatile bool ReadyToWriteJson;
+        static volatile bool InterruptThread;
 
         private static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
         private static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
@@ -2188,9 +2188,9 @@ namespace Cognitive3D.Serialization
                     JsonUtil.SetString("formatversion", "1.0", builder);
 
                     //manifest entries
+                    string manifestJson = null;
                     if (manifestCount > 0)
                     {
-                        builder.Append(",\"manifest\":{");
                         threadDone = false;
                         Queue<DynamicObjectManifestEntry> copyQueue = new Queue<DynamicObjectManifestEntry>(queuedManifest);
 
@@ -2198,15 +2198,16 @@ namespace Cognitive3D.Serialization
                         {
                             try
                             {
+                                // Use a thread-local builder to avoid cross-thread StringBuilder corruption
+                                var threadBuilder = new System.Text.StringBuilder(128 * manifestCount);
                                 for (int i = 0; i < manifestCount; i++)
                                 {
                                     if (i != 0)
-                                        builder.Append(',');
-                                    //var manifestentry = queuedManifest.Dequeue();
+                                        threadBuilder.Append(',');
                                     var manifestentry = copyQueue.Dequeue();
-                                    SetManifestEntry(manifestentry, builder);
-                                    //numberOfEntriesCopied++;
+                                    SetManifestEntry(manifestentry, threadBuilder);
                                 }
+                                manifestJson = threadBuilder.ToString();
                             }
                             catch
                             {
@@ -2220,17 +2221,22 @@ namespace Cognitive3D.Serialization
                             yield return null;
                         }
 
-                        //compare 
-                        builder.Append("}");
+                        // Assemble on main thread only
+                        if (manifestJson != null)
+                        {
+                            builder.Append(",\"manifest\":{");
+                            builder.Append(manifestJson);
+                            builder.Append("}");
+                        }
                     }
 
                     //check if this logic can be skipped because it will be invalidated
                     if (!InterruptThread && !encounteredError)
                     {
                         //snapshots
+                        string snapshotJson = null;
                         if (count > 0)
                         {
-                            builder.Append(",\"data\":[");
                             threadDone = false;
 
                             Queue<DynamicObjectSnapshot> copyQueue = new Queue<DynamicObjectSnapshot>(queuedSnapshots);
@@ -2238,14 +2244,16 @@ namespace Cognitive3D.Serialization
                             {
                                 try
                                 {
+                                    // Use a thread-local builder to avoid cross-thread StringBuilder corruption
+                                    var threadBuilder = new System.Text.StringBuilder(128 * count);
                                     for (int i = 0; i < count; i++)
                                     {
                                         if (i != 0)
-                                            builder.Append(',');
+                                            threadBuilder.Append(',');
                                         var snap = copyQueue.Dequeue();
-                                        SetSnapshot(snap, builder);
-                                        //snap.ReturnToPool();
+                                        SetSnapshot(snap, threadBuilder);
                                     }
+                                    snapshotJson = threadBuilder.ToString();
                                 }
                                 catch
                                 {
@@ -2258,7 +2266,14 @@ namespace Cognitive3D.Serialization
                             {
                                 yield return null;
                             }
-                            builder.Append("]");
+
+                            // Assemble on main thread only
+                            if (snapshotJson != null)
+                            {
+                                builder.Append(",\"data\":[");
+                                builder.Append(snapshotJson);
+                                builder.Append("]");
+                            }
                         }
                         builder.Append("}");
                     }

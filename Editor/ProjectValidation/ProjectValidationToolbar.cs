@@ -1,19 +1,18 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+
+#if !UNITY_6000_3_OR_NEWER
+using System.Reflection;
 using UnityEngine.UIElements;
+#endif
 
 namespace Cognitive3D
 {
     [InitializeOnLoad]
     public static class ProjectValidationToolbar
     {
-        static Button validateButton;
-        static Image icon;
-        static bool buttonAdded;
-
         static ProjectValidationToolbar()
         {
             EditorApplication.update += DelayedInit;
@@ -30,9 +29,53 @@ namespace Cognitive3D
         private static void DelayedInit()
         {
             EditorApplication.update -= DelayedInit;
+#if UNITY_6000_3_OR_NEWER
+            ProjectValidationButton();
+#else
             TryCreateToolbarButton();
+#endif
             OnProjectValidationUpdate(); // Set initial icon/text
         }
+
+#if UNITY_6000_3_OR_NEWER
+        const string k_ToolbarElementName = "Cognitive3D/Project Validation";
+
+        [UnityEditor.Toolbars.MainToolbarElement(k_ToolbarElementName, defaultDockPosition = UnityEditor.Toolbars.MainToolbarDockPosition.Left)]
+        public static UnityEditor.Toolbars.MainToolbarElement ProjectValidationButton()
+        {
+            var levels = ProjectValidation.GetLevelsOfItemsNotFixed()?.ToList();
+            Texture2D newIcon;
+
+            if (levels == null || levels.Count == 0)
+            {
+                newIcon = EditorCore.LogoDone;
+            }
+            else if (levels.Contains(ProjectValidation.ItemLevel.Required))
+            {
+                newIcon = EditorCore.LogoError;
+            }
+            else if (levels.Contains(ProjectValidation.ItemLevel.Recommended))
+            {
+                newIcon = EditorCore.LogoWarning;
+            }
+            else
+            {
+                newIcon = EditorCore.LogoDone;
+            }
+            
+            var content = new UnityEditor.Toolbars.MainToolbarContent("Cognitive3D Validation", newIcon, "Open Cognitive3D Project Validation Window");
+            var toolbarElement = new UnityEditor.Toolbars.MainToolbarButton(content, () => { ProjectValidationSettingsProvider.OpenSettingsWindow(); });
+            return toolbarElement;
+        }
+
+        static void OnProjectValidationUpdate()
+        {
+            UnityEditor.Toolbars.MainToolbar.Refresh(k_ToolbarElementName);
+        }
+#else
+        static Button validateButton;
+        static Image icon;
+        static bool buttonAdded;
 
         private static void TryCreateToolbarButton()
         {
@@ -131,5 +174,6 @@ namespace Cognitive3D
                 icon.image = newIcon;
             }
         }
+#endif
     }
 }

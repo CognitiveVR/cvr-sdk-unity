@@ -349,6 +349,11 @@ namespace Cognitive3D
 
         public bool WriteContent(string Destination, string body)
         {
+            // Sanitize: cache format requires exactly 2 lines per entry.
+            // Any embedded newlines would corrupt the line-pair structure.
+            Destination = Destination.Replace("\n", "").Replace("\r", "");
+            body = body.Replace("\n", "").Replace("\r", "");
+
             writer.WriteLine(Destination);
             writer.WriteLine(body);
             writer.Flush();

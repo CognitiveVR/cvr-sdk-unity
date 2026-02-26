@@ -140,86 +140,9 @@ namespace Cognitive3D
             EditorGUILayout.LabelField("Scene Settings", EditorStyles.boldLabel);
             SerializedProperty sceneSettings = serializedObject.FindProperty("sceneSettings");
 
-            for (int i = 0; i < sceneSettings.arraySize; i++)
-            {
-                SerializedProperty element = sceneSettings.GetArrayElementAtIndex(i);
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-
-                // Draws all the children properties of the current element
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(element, true);
-                EditorGUI.indentLevel--;
-
-                EditorGUILayout.BeginHorizontal();
-
-                // Export button
-                if (GUILayout.Button(new GUIContent("Export", "Exports the current open (active scene)")))
-                {
-                    var scenePath = element.FindPropertyRelative("ScenePath").stringValue;
-                    if (string.IsNullOrEmpty(scenePath) || !UploadTools.EnsureSceneReady(scenePath)) return;
-
-                    ExportUtility.ExportGLTFScene(true);
-
-                    string fullName = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                    string path = EditorCore.GetSubDirectoryPath(fullName);
-
-                    ExportUtility.GenerateSettingsFile(path, fullName);
-                    DebugInformationWindow.WriteDebugToFile(path + "debug.log");
-
-                    EditorUtility.SetDirty(EditorCore.GetPreferences());
-                    UnityEditor.AssetDatabase.SaveAssets();
-                    EditorCore.RefreshSceneVersion(null);
-                }
-                
-                // Upload button
-                if (GUILayout.Button(new GUIContent("Upload", "Uploads the current open (active scene)")))
-                {
-                    var scenePath = element.FindPropertyRelative("ScenePath").stringValue;
-                    if (string.IsNullOrEmpty(scenePath) || !UploadTools.EnsureSceneReady(scenePath)) return;
-
-                    UploadTools.UploadSceneAndDynamics(true, true, true, true, true);
-                }
-
-                // Open on Dashboard button
-                if (GUILayout.Button("Open Scene on Dashboard"))
-                {
-                    string sceneId = element.FindPropertyRelative("SceneId").stringValue;
-                    int sceneVersionNumber = element.FindPropertyRelative("VersionNumber").intValue;
-                    if (!string.IsNullOrEmpty(sceneId) && sceneVersionNumber > 0)
-                        Application.OpenURL(CognitiveStatics.GetSceneUrl(sceneId, sceneVersionNumber));
-                }
-
-                // Remove scene from list
-                GUI.enabled = sceneSettings.arraySize > 1;
-                if (GUILayout.Button(new GUIContent("−", "Remove this entry"), GUILayout.Width(24)))
-                {
-                    sceneSettings.DeleteArrayElementAtIndex(i);
-                    break; // break to avoid layout error after deletion
-                }
-                GUI.enabled = true;
-
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndVertical();
-            }
-
-            // Add scene
-            EditorGUILayout.Space(5);
-            if (GUILayout.Button(new GUIContent("+ Add Scene Setting", "Add a new scene entry")))
-            {
-                int newIndex = sceneSettings.arraySize;
-                sceneSettings.InsertArrayElementAtIndex(newIndex);
-
-                SerializedProperty newElement = sceneSettings.GetArrayElementAtIndex(newIndex);
-
-                // Resetting each field manually
-                newElement.FindPropertyRelative("SceneName").stringValue = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().name;
-                newElement.FindPropertyRelative("SceneId").stringValue = "";
-                newElement.FindPropertyRelative("ScenePath").stringValue = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
-                newElement.FindPropertyRelative("LastRevision").stringValue = "";
-                newElement.FindPropertyRelative("VersionNumber").intValue = 0;
-                newElement.FindPropertyRelative("VersionId").intValue = 0;
-            }
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(sceneSettings, true);
+            EditorGUI.indentLevel--;
 
             serializedObject.ApplyModifiedProperties();
             serializedObject.Update();

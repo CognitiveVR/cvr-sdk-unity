@@ -71,7 +71,7 @@ namespace Cognitive3D
             window.Show();
             initialPlayerSetup = false;
 
-            ExportUtility.ClearUploadSceneSettings();
+            UploadTools.ClearUploadSceneSettings();
 
             var found = Object.FindFirstObjectByType<Cognitive3D_Manager>();
             if (found == null) //add Cognitive3D_manager
@@ -119,7 +119,7 @@ namespace Cognitive3D
             window.Show();
             initialPlayerSetup = false;
 
-            ExportUtility.ClearUploadSceneSettings();
+            UploadTools.ClearUploadSceneSettings();
 
             var found = Object.FindFirstObjectByType<Cognitive3D_Manager>();
             if (found == null) //add Cognitive3D_manager
@@ -167,7 +167,7 @@ namespace Cognitive3D
             window.Show();
             initialPlayerSetup = false;
 
-            ExportUtility.ClearUploadSceneSettings();
+            UploadTools.ClearUploadSceneSettings();
 
             var settings = Cognitive3D_Preferences.FindCurrentScene();
             Texture2D ignored = null;
@@ -1971,7 +1971,7 @@ namespace Cognitive3D
                                 sceneUploadProgress = 0;
                                 sceneUploadStartTime = EditorApplication.timeSinceStartup;
                                 currentPage = Page.SceneUploadProgress;
-                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                                UploadTools.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
                             }
                         }
                         else
@@ -1982,13 +1982,13 @@ namespace Cognitive3D
                                 currentPage = Page.SceneUploadProgress;
                                 sceneUploadProgress = 0;
                                 sceneUploadStartTime = EditorApplication.timeSinceStartup;
-                                ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                                UploadTools.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
                             }
                         }
                     }
                     else // UPLOAD WITHOUT POPUPS
                     {
-                        ExportUtility.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
+                        UploadTools.UploadDecimatedScene(current, completeSceneUpload, ReceiveSceneUploadProgress);
                     }
                 }
                 else

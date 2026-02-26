@@ -86,6 +86,54 @@ namespace Cognitive3D
             EditorApplication.update += EditorQueueUpdate;
         }
 
+        /// <summary>
+        /// PUT request that streams directly from a file path instead of loading into memory.
+        /// Uses UploadHandlerFile for memory-efficient uploads of large files.
+        /// </summary>
+        public static void PutFile(string url, string filePath, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Put", string requestInfo = "", System.Action<float> progressCallback = null)
+        {
+            var p = new UnityWebRequest(url, "PUT");
+            p.uploadHandler = new UploadHandlerFile(filePath);
+            p.downloadHandler = new DownloadHandlerBuffer();
+            p.disposeUploadHandlerOnDispose = true;
+            p.disposeDownloadHandlerOnDispose = true;
+            p.SetRequestHeader("X-HTTP-Method-Override", "PUT");
+            foreach (var v in headers)
+            {
+                p.SetRequestHeader(v.Key, v.Value);
+            }
+            p.SendWebRequest();
+
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo, progressCallback));
+
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
+        /// <summary>
+        /// POST request that streams directly from a file path instead of loading into memory.
+        /// Uses UploadHandlerFile for memory-efficient uploads of large files.
+        /// </summary>
+        public static void PostFile(string url, string filePath, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
+        {
+            var p = new UnityWebRequest(url, "POST");
+            p.uploadHandler = new UploadHandlerFile(filePath);
+            p.downloadHandler = new DownloadHandlerBuffer();
+            p.disposeUploadHandlerOnDispose = true;
+            p.disposeDownloadHandlerOnDispose = true;
+            p.SetRequestHeader("X-HTTP-Method-Override", "POST");
+            foreach (var v in headers)
+            {
+                p.SetRequestHeader(v.Key, v.Value);
+            }
+            p.SendWebRequest();
+
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo, progressCallback));
+
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
         //post a request immediately and listen for a response callback
         public static void Post(string url, byte[] bytecontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Post", string requestInfo = "", System.Action<float> progressCallback = null)
         {
@@ -125,27 +173,66 @@ namespace Cognitive3D
             EditorApplication.update += EditorUpdate;
         }
 
+        //patch a request immediately and listen for a response callback
+        public static void Patch(string url, string stringcontent, Response callback, Dictionary<string, string> headers, bool blocking, string requestName = "Patch", string requestInfo = "")
+        {
+            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(stringcontent);
+            var p = UnityWebRequest.Put(url, bytes);
+            p.disposeUploadHandlerOnDispose = true;
+            p.disposeDownloadHandlerOnDispose = true;
+            p.method = "PATCH";
+            p.SetRequestHeader("X-HTTP-Method-Override", "PATCH");
+            foreach (var v in headers)
+            {
+                p.SetRequestHeader(v.Key, v.Value);
+            }
+            p.SendWebRequest();
+
+            EditorWebRequests.Add(new EditorWebRequest(p, callback, blocking, requestName, requestInfo));
+
+            EditorApplication.update -= EditorUpdate;
+            EditorApplication.update += EditorUpdate;
+        }
+
         //update all outstanding web requests
         static void EditorUpdate()
         {
             if (EditorWebRequests.Count == 0) { EditorApplication.update -= EditorUpdate; return; }
             for (int i = EditorWebRequests.Count - 1; i >= 0; i--)
             {
-                if (EditorWebRequests[i].ProgressAction != null)
+                var webRequest = EditorWebRequests[i];
+                var request = webRequest.Request;
+
+                float currentProgress = request.uploadProgress;
+
+                if (webRequest.ProgressAction != null)
                 {
-                    EditorWebRequests[i].ProgressAction.Invoke(EditorWebRequests[i].Request.uploadProgress);
+                    webRequest.ProgressAction.Invoke(currentProgress);
                 }
-                if (EditorWebRequests[i].IsBlocking)
+                if (webRequest.IsBlocking)
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar(EditorWebRequests[i].RequestName, EditorWebRequests[i].RequestInfo, EditorWebRequests[i].Request.uploadProgress))
+                    if (EditorUtility.DisplayCancelableProgressBar(webRequest.RequestName, webRequest.RequestInfo, currentProgress))
                     {
-                        EditorWebRequests[i].Request.Abort();
+                        // User clicked cancel
                         EditorUtility.ClearProgressBar();
+
+                        // Notify callback with cancelled status
+                        if (EditorWebRequests[i].Response != null)
+                        {
+                            EditorWebRequests[i].Response.Invoke(100, "Upload cancelled by user", "");
+                        }
+
+                        // Properly dispose the request before removing
+                        EditorWebRequests[i].Request.Abort();
+                        EditorWebRequests[i].Request.Dispose();
+                        EditorWebRequests.RemoveAt(i);
+                        Debug.Log("<color=yellow>Upload cancelled by user.</color>");
+                        continue; // Continue processing other requests instead of returning
                     }
                 }
-                if (!EditorWebRequests[i].Request.isDone) 
+                if (!EditorWebRequests[i].Request.isDone)
                 {
-                    return;
+                    continue; // Continue checking other requests instead of returning
                 }
                 if (EditorWebRequests[i].IsBlocking)
                     EditorUtility.ClearProgressBar();
@@ -161,12 +248,13 @@ namespace Cognitive3D
                         EditorWebRequests[i].Response.Invoke(responseCode, EditorWebRequests[i].Request.error, EditorWebRequests[i].Request.downloadHandler.text);
                     }
                 }
-                finally //if there is an error in try, still remove request
+                finally //if there is an error in try, still remove request and dispose
                 {
                     if (EditorWebRequests[i].IsBlocking)
                     {
                         EditorUtility.ClearProgressBar();
                     }
+                    EditorWebRequests[i].Request.Dispose();
                     EditorWebRequests.RemoveAt(i);
                 }
             }
