@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.2.0";
+        public static readonly string SDK_VERSION = "2.3.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -304,7 +304,7 @@ namespace Cognitive3D
                 fixationRecorder.Initialize();
             }
 #endif
-
+            SetSessionProperties();
             try
             {
                 InvokeSessionBeginEvent();
@@ -313,8 +313,6 @@ namespace Cognitive3D
             {
                 Debug.LogException(e);
             }
-
-            SetSessionProperties();
             FlushData();
             StartCoroutine(AutomaticSendData());
         }
@@ -346,7 +344,7 @@ namespace Cognitive3D
                     Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
                 }
             }
-            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
+            SetSessionPropertyIfEmpty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
 #region XRPF_PROPERTIES
 #if XRPF
@@ -733,6 +731,7 @@ namespace Cognitive3D
         void OnDestroy()
         {
             if (instance != this) { return; }
+            Application.wantsToQuit -= WantsToQuit;
             if (!Application.isPlaying) { return; }
 
             if (IsInitialized)
@@ -753,6 +752,7 @@ namespace Cognitive3D
             {
                 return true;
             }
+            if (this == null) { return true; }
             if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));

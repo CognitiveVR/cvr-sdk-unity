@@ -61,6 +61,13 @@ namespace Cognitive3D
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
         }
 
+        //GET scenes available on dashboard
+        //https://data.cognitive3d.com/v0/scenes/
+        internal static string GetScenes()
+        {
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes");
+        }
+
         //POST scene screenshot
         //https://data.cognitive3d.com/v0/scenes/[sceneId]/screenshot?version=[sceneVersionNumber]
         internal static string PostScreenshot(string sceneid, int versionnumber)
@@ -75,11 +82,24 @@ namespace Cognitive3D
             return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes";
         }
 
+        //POST upload new scene with SDK generated sceneId
+        internal static string PostNewScene(string sceneId)
+        {
+            return Cognitive3D_Preferences.Instance.Protocol + "://" + Cognitive3D_Preferences.Instance.Gateway + "/v"+ version+"/scenes?sceneId=" + sceneId + "&sdkType=UNITY";
+        }
+
         //POST upload and replace existing scene
         //https://data.cognitive3d.com/v0/scenes/[sceneId]
         internal static string PostUpdateScene(string sceneid)
         {
             return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid);
+        }
+
+        //PUT force update existing scene (always replaces, no version check)
+        //https://data.cognitive3d.com/v0/scenes/[sceneId]?force=true
+        internal static string PostUpdateSceneForce(string sceneid, int sceneVersionNumber)
+        {
+            return String.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/scenes/", sceneid, "?version=", sceneVersionNumber, "&force=true");
         }
 
         //https://app.cognitive3d.com/v3/scenes/[sceneId]/v/[sceneVersionNumber]/viewer

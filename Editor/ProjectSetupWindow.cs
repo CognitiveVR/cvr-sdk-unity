@@ -34,6 +34,7 @@ namespace Cognitive3D
                 AutoSelectXRSDK();
             }
 
+            EditorCore.GetPreferences();
             CacheCurrentScenes();
             UploadTools.OnUploadScenesComplete += CacheCurrentScenes;
             EditorApplication.update += CheckForChanges;
@@ -74,6 +75,12 @@ namespace Cognitive3D
         GameObject leftController;
 
         private Vector2 scrollPos;
+
+        // Foldout states for each section
+        private bool devKeysUnfolded = true;
+        private bool xrSdkUnfolded;
+        private bool playerSetupUnfolded;
+        private bool sceneTrackingUnfolded;
 
         private bool selectAll;
         private readonly List<SceneEntry> sceneEntries = new List<SceneEntry>();
@@ -121,7 +128,7 @@ namespace Cognitive3D
                 completenessStatus = keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Developer and App Keys", statusIcon, true, () =>
+                DrawFoldout("Developer and App Keys", statusIcon, ref devKeysUnfolded, () =>
                 {
                     GUILayout.Label("Enter your developer key:", EditorCore.styles.DescriptionPadding);
                     developerKey = EditorGUILayout.TextField("Developer Key", developerKey);
@@ -161,10 +168,10 @@ namespace Cognitive3D
 
                 EditorGUI.BeginDisabledGroup(!keysSet);
 #region XR SDK
-                completenessStatus = autoSelectXR;
+                completenessStatus = autoSelectXR && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("XR SDK Setup", statusIcon, keysSet, () =>
+                DrawFoldout("XR SDK Setup", statusIcon, ref xrSdkUnfolded, () =>
                 {
                     GUILayout.Label(
                     "By default, XR plugins are auto-detected, and features are enabled based on the packages present in the project.",
@@ -221,10 +228,10 @@ namespace Cognitive3D
 #endregion
 
 #region Player Setup
-                completenessStatus = EditorCore.GetPreferences().AutoPlayerSetup;
+                completenessStatus = EditorCore.GetPreferences().AutoPlayerSetup && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Player Setup", statusIcon, keysSet, () =>
+                DrawFoldout("Player Setup", statusIcon, ref playerSetupUnfolded, () =>
                 {
                     GUILayout.Label(
                     "By default, key player objects, including the camera (HMD), tracking space, and controllers are automatically detected and tracked.",
@@ -285,28 +292,15 @@ namespace Cognitive3D
                 });
 #endregion
 
-#region Scene Upload
-                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0;
+#region Scene Tracking
+                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0 && keysSet;
                 statusIcon = GetStatusIcon(completenessStatus);
 
-                DrawFoldout("Scene Upload", statusIcon, keysSet, () =>
+                DrawFoldout("Scene Tracking", statusIcon, ref sceneTrackingUnfolded, () =>
                 {
-                    GUILayout.Label("Configure which scenes from the Build Settings should be prepared and uploaded. Ensure all the scenes you want to track are added to the Build Settings.", EditorCore.styles.DescriptionPadding);
-                    GUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding);
+                    GUILayout.Label("Select which scenes from Build Settings you want to track. Selected scenes will be registered on the dashboard.", EditorCore.styles.DescriptionPadding);
 
-                    // Warning icon
-                    GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.Width(35), GUILayout.Height(35));
-                    GUILayout.Label(
-                        "For additive scenes, make sure to follow the setup instructions in the documentation.",
-                        EditorCore.styles.HelpBoxLabel
-                    );
-
-                    if (GUILayout.Button(EditorCore.ExternalLinkIcon, EditorCore.styles.ExternalLink))
-                    {
-                        Application.OpenURL("https://docs.cognitive3d.com/unity/scenes/#additive-scene-loading");
-                    }
-                    GUILayout.FlexibleSpace(); // Push content to the left
-                    GUILayout.EndHorizontal();
+                    GUILayout.Space(5);
 
                     if (EditorBuildSettings.scenes.Length == 0)
                     {
@@ -394,6 +388,12 @@ namespace Cognitive3D
                     }
 
                     GUILayout.EndScrollView();
+
+                    // Display count of selected scenes
+                    int selectedCount = sceneEntries.Count(s => s.selected);
+                    int totalCount = sceneEntries.Count;
+                    GUILayout.Label($"{selectedCount} out of {totalCount} scenes selected for tracking", EditorCore.styles.ItemDescription);
+
                     EditorGUILayout.EndVertical();
                 });
 #endregion
@@ -409,12 +409,12 @@ namespace Cognitive3D
             DrawFooter(footerRect);
         }
 
-        private void DrawFoldout(string title, Texture2D icon, bool foldout, Action drawContent)
+        private void DrawFoldout(string title, Texture2D icon, ref bool foldout, Action drawContent)
         {
             using (var scope = new EditorGUILayout.VerticalScope(EditorCore.styles.List))
             {
                 GUILayout.BeginHorizontal();
-                EditorGUILayout.Foldout(foldout, title, true);
+                foldout = EditorGUILayout.Foldout(foldout, title, true);
                 if (icon != null)
                 {
                     GUILayout.Label(icon, EditorCore.styles.InlinedIconStyle);
@@ -438,6 +438,23 @@ namespace Cognitive3D
             return condition ? EditorCore.CompleteCheckmark : EditorCore.CircleWarning;
         }
 
+        private void InitializeFoldStates()
+        {
+            if (keysSet)
+            {
+                // Fold completed sections, unfold incomplete ones
+                xrSdkUnfolded = !autoSelectXR;  // Fold when auto-select is enabled
+                playerSetupUnfolded = !EditorCore.GetPreferences().AutoPlayerSetup;  // Fold when auto-setup is enabled
+                sceneTrackingUnfolded = true;
+            }
+            else
+            {
+                xrSdkUnfolded = false;
+                playerSetupUnfolded = false;
+                sceneTrackingUnfolded = false;
+            }
+        }
+
         private void DrawColumnSeparator()
         {
             var rect = GUILayoutUtility.GetRect(1, 18, GUILayout.Width(1));
@@ -454,14 +471,14 @@ namespace Cognitive3D
 
             bool xrSdkNeedsUpdate = XRSDKNeedsUpdate();
             var selectedScenes = UploadTools.GetSelectedScenes(sceneEntries);
-            bool hasScenesToUpload = selectedScenes.Count > 0;
+            bool hasScenesSelected = selectedScenes.Count > 0;
 
-            string footerButtonText = GetFooterButtonText(hasScenesToUpload, xrSdkNeedsUpdate);
+            string footerButtonText = GetFooterButtonText(hasScenesSelected, xrSdkNeedsUpdate);
 
             EditorGUI.BeginDisabledGroup(!keysSet); // disable if keySet is false
             if (GUILayout.Button(footerButtonText, GUILayout.Width(140), GUILayout.Height(30)))
             {
-                HandleFooterButtonClick(hasScenesToUpload, xrSdkNeedsUpdate, selectedScenes);
+                HandleFooterButtonClick(hasScenesSelected, xrSdkNeedsUpdate, selectedScenes);
                 Close();  // Close the window
             }
             EditorGUI.EndDisabledGroup();
@@ -472,12 +489,12 @@ namespace Cognitive3D
             GUILayout.EndArea();
         }
 
-        private string GetFooterButtonText(bool hasScenesToUpload, bool xrSdkNeedsUpdate)
+        private string GetFooterButtonText(bool hasScenesSelected, bool xrSdkNeedsUpdate)
         {
-            if (hasScenesToUpload && xrSdkNeedsUpdate)
-                return "Upload and Compile";
-            if (hasScenesToUpload)
-                return "Upload and Finish";
+            if (hasScenesSelected && xrSdkNeedsUpdate)
+                return "Apply and Compile";
+            if (hasScenesSelected)
+                return "Apply and Finish";
             if (xrSdkNeedsUpdate)
                 return "Compile and Finish";
             return "Finish";
@@ -485,9 +502,9 @@ namespace Cognitive3D
 
         private bool xrSdkPendingAfterUpload;
 
-        private void HandleFooterButtonClick(bool hasScenesToUpload, bool xrSdkNeedsUpdate, List<SceneEntry> selectedScenes)
+        private void HandleFooterButtonClick(bool hasScenesSelected, bool xrSdkNeedsUpdate, List<SceneEntry> selectedScenes)
         {
-            if (hasScenesToUpload)
+            if (hasScenesSelected)
             {
                 if (xrSdkNeedsUpdate && !xrSdkPendingAfterUpload)
                 {
@@ -495,14 +512,25 @@ namespace Cognitive3D
                     xrSdkPendingAfterUpload = true;
                     UploadTools.OnUploadScenesComplete += ApplyXRSDKAndWaitForCompile;
                 }
+                else
+                {
+                    // Scenes will be added to preferences, no compilation needed - show notification after registration
+                    UploadTools.OnUploadScenesComplete += OnSetupCompleteAfterUpload;
+                }
 
-                UploadTools.UploadScenes(selectedScenes);
+                UploadTools.UploadScenes(selectedScenes, false);
             }
             else if (xrSdkNeedsUpdate)
             {
-                // No scenes to upload, set XR SDK
+                // No scenes selected, set XR SDK
                 ApplyXRSDKAndWaitForCompile();
             }
+        }
+
+        private void OnSetupCompleteAfterUpload()
+        {
+            UploadTools.OnUploadScenesComplete -= OnSetupCompleteAfterUpload;
+            PostSetupDialog.MarkSetupComplete();
         }
         #endregion
 
@@ -529,6 +557,7 @@ namespace Cognitive3D
             if (!string.IsNullOrEmpty(developerKey) && !string.IsNullOrEmpty(apiKey))
             {
                 keysSet = true;
+                InitializeFoldStates();
             }
         }
 
@@ -692,6 +721,15 @@ namespace Cognitive3D
             UploadTools.OnUploadScenesComplete -= ApplyXRSDKAndWaitForCompile;
             xrSdkPendingAfterUpload = false;
 
+            // Ensure preferences (including any newly added scene settings) are
+            // fully serialized to disk before triggering recompilation
+            EditorUtility.SetDirty(EditorCore.GetPreferences());
+            AssetDatabase.SaveAssets();
+
+            // Set pending notification flag BEFORE compilation starts
+            // The SetupNotificationInitializer will show the notification after recompile
+            EditorPrefs.SetBool("Cognitive3D_PendingNotification", true);
+
             SetXRSDK();
             compileStartTime = EditorApplication.timeSinceStartup;
             EditorApplication.update += MonitorCompileAfterXRSDKChange;
@@ -711,6 +749,9 @@ namespace Cognitive3D
             EditorApplication.update -= MonitorCompileAfterXRSDKChange;
             EditorUtility.ClearProgressBar();
             compileStartTime = -1;
+
+            // Note: Setup completion flag was already set before compilation
+            // SetupNotificationInitializer will show the notification after recompile
         }
         #endregion
         #region Build Setting Scene Utilities
@@ -786,6 +827,7 @@ namespace Cognitive3D
                 devKeyStatusType = MessageType.Error;
                 keysSet = false;
             }
+            Repaint();
         }
 
         private void GetApplicationKeyResponse(int responseCode, string error, string text)
@@ -830,6 +872,8 @@ namespace Cognitive3D
                 apiKeyFromDashboard = apiKey;
                 SaveApplicationKey();
             }
+            SaveDevKey();
+            Repaint();
         }
 
         private void GetUserResponse(int responseCode, string error, string text)
@@ -844,7 +888,7 @@ namespace Cognitive3D
                 var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
                 if (responseCode == 200 && userdata != null)
                 {
-                    devKeyStatusMessage = $"Organization name: {userdata.organizationName}";
+                    devKeyStatusMessage = $"Organization name: {userdata.organizationName} \nProject name: {userdata.projectName}";
                     long expiration = userdata.keyExpiresAt;
                     int daysRemaining = GetDaysUntilExpiry(expiration);
 
@@ -876,8 +920,10 @@ namespace Cognitive3D
             catch
             {
                 Debug.LogError("Invalid JSON response");
+                Repaint();
                 return;
             }
+            Repaint();
         }
 #endregion
         }
