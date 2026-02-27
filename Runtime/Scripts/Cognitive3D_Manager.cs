@@ -304,7 +304,7 @@ namespace Cognitive3D
                 fixationRecorder.Initialize();
             }
 #endif
-
+            SetSessionProperties();
             try
             {
                 InvokeSessionBeginEvent();
@@ -313,8 +313,6 @@ namespace Cognitive3D
             {
                 Debug.LogException(e);
             }
-
-            SetSessionProperties();
             FlushData();
             StartCoroutine(AutomaticSendData());
         }
@@ -346,7 +344,7 @@ namespace Cognitive3D
                     Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
                 }
             }
-            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
+            SetSessionPropertyIfEmpty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
 #region XRPF_PROPERTIES
 #if XRPF
