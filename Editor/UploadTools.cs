@@ -478,7 +478,8 @@ namespace Cognitive3D
         /// </summary>
         private static bool ShowUploadConfirmationDialog(Cognitive3D_Preferences.SceneSettings current)
         {
-            if (string.IsNullOrEmpty(current.SceneId))
+            bool hasBeenUploaded = !string.IsNullOrEmpty(current.SceneId) && !string.IsNullOrEmpty(current.backendSceneId);
+            if (!hasBeenUploaded)
             {
                 // NEW SCENE
                 return EditorUtility.DisplayDialog("Upload New Scene", "Upload " + current.SceneName + " to " + EditorCore.DisplayValue(DisplayKey.ViewerName) + "?", "Ok", "Cancel");
