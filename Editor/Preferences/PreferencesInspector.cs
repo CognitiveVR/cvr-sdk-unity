@@ -136,8 +136,6 @@ namespace Cognitive3D
                 EditorCore.RefreshAllScenesVersion(null);
             }
 
-
-            EditorGUILayout.LabelField("Scene Settings", EditorStyles.boldLabel);
             SerializedProperty sceneSettings = serializedObject.FindProperty("sceneSettings");
 
             EditorGUI.indentLevel++;

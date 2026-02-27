@@ -34,6 +34,7 @@ namespace Cognitive3D
                 AutoSelectXRSDK();
             }
 
+            EditorCore.GetPreferences();
             CacheCurrentScenes();
             UploadTools.OnUploadScenesComplete += CacheCurrentScenes;
             EditorApplication.update += CheckForChanges;
