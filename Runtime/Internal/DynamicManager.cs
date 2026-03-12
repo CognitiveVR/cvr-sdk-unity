@@ -668,7 +668,7 @@ namespace Cognitive3D
                     props = sb.ToString();
                 }
 
-                if (!ActiveDynamicObjectsArray[i].hasEnabled)
+                if (!ActiveDynamicObjectsArray[i].hasEnabled && !ActiveDynamicObjectsArray[i].remove)
                 {
                     ActiveDynamicObjectsArray[i].hasEnabled = true;
                     if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
@@ -993,7 +993,7 @@ namespace Cognitive3D
                         props = sb.ToString();
                     }
 
-                    if (!ActiveDynamicObjectsArray[i].hasEnabled)
+                    if (!ActiveDynamicObjectsArray[i].hasEnabled && !ActiveDynamicObjectsArray[i].remove)
                     {
                         ActiveDynamicObjectsArray[i].hasEnabled = true;
                         if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
@@ -1214,7 +1214,7 @@ namespace Cognitive3D
                         props = sb.ToString();
                     }
                     
-                    if (!array[index].hasEnabled)
+                    if (!array[index].hasEnabled && !array[index].remove)
                     {
                         array[index].hasEnabled = true;
                         if (array[index].HasProperties || !string.IsNullOrEmpty(props))
