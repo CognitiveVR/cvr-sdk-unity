@@ -244,8 +244,9 @@ namespace Cognitive3D
                             DebugInformationWindow.WriteDebugToFile(path + "debug.log");
                         }
 
-                        UnityEditor.EditorUtility.SetDirty(EditorCore.GetPreferences());
-                        UnityEditor.AssetDatabase.SaveAssets();
+                        EditorUtility.SetDirty(EditorCore.GetPreferences());
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
 
                         // Advance state after export completes
                         sceneUploadState = SceneManagementUploadState.StartUpload;
@@ -922,6 +923,7 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Phase1", "SceneSetupSceneUpdatePage");
             StartPhase2Update();
@@ -1048,6 +1050,7 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             SegmentAnalytics.TrackEvent("UploadingSceneComplete_Phase1", "SceneSetupSceneUploadPage");
             StartPhase2Upload();
@@ -1575,12 +1578,14 @@ namespace Cognitive3D
                 EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
                 UploadSceneSettings.SceneId = responseText;
                 AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             if (UploadComplete != null)
             {
