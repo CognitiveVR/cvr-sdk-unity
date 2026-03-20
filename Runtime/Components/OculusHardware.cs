@@ -1,9 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.XR;
 using System.Collections.Generic;
 
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
 using Unity.XR.Oculus;
 #endif
 
@@ -13,7 +13,7 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/Oculus Hardware")]
     public class OculusHardware : AnalyticsComponentBase
     {
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
         XRDisplaySubsystem currentActiveSubsystem;
 
         protected override void OnSessionBegin()
@@ -29,7 +29,7 @@ namespace Cognitive3D.Components
             yield return wait;
 
             currentActiveSubsystem = GetActiveDisplaySubsystem();
-            if (currentActiveSubsystem != null && currentActiveSubsystem.SubsystemDescriptor.id.Contains("oculus"))
+            if (currentActiveSubsystem != null && currentActiveSubsystem.subsystemDescriptor.id.Contains("oculus"))
             {
                 while (Cognitive3D.Cognitive3D_Manager.IsInitialized)
                 {
@@ -37,7 +37,7 @@ namespace Cognitive3D.Components
                     RecordOculusStats();
                 }
             }
-            else if (currentActiveSubsystem != null && currentActiveSubsystem.SubsystemDescriptor.id.Contains("OpenXR"))
+            else if (currentActiveSubsystem != null && currentActiveSubsystem.subsystemDescriptor.id.Contains("OpenXR"))
             {
                 Debug.LogWarning("Oculus Hardware sensors cannot be accessed while using OpenXR plugin");
             }
@@ -48,7 +48,6 @@ namespace Cognitive3D.Components
             try
             {
                 //battery level handled by a different component
-                Cognitive3D.SensorRecorder.RecordDataPoint("c3d.battery.temp", Stats.AdaptivePerformance.BatteryTemp);
                 Cognitive3D.SensorRecorder.RecordDataPoint("c3d.cpuLevel", Stats.AdaptivePerformance.CPULevel);
                 Cognitive3D.SensorRecorder.RecordDataPoint("c3d.gpuLevel", Stats.AdaptivePerformance.GPULevel);
                 Cognitive3D.SensorRecorder.RecordDataPoint("c3d.isPowerSavingMode", (Stats.AdaptivePerformance.PowerSavingMode ? 1 : 0));
@@ -67,15 +66,15 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
             return "Records Battery level, CPU level, GPU level and Power Saving mode states";
 #else
-            return "Oculus Hardware sensors can only be accessed when using the Oculus Integration SDK";
+            return "Oculus Hardware sensors can only be accessed when using the Oculus XR plugin";
 #endif
         }
         public override bool GetWarning()
         {
-#if C3D_OCULUS
+#if COGNITIVE3D_META_OCULUS_XR
             return false;
 #else
             return true;

@@ -22,7 +22,7 @@ namespace Cognitive3D
         /// </summary>
         [Tooltip("The image that will visually fill when the button is focused, applicable only if slowFill is enabled.")]
         [SerializeField]
-        protected Image fillImage;
+        public Image fillImage;
 
         /// <summary>
         /// The image component for the button's UI. <br/>
@@ -30,26 +30,26 @@ namespace Cognitive3D
         /// </summary>
         [Tooltip("The image used for the button's UI. Allows updating the button's color.")]
         [SerializeField]
-        protected Image buttonImage;
+        public Image buttonImage;
 
         /// <summary>
         /// Duration in seconds for the button to fill before confirming the action. 
         /// </summary>
         [Tooltip("Time in seconds for the button to fill before invoking the confirm action.")]
         [SerializeField]
-        protected float FillDuration = 1;
+        public float FillDuration = 1;
 
         /// <summary>
         /// The default color of the button <br/>
         /// Grey
         /// </summary>
-        private Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        public Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
         /// <summary>
         /// The color to set button to when "selected" <br/>
         /// Green
         /// </summary>
-        private Color selectedColor = new Color(0, 1, 0.05f, 1);
+        public Color selectedColor = new Color(0, 1, 0.05f, 1);
 
         /// <summary>
         /// Event or function to be executed when the button is clicked and confirmed.
@@ -57,7 +57,7 @@ namespace Cognitive3D
         [Tooltip("Event/function triggered when the button is clicked and the fill is completed.")]
         [UnityEngine.Serialization.FormerlySerializedAs("OnFill")]
         [SerializeField]
-        protected UnityEngine.Events.UnityEvent OnConfirm;
+        public UnityEngine.Events.UnityEvent OnConfirm;
 
         /// <summary>
         /// Set to true if you want the buttons to resize dynamically.
@@ -65,7 +65,7 @@ namespace Cognitive3D
         [Header("Resize Settings")]
         [Tooltip("Enable this to allow the button to resize dynamically.")]
         [SerializeField]
-        private bool dynamicallyResize;
+        public bool dynamicallyResize;
 
         /// <summary>
         /// A reference to the collider for this button <br/>
@@ -74,7 +74,7 @@ namespace Cognitive3D
         /// </summary>
         [Tooltip("Collider reference used for adjusting button collision during resizing.")]
         [SerializeField]
-        private BoxCollider boxCollider;
+        public BoxCollider boxCollider;
 
         /// <summary>
         /// A reference to the rect for this button <br/>
@@ -83,7 +83,7 @@ namespace Cognitive3D
         /// </summary>
         [Tooltip("RectTransform reference used for adjusting button size and position during resizing.")]
         [SerializeField]
-        private RectTransform rectTransform;
+        public RectTransform rectTransform;
 
         /// <summary>
         /// Float value representing how much the button has "filled"
@@ -111,13 +111,15 @@ namespace Cognitive3D
         /// <summary>
         /// Saves the color the fill image starts with
         /// </summary>
-        protected Color fillStartingColor;
+        [HideInInspector]
+        public Color fillStartingColor;
 
         /// <summary>
         /// The color to set on the confirm button when it is enabled <br/>
         /// A light blue
         /// </summary>
-        private readonly Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
+        [HideInInspector]
+        public Color confirmColor = new Color(0.12f, 0.64f, 0.96f, 1f);
 
         /// <summary>
         /// True if the button is "selected"

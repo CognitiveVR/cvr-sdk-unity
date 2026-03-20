@@ -18,7 +18,7 @@ namespace Cognitive3D
                     _camera = Camera.main;
                     if (_camera == null)
                     {
-                        _camera = FindObjectOfType<Camera>();
+                        _camera = FindFirstObjectByType<Camera>();
                     }
                 }
                 return _camera;
@@ -194,18 +194,31 @@ namespace Cognitive3D
             if (p.PointerType == ExitPollManager.PointerType.ControllersAndHands)
             {
                 p.PointerControllerPrefab = (GameObject)EditorGUILayout.ObjectField(
-                    new GUIContent("Pointer Controller Prefab","Prefab responsible for managing pointer input and visualizing the pointer."), 
+                    new GUIContent("Pointer Controller Prefab", "Prefab responsible for managing pointer input and visualizing the pointer."),
                     p.PointerControllerPrefab, typeof(GameObject), true
                 );
 
                 p.PointerLineWidth = EditorGUILayout.FloatField(
-                    new GUIContent("Pointer Line Width Multiplier","Adjusts the overall scaling factor applied to the LineRenderer.widthCurve, determining the final width of the pointer line."), 
+                    new GUIContent("Pointer Line Width Multiplier", "Adjusts the overall scaling factor applied to the LineRenderer.widthCurve, determining the final width of the pointer line."),
                     p.PointerLineWidth
                 );
 
                 p.PointerGradient = EditorGUILayout.GradientField(
-                    new GUIContent("Pointer Gradient Color","Defines the gradient color of the pointer line. Customize this to set how the pointer visually transitions between colors."), 
+                    new GUIContent("Pointer Gradient Color", "Defines the gradient color of the pointer line. Customize this to set how the pointer visually transitions between colors."),
                     p.PointerGradient
+                );
+                
+                EditorGUILayout.LabelField("Pointer Offset", EditorStyles.boldLabel);
+
+                EditorGUI.indentLevel++;
+                p.PointerPositionOffset = EditorGUILayout.Vector3Field(
+                    new GUIContent("Position Offset", "Adjusts the local position offset of the pointer relative to its base transform."),
+                    p.PointerPositionOffset
+                );
+
+                p.PointerRotationOffset = EditorGUILayout.Vector3Field(
+                    new GUIContent("Rotation Offset", "Adjusts the local rotation offset (in degrees) of the pointer relative to its base orientation."),
+                    p.PointerRotationOffset
                 );
             }
 

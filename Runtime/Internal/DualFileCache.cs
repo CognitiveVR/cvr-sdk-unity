@@ -27,8 +27,8 @@ namespace Cognitive3D
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
 
-            read_filestream = new FileStream(path + "data_read", FileMode.OpenOrCreate);
-            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate);
+            read_filestream = new FileStream(path + "data_read", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             //get number of batches in write file
             var reader2 = new StreamReader(write_filestream);
@@ -37,7 +37,7 @@ namespace Cognitive3D
             numberWriteBatches = i / 2;
             reader2.Close();
             write_filestream.Close();
-            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate);
+            write_filestream = new FileStream(path + "data_write", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
             //merge write file into read file (if there's content in the write file)
 
@@ -143,7 +143,7 @@ namespace Cognitive3D
         //manually keep track of how many write batches there are, instead of constantly opening/closing filestreams
         int numberWriteBatches = 0;
 
-        public bool PeekContent(ref string Destination, ref string body)
+        public bool PeekContent(ref string Destination, ref string body, ref bool sendAsBytes)
         {
             //if there's content in data_read, do that
             //otherwise, if there's content in write, merge files
@@ -168,6 +168,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
+                            sendAsBytes = tempDest.Contains("audio");
                             return true;
                         }
                     }
@@ -201,6 +202,7 @@ namespace Cognitive3D
                         {
                             Destination = tempDest;
                             body = tempBody;
+                            sendAsBytes = tempDest.Contains("audio");
                             return true;
                         }
                     }
@@ -347,6 +349,19 @@ namespace Cognitive3D
 
         public bool WriteContent(string Destination, string body)
         {
+            // Sanitize: cache format requires exactly 2 lines per entry.
+            // Any embedded newlines would corrupt the line-pair structure.
+            bool hadNewlines =
+                (Destination != null && (Destination.Contains("\n") || Destination.Contains("\r"))) ||
+                (body != null && (body.Contains("\n") || body.Contains("\r")));
+            if (hadNewlines)
+            {
+                Util.logWarning("Newline characters detected in cache entry data. Newlines will be stripped from Destination/body before writing to the local data cache. This may indicate an upstream formatting issue.");
+            }
+            
+            Destination = Destination.Replace("\n", "").Replace("\r", "");
+            body = body.Replace("\n", "").Replace("\r", "");
+
             writer.WriteLine(Destination);
             writer.WriteLine(body);
             writer.Flush();

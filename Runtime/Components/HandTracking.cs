@@ -39,7 +39,7 @@ namespace Cognitive3D.Components
         // Registers hands only if they are being used. If controllers are in use, hands will not be registered or recorded.
         void RegisterHands()
         {
-            if (!Cognitive3D_Manager.autoInitializeInput || handsRegistered) return;
+            if (!Cognitive3D_Manager.Instance.autoInitializePlayerSetup || handsRegistered) return;
             
             // Hands
             var currentTrackedDevice = InputUtil.GetCurrentTrackedDevice();

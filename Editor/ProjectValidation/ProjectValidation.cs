@@ -43,6 +43,13 @@ namespace Cognitive3D
 
         internal static readonly ProjectValidationItemRegistry registry = new ProjectValidationItemRegistry();
 
+        internal delegate void onProjectValidationUpdate();
+        /// <summary>
+        /// Event used to signal that project validation items have been updated.
+        /// </summary>
+        internal static event onProjectValidationUpdate OnProjectValidationUpdate;
+        internal static void InvokeProjectValidationUpdateEvent() { if (OnProjectValidationUpdate != null) { OnProjectValidationUpdate.Invoke(); } }
+
         /// <summary>
         /// Add an <see cref="ProjectValidationItem"/> to project validation checklist items
         /// </summary>
@@ -264,7 +271,7 @@ namespace Cognitive3D
         {
             controllerNamesList = new List<string>();
             ProjectValidation.FindComponentInActiveScene<DynamicObject>(out var controllers);
-            if (controllers == null)
+            if (controllers.Count <= 0)
             {
                 return false;
             }
@@ -276,7 +283,7 @@ namespace Cognitive3D
                     controllerNamesList.Add(controller.name);
                 }
             }
-            return true;
+            return controllerNamesList.Count > 0;
         }
 
         /// <summary>

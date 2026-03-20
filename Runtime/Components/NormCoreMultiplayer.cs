@@ -7,7 +7,7 @@ using Cognitive3D.Components;
 #if COGNITIVE3D_INCLUDE_NORMCORE
 using Normal.Realtime;
 
-namespace Cognitive3D
+namespace Cognitive3D.Components
 {
     public class NormcoreMultiplayer : AnalyticsComponentBase
     {

@@ -59,7 +59,8 @@ namespace Cognitive3D
         {
             if (!Cognitive3D_Manager.IsInitialized)
             {
-                Util.logDebug("Cannot display exitpoll. Session has not begun");
+                Util.logDebug("Cannot display ExitPoll Survey. Session has not begun");
+                myparameters = parameters;
                 Cleanup(false);
                 return;
             }
@@ -78,7 +79,7 @@ namespace Cognitive3D
                     break;
 
                 case ExitPollManager.PointerType.ControllersAndHands:
-                    ExitPollPointer.SetupControllerAsPointer(parameters.PointerControllerPrefab, parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.PointerGradient);
+                    ExitPollPointer.SetupControllerAsPointer(parameters.PointerControllerPrefab, parameters.PointerActivationButton, parameters.PointerLineWidth, parameters.PointerPositionOffset, parameters.PointerRotationOffset, parameters.PointerGradient);
                     break;
 
                 case ExitPollManager.PointerType.Custom:
@@ -361,7 +362,7 @@ namespace Cognitive3D
                     new Cognitive3D.CustomEvent("c3d.ExitPoll detected no microphones")
                         .SetProperty("Panel ID", tempPanelID)
                         .Send();
-                    OnPanelClosed(tempPanelID, "Answer" + tempPanelID, short.MinValue);
+                    OnPanelClosed(tempPanelID, short.MinValue);
                     return;
                 }
 #else

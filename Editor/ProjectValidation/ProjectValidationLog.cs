@@ -21,6 +21,7 @@ namespace Cognitive3D
             File.WriteAllText(FILEPATH, json);
         }
 
+        [System.Obsolete("SetBuildProcessPopup is deprecated as the popup before build has been removed.")]
         public static void SetBuildProcessPopup(bool showPopup)
         {
             //file doesn't exist, create a new file

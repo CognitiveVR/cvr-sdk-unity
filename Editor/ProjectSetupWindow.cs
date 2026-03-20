@@ -1,478 +1,659 @@
-﻿using System.Collections;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
 using UnityEditor;
-using Cognitive3D;
+using UnityEngine;
 
 namespace Cognitive3D
 {
-    internal class ProjectSetupWindow : EditorWindow
+    [InitializeOnLoad]
+    public class ProjectSetupWindow : EditorWindow
     {
-        readonly Rect steptitlerect = new Rect(30, 5, 100, 440);
-        internal static void Init()
+        bool keysSet;
+        private string developerKey;
+        private string apiKey;
+        private string devKeyStatusMessage = "";
+        private MessageType devKeyStatusType = MessageType.None;
+
+        #region Project Setup Window
+        public static void Init()
         {
-            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
+            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow", "new");
+
             ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.minSize = new Vector2(500, 550);
-            window.maxSize = new Vector2(500, 550);
+            window.minSize = new Vector2(600, 800);
             window.Show();
 
             window.LoadKeys();
-            window.GetSelectedSDKs();
-            window.currentPage = Page.Welcome;
-
-            ExportUtility.ClearUploadSceneSettings();
         }
 
-        internal static void Init(Page page)
+        private void OnEnable()
         {
-            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
-            ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.minSize = new Vector2(500, 550);
-            window.maxSize = new Vector2(500, 550);
-            window.currentPage = page;
-            window.Show();
-
-            window.LoadKeys();
-            window.GetSelectedSDKs();
-
-            ExportUtility.ClearUploadSceneSettings();
-        }
-
-        internal static void Init(Rect position)
-        {
-            SegmentAnalytics.TrackEvent("ProjectSetupWindow_Opened", "ProjectSetupWindow");
-            ProjectSetupWindow window = (ProjectSetupWindow)EditorWindow.GetWindow(typeof(ProjectSetupWindow), true, "Project Setup (Version " + Cognitive3D_Manager.SDK_VERSION + ")");
-            window.minSize = new Vector2(500, 550);
-            window.maxSize = new Vector2(500, 550);
-            window.position = new Rect(position.x + 5, position.y + 5, 500, 550);
-            window.Show();
-
-            window.LoadKeys();
-            window.GetSelectedSDKs();
-            window.currentPage = Page.Welcome;
-
-            ExportUtility.ClearUploadSceneSettings();
-        }
-
-        internal enum Page
-        {
-            Welcome,
-            APIKeys,
-            Organization,
-            SDKSelection,
-            Glia,
-            SRAnipal,
-            Recompile,
-            Wave,
-            NextSteps,
-            MultiplayerSetup,
-            DynamicSetup,
-        }
-        private Page _currentPage;
-        public Page currentPage {
-            get {
-                return _currentPage;
+            if (autoSelectXR)
+            {
+                AutoSelectXRSDK();
             }
-            internal set {
-                _currentPage = value;
-            }
+
+            EditorCore.GetPreferences();
+            CacheCurrentScenes();
+            UploadTools.OnUploadScenesComplete += CacheCurrentScenes;
+            EditorApplication.update += CheckForChanges;
         }
 
-        int lastDevKeyResponseCode;
-        bool isResponseJsonValid = true;
+        private void OnDisable()
+        {
+            CacheCurrentScenes();
+            UploadTools.OnUploadScenesComplete -= CacheCurrentScenes;
+            EditorApplication.update -= CheckForChanges;
+        }
+        #endregion
+
+        private Vector2 mainScroll;
+
+        private bool forceUpdateApiKey;
+        private string apiKeyFromDashboard = "";
+
+        bool autoSelectXR = true;
+        bool previousAutoSelectXR;
+        int selectedSDKIndex;
+        readonly Dictionary<string, string> availableXrSdks = new Dictionary<string, string>
+        {
+            { "MetaXR", "C3D_OCULUS" },
+            { "PicoXR", "C3D_PICOXR" },
+            { "ViveWave", "C3D_VIVEWAVE" },
+            { "SteamVR (OpenVR)", "C3D_STEAMVR2" },
+            { "SRAnipal", "C3D_SRANIPAL" },
+            { "Omnicept", "C3D_OMNICEPT" },
+            { "VarjoXR", "C3D_VARJOXR" },
+            { "MRTK", "C3D_MRTK" },
+            { "Default", "C3D_DEFAULT" }
+        };
+
+        GameObject hmd;
+        GameObject trackingSpace;
+        GameObject rightController;
+        GameObject leftController;
+
+        private Vector2 scrollPos;
+
+        // Foldout states for each section
+        private bool devKeysUnfolded = true;
+        private bool xrSdkUnfolded;
+        private bool playerSetupUnfolded;
+        private bool sceneTrackingUnfolded;
+
+        private bool selectAll;
+        private readonly List<SceneEntry> sceneEntries = new List<SceneEntry>();
+
         private void OnGUI()
         {
-            GUI.skin = EditorCore.WizardGUISkin;
-            GUI.DrawTexture(new Rect(0, 0, 500, 550), EditorGUIUtility.whiteTexture);
+            bool completenessStatus;
+            Texture2D statusIcon;
 
-            switch (currentPage)
+            // Footer height
+            float footerHeight = 60f;
+
+            // Scrollable content area (from top of window to above footer)
+            Rect contentRect = new Rect(0, 0, position.width, position.height - footerHeight);
+            GUILayout.BeginArea(contentRect);
+            mainScroll = GUILayout.BeginScrollView(mainScroll);
+
+            // Header background and logo
+            if (EditorCore.LogoTexture != null)
             {
-                case Page.Welcome:
-                    WelcomeUpdate();
-                    break;
-                case Page.APIKeys:
-                    AuthenticateUpdate();
-                    break;
-                case Page.Organization:
-                    OrganizationUpdate();
-                    break;
-                case Page.SDKSelection:
-                    SelectSDKUpdate();
-                    break;
-                case Page.Glia:
-                    GliaSetup();
-                    break;
-                case Page.SRAnipal:
-                    SRAnipalSetup();
-                    break;
-                case Page.Recompile:
-                    WaitForCompile();
-                    break;
-                case Page.Wave:
-                    ViveFocusSetup();
-                    break;
-                case Page.NextSteps:
-                    DoneUpdate();
-                    break;
-                case Page.DynamicSetup:
-                    DynamicUpdate();
-                    break;
-                case Page.MultiplayerSetup:
-                    MultiplayerSetup();
-                    break;
-                default:
-                    throw new System.NotSupportedException();
+                float bgHeight = 100f;
+
+                Rect bgRect = new Rect(0, 0, position.width, bgHeight);
+                GUI.DrawTexture(bgRect, EditorCore.BackgroundTexture, ScaleMode.ScaleAndCrop);
+
+                float logoWidth = EditorCore.LogoTexture.width / 3f;
+                float logoHeight = EditorCore.LogoTexture.height / 3f;
+                float logoX = (position.width - logoWidth) / 2f;
+                float logoY = (bgHeight - logoHeight) / 2f;
+
+                GUI.DrawTexture(new Rect(logoX, logoY, logoWidth, logoHeight), EditorCore.LogoTexture, ScaleMode.ScaleToFit);
+
+                GUILayout.Space(bgHeight);
             }
 
-            DrawFooter();
-            Repaint(); //manually repaint gui each frame to make sure it's responsive
-        }
-
-        void WelcomeUpdate()
-        {
-            GUI.Label(new Rect(30, 10, 440, 80), EditorCore.LogoTexture, "image_centered");
-
-            GUI.Label(new Rect(30, 110, 440, 440), "Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup! This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded." +
-                "\n\nAt the end of this setup process, you will have production ready analytics and a method to replay individual sessions", "normallabel");
-            string url = "https://docs.cognitive3d.com/unity/minimal-setup-guide";
-            Rect buttonRect = new Rect(150, 300, 200, 30);
-            if (GUI.Button(buttonRect, new GUIContent("Open Online Documentation       ", url)))
+            using (new EditorGUILayout.VerticalScope(EditorCore.styles.ContextPadding))
             {
-                Application.OpenURL(url);
-            }
-            Rect onlineRect = buttonRect;
-            onlineRect.x += 82;
-            GUI.Label(onlineRect, EditorCore.ExternalIcon);
-            GUI.Label(new Rect(30, 380, 440, 440), "There is written documentation and a video guide to help you configure your project.", "normallabel");
-        }
+                GUILayout.Space(5);
+                GUILayout.Label("Welcome to the " + EditorCore.DisplayValue(DisplayKey.FullName) + " SDK Project Setup", EditorCore.styles.FeatureTitle);
+                GUILayout.Label(
+                    "This window will guide you through setting up our SDK in your project and ensuring the features available from packages in your project are automatically recorded.",
+                    EditorCore.styles.ItemDescription);
 
-        #region Auth Keys
+#region Dev and App keys
+                completenessStatus = keysSet;
+                statusIcon = GetStatusIcon(completenessStatus);
 
-        string apikey = string.Empty;
-        string developerkey = string.Empty;
-        void AuthenticateUpdate()
-        {
-            GUI.Label(steptitlerect, "AUTHENTICATION", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "Please add your " + EditorCore.DisplayValue(DisplayKey.ShortName) + " Developer Key." +
-                "\n\nThe Developer Key is saved to Unity Editor Preferences (specific to the current user) and is never included in a build. " +
-                "This should be kept private to your organization."+
-                "\n\nThis is available on the Project Dashboard.", "normallabel");
-            Rect buttonRect = new Rect(150, 260, 200, 30);
-            if (GUI.Button(buttonRect, "Open Dashboard       "))
-            {
-                Application.OpenURL("https://app.cognitive3d.com");
-            }
-            Rect onlineRect = buttonRect;
-            onlineRect.x += 82;
-            GUI.Label(onlineRect, EditorCore.ExternalIcon);
-
-            //dev key
-            GUI.Label(new Rect(30, 315, 100, 30), "Developer Key", "miniheader");
-            if (string.IsNullOrEmpty(developerkey)) //empty
-            {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Alert, "Not validated"), "image_centered");
-                lastDevKeyResponseCode = 0;
-                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
-                GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-            }
-            else if (lastDevKeyResponseCode == 200 && isResponseJsonValid) //valid key
-            {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.CircleCheckmark, "Valid key"), "image_centered");
-                string previous = developerkey;
-                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
-                if (previous != developerkey)
-                    lastDevKeyResponseCode = 0;
-            }
-            else if (lastDevKeyResponseCode == 0) //maybe valid key? needs to be checked
-            {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Alert, "Not validated"), "image_centered");
-                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32);
-            }
-            else //invalid key
-            {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
-                string previous = developerkey;
-                developerkey = GUI.TextField(new Rect(30, 345, 400, 40), developerkey, 32, "textfield_warning");
-                if (previous != developerkey)
-                    lastDevKeyResponseCode = 0;
-            }
-
-            if (lastDevKeyResponseCode != 200 && lastDevKeyResponseCode != 0)
-            {
-                GUI.Label(new Rect(30, 390, 400, 30), "This Developer Key is invalid or expired. Please ensure the developer key is valid on the dashboard. Developer Keys expire automatically after 90 days.", "miniwarning");
-            }
-            else if (!isResponseJsonValid)
-            {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Error, "Invalid or Expired"), "image_centered");
-                GUI.Label(new Rect(30, 390, 400, 30), "The response is not a valid JSON response. Please ensure the gateway is configured correctly", "miniwarning");
-            }
-        }
-
-        string OrganizationName;
-        string SubscriptionPlan;
-        long SubscriptionExpirationDateLong;
-        System.DateTime? SubscriptionExpirationDate;
-        bool SubscriptionTrial;
-
-        void OrganizationUpdate()
-        {
-            GUI.Label(steptitlerect, "ORGANIZATION", "steptitle");
-
-            GUI.Label(new Rect(60, 40, 440, 440), "Organization Name: " + OrganizationName, "normallabel");
-            GUI.Label(new Rect(60, 70, 440, 440), "Current Subscription Plan: " + SubscriptionPlan + (SubscriptionTrial ? " (Trial)" : ""), "normallabel");
-
-            string expirationDateString = string.Empty;
-            if (string.IsNullOrEmpty(expirationDateString) && SubscriptionExpirationDateLong > 0L)
-            {
-                if (!SubscriptionExpirationDate.HasValue)
+                DrawFoldout("Developer and App Keys", statusIcon, ref devKeysUnfolded, () =>
                 {
-                    SubscriptionExpirationDate = UnixTimeStampToDateTime(SubscriptionExpirationDateLong);
+                    GUILayout.Label("Enter your developer key:", EditorCore.styles.DescriptionPadding);
+                    developerKey = EditorGUILayout.TextField("Developer Key", developerKey);
+                    GUILayout.Space(10);
+
+                    EditorGUILayout.BeginHorizontal();
+
+                    Rect apiKeyRect = EditorGUILayout.GetControlRect();
+
+                    // Draw with EditorGUI to retain full control
+                    apiKey = EditorGUI.TextField(apiKeyRect, "Application Key", forceUpdateApiKey ? apiKeyFromDashboard : apiKey);
+
+                    if (forceUpdateApiKey)
+                    {
+                        forceUpdateApiKey = false;
+                        GUI.FocusControl(null); // Optionally clear focus
+                    }
+
+                    if (GUILayout.Button("Get from Dashboard", GUILayout.Width(130)))
+                    {
+                        EditorCore.CheckForExpiredDeveloperKey(developerKey, GetDevKeyResponse);
+                        EditorCore.CheckForApplicationKey(developerKey, GetApplicationKeyResponse);
+                        EditorCore.GetUserData(developerKey, GetUserResponse);
+
+                        forceUpdateApiKey = true;
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+                    GUILayout.Space(10);
+
+                    if (!string.IsNullOrEmpty(devKeyStatusMessage))
+                    {
+                        EditorGUILayout.HelpBox(devKeyStatusMessage, devKeyStatusType);
+                    }
+                });
+#endregion
+
+                EditorGUI.BeginDisabledGroup(!keysSet);
+#region XR SDK
+                completenessStatus = autoSelectXR && keysSet;
+                statusIcon = GetStatusIcon(completenessStatus);
+
+                DrawFoldout("XR SDK Setup", statusIcon, ref xrSdkUnfolded, () =>
+                {
+                    GUILayout.Label(
+                    "By default, XR plugins are auto-detected, and features are enabled based on the packages present in the project.",
+                    EditorCore.styles.DescriptionPadding);
+
+                    bool newAutoSelectXR = EditorGUILayout.Toggle(new GUIContent("Auto-select XR SDK", "Disable 'Auto-select XR SDK' to configure this manually"), autoSelectXR);
+
+                    if (newAutoSelectXR != previousAutoSelectXR)
+                    {
+                        if (newAutoSelectXR)
+                        {
+                            SegmentAnalytics.TrackEvent("EnabledAutoXRSDKSetup_SDKDefinePage", "ProjectSetupSDKDefinePage", "new");
+                            AutoSelectXRSDK();
+                        }
+                        else
+                        {
+                            SegmentAnalytics.TrackEvent("DisabledAutoXRSDKSetup_SDKDefinePage", "ProjectSetupSDKDefinePage", "new");
+                        }
+                    }
+
+                    autoSelectXR = newAutoSelectXR;
+                    previousAutoSelectXR = newAutoSelectXR;
+
+                    using (new EditorGUI.DisabledScope(autoSelectXR))
+                    {
+                        selectedSDKIndex = EditorGUILayout.Popup("Select XR SDK", selectedSDKIndex, availableXrSdks.Keys.ToArray());
+                    }
+
+                    GUILayout.Space(10);
+
+                    if (EditorCore.HasC3DDefine(out var c3dSymbols))
+                    {
+                        var readableNames = new List<string>();
+                        foreach (var symbol in c3dSymbols)
+                        {
+                            var sdkName = availableXrSdks.FirstOrDefault(kvp => kvp.Value == symbol).Key;
+                            readableNames.Add(string.IsNullOrEmpty(sdkName) ? symbol : sdkName);
+                        }
+                        string currentDefines = string.Join(", ", readableNames);
+                        EditorGUILayout.HelpBox($"XR SDK setup complete. Currently configured for: {currentDefines}", MessageType.Info);
+                    }
+                    else
+                    {
+                        if (selectedSDKIndex >= 0 && selectedSDKIndex < availableXrSdks.Count)
+                        {
+                            EditorGUILayout.HelpBox($"XR SDK requires compilation. Click 'Compile and Finish' below to apply {availableXrSdks.Keys.ElementAt(selectedSDKIndex)} configuration.", MessageType.Warning);
+                        }
+                        else
+                        {
+                            EditorGUILayout.HelpBox("No XR SDK selected. Please select an SDK from the dropdown above.", MessageType.Warning);
+                        }
+                    }
+                });
+#endregion
+
+#region Player Setup
+                completenessStatus = EditorCore.GetPreferences().AutoPlayerSetup && keysSet;
+                statusIcon = GetStatusIcon(completenessStatus);
+
+                DrawFoldout("Player Setup", statusIcon, ref playerSetupUnfolded, () =>
+                {
+                    GUILayout.Label(
+                    "By default, key player objects, including the camera (HMD), tracking space, and controllers are automatically detected and tracked.",
+                    EditorCore.styles.DescriptionPadding);
+
+                    bool newAutoPlayerSetupValue = EditorGUILayout.Toggle(
+                        new GUIContent("Auto Player Setup", "Disable auto-setup to manually assign these from your existing Player Prefab"),
+                        EditorCore.GetPreferences().AutoPlayerSetup
+                    );
+
+                    if (newAutoPlayerSetupValue != EditorCore.GetPreferences().AutoPlayerSetup)
+                    {
+                        EditorCore.GetPreferences().AutoPlayerSetup = newAutoPlayerSetupValue;
+
+                        if (newAutoPlayerSetupValue)
+                        {
+                            SegmentAnalytics.TrackEvent("EnabledAutoPlayerSetup_PlayerSetupPage", "ProjectSetupPlayerSetupPage", "new");
+                        }
+                        else
+                        {
+                            SegmentAnalytics.TrackEvent("DisabledAutoPlayerSetup_PlayerSetupPage", "ProjectSetupPlayerSetupPage", "new");
+                        }
+                    }
+
+                    GUILayout.Space(10);
+
+                    if (!EditorCore.GetPreferences().AutoPlayerSetup)
+                    {
+                        EditorGUILayout.HelpBox("For SteamVR, assign GameObjects with SteamVR_Behaviour_Pose components to the controller fields.", MessageType.Info);
+
+                        GUILayout.Space(5);
+
+                        hmd = (GameObject)EditorGUILayout.ObjectField(new GUIContent("HMD", "The display for HMD should be tagged as MainCamera"), hmd, typeof(GameObject), true);
+                        trackingSpace = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Tracking Space", "The TrackingSpace is the root transform for the HMD and controllers"), trackingSpace, typeof(GameObject), true);
+                        rightController = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Right Controller", "The Right Controller may have Tracked Pose Driver component"), rightController, typeof(GameObject), true);
+                        leftController = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Left Controller", "The Left Controller may have Tracked Pose Driver component"), leftController, typeof(GameObject), true);
+
+                        GUILayout.Space(5);
+
+                        GUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button("Set Player", GUILayout.Width(100)))
+                        {
+                            EditorCore.SetMainCamera(hmd);
+                            EditorCore.SetTrackingSpace(trackingSpace);
+                            EditorCore.SetController(true, rightController);
+                            EditorCore.SetController(false, leftController);
+                        }
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+
+                        GUILayout.Space(5);
+                    }
+                    else
+                    {
+                        EditorGUILayout.HelpBox("Auto Player Setup is enabled, allowing all player-related objects to be automatically detected and tracked.", MessageType.Info);
+                    }
+                });
+#endregion
+
+#region Scene Tracking
+                completenessStatus = Cognitive3D_Preferences.Instance.sceneSettings.Count > 0 && keysSet;
+                statusIcon = GetStatusIcon(completenessStatus);
+
+                DrawFoldout("Scene Tracking", statusIcon, ref sceneTrackingUnfolded, () =>
+                {
+                    GUILayout.Label("Select which scenes from Build Settings you want to track. Selected scenes will be registered on the dashboard.", EditorCore.styles.DescriptionPadding);
+
+                    GUILayout.Space(5);
+
+                    if (EditorBuildSettings.scenes.Length == 0)
+                    {
+                        GUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding);
+                        // Display error icon
+                        GUILayout.Label(EditorGUIUtility.IconContent("console.erroricon"), GUILayout.Width(35), GUILayout.Height(35));
+                        GUILayout.Label(
+                            "No scenes have been added to the Build Settings.",
+                            EditorCore.styles.HelpBoxLabel
+                        );
+                        GUILayout.EndHorizontal();
+                    }
+
+                    EditorGUILayout.BeginVertical(EditorCore.styles.ListBoxPadding);
+
+                    EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+                    // Select All Toggle
+                    bool newSelectAll = EditorGUILayout.Toggle(selectAll, GUILayout.Width(40));
+                    if (newSelectAll != selectAll)
+                    {
+                        selectAll = newSelectAll;
+                        foreach (var scene in sceneEntries)
+                        {
+                            scene.selected = selectAll;
+                        }
+                    }
+                    DrawColumnSeparator();
+
+                    // Column Headers
+                    GUILayout.Label("Scene Name", EditorCore.styles.LeftPaddingBoldLabel, GUILayout.Width(185));
+                    DrawColumnSeparator();
+                    GUILayout.Label("Version Number", EditorCore.styles.LeftPaddingBoldLabel);
+
+                    // Flexible space to push icon to the right
+                    GUILayout.FlexibleSpace();
+
+                    // Gear Icon Button
+                    if (GUILayout.Button(new GUIContent(EditorCore.SettingsIcon2, "Additional Settings"), EditorStyles.toolbarButton, GUILayout.Width(24)))
+                    {
+                        GenericMenu gm = new GenericMenu();
+                        gm.AddItem(new GUIContent("Full Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 1, OnSelectFullResolution);
+                        gm.AddItem(new GUIContent("Half Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 2, OnSelectHalfResolution);
+                        gm.AddItem(new GUIContent("Quarter Texture Resolution"), Cognitive3D_Preferences.Instance.TextureResize == 4, OnSelectQuarterResolution);
+                        gm.AddSeparator("");
+                        gm.AddItem(new GUIContent("Export lowest LOD meshes"), Cognitive3D_Preferences.Instance.ExportSceneLODLowest, OnToggleLODMeshes);
+
+#if UNITY_2020_1_OR_NEWER
+                        gm.AddItem(new GUIContent("Include Disabled Dynamic Objects"), Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects, OnToggleIncludeDisabledDynamics);
+#endif
+                        gm.ShowAsContext();
+                    }
+
+                    EditorGUILayout.EndHorizontal();
+
+                    // Scrollable list of scenes
+                    scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(100));
+
+                    for (int i = 0; i < sceneEntries.Count; i++)
+                    {
+                        string sceneName = System.IO.Path.GetFileNameWithoutExtension(sceneEntries[i].path);
+
+                        EditorGUILayout.BeginHorizontal();
+                        sceneEntries[i].selected = EditorGUILayout.Toggle(sceneEntries[i].selected, GUILayout.Width(40));
+
+                        GUILayout.Space(5);
+                        GUILayout.Label(sceneName, EditorCore.styles.LeftPaddingLabel, GUILayout.Width(185));
+
+                        GUILayout.Label(sceneEntries[i].versionNumber.ToString(), EditorCore.styles.LeftPaddingLabel);
+                        EditorGUILayout.EndHorizontal();
+                    }
+
+                    bool allSelected = true;
+                    foreach (var scene in sceneEntries)
+                    {
+                        if (!scene.selected)
+                        {
+                            allSelected = false;
+                            break;
+                        }
+                    }
+
+                    if (selectAll != allSelected)
+                    {
+                        selectAll = allSelected;
+                    }
+
+                    GUILayout.EndScrollView();
+
+                    // Display count of selected scenes
+                    int selectedCount = sceneEntries.Count(s => s.selected);
+                    int totalCount = sceneEntries.Count;
+                    GUILayout.Label($"{selectedCount} out of {totalCount} scenes selected for tracking", EditorCore.styles.ItemDescription);
+
+                    EditorGUILayout.EndVertical();
+                });
+#endregion
+
+                EditorGUI.EndDisabledGroup();
+            }
+
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+
+            // Sticky footer button
+            Rect footerRect = new Rect(0, position.height - footerHeight, position.width, footerHeight);
+            DrawFooter(footerRect);
+        }
+
+        private void DrawFoldout(string title, Texture2D icon, ref bool foldout, Action drawContent)
+        {
+            using (var scope = new EditorGUILayout.VerticalScope(EditorCore.styles.List))
+            {
+                GUILayout.BeginHorizontal();
+                foldout = EditorGUILayout.Foldout(foldout, title, true);
+                if (icon != null)
+                {
+                    GUILayout.Label(icon, EditorCore.styles.InlinedIconStyle);
                 }
-                expirationDateString = SubscriptionExpirationDate.Value.Date.ToString("dd MMMM yyyy");
+                GUILayout.EndHorizontal();
+
+                if (foldout)
+                {
+                    using (new EditorGUILayout.VerticalScope(EditorCore.styles.ListLabel))
+                    {
+                        EditorGUI.indentLevel++;
+                        drawContent?.Invoke();
+                        EditorGUI.indentLevel--;
+                    }
+                }
+            }
+        }
+
+        Texture2D GetStatusIcon(bool condition)
+        {
+            return condition ? EditorCore.CompleteCheckmark : EditorCore.CircleWarning;
+        }
+
+        private void InitializeFoldStates()
+        {
+            if (keysSet)
+            {
+                // Fold completed sections, unfold incomplete ones
+                xrSdkUnfolded = !autoSelectXR;  // Fold when auto-select is enabled
+                playerSetupUnfolded = !EditorCore.GetPreferences().AutoPlayerSetup;  // Fold when auto-setup is enabled
+                sceneTrackingUnfolded = true;
             }
             else
             {
-                expirationDateString = "Never";
+                xrSdkUnfolded = false;
+                playerSetupUnfolded = false;
+                sceneTrackingUnfolded = false;
             }
+        }
 
-            GUI.Label(new Rect(60, 100, 440, 440), "Expiration Date: " + expirationDateString, "normallabel");
+        private void DrawColumnSeparator()
+        {
+            var rect = GUILayoutUtility.GetRect(1, 18, GUILayout.Width(1));
+            EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 0.4f));
+        }
 
-            GUI.Label(new Rect(30, 150, 440, 440), "The Application Key is saved in Cognitive3D_Preferences asset. It is used to identify where session data should be collected.\n\nThis is included with a build, but otherwise should be kept private to your organization.", "normallabel");
+        #region Footer
+        private void DrawFooter(Rect footerRect)
+        {
+            GUILayout.BeginArea(footerRect, EditorStyles.helpBox);
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
 
-            //api key
-            GUI.Label(new Rect(30, 315, 100, 30), "Application Key", "miniheader");
-            apikey = GUI.TextField(new Rect(30, 345, 400, 40), apikey, 32);
-            if (string.IsNullOrEmpty(apikey))
+            bool xrSdkNeedsUpdate = XRSDKNeedsUpdate();
+            var selectedScenes = UploadTools.GetSelectedScenes(sceneEntries);
+            bool hasScenesSelected = selectedScenes.Count > 0;
+
+            string footerButtonText = GetFooterButtonText(hasScenesSelected, xrSdkNeedsUpdate);
+
+            EditorGUI.BeginDisabledGroup(!keysSet); // disable if keySet is false
+            if (GUILayout.Button(footerButtonText, GUILayout.Width(140), GUILayout.Height(30)))
             {
-                GUI.Label(new Rect(30, 345, 400, 40), "asdf-hjkl-1234-5678", "ghostlabel");
-                GUI.Label(new Rect(440, 345, 30, 40), EditorCore.CircleEmpty, "image_centered");
+                HandleFooterButtonClick(hasScenesSelected, xrSdkNeedsUpdate, selectedScenes);
+                Close();  // Close the window
             }
-            else
+            EditorGUI.EndDisabledGroup();
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+            GUILayout.EndArea();
+        }
+
+        private string GetFooterButtonText(bool hasScenesSelected, bool xrSdkNeedsUpdate)
+        {
+            if (hasScenesSelected && xrSdkNeedsUpdate)
+                return "Apply and Compile";
+            if (hasScenesSelected)
+                return "Apply and Finish";
+            if (xrSdkNeedsUpdate)
+                return "Compile and Finish";
+            return "Finish";
+        }
+
+        private bool xrSdkPendingAfterUpload;
+
+        private void HandleFooterButtonClick(bool hasScenesSelected, bool xrSdkNeedsUpdate, List<SceneEntry> selectedScenes)
+        {
+            if (hasScenesSelected)
             {
-                GUI.Label(new Rect(440, 345, 30, 40), new GUIContent(EditorCore.Info,"This is automatically set from the Dashboard"), "image_centered");
+                if (xrSdkNeedsUpdate && !xrSdkPendingAfterUpload)
+                {
+                    // Wait until upload is complete before setting XRSDK
+                    xrSdkPendingAfterUpload = true;
+                    UploadTools.OnUploadScenesComplete += ApplyXRSDKAndWaitForCompile;
+                }
+                else
+                {
+                    // Scenes will be added to preferences, no compilation needed - show notification after registration
+                    UploadTools.OnUploadScenesComplete += OnSetupCompleteAfterUpload;
+                }
+
+                UploadTools.UploadScenes(selectedScenes, false);
+            }
+            else if (xrSdkNeedsUpdate)
+            {
+                // No scenes selected, set XR SDK
+                ApplyXRSDKAndWaitForCompile();
+            }
+        }
+
+        private void OnSetupCompleteAfterUpload()
+        {
+            UploadTools.OnUploadScenesComplete -= OnSetupCompleteAfterUpload;
+            PostSetupDialog.MarkSetupComplete();
+        }
+        #endregion
+
+        #region Developer and App Key Utilities
+        private void LoadKeys()
+        {
+            developerKey = EditorCore.DeveloperKey;
+            apiKey = EditorCore.GetPreferences().ApplicationKey;
+
+            if (!string.IsNullOrEmpty(developerKey) && !string.IsNullOrEmpty(apiKey))
+            {
+                EditorCore.CheckForExpiredDeveloperKey(developerKey, GetDevKeyResponse);
+                EditorCore.CheckForApplicationKey(developerKey, GetApplicationKeyResponse);
+                EditorCore.GetUserData(developerKey, GetUserResponse);
             }
 
+            EditorCore.RefreshSceneVersionComplete += CacheCurrentScenes;
         }
 
         private void SaveDevKey()
         {
-            EditorCore.DeveloperKey = developerkey;
+            EditorCore.DeveloperKey = developerKey;
+
+            if (!string.IsNullOrEmpty(developerKey) && !string.IsNullOrEmpty(apiKey))
+            {
+                keysSet = true;
+                InitializeFoldStates();
+            }
         }
 
         private void SaveApplicationKey()
         {
-            EditorCore.GetPreferences().ApplicationKey = apikey;
+            EditorCore.GetPreferences().ApplicationKey = apiKey;
             EditorUtility.SetDirty(EditorCore.GetPreferences());
             AssetDatabase.SaveAssets();
         }
 
-        private void LoadKeys()
+        private int GetDaysUntilExpiry(long unixTimestamp)
         {
-            developerkey = EditorCore.DeveloperKey;
-            apikey = EditorCore.GetPreferences().ApplicationKey;
+            DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime expiryDate = dateTime.AddSeconds(unixTimestamp / 1000.0).ToLocalTime();
+            TimeSpan timeLeft = expiryDate - DateTime.Now;
+
+            return Mathf.Max(0, (int)Math.Floor(timeLeft.TotalDays));
         }
-
-        [System.Serializable]
-        private class ApplicationKeyResponseData
-        {
-            public string apiKey;
-            public bool valid;
-        }
-
-        private void GetApplicationKeyResponse(int responseCode, string error, string text)
-        {
-            if (responseCode != 200)
-            {
-                SegmentAnalytics.TrackEvent("InvalidDevKey_ProjectSetup_" + responseCode, "ProjectSetupAPIPage");
-                Debug.LogError("GetApplicationKeyResponse response code: " + responseCode + " error: " + error);
-                return;
-            }
-
-            // Check if response data is valid
-            try
-            {
-                JsonUtility.FromJson<ApplicationKeyResponseData>(text);
-                isResponseJsonValid = true;
-                SegmentAnalytics.TrackEvent("ValidDevKey_ProjectSetup", "ProjectSetupAPIPage");
-            }
-            catch
-            {
-                isResponseJsonValid = false;
-                Debug.LogError("Invalid JSON response");
-                return;
-            }
-
-            ApplicationKeyResponseData responseData = JsonUtility.FromJson<ApplicationKeyResponseData>(text);
-
-            //display popup if application key is set but doesn't match the response
-            if (!string.IsNullOrEmpty(apikey) && apikey != responseData.apiKey)
-            {
-                SegmentAnalytics.TrackEvent("APIKeyMismatch_ProjectSetup", "ProjectSetupAPIPage");
-                var result = EditorUtility.DisplayDialog("Application Key Mismatch", "Do you want to use the latest Application Key available on the Dashboard?", "Ok", "No");
-                if (result)
-                {
-                    apikey = responseData.apiKey;
-                }
-            }
-            else
-            {
-                SegmentAnalytics.TrackEvent("APIKeyFound_ProjectSetup", "ProjectSetupAPIPage");
-                apikey = responseData.apiKey;
-            }
-        }
-
-        private System.DateTime UnixTimeStampToDateTime(long unixTimeStamp)
-        {
-            System.DateTime dateTime = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dateTime = dateTime.AddSeconds(unixTimeStamp/1000.0).ToLocalTime();
-            return dateTime;
-        }
-
-        private void GetSubscriptionResponse(int responseCode, string error, string text)
-        {
-            if (responseCode != 200)
-            {
-                Debug.LogError("GetSubscriptionResponse response code: " + responseCode + " error: " + error);
-                return;
-            }
-
-            // Check if response data is valid
-            try
-            {
-                JsonUtility.FromJson<EditorCore.OrganizationData>(text);
-                isResponseJsonValid = true;
-            }
-            catch
-            {
-                isResponseJsonValid = false;
-                Debug.LogError("Invalid JSON response");
-                return;
-            }
-
-            EditorCore.OrganizationData organizationDetails = JsonUtility.FromJson<EditorCore.OrganizationData>(text);
-            if (organizationDetails == null)
-            {
-                Debug.LogError("GetSubscriptionResponse data is null or invalid. Please get in touch");
-            }
-            else
-            {
-                OrganizationName = organizationDetails.organizationName;
-                if (organizationDetails.subscriptions.Length == 0)
-                {
-                    SubscriptionPlan = "No Subscription";
-                }
-                else
-                {
-                    SubscriptionPlan = organizationDetails.subscriptions[0].planType;
-                    SubscriptionTrial = organizationDetails.subscriptions[0].isFreeTrial;
-                    SubscriptionExpirationDateLong = organizationDetails.subscriptions[0].expiration;
-                }
-            }
-        }
-
         #endregion
 
-        bool hasDoneInitialSDKSelection;
-        void GetSelectedSDKs()
+        #region XR SDK Utilities
+        [System.NonSerialized]
+        double compileStartTime = -1;
+        void SetXRSDK()
         {
-            if (hasDoneInitialSDKSelection == false)
+            // Validate selectedSDKIndex is within bounds
+            if (selectedSDKIndex < 0 || selectedSDKIndex >= availableXrSdks.Count)
             {
-                hasDoneInitialSDKSelection = true;
-                selectedsdks.Clear();
-#if C3D_STEAMVR2
-                selectedsdks.Add("C3D_STEAMVR2");
-#endif
-#if C3D_OCULUS
-            selectedsdks.Add("C3D_OCULUS");
-#endif
-#if C3D_SRANIPAL
-        selectedsdks.Add("C3D_SRANIPAL");
-#endif
-#if C3D_VIVEWAVE
-        selectedsdks.Add("C3D_VIVEWAVE");
-#endif
-#if C3D_VARJOVR
-        selectedsdks.Add("C3D_VARJOVR");
-#endif
-#if C3D_VARJOXR
-        selectedsdks.Add("C3D_VARJOXR");
-#endif
-#if C3D_PICOVR
-        selectedsdks.Add("C3D_PICOVR");
-#endif
-#if C3D_PICOXR
-        selectedsdks.Add("C3D_PICOXR");
-#endif
-#if C3D_WINDOWSMR
-            selectedsdks.Add("C3D_WINDOWSMR");
-#endif
-#if C3D_OMNICEPT
-            selectedsdks.Add("C3D_OMNICEPT");
-#endif
-#if C3D_MRTK
-            selectedsdks.Add("C3D_MRTK");
-#endif
+                Debug.LogError("Invalid SDK index. Please ensure XR SDK is properly selected.");
+                return;
             }
 
-            //C3D_Default doesn't enable or change any behaviour - only used in scene setup window and written to define symbols for debugging purposes
-            if (selectedsdks.Count == 0)
+            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage", "new");
+            EditorCore.SetPlayerDefine(availableXrSdks.Values.ElementAt(selectedSDKIndex));
+
+            if (compileStartTime < 0)
             {
-                selectedsdks.Add("C3D_DEFAULT");
+                compileStartTime = EditorApplication.timeSinceStartup;
             }
         }
 
-        Vector2 sdkScrollPos;
-        List<string> selectedsdks = new List<string>();
-
-        class SDKDefine
+        private void AutoSelectXRSDK()
         {
-            public string Name;
-            public string Define;
-            public string Tooltip;
-            public SDKDefine(string name, string define, string tooltip="")
-            {
-                Name = name;
-                Define = define;
-                Tooltip = tooltip;
-            }
+            EditorCore.GetPackages(OnGetPackages);
         }
 
-        readonly List<SDKDefine> SDKNamesDefines = new List<SDKDefine>
+        private bool XRSDKNeedsUpdate()
         {
-            new SDKDefine("Default","C3D_DEFAULT", "Uses UnityEngine.InputDevice Features to broadly support all XR SDKs" ),
-            new SDKDefine("SteamVR 2.7.3 and OpenVR","C3D_STEAMVR2", "OpenVR Input System" ),
-            new SDKDefine("Meta XR All-in-One 64+","C3D_OCULUS", "Adds Passthrough, Hand Tracking, Eye Tracking and optional Oculus ID and Subscription Features.\nOculus Integration 53+ is also supported" ),
-            new SDKDefine("HP Omnicept Runtime 1.12","C3D_OMNICEPT", "Adds Eye Tracking and Sensors" ),
-            new SDKDefine("SRanipal Runtime","C3D_SRANIPAL","Adds Eyetracking for the Vive Pro Eye" ), //previously C3D_VIVEPROEYE
-            new SDKDefine("Varjo XR 3.0.0","C3D_VARJOXR", "Adds Eye Tracking for Varjo Headsets"),
-            new SDKDefine("Vive Wave 5.0.2","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
-            new SDKDefine("Pico Unity XR Platform 2.1.3","C3D_PICOXR", "Adds Eye Tracking for Pico Neo 3 Eye" ),
-            new SDKDefine("MRTK 2.5.4","C3D_MRTK", "Adds Eye Tracking for Hololens 2" ),
-            new SDKDefine("Windows Mixed Reality XR","C3D_WINDOWSMR", "Deprecated. Select 'Default'" ), //legacy
-            new SDKDefine("Varjo VR","C3D_VARJOVR", "Prefer to upgrade to Varjo XR instead" ), //legacy
-            new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR", "Prefer to upgrade to Pico XR instead" ), //legacy
-        };
+            // Validate selectedSDKIndex is within bounds
+            if (selectedSDKIndex < 0 || selectedSDKIndex >= availableXrSdks.Count)
+            {
+                return false;
+            }
+            
+            if (EditorCore.HasC3DDefine(out var c3dSymbols))
+            {
+                string selectedSdk = availableXrSdks.Values.ElementAt(selectedSDKIndex);
+                foreach (var symbol in c3dSymbols)
+                {
+                    if (!symbol.Equals(selectedSdk))
+                    {
+                        return true;
+                    }
+                }
+            }
 
-        bool hasDoneSDKRecommendation;
+            if (!EditorCore.HasC3DDefine())
+            {
+                return true;
+            }
+            return false;
+        }
+
         void OnGetPackages(UnityEditor.PackageManager.PackageCollection packages)
         {
             //search from specific sdks (single headset support) to general runtimes (openvr, etc)
-            foreach(var package in packages)
+            string packageName;
+            var XrSdks = availableXrSdks.Keys.ToArray();
+            foreach (var package in packages)
             {
                 if (package.name == "com.unity.xr.picoxr")
                 {
-                    DisplayRecommendationPopup("C3D_PICOXR","Pico Unity Integration SDK");
+                    packageName = "PicoXR";
+                    selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                     return;
                 }
                 if (package.name == "com.varjo.xr")
                 {
-                    DisplayRecommendationPopup("C3D_VARJOXR", "Varjo XR Package");
+                    packageName = "VarjoXR";
+                    selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                     return;
                 }
                 if (package.name == "com.htc.upm.wave.xrsdk")
                 {
-                    DisplayRecommendationPopup("C3D_VIVEWAVE", "Vive Wave Package");
+                    packageName = "ViveWave";
+                    selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                     return;
                 }
             }
@@ -481,28 +662,32 @@ namespace Cognitive3D
             var SRAnipalAssets = AssetDatabase.FindAssets("SRanipal");
             if (SRAnipalAssets.Length > 0)
             {
-                DisplayRecommendationPopup("C3D_SRANIPAL","SRanipal");
+                packageName = "SRAnipal";
+                selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                 return;
             }
 
             var GliaAssets = AssetDatabase.FindAssets("lib-client-csharp");
             if (GliaAssets.Length > 0)
             {
-                DisplayRecommendationPopup("C3D_OMNICEPT","Omnicept SDK");
+                packageName = "Omnicept";
+                selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                 return;
             }
 
             var OculusIntegrationAssets = AssetDatabase.FindAssets("t:assemblydefinitionasset oculus.vr");
             if (OculusIntegrationAssets.Length > 0)
             {
-                DisplayRecommendationPopup("C3D_OCULUS","Oculus Integration");
+                packageName = "MetaXR";
+                selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                 return;
             }
 
             var HololensAssets = AssetDatabase.FindAssets("WindowsMRAssembly");
             if (HololensAssets.Length > 0)
             {
-                DisplayRecommendationPopup("C3D_MRTK","Hololens Package");
+                packageName = "MRTK";
+                selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                 return;
             }
 
@@ -511,7 +696,8 @@ namespace Cognitive3D
             {
                 if (package.name == "com.openvr")
                 {
-                    DisplayRecommendationPopup("C3D_STEAMVR2", "SteamVR Package");
+                    packageName = "SteamVR (OpenVR)";
+                    selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                     return;
                 }
             }
@@ -519,680 +705,226 @@ namespace Cognitive3D
             var SteamVRAssets = AssetDatabase.FindAssets("t:assemblydefinitionasset steamvr");
             if (SteamVRAssets.Length > 0)
             {
-                DisplayRecommendationPopup("C3D_STEAMVR2", "SteamVR Package");
+                packageName = "SteamVR (OpenVR)";
+                selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
                 return;
             }
 
             //default fallback
-            DisplayRecommendationPopup("C3D_DEFAULT", string.Empty);
+            packageName = "Default";
+            selectedSDKIndex = Array.IndexOf(XrSdks, packageName);
+            return;
         }
 
-        //TODO CONSIDER write a static list of features that each SDK enables (eye tracking, room size, social features, sensors, etc)
-        //TODO rewrite description on this popup
-        void DisplayRecommendationPopup(string selection, string friendlyName)
+        private void ApplyXRSDKAndWaitForCompile()
         {
-            string description = friendlyName + " was found in your project. Selecting this will enable additional feature support";
+            UploadTools.OnUploadScenesComplete -= ApplyXRSDKAndWaitForCompile;
+            xrSdkPendingAfterUpload = false;
 
-            if (string.IsNullOrEmpty(friendlyName))
-            {
-                description = "No supported SDKs or packages were found in your project. We recommend default for a general implementation";
-            }
+            // Ensure preferences (including any newly added scene settings) are
+            // fully serialized to disk before triggering recompilation
+            EditorUtility.SetDirty(EditorCore.GetPreferences());
+            AssetDatabase.SaveAssets();
 
-            var result = EditorUtility.DisplayDialog("Recommended Setup", description, "Ok", "Manually Select");
-            if (result)
-            {
-                //ok
-                selectedsdks = new List<string> { selection };
-            }
-            else
-            {
-                //cancel or close popup
-                selectedsdks = new List<string> { "C3D_DEFAULT" };
-            }
+            // Set pending notification flag BEFORE compilation starts
+            // The SetupNotificationInitializer will show the notification after recompile
+            EditorPrefs.SetBool("Cognitive3D_PendingNotification", true);
+
+            SetXRSDK();
+            compileStartTime = EditorApplication.timeSinceStartup;
+            EditorApplication.update += MonitorCompileAfterXRSDKChange;
         }
 
-        void SelectSDKUpdate()
+        private void MonitorCompileAfterXRSDKChange()
         {
-            if (!hasDoneSDKRecommendation)
+            if (EditorApplication.isCompiling)
             {
-                hasDoneSDKRecommendation = true;
-                if (!EditorCore.HasC3DDefine())
-                {
-                    EditorCore.GetPackages(OnGetPackages);
-                }
-            }
-
-            GUI.Label(steptitlerect, "SDK FEATURES", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "By default, we support most XR features, but some additional software may be required to support specific features.\n\nShift click to select multiple", "normallabel");
-
-            int startHeight = 150;
-            int scrollAreaHeight = 320;
-
-            Rect innerScrollSize = new Rect(30, 0, 420, SDKNamesDefines.Count * 36);
-            sdkScrollPos = GUI.BeginScrollView(new Rect(30, startHeight, 440, scrollAreaHeight), sdkScrollPos, innerScrollSize, false, false);
-
-            for (int i = 0; i < SDKNamesDefines.Count; i++)
-            {
-                bool selected = selectedsdks.Contains(SDKNamesDefines[i].Define);
-                GUIContent content = new GUIContent("  "+SDKNamesDefines[i].Name);
-                float separator = 0;
-                if (i > 8)
-                {
-                    separator = 32;
-                }
-                if (!string.IsNullOrEmpty(SDKNamesDefines[i].Tooltip))
-                {
-                    content.tooltip = SDKNamesDefines[i].Tooltip;
-                }
-
-                if (GUI.Button(new Rect(30, i * 32+ separator, 420, 30), content, selected ? "button_blueoutlineleft" : "button_disabledoutline"))
-                {
-                    if (selected)
-                    {
-                        selectedsdks.Remove(SDKNamesDefines[i].Define);
-                    }
-                    else
-                    {
-                        if (Event.current.shift) //add
-                        {
-                            selectedsdks.Add(SDKNamesDefines[i].Define);
-                            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage");
-                        }
-                        else //set
-                        {
-                            selectedsdks.Clear();
-                            selectedsdks.Add(SDKNamesDefines[i].Define);
-                            SegmentAnalytics.TrackEvent("SDKDefineIsSet_SDKDefinePage", "ProjectSetupSDKDefinePage");
-                        }
-                    }
-                }
-                GUI.Label(new Rect(30, i * 32 + separator, 24, 30), selected ? EditorCore.BoxCheckmark : EditorCore.BoxEmpty, "image_centered");
-                if (i == 9)
-                {
-                    int kerning = 4;
-                    GUI.Label(new Rect(30, i * 32 + kerning, 420, 30), "Legacy Support", "boldlabel");
-                }
-            }
-
-            GUI.EndScrollView();
-        }
-
-        #region Glia Setup
-        //added to tell developer to add assemblies so C3D can use Glia api
-
-        bool hasDoneGliaStartCheck;
-        bool gliaAssemblyExists;
-
-        void GliaStart()
-        {
-            if (hasDoneGliaStartCheck) { return; }
-            hasDoneGliaStartCheck = true;
-
-            var assets = AssetDatabase.FindAssets("GliaAssembly");
-            var editorAssets = AssetDatabase.FindAssets("GliaEditorAssembly");
-            gliaAssemblyExists = assets.Length > 0 && editorAssets.Length > 0;
-        }
-
-        void GliaSetup()
-        {
-            if (!selectedsdks.Contains("C3D_OMNICEPT"))
-            {
-                currentPage++;
-                return;
-            }
-            GliaStart();
-            GUI.Label(steptitlerect, "SDK VALIDATION", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "To automatically access Omnicept's Glia API, the Cognitive3D SDK needs to reference the Glia Assembly, which doesn't exist by default." +
-                "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
-
-            if (GUI.Button(new Rect(150, 290, 200, 30), "Create Assemblies"))
-            {
-                var assets = AssetDatabase.FindAssets("GliaAssembly");
-                if (assets.Length == 0)
-                {
-                    //new text document?
-                    string assemblyDefinitionContent = "{\"name\": \"GliaAssembly\",\"rootNamespace\": \"\",\"references\": [],\"includePlatforms\": [],\"excludePlatforms\": [],\"allowUnsafeCode\": false,\"overrideReferences\": false,\"precompiledReferences\": [],\"autoReferenced\": true,\"defineConstraints\": [],\"versionDefines\": [],\"noEngineReferences\": false}";
-                    string filepath = Application.dataPath + "/Glia/";
-
-                    System.IO.File.WriteAllText(filepath + "GliaAssembly.asmdef", assemblyDefinitionContent);
-                    EditorUtility.SetDirty(EditorCore.GetPreferences());
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                }
-                assets = AssetDatabase.FindAssets("GliaEditorAssembly");
-                if (assets.Length == 0)
-                {
-                    //new text document?
-                    string assemblyDefinitionContent = "{\"name\": \"GliaEditorAssembly\",\"rootNamespace\": \"\",\"references\": [\"GliaAssembly\"],\"includePlatforms\": [\"Editor\"],\"excludePlatforms\": [],\"allowUnsafeCode\": false,\"overrideReferences\": false,\"precompiledReferences\": [],\"autoReferenced\": true,\"defineConstraints\": [],\"versionDefines\": [],\"noEngineReferences\": false}";
-                    string filepath = Application.dataPath + "/Glia/Editor/";
-
-                    System.IO.File.WriteAllText(filepath + "GliaEditorAssembly.asmdef", assemblyDefinitionContent);
-                    EditorUtility.SetDirty(EditorCore.GetPreferences());
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                }
-                hasDoneGliaStartCheck = false;
-            }
-
-            if (gliaAssemblyExists == false)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-        }
-
-        #endregion
-
-        #region SRAnipal Setup
-        //added to tell developer to add assemblies so C3D can use sranipal api
-
-        bool hasDoneSRAnipalStartCheck;
-        bool sranipalAssemblyExists;
-
-        void SRAnipalStart()
-        {
-            if (hasDoneSRAnipalStartCheck) { return; }
-            hasDoneSRAnipalStartCheck = true;
-
-            var assets = AssetDatabase.FindAssets("SRAnipalAssembly");
-            sranipalAssemblyExists = assets.Length > 0;
-        }    
-
-        void SRAnipalSetup()
-        {
-            if (!selectedsdks.Contains("C3D_SRANIPAL"))
-            {
-                currentPage++;
-                return;
-            }
-            SRAnipalStart();
-            GUI.Label(steptitlerect, "SDK VALIDATION", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "To automatically access the SRAnipal API, the Cognitive3D SDK needs to reference the SRAnipal Assembly, which doesn't exist by default." +
-    "\n\nUse the button below to create the expected Assembly Definition files if they do not already exist.", "normallabel");
-
-            //button to add assemblies to sranipal folder
-            if (GUI.Button(new Rect(150, 290, 200, 30), "Create Assemblies"))
-            {
-                var assets = AssetDatabase.FindAssets("SRAnipalAssembly");
-                if (assets.Length == 0)
-                {
-                    //new text document?
-                    string assemblyDefinitionContent = "{\"name\": \"SRAnipalAssembly\",\"rootNamespace\": \"\",\"references\": [],\"includePlatforms\": [],\"excludePlatforms\": [],\"allowUnsafeCode\": false,\"overrideReferences\": false,\"precompiledReferences\": [],\"autoReferenced\": true,\"defineConstraints\": [],\"versionDefines\": [],\"noEngineReferences\": false}";
-                    string filepath = Application.dataPath+"/ViveSR/";
-
-                    System.IO.File.WriteAllText(filepath + "SRAnipalAssembly.asmdef", assemblyDefinitionContent);
-                    EditorUtility.SetDirty(EditorCore.GetPreferences());
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                }
-                hasDoneSRAnipalStartCheck = false;
-            }
-
-            //a checkmark if the assembly already exists
-            if (sranipalAssemblyExists == false)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
-                
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }    
-        }
-
-        void ViveFocusSetup()
-        {
-            if (!selectedsdks.Contains("C3D_VIVEWAVE"))
-            {
-                currentPage++;
+                float elapsed = (float)(EditorApplication.timeSinceStartup - compileStartTime);
+                float progress = Mathf.Clamp(Mathf.Log10(elapsed + 1), 0.05f, 0.95f);
+                EditorUtility.DisplayProgressBar("Compiling", "Setting player definition...", progress);
                 return;
             }
 
-#if C3D_VIVEWAVE
-            GUI.Label(steptitlerect, "REQUIRED PREFAB", "steptitle");
-            //GUI.Label(new Rect(30, 30, 440, 440), "Add EyeManager to the scene.", "normallabel");
-            var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
-            bool eyeManagerExists = eyeManager != null;
-
-            GUI.Label(new Rect(30, 30, 440, 440), "To utilise the WaveVR Eye Tracking features, the scene needs a WaveEyeManager object, which doesn't exist by default." +
-    "\n\nUse the button below to add the WaveEyeManager to the scene if it does not already exist.", "normallabel");
-
-            //button to add assemblies to sranipal folder
-            if (GUI.Button(new Rect(150, 290, 200, 30), "Create EyeManager"))
-            {
-                if (eyeManager == null)
-                {
-                    var m_EyeManager = new GameObject("WaveEyeManager");
-                    m_EyeManager.AddComponent<Wave.Essence.Eye.EyeManager>();
-                    UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
-                    eyeManagerExists = true;
-                } 
-            }
-
-            //a checkmark if the assembly already exists
-            if (eyeManagerExists == false)
-            {
-                //empty checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleEmpty, "image_centered");
-
-            }
-            else
-            {
-                //full checkmark
-                GUI.Label(new Rect(100, 290, 64, 30), EditorCore.CircleCheckmark, "image_centered");
-            }
-#endif
-        }
-
-        #endregion
-
-        #region WaitForCompile
-
-        [System.NonSerialized]
-        double compileStartTime = -1;
-
-        void WaitForCompile()
-        {
-            GUI.Label(steptitlerect, "RECOMPILE", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "Applying selected SDKs and compiling. This will take a moment.", "normallabel");
-            EditorCore.SetPlayerDefine(selectedsdks);
-
-            if (compileStartTime < 0)
-            {
-                compileStartTime = EditorApplication.timeSinceStartup;
-            }
-
-            //calculate fill amount
-            float compileDifference = (float)(EditorApplication.timeSinceStartup - compileStartTime);
-
-            //scale the loading bar so it never entirely fills
-            float fillAmount = Mathf.Log10(compileDifference);
-            fillAmount = Mathf.Clamp(fillAmount,0.02f, 0.95f);
-            var compileDurationBox = new Rect(30, 120, 440, 30);
-            var progressBackground = new Rect(30, 150, 440, 30);
-            var progressPartial = new Rect(30, 150, 440 * fillAmount, 30);
-
-            //calculate duration text
-            double compileTimeInSeconds = EditorApplication.timeSinceStartup - compileStartTime;
-            int compileTimeMinutes = 0;
-            while (compileTimeInSeconds > 59.99f)
-            {
-                compileTimeMinutes++;
-                compileTimeInSeconds = compileTimeInSeconds - 59.99f;
-            }
-            string compileDuration = compileTimeMinutes+":"+Mathf.Floor((float)compileTimeInSeconds).ToString("00");
-
-            //display ui elements
-            GUI.Box(progressBackground, "", "box");
-            GUI.Box(progressPartial, "", "button");
-            GUI.Label(compileDurationBox, compileDuration, "image_centered");
-
-            //done
-            if (EditorApplication.isCompiling) { return; }
-            SegmentAnalytics.TrackEvent("RecompileCompleted_RecompilePage", "ProjectSetupRecompilePage");
+            // Compilation finished
+            EditorApplication.update -= MonitorCompileAfterXRSDKChange;
+            EditorUtility.ClearProgressBar();
             compileStartTime = -1;
 
-            currentPage++;
+            // Note: Setup completion flag was already set before compilation
+            // SetupNotificationInitializer will show the notification after recompile
         }
+        #endregion
+        #region Build Setting Scene Utilities
+        private string[] cachedScenePaths;
 
-
-#endregion
-
-        void DoneUpdate()
+        void CacheCurrentScenes()
         {
-            GUI.Label(steptitlerect, "NEXT STEPS", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "The project settings are complete. Next you'll be guided to upload a scene to give context to the data you record.", "normallabel");
-            if (GUI.Button(new Rect(150, 100, 200, 30), "Quick Scene Setup"))
+            cachedScenePaths = EditorBuildSettings.scenes.Select(s => s.path).ToArray();
+            sceneEntries.Clear();
+            foreach (var scene in EditorBuildSettings.scenes)
             {
-                SceneSetupWindow.Init(position);
-                SegmentAnalytics.TrackEvent("QuickSceneSetupSelected_ProjectSetupNextStepsPage", "QuickSceneSetup");
-                Close();
-            }
+                var c3dScene = Cognitive3D_Preferences.FindSceneByPath(scene.path);
+                int versionNumber = c3dScene?.VersionNumber ?? 0;
 
-            GUI.Label(new Rect(30, 250, 440, 440), "Alternatively, you can use Dynamic Object Components to identify key objects in your environment.", "normallabel");
-            if (GUI.Button(new Rect(150, 320, 200, 30), "Advanced Scene Setup"))
-            {
-                //show dynamic page
-                SegmentAnalytics.TrackEvent("AdvancedSceneSetupSelected_ProjectSetupNextStepsPage", "AdvancedSceneSetup");
-                currentPage = Page.DynamicSetup;
+                bool isSelected = versionNumber == 0;
+
+                var sceneEntry = new SceneEntry(
+                    scene.path,
+                    versionNumber,
+                    isSelected,
+                    true
+                );
+
+                sceneEntries.Add(sceneEntry);
             }
         }
 
-#if C3D_PHOTON
-        bool wantPhotonPunSupport = true;
-#else
-        bool wantPhotonPunSupport = false;
-#endif
-
-#if C3D_NETCODE
-        bool wantNetcodeSupport = true;
-#else
-        bool wantNetcodeSupport = false;
-#endif
-
-#if C3D_NORMCORE
-        bool wantNormcoreSupport = true;
-#else
-        bool wantNormcoreSupport = false;
-#endif
-        void MultiplayerSetup()
+        void CheckForChanges()
         {
-            GUI.Label(steptitlerect, "MUTLIPLAYER SUPPORT", "steptitle");
-            GUI.Label(new Rect(30, 30, 440, 440), "You can enable multiplayer support here. Select the package or framework you are using below.", "normallabel");
-
-            // PUN
-            GUI.Label(new Rect(140, 90, 440, 440), "Photon PUN 2*", "normallabel");
-            GUI.Label(new Rect(30, 420, 440, 440), "*Please ensure that there is only a single instance of Cognitive3D_Manager across your multiplayer scenes", "caption");
-            GUI.Label(new Rect(30, 475, 440, 440), "If you require support for other multiplayer frameworks, please get in touch.", "caption");
-            GUI.Label(new Rect(320, 85, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Photon PUN 2. Requires PhotonUnityNetworking and PhotonRealtime assemblies. You can find more information at https://www.photonengine.com/"), "image_centered");
-
-            if (wantPhotonPunSupport)
+            var currentPaths = EditorBuildSettings.scenes.Select(s => s.path).ToArray();
+            if (!cachedScenePaths.SequenceEqual(currentPaths))
             {
-                if (GUI.Button(new Rect(105, 85, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
-                {
-                    wantPhotonPunSupport = false;
-                }
-            }
-            else
-            {
-                if (GUI.Button(new Rect(105, 85, 30, 30), EditorCore.BoxEmpty, "image_centered"))
-                {
-                    wantPhotonPunSupport = true;
-                }
-            }
-
-            // Netcode
-            GUI.Label(new Rect(140, 130, 440, 440), "Unity Netcode for Gameobjects", "normallabel");
-            GUI.Label(new Rect(400, 125, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Unity Netcode for Gameobjects. Requires Unity Netcode Runtime assemblies."), "image_centered");
-
-            if (wantNetcodeSupport)
-            {
-                if (GUI.Button(new Rect(105, 125, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
-                {
-                    wantNetcodeSupport = false;
-                }
-            }
-            else
-            {
-                if (GUI.Button(new Rect(105, 125, 30, 30), EditorCore.BoxEmpty, "image_centered"))
-                {
-                    wantNetcodeSupport = true;
-                }
-            }
-
-            // Normcore
-            GUI.Label(new Rect(140, 170, 440, 440), "Normcore", "normallabel");
-            GUI.Label(new Rect(320, 165, 30, 30), new GUIContent(EditorCore.Info, "Enables support for Normcore. Requires Normal Realtime assemblies."), "image_centered");
-
-            if (wantNormcoreSupport)
-            {
-                if (GUI.Button(new Rect(105, 165, 30, 30), EditorCore.BoxCheckmark, "image_centered"))
-                {
-                    wantNormcoreSupport = false;
-                }
-            }
-            else
-            {
-                if (GUI.Button(new Rect(105, 165, 30, 30), EditorCore.BoxEmpty, "image_centered"))
-                {
-                    wantNormcoreSupport = true;
-                }
+                CacheCurrentScenes();
             }
         }
 
-        void DynamicUpdate()
+        void OnSelectFullResolution()
         {
-            GUI.Label(steptitlerect, "DYNAMIC OBJECTS", "steptitle");
-            //display some text about what dynamics are and how to define them with a component
-            //also brief on the upcoming dynamic objects screen
-
-            GUI.Label(new Rect(30, 30, 440, 440), "Dynamic Objects record engagements with various objects in your experience. This includes the positions of moving objects and if/how a user gazes on an object. These can be used with <b>Objectives</b> and quickly evaluate your users' performance.", "normallabel");
-            GUI.Label(new Rect(30, 140, 440, 440), "Some examples include Billboards, Vehicles or Tools.", "normallabel");
-            GUI.Label(new Rect(30, 240, 440, 440), "The next screen is an overview of all the Dynamic Objects in your scene and what Dynamic Objects already exist on the dashboard.", "normallabel");
-            GUI.Label(new Rect(30, 320, 440, 440), "For now, simply add <b>Dynamic Object components</b> to your key GameObjects.", "normallabel");
+            Cognitive3D_Preferences.Instance.TextureResize = 1;
         }
-
-        void DrawFooter()
+        void OnSelectHalfResolution()
         {
-            GUI.color = EditorCore.BlueishGrey;
-            GUI.DrawTexture(new Rect(0, 500, 500, 50), EditorGUIUtility.whiteTexture);
-            GUI.color = Color.white;
-            
-            DrawBackButton();
-            DrawNextButton();
+            Cognitive3D_Preferences.Instance.TextureResize = 2;
+        }
+        void OnSelectQuarterResolution()
+        {
+            Cognitive3D_Preferences.Instance.TextureResize = 4;
+        }
+        void OnToggleLODMeshes()
+        {
+            Cognitive3D_Preferences.Instance.ExportSceneLODLowest = !Cognitive3D_Preferences.Instance.ExportSceneLODLowest;
         }
 
+        //Unity 2020.1+
+        void OnToggleIncludeDisabledDynamics()
+        {
+            Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects = !Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects;
+        }
+        #endregion
+        #region Callback Responses
         void GetDevKeyResponse(int responseCode, string error, string text)
         {
-            lastDevKeyResponseCode = responseCode;
-            if (responseCode == 200 && isResponseJsonValid)
+            if (responseCode == 200)
             {
                 //dev key is fine
-                currentPage++;
                 SaveDevKey();
             }
             else
             {
                 Debug.LogError("Developer Key invalid or expired: " + error);
+
+                devKeyStatusMessage = "Developer Key invalid or expired.";
+                devKeyStatusType = MessageType.Error;
+                keysSet = false;
             }
+            Repaint();
         }
 
-        void DrawNextButton()
+        private void GetApplicationKeyResponse(int responseCode, string error, string text)
         {
-            bool buttonDisabled = false;
-            bool appearDisabled = false; //used on dynamic upload page to skip step
-            string text = "Next";
-            System.Action onclick = () => currentPage++;
-            Rect buttonrect = new Rect(410, 510, 80, 30);
-
-            switch (currentPage)
+            if (responseCode != 200)
             {
-                case Page.Welcome:
-                    break;
-                case Page.APIKeys:
-                    buttonrect = new Rect(410, 510, 80, 30);
-                    if (lastDevKeyResponseCode == 200 && isResponseJsonValid)
-                    {
-                        //next. use default action
-                        onclick += () => SaveDevKey();
-                    }
-                    else
-                    {
-                        //check and wait for response
-                        onclick = () => SaveDevKey();
-                        onclick += () => EditorCore.CheckForExpiredDeveloperKey(GetDevKeyResponse);
-                        onclick += () => EditorCore.CheckForApplicationKey(developerkey, GetApplicationKeyResponse);
-                        onclick += () => EditorCore.CheckSubscription(developerkey, GetSubscriptionResponse);
-                    }
-
-                    buttonDisabled = developerkey == null || developerkey.Length == 0 || !isResponseJsonValid;
-
-                    if (developerkey == null || developerkey.Length == 0)
-                    {
-                        text = "Key Missing";
-                    }
-
-                    if (buttonDisabled == false && lastDevKeyResponseCode != 200)
-                    {
-                        text = "Validate";
-                    }
-
-                    if (buttonDisabled == false && lastDevKeyResponseCode == 200 && isResponseJsonValid)
-                    {
-                        text = "Next";
-                    }
-                    break;
-                case Page.Organization:
-                    onclick += () => SaveApplicationKey();
-                    buttonDisabled = apikey == null || string.IsNullOrEmpty(apikey);
-                    if (buttonDisabled)
-                    {
-                        text = "Key Missing";
-                    }
-                    else
-                    {
-                        text = "Next";
-                    }
-                    break;
-                case Page.SDKSelection:
-                    onclick += () => SegmentAnalytics.TrackEvent("SDKDefineSelected_SDKDefinePage", "ProjectSetupSDKDefinePage");
-                    onclick += () => currentPage = Page.MultiplayerSetup;
-                    break;
-                case Page.Recompile:
-                    onclick = null;
-                    buttonDisabled = true;
-                    break;
-                case Page.DynamicSetup:
-                    onclick = () =>
-                    {
-                        DynamicObjectsWindow.Init(position);
-                        Close();
-                    };
-                    
-                    text = "Open Dynamic Objects Window";
-                    buttonrect = new Rect(280, 510, 200, 30);
-                    break;
-                case Page.NextSteps:
-                    buttonrect = new Rect(600, 0, 0, 0);
-                    break;
-                case Page.SRAnipal:
-                    appearDisabled = !sranipalAssemblyExists;
-                    if (appearDisabled)
-                    {
-                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
-                    }
-                    break;
-                case Page.Glia:
-                    appearDisabled = !gliaAssemblyExists;
-                    if (appearDisabled)
-                    {
-                        onclick = () => { if (EditorUtility.DisplayDialog("Continue", "Are you sure you want to continue without creating the necessary files?", "Yes", "No")) { currentPage++; } };
-                    }
-                    break;
-                case Page.Wave:
-                    break;
-                case Page.MultiplayerSetup:
-                    if (wantPhotonPunSupport)
-                    { 
-                        if (!selectedsdks.Contains("C3D_PHOTON"))
-                        {
-                            selectedsdks.Add("C3D_PHOTON");
-                        }
-                        onclick += () => SegmentAnalytics.TrackEvent("PhotonPUN2SupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
-                    }
-                    else
-                    { 
-                        selectedsdks.Remove("C3D_PHOTON");
-                    }
-
-                    if (wantNetcodeSupport)
-                    { 
-                        if (!selectedsdks.Contains("C3D_NETCODE"))
-                        {
-                            selectedsdks.Add("C3D_NETCODE");
-                        }
-                        onclick += () => SegmentAnalytics.TrackEvent("NetcodeSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
-                    }
-                    else
-                    { 
-                        selectedsdks.Remove("C3D_NETCODE");
-                    }
-
-                    if (wantNormcoreSupport)
-                    { 
-                        if (!selectedsdks.Contains("C3D_NORMCORE"))
-                        {
-                            selectedsdks.Add("C3D_NORMCORE");
-                        }
-                        onclick += () => SegmentAnalytics.TrackEvent("NormcoreSupportEnabled_MultiplayerPage", "ProjectSetupMultiplayerPage");
-                    }
-                    else
-                    { 
-                        selectedsdks.Remove("C3D_NORMCORE");
-                    }
-                    onclick += () => currentPage = Page.Glia;
-                    break;
-                default:
-                    throw new System.NotSupportedException();
+                SegmentAnalytics.TrackEvent("InvalidDevKey_ProjectSetup_" + responseCode, "ProjectSetupAPIPage", "new");
+                Debug.LogError("GetApplicationKeyResponse response code: " + responseCode + " error: " + error);
+                return;
             }
 
-            if (appearDisabled)
+            // Check if response data is valid
+            try
             {
-                if (GUI.Button(buttonrect, text, "button_disabled"))
+                JsonUtility.FromJson<EditorCore.ApplicationKeyResponseData>(text);
+                SegmentAnalytics.TrackEvent("ValidDevKey_ProjectSetup", "ProjectSetupAPIPage", "new");
+            }
+            catch
+            {
+                Debug.LogError("Invalid JSON response");
+                return;
+            }
+
+            EditorCore.ApplicationKeyResponseData responseData = JsonUtility.FromJson<EditorCore.ApplicationKeyResponseData>(text);
+
+            //display popup if application key is set but doesn't match the response
+            if (!string.IsNullOrEmpty(apiKey) && apiKey != responseData.apiKey)
+            {
+                SegmentAnalytics.TrackEvent("APIKeyMismatch_ProjectSetup", "ProjectSetupAPIPage", "new");
+                var result = EditorUtility.DisplayDialog("Application Key Mismatch", "Do you want to use the latest Application Key available on the Dashboard?", "Ok", "No");
+                if (result)
                 {
-                    onclick.Invoke();
+                    apiKey = responseData.apiKey;
+                    apiKeyFromDashboard = apiKey;
+                    SaveApplicationKey();
                 }
-            }
-            else if (buttonDisabled)
-            {
-                GUI.Button(buttonrect, text, "button_disabled");
             }
             else
             {
-                if (GUI.Button(buttonrect, text))
-                {
-                    if (onclick != null)
-                        onclick.Invoke();
-                }
+                SegmentAnalytics.TrackEvent("APIKeyFound_ProjectSetup", "ProjectSetupAPIPage", "new");
+                apiKey = responseData.apiKey;
+                apiKeyFromDashboard = apiKey;
+                SaveApplicationKey();
             }
+            SaveDevKey();
+            Repaint();
         }
 
-        void DrawBackButton()
+        private void GetUserResponse(int responseCode, string error, string text)
         {
-            bool buttonDisabled = false;
-            string text = "Back";
-            System.Action onclick = () => currentPage--;
-            Rect buttonrect = new Rect(10, 510, 80, 30);
-
-            switch (currentPage)
+            if (responseCode != 200)
             {
-                case Page.Welcome: buttonDisabled = true; break;
-                case Page.APIKeys:
-                    onclick = () => currentPage = Page.Welcome;
-                    break;
-                case Page.Glia:
-                case Page.SRAnipal:
-                case Page.Wave:
-                case Page.NextSteps:
-                    if (wantPhotonPunSupport || wantNetcodeSupport || wantNormcoreSupport) { onclick = () => currentPage = Page.MultiplayerSetup; }
-                    else { onclick = () => currentPage = Page.SDKSelection; }
-                    break;
-                case Page.DynamicSetup:
-                    onclick = () => currentPage = Page.NextSteps;
-                    break;
-                case Page.Organization:
-                case Page.SDKSelection:
-                    break;
-                case Page.Recompile:
-                    buttonDisabled = true;
-                    break;
-                case Page.MultiplayerSetup:
-                    onclick += () => currentPage = Page.SDKSelection;
-                    break;
-                default:
-                    throw new System.NotSupportedException();
+                Util.logDevelopment("Failed to retrieve user data" + responseCode + "  " + error);
             }
 
-            if (buttonDisabled)
+            try
             {
-                GUI.Button(buttonrect, text, "button_disabledtext");
-            }
-            else
-            {
-                if (GUI.Button(buttonrect, text))
+                var userdata = JsonUtility.FromJson<EditorCore.UserData>(text);
+                if (responseCode == 200 && userdata != null)
                 {
-                    if (onclick != null)
-                        onclick.Invoke();
+                    devKeyStatusMessage = $"Organization name: {userdata.organizationName} \nProject name: {userdata.projectName}";
+                    long expiration = userdata.keyExpiresAt;
+                    int daysRemaining = GetDaysUntilExpiry(expiration);
+
+                    if (string.IsNullOrEmpty(userdata.organizationName))
+                    {
+                        devKeyStatusMessage += "\nCurrent Subscription Plan: No Subscription";
+                    }
+                    else
+                    {
+                        if (expiration == 0)
+                        {
+                            devKeyStatusType = MessageType.Info;
+                            devKeyStatusMessage += "\nDeveloper key is valid and does not expire.";
+                        }
+                        else if (daysRemaining < 0)
+                        {
+                            devKeyStatusType = MessageType.Error;
+                            devKeyStatusMessage += "\nDeveloper key has expired.";
+                        }
+                        else
+                        {
+                            devKeyStatusType = daysRemaining < 7 ? MessageType.Warning : MessageType.Info;
+                            devKeyStatusMessage += $"\nDeveloper key valid. Expires in {daysRemaining} day(s).";
+                        }
+                    }
                 }
+                SegmentAnalytics.Init();
             }
+            catch
+            {
+                Debug.LogError("Invalid JSON response");
+                Repaint();
+                return;
+            }
+            Repaint();
         }
-    }
+#endregion
+        }
 }

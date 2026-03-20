@@ -903,6 +903,25 @@ namespace Cognitive3D.UnityGLTF
 			if (lightData != null)
 			{
 				//1000 lumen ~1 unity light unit
+#if UNITY_6000_0_OR_NEWER
+				switch (unityLight.lightUnit)
+				{
+					case UnityEngine.Rendering.LightUnit.Lumen:
+						unityUnitAmount = unityLight.intensity / 1000f;
+						break;
+					case UnityEngine.Rendering.LightUnit.Candela:
+						unityUnitAmount = unityLight.intensity / 79.5f;
+						break;
+					case UnityEngine.Rendering.LightUnit.Lux:
+						unityUnitAmount = unityLight.intensity / 79.5f;
+						break;
+					case UnityEngine.Rendering.LightUnit.Nits: //nits only used on arealights, which we don't support
+						break;
+					case UnityEngine.Rendering.LightUnit.Ev100:
+						unityUnitAmount = unityLight.intensity / 9.31f;
+						break;
+				}
+#else
 				switch (lightData.lightUnit)
 				{
 					case UnityEngine.Rendering.HighDefinition.LightUnit.Lumen:
@@ -920,6 +939,7 @@ namespace Cognitive3D.UnityGLTF
 						unityUnitAmount = lightData.intensity / 9.31f;
 						break;
 				}
+#endif
 				if (unityUnitAmount > 1)
 				{
 					//light falloff is different. simplify to log10

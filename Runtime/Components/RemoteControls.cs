@@ -156,7 +156,7 @@ namespace Cognitive3D.Components
                     {
                         Cognitive3D_Manager.SetSessionProperty("c3d.remote_variable." + item.remoteVariableName, RemoteControlManager.GetValue<string>(item.remoteVariableName, ""));
                     }
-                    else if (item.type == "bool")
+                    else if (item.type == "boolean")
                     {
                         Cognitive3D_Manager.SetSessionProperty("c3d.remote_variable." + item.remoteVariableName, RemoteControlManager.GetValue<bool>(item.remoteVariableName, false));
                     }

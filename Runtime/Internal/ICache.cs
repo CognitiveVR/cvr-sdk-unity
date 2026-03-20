@@ -21,7 +21,7 @@ namespace Cognitive3D
 
 		//return true if there's content to 'get'. false if not
 		//implementation may also move the streamreader/index
-		bool PeekContent(ref string Destination, ref string body);
+		bool PeekContent(ref string Destination, ref string body, ref bool sendAsBytes);
 
 		//returns true if successfully saved, false otherwise
 		bool WriteContent(string Destination, string body);

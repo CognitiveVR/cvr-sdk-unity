@@ -30,7 +30,6 @@ namespace Cognitive3D.Components
         private readonly float ForeheadHeight = 0.11f; //meters
         private const float SAMPLE_INTERVAL = 10;
         private float[] heights;
-        private Transform trackingSpace;
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
         XROrigin xrOrigin;
 #endif
@@ -79,17 +78,15 @@ namespace Cognitive3D.Components
         {
             height = 0;
 
-            if (Cognitive3D_Manager.Instance.trackingSpace == null)
+            if (BoundaryUtil.TryGetTrackingSpaceTransform(out var trackingSpaceTransform) == false)
             {
                 Debug.LogWarning("Tracking Space not found. Unable to record HMD height.");
                 return false;
             }
 
-            trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-
 #if C3D_OCULUS
             // Calculates height according to camera offset relative to Floor level and rig customization
-            height = GameplayReferences.HMD.position.y - OVRPlugin.GetTrackingTransformRelativePose(OVRPlugin.TrackingOrigin.FloorLevel).Position.y - trackingSpace.position.y;
+            height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
 #elif C3D_VIVEWAVE
             if (waveRig == null)
             {
@@ -100,14 +97,14 @@ namespace Cognitive3D.Components
             {
                 if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Device)
                 {
-                    height = GameplayReferences.HMD.position.y + waveRig.CameraYOffset - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y + waveRig.CameraYOffset - trackingSpaceTransform.pos.y;
                 }
                 else if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor 
                     || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unknown 
                     || waveRig.TrackingOrigin == TrackingOriginModeFlags.TrackingReference
                     || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unbounded) // unknown and tracking gives incorrect values
                 {
-                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
                 }
             }
 
@@ -116,7 +113,7 @@ namespace Cognitive3D.Components
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
             if (xrOrigin == null)
             {
-                xrOrigin = FindObjectOfType<XROrigin>(); 
+                xrOrigin = FindFirstObjectByType<XROrigin>(); 
             }  
 
             if (xrOrigin != null)
@@ -125,12 +122,12 @@ namespace Cognitive3D.Components
                 {
                     // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
                     // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
-                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpaceTransform.pos.y;
                 }
                 else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
                 {
                     // Calculates height based on the camera offset relative to Floor level and rig settings
-                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
                 }
             } 
 #endif
@@ -138,23 +135,23 @@ namespace Cognitive3D.Components
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
             if (cameraOffset == null)
             {
-                cameraOffset = FindObjectOfType<CameraOffset>();
+                cameraOffset = FindFirstObjectByType<CameraOffset>();
             }
             
             if (cameraOffset != null)
             {
                 if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
                 {
-                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpaceTransform.pos.y;
                 }
                 else if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
                 {
-                    height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
                 }
             }
 #endif
 #else // C3D_DEFAULT == FALSE
-            height = GameplayReferences.HMD.position.y - trackingSpace.position.y;
+            height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
 #endif
 
             return true;

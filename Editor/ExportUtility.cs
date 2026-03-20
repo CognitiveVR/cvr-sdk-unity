@@ -26,60 +26,15 @@ namespace Cognitive3D
         public Vector3 originalScale;
     }
 
-    //returned from get scene version. contains info about all versions of a single scene
-    public class SceneVersionCollection
-    {
-        public long createdAt;
-        public long updatedAt;
-        public string id;
-        public List<SceneVersion> versions = new List<SceneVersion>();
-        public string customerId;
-        public string sceneName;
-        public bool isPublic;
-
-        public SceneVersion GetLatestVersion()
-        {
-            int latest = 0;
-            SceneVersion latestscene = null;
-            if (versions == null) { Debug.LogError("SceneVersionCollection versions is null!"); return null; }
-            for (int i = 0; i < versions.Count; i++)
-            {
-                if (versions[i].versionNumber > latest)
-                {
-                    latest = versions[i].versionNumber;
-                    latestscene = versions[i];
-                }
-            }
-            return latestscene;
-        }
-
-        public SceneVersion GetVersion(int versionnumber)
-        {
-            var sceneversion = versions.Find(delegate (SceneVersion obj) { return obj.versionNumber == versionnumber; });
-            return sceneversion;
-        }
-    }
-
-    //a specific version of a scene
-    [System.Serializable]
-    public class SceneVersion
-    {
-        public long createdAt;
-        public long updatedAt;
-        public int id;
-        public int versionNumber;
-        public float scale;
-        public string sdkVersion;
-        public int sessionCount;
-    }
-
     public static class ExportUtility
     {
         private enum ExportQuadType
         {
             Canvas = 0,
             TMPro = 1,
-            SpriteRenderer = 2
+            SpriteRenderer = 2,
+            UIImage = 3,
+            TMProUI = 4
         };
 
         #region Export Scene
@@ -154,70 +109,9 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Upload temporary geometry from the active scene to the dashboard. This handles new scene versions and entirely new scenes
-        /// </summary>
-        public static void UploadActiveSceneGeometry()
-        {
-            //refresh scene versions post upload
-            System.Action<int> refreshSceneVersion = delegate (int responseCode)
-            {
-                if (responseCode == 200 || responseCode == 201)
-                {
-                    Util.logDebug("scene upload complete, refresh scene version");
-                    EditorCore.RefreshSceneVersion(null); //likely completed in previous step, but just in case
-                }
-                else
-                {
-                    Util.logDebug("scene upload failed - response code " + responseCode);
-                }
-            };
-
-            //upload scene geometry
-            System.Action uploadScene = delegate
-            {
-                Cognitive3D_Preferences.SceneSettings current = Cognitive3D_Preferences.FindCurrentScene();
-                if (current == null)
-                {
-                    Util.logError("Trying to upload to a scene with no settings! Upload cancelled");
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(current.SceneId))
-                {
-                    //new scene
-                    ExportUtility.UploadDecimatedScene(current, refreshSceneVersion, null);
-                }
-                else
-                {
-                    //new version
-                    ExportUtility.UploadDecimatedScene(current, refreshSceneVersion, null);
-                }
-            };
-
-            var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            if (!activeScene.IsValid())
-            {
-                Util.logError("GetActiveScene returned an invalid scene. Upload cancelled");
-                return;
-            }
-
-            Cognitive3D_Preferences.AddSceneSettings(activeScene);
-
-            //first refresh scene version
-            if (string.IsNullOrEmpty(activeScene.name))
-            {
-                Util.logError("Cannot Upload scenes that have not been saved yet! Upload cancelled");
-            }
-            else
-            {
-                EditorCore.RefreshSceneVersion(uploadScene);
-            }
-        }
-
-        /// <summary>
         /// export all geometry for the active scene. will NOT delete existing files in this directory
         /// </summary>
-        public static void ExportGLTFScene()
+        public static void ExportGLTFScene(bool showSuccessPopup)
         {
             var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
             List<GameObject> allRootObjects = new List<GameObject>();
@@ -285,6 +179,12 @@ namespace Cognitive3D
                 {
                     UnityEngine.Object.DestroyImmediate(tempgameobject);
                 }
+
+                if (showSuccessPopup)
+                {
+                    EditorUtility.ClearProgressBar();
+                    EditorUtility.DisplayDialog("Export Complete", "Scene exported successfully!", "OK");
+                }
             }
         }
 
@@ -347,211 +247,6 @@ namespace Cognitive3D
 
         #endregion
 
-        #region Upload Scene
-        static System.Action<int> UploadComplete;
-        //displays popup window confirming upload, then uploads the files
-
-        /// <summary>
-        /// displays confirmation popup
-        /// reads files from export directory and sends POST request to backend
-        /// invokes uploadComplete if upload actually starts and PostSceneUploadResponse callback gets 200/201 responsecode
-        /// </summary>
-        public static void UploadDecimatedScene(Cognitive3D_Preferences.SceneSettings settings, System.Action<int> uploadComplete, System.Action<float> progressCallback)
-        {
-            //if uploadNewScene POST
-            //else PUT to sceneexplorer/sceneid
-
-            if (settings == null) { UploadSceneSettings = null; return; }
-
-            UploadSceneSettings = settings;
-
-            bool hasExistingSceneId = settings != null && !string.IsNullOrEmpty(settings.SceneId);
-
-            bool uploadConfirmed = false;
-            string sceneName = settings.SceneName;
-            string[] filePaths = new string[] { };
-
-            string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
-            var SceneExportDirExists = Directory.Exists(sceneExportDirectory);
-
-            if (SceneExportDirExists)
-            {
-                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
-            }
-
-            //custom confirm upload popup windows
-            if ((!SceneExportDirExists || filePaths.Length <= 1))
-            {
-                if (EditorUtility.DisplayDialog("Upload Scene", "Scene " + settings.SceneName + " has no exported geometry. Upload anyway?", "Yes", "No"))
-                {
-                    uploadConfirmed = true;
-                    //create a json.settings file in the directory
-                    string objPath = EditorCore.GetSubDirectoryPath(sceneName);
-
-                    Directory.CreateDirectory(objPath);
-
-                    string jsonSettingsContents = "{ \"scale\":1, \"sceneName\":\"" + settings.SceneName + "\",\"sdkVersion\":\"" + Cognitive3D_Manager.SDK_VERSION + "\"}";
-                    File.WriteAllText(objPath + "settings.json", jsonSettingsContents);
-
-                    string debugContent = DebugInformationWindow.GetDebugContents();
-                    File.WriteAllText(objPath + "debug.log", debugContent);
-                }
-            }
-            else
-            {
-                uploadConfirmed = true;
-            }
-
-            if (!uploadConfirmed)
-            {
-                UploadSceneSettings = null;
-                return; //just exit now
-            }
-
-            //after confirmation because uploading an empty scene creates a settings.json file
-            if (Directory.Exists(sceneExportDirectory))
-            {
-                filePaths = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar);
-            }
-
-            string[] screenshotPath = new string[0];
-            if (Directory.Exists(sceneExportDirectory + "screenshot"))
-            {
-                screenshotPath = Directory.GetFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + sceneName + Path.DirectorySeparatorChar + "screenshot");
-            }
-            else
-            {
-                Debug.Log("SceneExportWindow Upload can't find directory to screenshot");
-            }
-
-            string fileList = "Upload Files:\n";
-            WWWForm wwwForm = new WWWForm();
-            foreach (var f in filePaths)
-            {
-                if (f.ToLower().EndsWith(".ds_store"))
-                {
-                    Debug.Log("skip file " + f);
-                    continue;
-                }
-
-                fileList += f + "\n";
-
-                var data = File.ReadAllBytes(f);
-                wwwForm.AddBinaryData("file", data, Path.GetFileName(f));
-            }
-
-            Debug.Log(fileList);
-
-            if (screenshotPath.Length == 0)
-            {
-                Debug.Log("SceneExportWindow Upload can't find files in screenshot directory");
-            }
-            else
-            {
-                wwwForm.AddBinaryData("screenshot", File.ReadAllBytes(screenshotPath[0]), "screenshot.png");
-            }
-
-            if (hasExistingSceneId) //upload new verison of existing scene
-            {
-                Dictionary<string, string> headers = new Dictionary<string, string>();
-                if (EditorCore.IsDeveloperKeyValid)
-                {
-                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                    foreach (var v in wwwForm.headers)
-                    {
-                        headers[v.Key] = v.Value;
-                    }
-                }
-                EditorNetwork.Post(CognitiveStatics.PostUpdateScene(settings.SceneId), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new version of scene", progressCallback);//AUTH
-            }
-            else //upload as new scene
-            {
-                Dictionary<string, string> headers = new Dictionary<string, string>();
-                if (EditorCore.IsDeveloperKeyValid)
-                {
-                    headers.Add("Authorization", "APIKEY:DEVELOPER " + EditorCore.DeveloperKey);
-                    foreach (var v in wwwForm.headers)
-                    {
-                        headers[v.Key] = v.Value;
-                    }
-                }
-                EditorNetwork.Post(CognitiveStatics.PostNewScene(), wwwForm.data, PostSceneUploadResponse, headers, true, "Upload", "Uploading new scene", progressCallback);//AUTH
-            }
-
-            UploadComplete = uploadComplete;
-        }
-
-        /// <summary>
-        /// callback from UploadDecimatedScene
-        /// </summary>
-        static void PostSceneUploadResponse(int responseCode, string error, string text)
-        {
-            Debug.Log("UploadScene Response. [RESPONSE CODE] " + responseCode
-                + (!string.IsNullOrEmpty(error) ? " [ERROR] " + error : "")
-                + (!string.IsNullOrEmpty(text) ? " [TEXT] " + text : ""));
-
-            if (responseCode != 200 && responseCode != 201)
-            {
-                Debug.LogError("Scene Upload Error " + error);
-                SegmentAnalytics.TrackEvent("UploadingSceneError" + responseCode + "_SceneUploadPage", "SceneSetupSceneUploadPage");
-                if (responseCode != 100) //ie user cancelled upload
-                {
-                    EditorUtility.DisplayDialog("Error Uploading Scene", "There was an error uploading the scene. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
-                }
-                UploadComplete.Invoke(responseCode);
-                UploadSceneSettings = null;
-                UploadComplete = null;
-                return;
-            }
-
-            //response can be <!DOCTYPE html><html lang=en><head><meta charset=utf-8><title>Error</title></head><body><pre>Internal Server Error</pre></body></html>
-            if (text.Contains("Internal Server Error") || text.Contains("Bad Request"))
-            {
-                Debug.LogError("Scene Upload Error:" + text);
-                EditorUtility.DisplayDialog("Error Uploading Scene", "There was an internal error uploading the scene. \n\nSee Console for more details", "Ok");
-                UploadComplete.Invoke(responseCode);
-                UploadSceneSettings = null;
-                UploadComplete = null;
-                return;
-            }
-
-            string responseText = text.Replace("\"", "");
-            if (!string.IsNullOrEmpty(responseText)) //uploading a new version returns empty. uploading a new scene returns sceneid
-            {
-                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
-                UploadSceneSettings.SceneId = responseText;
-                AssetDatabase.SaveAssets();
-            }
-
-            UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            GUI.FocusControl("NULL");
-            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
-            AssetDatabase.SaveAssets();
-
-            if (UploadComplete != null)
-            {
-                UploadComplete.Invoke(responseCode);
-            }
-            UploadComplete = null;
-
-            Debug.Log("<color=green>Scene Upload Complete!</color>");
-            SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
-            props.buttonName = "SceneSetupSceneUploadPage";
-            props.SetProperty("sceneVersion", UploadSceneSettings.VersionNumber+1);
-            SegmentAnalytics.TrackEvent("UploadingSceneComplete_SceneUploadPage", props);
-        }
-
-        static Cognitive3D_Preferences.SceneSettings UploadSceneSettings;
-        /// <summary>
-        /// SceneSettings for the currently uploading scene
-        /// </summary>
-        public static void ClearUploadSceneSettings() //sometimes not set to null when init window quits
-        {
-            UploadSceneSettings = null;
-        }
-
-        #endregion
-
         #region Bake Renderers
 
         static List<GameObject> deleteCustomRenders;
@@ -564,14 +259,16 @@ namespace Cognitive3D
         /// <param name="path">used to bake terrain texture to file</param>
         static void BakeNonstandardRenderers(DynamicObject rootDynamic, List<BakeableMesh> meshes, string path)
         {
-            SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsOfType<SkinnedMeshRenderer>();
-            Terrain[] Terrains = UnityEngine.Object.FindObjectsOfType<Terrain>();
-            Canvas[] Canvases = UnityEngine.Object.FindObjectsOfType<Canvas>();
-            SpriteRenderer[] spriteRenderers= UnityEngine.Object.FindObjectsOfType<SpriteRenderer>();
+            SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
+            Terrain[] Terrains = UnityEngine.Object.FindObjectsByType<Terrain>(FindObjectsSortMode.None);
+            Canvas[] Canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            SpriteRenderer[] spriteRenderers= UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+            UnityEngine.UI.Image[] uiImages = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Image>(FindObjectsSortMode.None);
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
-            CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsOfType<CustomRenderExporter>();
+            CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsByType<CustomRenderExporter>(FindObjectsSortMode.None);
 #if C3D_TMPRO
-            TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsOfType<TextMeshPro>();
+            TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsByType<TextMeshPro>(FindObjectsSortMode.None);
+            TMPro.TextMeshProUGUI[] TextMeshProUGUIs = UnityEngine.Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None);
 #endif
             deleteCustomRenders = new List<GameObject>();
 
@@ -581,6 +278,7 @@ namespace Cognitive3D
                 Terrains = rootDynamic.GetComponentsInChildren<Terrain>();
                 Canvases = rootDynamic.GetComponentsInChildren<Canvas>();
                 spriteRenderers = rootDynamic.GetComponentsInChildren<SpriteRenderer>();
+                uiImages = rootDynamic.GetComponentsInChildren<UnityEngine.UI.Image>();
                 foreach (var mf in rootDynamic.GetComponentsInChildren<MeshFilter>())
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
@@ -590,11 +288,12 @@ namespace Cognitive3D
                 }
 #if C3D_TMPRO
                 TextMeshPros = rootDynamic.GetComponentsInChildren<TextMeshPro>();
+                TextMeshProUGUIs = rootDynamic.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
 #endif
             }
             else
             {
-                var meshfilters = UnityEngine.Object.FindObjectsOfType<MeshFilter>();
+                var meshfilters = UnityEngine.Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None);
                 foreach (var mf in meshfilters)
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
@@ -605,7 +304,7 @@ namespace Cognitive3D
             }
 
             //count custom render and terrain separately - much heavier
-            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases, spriteRenderers);
+            int numberOfSmallTasks = CountValidSmallTasks(SkinnedMeshes, ProceduralMeshFilters, Canvases, spriteRenderers, uiImages);
             float progressPerSmallTask = 0.1f / numberOfSmallTasks;
 
             int numberOfLargeTasks = CountValidLargeTasks(CustomRenders, Terrains);
@@ -803,9 +502,17 @@ namespace Cognitive3D
 #if C3D_TMPRO
             foreach (var v in TextMeshPros)
             {
-                if (v.GetComponent<DynamicObject>() ==  null) // Dynamic Objects are handled separately in `ExportDynamicObects()`
+                if (v.GetComponent<DynamicObject>() ==  null) // Dynamic Objects are handled separately in `ExportDynamicObjects()`
                 {
                     BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.TMPro, false);
+                }
+            }
+
+            foreach (var v in TextMeshProUGUIs)
+            {
+                if (v.GetComponent<DynamicObject>() ==  null) // Dynamic Objects are handled separately in `ExportDynamicObjects()`
+                {
+                    BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.TMProUI, false);
                 }
             }
 #endif
@@ -855,6 +562,34 @@ namespace Cognitive3D
 
                 BakeCanvasGameObject(v.gameObject, meshes);
             }
+
+            currentTask = 0;
+            foreach (var v in uiImages)
+            {
+                if (!v.enabled) { continue; }
+                if (!v.gameObject.activeInHierarchy) { continue; }
+
+                // Only process UI Images that have a DynamicObject component directly on them
+                var dynamicOnImage = v.GetComponent<DynamicObject>();
+                if (dynamicOnImage == null) { continue; }
+
+                currentProgress += progressPerSmallTask;
+                currentTask++;
+                EditorUtility.DisplayProgressBar("Export GLTF", "Bake UI Images " + currentTask + "/" + uiImages.Length, currentProgress);
+
+                if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null && v.GetComponentInParent<DynamicObject>() != dynamicOnImage)
+                {
+                    //UI Image as child of dynamic when exporting scene
+                    continue;
+                }
+                else if (rootDynamic != null && dynamicOnImage != rootDynamic)
+                {
+                    //exporting dynamic, found UI Image in some other dynamic
+                    continue;
+                }
+
+                BakeQuadGameObject(v.gameObject, meshes, ExportQuadType.UIImage, false);
+            }
         }
 
         private static GameObject BakeCanvasGameObject(GameObject v, List<BakeableMesh> meshes)
@@ -898,7 +633,7 @@ namespace Cognitive3D
         {
             BakeableMesh bm = new BakeableMesh();
             bm.tempGo = new GameObject(v.gameObject.name);
-            if (type != ExportQuadType.TMPro)
+            if (type != ExportQuadType.TMPro && type != ExportQuadType.TMProUI)
             {
                 bm.tempGo.transform.parent = v.transform;
             }
@@ -929,12 +664,40 @@ namespace Cognitive3D
                     bm.tempGo.transform.position += (bm.tempGo.transform.up) * (width - height) / 2;
                 }
             }
+            else if (type == ExportQuadType.UIImage)
+            {
+                var rt = v.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    // Get world space dimensions accounting for canvas scale
+                    // rt.rect gives us local canvas space, we need to multiply by lossyScale to get world space
+                    width = rt.rect.width * rt.lossyScale.x;
+                    height = rt.rect.height * rt.lossyScale.y;
+
+                    // For UI Images, use the RectTransform's position accounting for anchors
+                    bm.tempGo.transform.position = rt.position;
+
+                    // Note: Don't adjust position based on width/height difference for UI Images
+                    // The rect transform position already handles this correctly
+                }
+            }
             else if (type == ExportQuadType.TMPro)
             {
                 MeshRenderer mr = v.GetComponent<MeshRenderer>();
                 width = mr.bounds.size.x;
                 height = mr.bounds.size.y;
                 bm.tempGo.transform.position = mr.bounds.center;
+            }
+            else if (type == ExportQuadType.TMProUI)
+            {
+                var rt = v.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    // Get world space dimensions accounting for canvas scale
+                    width = rt.rect.width * rt.lossyScale.x;
+                    height = rt.rect.height * rt.lossyScale.y;
+                    bm.tempGo.transform.position = rt.position;
+                }
             }
             else if (type == ExportQuadType.SpriteRenderer)
             {
@@ -954,7 +717,55 @@ namespace Cognitive3D
                 screenshot = TextureBake(v.transform, type, sr.bounds.extents.x*2, sr.bounds.extents.y*2);
                 screenshot.name = AssetDatabase.GetAssetPath(sr.sprite).GetHashCode().ToString();
             }
-            else //text mesh pro. canvas should be handled in a different function
+            else if (type == ExportQuadType.UIImage)
+            {
+                UnityEngine.UI.Image img = v.GetComponent<UnityEngine.UI.Image>();
+                screenshot = null;
+
+                // Check if we need to render the image due to special image types
+                bool needsRendering = false;
+                if (img != null)
+                {
+                    // Sliced, Tiled, and Filled images need to be rendered to capture their appearance correctly
+                    needsRendering = img.type == UnityEngine.UI.Image.Type.Sliced ||
+                                   img.type == UnityEngine.UI.Image.Type.Tiled ||
+                                   img.type == UnityEngine.UI.Image.Type.Filled;
+                }
+
+                // Only use sprite texture directly for Simple image type
+                if (!needsRendering && img != null && img.sprite != null && img.type == UnityEngine.UI.Image.Type.Simple)
+                {
+                    // Try to use the sprite texture directly if available
+                    screenshot = GetReadableTexture(img.sprite.texture);
+                    if (screenshot != null)
+                    {
+                        screenshot.name = AssetDatabase.GetAssetPath(img.sprite).GetHashCode().ToString();
+                    }
+                }
+
+                // If we couldn't get the sprite texture, try material texture (only for Simple type)
+                if (screenshot == null && !needsRendering && img != null && img.material != null && img.material.mainTexture != null)
+                {
+                    screenshot = GetReadableTexture(img.material.mainTexture as Texture2D);
+                    if (screenshot != null)
+                    {
+                        screenshot.name = v.gameObject.GetInstanceID().ToString();
+                    }
+                }
+
+                // Render the image if needed (Sliced, Tiled, Filled) or if texture extraction failed
+                if (screenshot == null)
+                {
+                    screenshot = TextureBakeCanvasUIElement(v.transform, width, height);
+                    screenshot.name = v.gameObject.GetInstanceID().ToString();
+                }
+            }
+            else if (type == ExportQuadType.TMProUI) //TextMeshProUGUI uses canvas rendering
+            {
+                screenshot = TextureBakeCanvasUIElement(v.transform, width, height);
+                screenshot.name = v.gameObject.GetInstanceID().ToString();
+            }
+            else //text mesh pro (world space). canvas should be handled in a different function
             {
                 screenshot = TextureBake(v.transform, type, width, height);
                 screenshot.name = v.gameObject.GetInstanceID().ToString();
@@ -966,11 +777,17 @@ namespace Cognitive3D
             //write simple quad
             if (dyn)
             {
-                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height) / v.transform.lossyScale.x, Mathf.Max(width, height) / v.transform.lossyScale.y);
+                // For UI Images and TMProUI, use actual width/height instead of max to preserve aspect ratio
+                mesh = type == ExportQuadType.UIImage || type == ExportQuadType.TMProUI ?
+                GenerateQuadMesh(v.gameObject.name + type.ToString(), width / v.transform.lossyScale.x, height / v.transform.lossyScale.y) :
+                GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height) / v.transform.lossyScale.x, Mathf.Max(width, height) / v.transform.lossyScale.y);
             }
             else
             {
-                mesh = GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
+                // For UI Images and TMProUI, use actual width/height instead of max to preserve aspect ratio
+                mesh = type == ExportQuadType.UIImage || type == ExportQuadType.TMProUI ?
+                GenerateQuadMesh(v.gameObject.name + type.ToString(), width, height) : 
+                GenerateQuadMesh(v.gameObject.name + type.ToString(), Mathf.Max(width, height), Mathf.Max(width, height));
             }
             bm.meshFilter.sharedMesh = mesh;
             meshes.Add(bm);
@@ -982,7 +799,7 @@ namespace Cognitive3D
             return bm.tempGo;
         }
 
-        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases, SpriteRenderer[] spriteRenderers)
+        private static int CountValidSmallTasks(SkinnedMeshRenderer[] skinnedMeshes, List<MeshFilter> proceduralMeshFilters, Canvas[] canvases, SpriteRenderer[] spriteRenderers, UnityEngine.UI.Image[] uiImages)
         {
             int number = 0;
 
@@ -1017,6 +834,17 @@ namespace Cognitive3D
             {
                 if (!v.enabled) { continue; }
                 number++;
+            }
+
+            foreach (var v in uiImages)
+            {
+                if (!v.enabled) { continue; }
+                if (!v.gameObject.activeInHierarchy) { continue; }
+                // Only count UI Images that have a DynamicObject component directly on them
+                if (v.GetComponent<DynamicObject>() != null)
+                {
+                    number++;
+                }
             }
             return number;
         }
@@ -1416,6 +1244,251 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Gets a readable copy of a texture, handling read/write permissions
+        /// </summary>
+        private static Texture2D GetReadableTexture(Texture2D source)
+        {
+            if (source == null) return null;
+
+            try
+            {
+                // Try to read the texture directly
+                Texture2D readable = new Texture2D(source.width, source.height, source.format, source.mipmapCount > 1);
+                Graphics.CopyTexture(source, readable);
+                return readable;
+            }
+            catch
+            {
+                // If that fails, try using RenderTexture
+                try
+                {
+                    RenderTexture tmp = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
+                    Graphics.Blit(source, tmp);
+                    RenderTexture previous = RenderTexture.active;
+                    RenderTexture.active = tmp;
+
+                    Texture2D readable = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
+                    readable.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
+                    readable.Apply();
+
+                    RenderTexture.active = previous;
+                    RenderTexture.ReleaseTemporary(tmp);
+                    return readable;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Bakes a UI element (Image or TextMeshProUGUI) by rendering it with a camera focused on the element
+        /// </summary>
+        internal static Texture2D TextureBakeCanvasUIElement(Transform target, float width, float height, int resolution = 512)
+        {
+            // Check for UI Image component
+            UnityEngine.UI.Image img = target.GetComponent<UnityEngine.UI.Image>();
+
+#if C3D_TMPRO
+            // Check for TextMeshProUGUI component if Image not found
+            TMPro.TextMeshProUGUI tmpUI = null;
+            if (img == null)
+            {
+                tmpUI = target.GetComponent<TMPro.TextMeshProUGUI>();
+            }
+
+            if (img == null && tmpUI == null)
+            {
+                Debug.LogWarning("Target has neither UI Image nor TextMeshProUGUI component: " + target.name);
+                return new Texture2D(resolution, resolution);
+            }
+#else
+            if (img == null)
+            {
+                return new Texture2D(resolution, resolution);
+            }
+#endif
+
+            // Get or ensure parent canvas exists and is in WorldSpace
+            Canvas parentCanvas = target.GetComponentInParent<Canvas>();
+            RenderMode originalRenderMode = RenderMode.ScreenSpaceOverlay;
+            bool hadCanvas = parentCanvas != null;
+            bool changedRenderMode = false;
+
+            if (!hadCanvas)
+            {
+                Util.logWarning("UI element has no parent Canvas, cannot bake texture for: " + target.name);
+                return new Texture2D(resolution, resolution);
+            }
+
+            // Temporarily change canvas to WorldSpace if needed
+            if (parentCanvas.renderMode != RenderMode.WorldSpace)
+            {
+                originalRenderMode = parentCanvas.renderMode;
+                parentCanvas.renderMode = RenderMode.WorldSpace;
+                changedRenderMode = true;
+            }
+
+            GameObject cameraGo = new GameObject("Temp_Camera " + target.gameObject.name);
+            Camera cam = cameraGo.AddComponent<Camera>();
+
+            // For UI elements, the camera needs to look at the element from a distance
+            // UI elements face away from the canvas (towards the camera), so we position camera in the opposite direction
+            Vector3 cameraOffset = parentCanvas.transform.forward * 2f;
+
+            cameraGo.transform.position = target.position + cameraOffset;
+            cameraGo.transform.rotation = Quaternion.LookRotation(-cameraOffset, parentCanvas.transform.up);
+
+            // Adjust camera position for non-square aspect ratios
+            if (Mathf.Approximately(width, height))
+            {
+                //centered
+            }
+            else if (height > width) //tall
+            {
+                cameraGo.transform.position += (cameraGo.transform.right) * (height - width) / 2;
+            }
+            else //wide
+            {
+                cameraGo.transform.position += (cameraGo.transform.up) * (width - height) / 2;
+            }
+
+            cam.nearClipPlane = 1f;
+            cam.farClipPlane = 4f;
+            cam.orthographic = true;
+            cam.orthographicSize = Mathf.Max(width, height) / 2;
+            cam.clearFlags = CameraClearFlags.Color;
+            cam.backgroundColor = Color.clear;
+
+            //create render texture and assign to camera
+            RenderTexture renderTexture = RenderTexture.GetTemporary(resolution, resolution, 16);
+            RenderTexture.active = renderTexture;
+            cam.targetTexture = renderTexture;
+
+            // Get all canvas children for disabling non-target objects
+            List<Transform> children = new List<Transform>();
+            EditorCore.RecursivelyGetChildren(children, parentCanvas.transform);
+
+            // Don't change layers for UI elements - they don't render properly when layers change
+            // Instead, just use culling mask for the current canvas layer
+            cam.cullingMask = 1 << parentCanvas.gameObject.layer;
+
+            // Disable all canvas children except our target and its children
+            List<GameObject> disabledObjects = new List<GameObject>();
+            List<UnityEngine.UI.Image> disabledImages = new List<UnityEngine.UI.Image>();
+            List<UnityEngine.UI.RawImage> disabledRawImages = new List<UnityEngine.UI.RawImage>();
+
+            //disable objects not part of our target
+            try
+            {
+                foreach (var v in children.Where(v => v != target && !v.IsChildOf(target) && v != parentCanvas.transform))
+                {
+                    // Disable all canvas children that are not our target or its children
+                    if (v.gameObject.activeSelf)
+                    {
+                        v.gameObject.SetActive(false);
+                        disabledObjects.Add(v.gameObject);
+                    }
+                }
+
+                // Also disable any UI Images or RawImages on parent objects (like panels) to ensure transparent background
+                // Check all parents of the target up to the canvas
+                Transform currentParent = target.parent;
+                while (currentParent != null && currentParent != parentCanvas.transform)
+                {
+                    var parentImg = currentParent.GetComponent<UnityEngine.UI.Image>();
+                    if (parentImg != null && parentImg.enabled)
+                    {
+                        parentImg.enabled = false;
+                        disabledImages.Add(parentImg);
+                    }
+
+                    var rawImg = currentParent.GetComponent<UnityEngine.UI.RawImage>();
+                    if (rawImg != null && rawImg.enabled)
+                    {
+                        rawImg.enabled = false;
+                        disabledRawImages.Add(rawImg);
+                    }
+
+                    currentParent = currentParent.parent;
+                }
+
+                // Also check canvas itself
+                var canvasImg = parentCanvas.GetComponent<UnityEngine.UI.Image>();
+                if (canvasImg != null && canvasImg.enabled)
+                {
+                    canvasImg.enabled = false;
+                    disabledImages.Add(canvasImg);
+                }
+
+                var canvasRawImg = parentCanvas.GetComponent<UnityEngine.UI.RawImage>();
+                if (canvasRawImg != null && canvasRawImg.enabled)
+                {
+                    canvasRawImg.enabled = false;
+                    disabledRawImages.Add(canvasRawImg);
+                }
+
+                //render to texture
+                cam.Render();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            // Re-enable disabled objects
+            foreach (var obj in disabledObjects)
+            {
+                obj.SetActive(true);
+            }
+
+            // Re-enable disabled images
+            foreach (var disabledImg in disabledImages)
+            {
+                disabledImg.enabled = true;
+            }
+
+            foreach (var rawImg in disabledRawImages)
+            {
+                rawImg.enabled = true;
+            }
+
+            // Restore original canvas render mode
+            if (changedRenderMode)
+            {
+                parentCanvas.renderMode = originalRenderMode;
+            }
+
+            //write rendertexture to png
+            Texture2D tex = new Texture2D(resolution, resolution);
+            RenderTexture.active = renderTexture;
+            tex.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
+            tex.Apply();
+
+            // Flip texture horizontally
+            Color[] pixels = tex.GetPixels();
+            Color[] flippedPixels = new Color[pixels.Length];
+            for (int y = 0; y < resolution; y++)
+            {
+                for (int x = 0; x < resolution; x++)
+                {
+                    flippedPixels[x + y * resolution] = pixels[(resolution - 1 - x) + y * resolution];
+                }
+            }
+            tex.SetPixels(flippedPixels);
+            tex.Apply();
+
+            RenderTexture.active = null;
+
+            //delete temporary camera and release render texture
+            UnityEngine.Object.DestroyImmediate(cameraGo);
+            RenderTexture.ReleaseTemporary(renderTexture);
+
+            return tex;
+        }
+
+        /// <summary>
         /// returns texture2d baked from canvas target
         /// </summary>
         private static Texture2D TextureBake(Transform target, ExportQuadType type, float width, float height, int resolution = 512)
@@ -1427,7 +1500,7 @@ namespace Cognitive3D
             cameraGo.transform.rotation = target.rotation;
             cameraGo.transform.position = target.position - target.forward * 0.05f;
 
-            if (type == ExportQuadType.Canvas) // use rect bounds for canvas
+            if (type == ExportQuadType.Canvas || type == ExportQuadType.UIImage || type == ExportQuadType.TMProUI) // use rect bounds for canvas and UI Images
             {
                 if (Mathf.Approximately(width, height))
                 {
@@ -1602,7 +1675,7 @@ namespace Cognitive3D
         /// <returns>true if any dynamics are exported</returns>
         public static bool ExportAllDynamicsInScene()
         {
-            var dynamics = UnityEngine.Object.FindObjectsOfType<DynamicObject>();
+            var dynamics = UnityEngine.Object.FindObjectsByType<DynamicObject>(FindObjectsSortMode.None);
             List<GameObject> gos = new List<GameObject>();
             foreach (var v in dynamics)
                 gos.Add(v.gameObject);
@@ -1679,15 +1752,34 @@ namespace Cognitive3D
                 //if (dynamicObject == null) { return false; }
                 if (dynamicObject == null) { continue; }
 
+                // Handle UI Image components - bake to quad mesh
+                bool isUIImage = dynamicObject.GetComponent<UnityEngine.UI.Image>() != null;
+                if (isUIImage)
+                {
+                    temporaryDynamic = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.UIImage, true).GetComponent<DynamicObject>();
+                    temporaryDynamic.MeshName = dynamicObject.MeshName;
+                }
+
 #if C3D_TMPRO
-                if (dynamicObject.GetComponent<TextMeshPro>() != null)
+                bool isTMPro = dynamicObject.GetComponent<TextMeshPro>() != null;
+                if (isTMPro)
                 {
                     temporaryDynamic = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMPro, true).GetComponent<DynamicObject>();
                     temporaryDynamic.MeshName = dynamicObject.MeshName;
                 }
+
+                bool isTMProUI = dynamicObject.GetComponent<TMPro.TextMeshProUGUI>() != null;
+                if (isTMProUI)
+                {
+                    temporaryDynamic = BakeQuadGameObject(dynamicObject.gameObject, temporaryDynamicMeshes, ExportQuadType.TMProUI, true).GetComponent<DynamicObject>();
+                    temporaryDynamic.MeshName = dynamicObject.MeshName;
+                }
+#else
+                bool isTMPro = false;
+                bool isTMProUI = false;
 #endif
-                //skip exporting common meshes
-                if (!dynamicObject.UseCustomMesh) { continue; }
+                //skip exporting common meshes (but always export UI Images, TMPro, and TMProUI since they're baked)
+                if (!dynamicObject.UseCustomMesh && !isUIImage && !isTMPro && !isTMProUI) { continue; }
                 //skip empty mesh names
                 if (string.IsNullOrEmpty(dynamicObject.MeshName)) { Debug.LogError(dynamicObject.gameObject.name + " Skipping export because of null/empty mesh name", dynamicObject.gameObject); continue; }
                 GameObject prefabInScene = null;
@@ -1963,6 +2055,7 @@ namespace Cognitive3D
             {
                 DynamicUploadTotal = dynamicObjectForms.Count;
                 DynamicUploadSuccess = 0;
+                DynamicUploadCancelled = false;
                 EditorApplication.update += UpdateUploadDynamics;
             }
             return true;
@@ -1989,6 +2082,7 @@ namespace Cognitive3D
 
         static int DynamicUploadTotal;
         static int DynamicUploadSuccess;
+        static bool DynamicUploadCancelled;
 
         static UnityWebRequest dynamicUploadWWW;
         /// <summary>
@@ -2018,13 +2112,21 @@ namespace Cognitive3D
                 }
             }
 
-            if (EditorUtility.DisplayCancelableProgressBar("Upload Dynamic Object", currentDynamicUploadName, dynamicUploadWWW.uploadProgress))
+            if (EditorUtility.DisplayCancelableProgressBar("Upload Dynamic Object",
+                    currentDynamicUploadName, dynamicUploadWWW.uploadProgress)) 
+                DynamicUploadCancelled = true;
+            
+            if (DynamicUploadCancelled)
             {
                 Debug.Log("Cancelled upload of dynamic object: " + currentDynamicUploadName);
                 dynamicUploadWWW.Abort();
+                dynamicUploadWWW.Dispose();
+                dynamicUploadWWW = null;      // Reset to null
+                dynamicObjectForms.Clear();   // Clear remaining queued uploads
+                EditorApplication.update -= UpdateUploadDynamics;
                 EditorUtility.ClearProgressBar();
+                return;
             }
-      
 
             if (!dynamicUploadWWW.isDone) { return; }
             if (!string.IsNullOrEmpty(dynamicUploadWWW.error))
@@ -2036,6 +2138,7 @@ namespace Cognitive3D
                 DynamicUploadSuccess++;
             }
             Debug.Log("Finished uploading Dynamic Object mesh: " + currentDynamicUploadName);
+            dynamicUploadWWW.Dispose();
             dynamicUploadWWW = null;
         }
         #endregion

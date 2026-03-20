@@ -62,7 +62,7 @@ namespace Cognitive3D.Components
         MRUK mixedRealityUtility;
         private void Start()
         {
-            mixedRealityUtility = FindObjectOfType<MRUK>();
+            mixedRealityUtility = FindFirstObjectByType<MRUK>();
             if (mixedRealityUtility != null )
             {
                 mixedRealityUtility.RegisterSceneLoadedCallback(MrukLoaded);

@@ -7,17 +7,12 @@ namespace Cognitive3D
 {
     internal class ProjectValidationSettingsProvider : SettingsProvider
     {
-        private const string title = "Cognitive3D";
+        private const string title = "Cognitive3D/Project Validation";
         public static readonly string SettingsPath = $"Project/{title}";
         private readonly ProjectValidationGUI projectValidationGUI = new ProjectValidationGUI();
 
         internal ProjectValidationSettingsProvider(string path, SettingsScope scopes) : base(path, scopes)
         {
-        }
-
-        public static void OpenProjectSetupTool()
-        {
-            OpenSettingsWindow();
         }
 
         public static void OpenSettingsWindow()

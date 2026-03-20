@@ -16,7 +16,6 @@ namespace Cognitive3D
 
         private void OnEnable()
         {
-            Cognitive3D_Manager.OnPostSessionEnd += Cleanup;
             if (ActivateOnEnable)
             {
                 //will wait for cognitive vr manager to have call initialize before activating
@@ -58,11 +57,6 @@ namespace Cognitive3D
             }
             ExitPollSet exitPollSet = new ExitPollSet();
             exitPollSet.BeginExitPoll(Parameters);
-        }
-
-        private void Cleanup()
-        {
-            Cognitive3D_Manager.OnPostSessionEnd -= Cleanup;
         }
     }
 }

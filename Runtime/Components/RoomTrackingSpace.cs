@@ -51,6 +51,7 @@ namespace Cognitive3D
             if (cachedTrackingSpace != null)
             {
                 TrackingSpaceChanged?.Invoke(trackingSpaceIndex, cachedTrackingSpace);
+                GameplayReferences.RoomTrackingSpaceTransform = transform;
             }
         }
     }

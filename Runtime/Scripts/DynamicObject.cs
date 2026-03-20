@@ -112,6 +112,8 @@ namespace Cognitive3D
             StartingScale = transform.lossyScale;
             string registerMeshName = MeshName;
 
+            IsController = inputType == InputUtil.InputType.Controller || inputType == InputUtil.InputType.Hand;
+
             // if a controller, delay registering the controller until the controller name has returned something valid
             // if current device is hands or null, then use fallback
             if (IsController)
@@ -122,11 +124,11 @@ namespace Cognitive3D
                 //  and InputDevice.name gives us nothing
                 if (Cognitive3D_Manager.Instance?.GetComponent<Cognitive3D.Components.HandTracking>())
                 {
-                    // If starting with hands or none; use fallback controller
-                    if (InputUtil.GetCurrentTrackedDevice() == InputUtil.InputType.Hand || InputUtil.GetCurrentTrackedDevice() == InputUtil.InputType.None)
+                    // If starting with hands; use fallback controller which is hand
+                    if (InputUtil.GetCurrentTrackedDevice() == InputUtil.InputType.Hand)
                     {
                         // just quickly look up controller by type, isRight
-                        SetControllerFromFallback(FallbackControllerType, IsRight);
+                        InputUtil.SetControllerFromFallback(FallbackControllerType, IsRight, out controllerDisplayType, out commonDynamicMesh);
                         registerMeshName = commonDynamicMesh.ToString();
                         RegisterDynamicObject(registerMeshName);
                         return;
@@ -152,7 +154,7 @@ namespace Cognitive3D
                             commonDynamicMesh == InputUtil.CommonDynamicMesh.Unknown)
                         {
                             //failed to identify the controller - use the fallback
-                            SetControllerFromFallback(FallbackControllerType, IsRight);
+                            InputUtil.SetControllerFromFallback(FallbackControllerType, IsRight, out controllerDisplayType, out commonDynamicMesh);
                             registerMeshName = commonDynamicMesh.ToString();
                         }
                     }
@@ -160,7 +162,7 @@ namespace Cognitive3D
                 else
                 {
                     //just quickly look up controller by type, isRight
-                    SetControllerFromFallback(FallbackControllerType, IsRight);
+                    InputUtil.SetControllerFromFallback(FallbackControllerType, IsRight, out controllerDisplayType, out commonDynamicMesh);
                     registerMeshName = commonDynamicMesh.ToString();
                 }
             }
@@ -188,13 +190,30 @@ namespace Cognitive3D
 
             DataId = Data.Id;
 
-            if (inputType == InputUtil.InputType.Controller || inputType == InputUtil.InputType.Hand)
+            if (IsController)
             {
                 Cognitive3D.DynamicManager.RegisterController(Data);
             }
             else
             {
                 Cognitive3D.DynamicManager.RegisterDynamicObject(Data);
+            }
+
+            // Register UI DynamicObjects for gaze tracking without colliders
+            var rectTransform = GetComponent<RectTransform>();
+            if (rectTransform != null && PhysicsGaze.Instance != null)
+            {
+                var uiImage = GetComponent<UnityEngine.UI.Image>();
+                if (uiImage != null)
+                {
+                    PhysicsGaze.RegisterUIDynamic(this, rectTransform, PhysicsGaze.Instance.uiImageDynamics, PhysicsGaze.Instance.uiImageRectTransforms);
+                }
+
+                var canvas = GetComponent<UnityEngine.Canvas>();
+                if (canvas != null)
+                {
+                    PhysicsGaze.RegisterUIDynamic(this, rectTransform, PhysicsGaze.Instance.canvasDynamics, PhysicsGaze.Instance.canvasDynamicRectTransforms);
+                }
             }
 
             hasInitialized = true;
@@ -210,130 +229,6 @@ namespace Cognitive3D
             }
             mesh = commonDynamicMesh;
             display = controllerDisplayType;
-        }
-
-        //sets the class variables from the fallback controller type
-        private void SetControllerFromFallback(InputUtil.ControllerType fallbackControllerType, bool isRight)
-        {
-            switch (fallbackControllerType)
-            {
-                case InputUtil.ControllerType.Quest2:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.oculus_quest_touch_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.OculusQuestTouchRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.oculus_quest_touch_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.OculusQuestTouchLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.QuestPro:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.quest_pro_touch_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.QuestProTouchRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.quest_pro_touch_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.QuestProTouchLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.Quest3:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.quest_plus_touch_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.QuestPlusTouchRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.quest_plus_touch_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.QuestPlusTouchLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.ViveWand:
-                    controllerDisplayType = InputUtil.ControllerDisplayType.vive_controller;
-                    commonDynamicMesh = InputUtil.CommonDynamicMesh.ViveController;
-                    break;
-                case InputUtil.ControllerType.WindowsMRController:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.windows_mixed_reality_controller_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.WindowsMixedRealityRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.windows_mixed_reality_controller_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.WindowsMixedRealityLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.SteamIndex:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.steam_index_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.SteamIndexRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.steam_index_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.SteamIndexLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.PicoNeo3:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.pico_neo_3_eye_controller_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.PicoNeo3ControllerRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.pico_neo_3_eye_controller_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.PicoNeo3ControllerLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.PicoNeo4:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.pico_neo_4_eye_controller_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.PicoNeo4ControllerRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.pico_neo_4_eye_controller_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.PicoNeo4ControllerLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.ViveFocus:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.vive_focus_controller_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.ViveFocusControllerRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.vive_focus_controller_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.ViveFocusControllerLeft;
-                    }
-                    break;
-                case InputUtil.ControllerType.Hand:
-                    if (isRight)
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.hand_right;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.handRight;
-                    }
-                    else
-                    {
-                        controllerDisplayType = InputUtil.ControllerDisplayType.hand_left;
-                        commonDynamicMesh = InputUtil.CommonDynamicMesh.handLeft;
-                    }
-                    break;
-                default:
-                    controllerDisplayType = InputUtil.ControllerDisplayType.unknown;
-                    commonDynamicMesh = InputUtil.CommonDynamicMesh.Unknown;
-                    break;
-            }
         }
 
         private void SyncWithGazeTick()
@@ -505,6 +400,21 @@ namespace Cognitive3D
 
             PhysicsGaze.OnGazeTick -= SyncWithGazeTick;
 
+            // Unregister UI DynamicObjects from gaze tracking
+            if (PhysicsGaze.Instance != null)
+            {
+                var uiImage = GetComponent<UnityEngine.UI.Image>();
+                if (uiImage != null)
+                {
+                    PhysicsGaze.UnregisterUIDynamic(this, PhysicsGaze.Instance.uiImageDynamics, PhysicsGaze.Instance.uiImageRectTransforms);
+                }
+                var canvas = GetComponent<UnityEngine.Canvas>();
+                if (canvas != null)
+                {
+                    PhysicsGaze.UnregisterUIDynamic(this, PhysicsGaze.Instance.canvasDynamics, PhysicsGaze.Instance.canvasDynamicRectTransforms);
+                }
+            }
+
             DynamicManager.SetTransform(DataId, transform);
 
             Cognitive3D.DynamicManager.RemoveDynamicObject(DataId);
@@ -517,6 +427,21 @@ namespace Cognitive3D
             GameplayReferences.OnControllerValidityChange -= DelayEnable;
 
             PhysicsGaze.OnGazeTick -= SyncWithGazeTick;
+
+            // Unregister UI DynamicObjects from gaze tracking
+            if (PhysicsGaze.Instance != null)
+            {
+                var uiImage = GetComponent<UnityEngine.UI.Image>();
+                if (uiImage != null)
+                {
+                    PhysicsGaze.UnregisterUIDynamic(this, PhysicsGaze.Instance.uiImageDynamics, PhysicsGaze.Instance.uiImageRectTransforms);
+                }
+                var canvas = GetComponent<UnityEngine.Canvas>();
+                if (canvas != null)
+                {
+                    PhysicsGaze.UnregisterUIDynamic(this, PhysicsGaze.Instance.canvasDynamics, PhysicsGaze.Instance.canvasDynamicRectTransforms);
+                }
+            }
 
             if (DynamicManager.IsDataActive(GetId()))
             {

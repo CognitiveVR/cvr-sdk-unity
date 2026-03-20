@@ -119,12 +119,11 @@ namespace Cognitive3D.Components
         /// </summary>
         void SendEventIfUserExitsBoundary()
         {
-            Transform trackingSpace = Cognitive3D_Manager.Instance.trackingSpace;
-            if (trackingSpace)
+            if (BoundaryUtil.TryGetTrackingSpaceTransform(out var trackingSpaceTransform))
             {
                 if (previousBoundaryPoints != null && previousBoundaryPoints.Length != 0) // we want to avoid "fake exit" events if boundary points is empty array; this happens sometimes when you pause
                 {
-                    if (!BoundaryUtil.IsPointInPolygon4(previousBoundaryPoints, trackingSpace.transform.InverseTransformPoint(GameplayReferences.HMD.position)))
+                    if (!BoundaryUtil.IsPointInPolygon4(previousBoundaryPoints, Quaternion.Inverse(trackingSpaceTransform.rot) * (GameplayReferences.HMD.transform.position - trackingSpaceTransform.pos)))
                     {
                         SendExitEvent();
                     }
@@ -325,39 +324,6 @@ namespace Cognitive3D.Components
             }
             return new Vector3(maxX - minX, 0, maxZ - minZ);
         }
-
-#region SteamVR Specific Utils
-
-#if C3D_STEAMVR2
-        /// <summary>
-        /// Converts Valve's HmdQuad_t array to a List of Vector3. 
-        /// Used for the very specific use-case of boundary points.
-        /// </summary>
-        /// <param name="steamArray"> An array of HmdQuad_t structs</param>
-        /// <returns> A list of 4 Vector3 elements </returns>
-        private Vector3[] ConvertSteamVRToUnityBounds(Valve.VR.HmdQuad_t[] steamArray)
-        {
-            Vector3[] returnArray = new Vector3[steamArray.Length];
-            for (int i = 0; i < steamArray.Length; i++)
-            {
-                returnArray[i] = SteamHMDVector3tToVector(steamArray[i].vCorners0);
-            }
-            return returnArray;
-        }
-            
-        /// <summary>
-        /// Converts a Valve.VR HmdVector3_t struct to a Unity Vector3
-        /// </summary>
-        /// <param name="point">A struct of type Valve.VR.HmdVector3_t</param>
-        /// <returns>A Vector3 representation of the Valve.VR point</returns>
-        private Vector3 SteamHMDVector3tToVector(Valve.VR.HmdVector3_t point)
-        {
-            Vector3 myPoint = new Vector3(point.v0, point.v1, point.v2);
-            return myPoint;
-        }
-#endif
-
-#endregion
 
 #if C3D_VIVEWAVE
         Vector3 lastRoomSize = new Vector3();

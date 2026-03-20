@@ -20,7 +20,7 @@ namespace Cognitive3D.Serialization
         #endregion
 
 
-        internal static void FlushSceneChange(bool copyToCache)
+        internal static void FlushSceneChange(bool copyToCache, bool flushDynamics)
         {
             if (!IsInitialized) { return; }
 
@@ -29,7 +29,7 @@ namespace Cognitive3D.Serialization
             SerializeSensors(copyToCache);
             SerializeFixations(copyToCache);
             SerializeBoundaryShapes(copyToCache);
-            SerializeDynamicImmediate(copyToCache);
+            if (flushDynamics) SerializeDynamicImmediate(copyToCache);
         }
 
         internal static void Flush(bool copyToCache)
@@ -1783,6 +1783,7 @@ namespace Cognitive3D.Serialization
 
             // Clear and prepare for next batch
             trackingSpaces.Clear();
+            boundaryShapes.Clear();
             boundarybuilder.Clear();
             boundarybuilder.Append("{\"data\":[");
         }
@@ -1969,8 +1970,8 @@ namespace Cognitive3D.Serialization
 
         static int DynamicJsonPart;
         //marks the looping coroutine as 'ready' to pull data from the queue on a separate thread
-        static bool ReadyToWriteJson;
-        static bool InterruptThread;
+        static volatile bool ReadyToWriteJson;
+        static volatile bool InterruptThread;
 
         private static Queue<DynamicObjectSnapshot> queuedSnapshots = new Queue<DynamicObjectSnapshot>();
         private static Queue<DynamicObjectManifestEntry> queuedManifest = new Queue<DynamicObjectManifestEntry>();
@@ -2147,6 +2148,18 @@ namespace Cognitive3D.Serialization
             }
         }
 
+        /// <summary>
+        /// Holds cross-thread state for a single worker invocation.
+        /// volatile Done/Error provide acquire-release ordering so the main
+        /// thread sees Json after observing Done == true.
+        /// </summary>
+        private class ThreadResult
+        {
+            public volatile bool Done = true;
+            public volatile bool Error;
+            public string Json;
+        }
+
         //TODO eventually this should just be a loop on a thread, not a coroutine
         static IEnumerator CheckWriteJson()
         {
@@ -2162,8 +2175,8 @@ namespace Cognitive3D.Serialization
                     int manifestCount = Mathf.Min(queuedManifest.Count, totalDataToWrite);
                     int count = Mathf.Min(queuedSnapshots.Count, totalDataToWrite - manifestCount);
 
-                    bool threadDone = true;
-                    bool encounteredError = false;
+                    var manifestResult = new ThreadResult();
+                    var snapshotResult = new ThreadResult();
 
                     builder.Append("{");
 
@@ -2189,80 +2202,93 @@ namespace Cognitive3D.Serialization
                     //manifest entries
                     if (manifestCount > 0)
                     {
-                        builder.Append(",\"manifest\":{");
-                        threadDone = false;
+                        manifestResult.Done = false;
                         Queue<DynamicObjectManifestEntry> copyQueue = new Queue<DynamicObjectManifestEntry>(queuedManifest);
 
                         new Thread(() =>
                         {
                             try
                             {
+                                // Use a thread-local builder to avoid cross-thread StringBuilder corruption
+                                var threadBuilder = new System.Text.StringBuilder(128 * manifestCount);
                                 for (int i = 0; i < manifestCount; i++)
                                 {
                                     if (i != 0)
-                                        builder.Append(',');
-                                    //var manifestentry = queuedManifest.Dequeue();
+                                        threadBuilder.Append(',');
                                     var manifestentry = copyQueue.Dequeue();
-                                    SetManifestEntry(manifestentry, builder);
-                                    //numberOfEntriesCopied++;
+                                    SetManifestEntry(manifestentry, threadBuilder);
                                 }
+                                manifestResult.Json = threadBuilder.ToString();
                             }
                             catch
                             {
-                                encounteredError = true;
+                                manifestResult.Error = true;
                             }
-                            threadDone = true;
+                            manifestResult.Done = true;
                         }).Start();
 
-                        while (!threadDone && !encounteredError)
+                        while (!manifestResult.Done && !manifestResult.Error)
                         {
                             yield return null;
                         }
 
-                        //compare 
-                        builder.Append("}");
+                        // Assemble on main thread only
+                        if (manifestResult.Json != null)
+                        {
+                            builder.Append(",\"manifest\":{");
+                            builder.Append(manifestResult.Json);
+                            builder.Append("}");
+                        }
                     }
 
                     //check if this logic can be skipped because it will be invalidated
-                    if (!InterruptThread && !encounteredError)
+                    if (!InterruptThread && !manifestResult.Error)
                     {
                         //snapshots
                         if (count > 0)
                         {
-                            builder.Append(",\"data\":[");
-                            threadDone = false;
+                            snapshotResult.Done = false;
 
                             Queue<DynamicObjectSnapshot> copyQueue = new Queue<DynamicObjectSnapshot>(queuedSnapshots);
                             new Thread(() =>
                             {
                                 try
                                 {
+                                    // Use a thread-local builder to avoid cross-thread StringBuilder corruption
+                                    var threadBuilder = new System.Text.StringBuilder(128 * count);
                                     for (int i = 0; i < count; i++)
                                     {
                                         if (i != 0)
-                                            builder.Append(',');
+                                            threadBuilder.Append(',');
                                         var snap = copyQueue.Dequeue();
-                                        SetSnapshot(snap, builder);
-                                        //snap.ReturnToPool();
+                                        SetSnapshot(snap, threadBuilder);
                                     }
+                                    snapshotResult.Json = threadBuilder.ToString();
                                 }
                                 catch
                                 {
-                                    encounteredError = true;
+                                    snapshotResult.Error = true;
                                 }
-                                threadDone = true;
+                                snapshotResult.Done = true;
                             }).Start();
 
-                            while (!threadDone && !encounteredError)
+                            while (!snapshotResult.Done && !snapshotResult.Error)
                             {
                                 yield return null;
                             }
-                            builder.Append("]");
+
+                            // Assemble on main thread only
+                            if (snapshotResult.Json != null)
+                            {
+                                builder.Append(",\"data\":[");
+                                builder.Append(snapshotResult.Json);
+                                builder.Append("]");
+                            }
                         }
                         builder.Append("}");
                     }
 
-                    if (!InterruptThread && !encounteredError)
+                    if (!InterruptThread && !manifestResult.Error && !snapshotResult.Error)
                     {
                         //if this coroutine reached here and the thread hasn't been interrupted (from flushdata) and encounter no errors
                         //then remove entries and snapshots from real queues

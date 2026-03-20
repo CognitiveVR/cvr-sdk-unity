@@ -21,7 +21,23 @@ namespace Cognitive3D
         /// </summary>
         private bool isRightHand;
         
+        /// <summary>
+        /// Defines which controller input (e.g., trigger, primary button) activates the pointer interaction.
+        /// This value is used to detect input during exit poll sessions.
+        /// </summary>
         private ExitPollManager.PointerInputButton pointerInputButton;
+
+        /// <summary>
+        /// Local position offset applied to the controller pointer. 
+        /// Use this to adjust the starting position of the pointer relative to the controller.
+        /// </summary>
+        public static Vector3 PointerPosOffset;
+
+        /// <summary>
+        /// Local rotation offset (in degrees) applied to the controller pointer direction. 
+        /// Useful for fine-tuning the pointer's forward angle when it doesn't align with the controller's default forward direction.
+        /// </summary>
+        public static Vector3 PointerRotOffset;
 
 #if C3D_OCULUS
         private List<OVRHand> hands = new List<OVRHand>();
@@ -52,7 +68,7 @@ namespace Cognitive3D
 #if C3D_OCULUS
             if (hands.Count == 0)
             {
-                OVRHand[] foundHands = FindObjectsOfType<OVRHand>();
+                OVRHand[] foundHands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
                 hands.Clear();
                 foreach (OVRHand hand in foundHands)
                 {
@@ -99,10 +115,13 @@ namespace Cognitive3D
             InputUtil.TryGetControllerPosition(activeController, out controllerPosition);
             InputUtil.TryGetControllerRotation(activeController, out controllerRotation);
 
-            Vector3 direction = controllerRotation * Vector3.forward;
+            // Apply position offset (relative to controller)
+            Vector3 position = controllerPosition + controllerRotation * PointerPosOffset;
+            // Apply rotation offset
+            Vector3 direction = controllerRotation * Quaternion.Euler(PointerRotOffset) * Vector3.forward;
             bool activation = ExitPollUtil.GetButtonState(activeController, ExitPollUtil.GetButtonFeature(pointerInputButton));
 
-            UpdatePointer(controllerPosition, direction, activation, false);
+            UpdatePointer(position, direction, activation, false);
         }
 
         private void UpdatePointer(Vector3 start, Vector3 direction, bool activation, bool fillActivate)

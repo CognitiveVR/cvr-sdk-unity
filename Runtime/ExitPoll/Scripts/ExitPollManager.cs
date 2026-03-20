@@ -285,7 +285,7 @@ namespace Cognitive3D
         /// <param name="questionSet">The exit poll data containing the questions and poll details to be sent with the custom event.</param>
         internal static void SendResponsesAsCustomEvents(string hookName, ExitPollData questionSet)
         {
-            var exitpollEvent = new CustomEvent("cvr.exitpoll");
+            var exitpollEvent = new CustomEvent("c3d.exitpoll");
             exitpollEvent.SetProperty("userId", Cognitive3D_Manager.DeviceId);
             if (!string.IsNullOrEmpty(Cognitive3D_Manager.ParticipantId))
             {
@@ -311,6 +311,7 @@ namespace Cognitive3D
 
         private static void Cleanup()
         {
+            OnSurveyComplete.Invoke();
             currentExitpollData = null;
             exitpollResponseProperties.Clear();
             exitpollEventProperties.Clear();

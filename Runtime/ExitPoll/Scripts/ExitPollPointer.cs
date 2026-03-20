@@ -38,7 +38,7 @@ namespace Cognitive3D
         /// Creates a controller pointer and attaches it to the correct controller anchor <br/>
         /// If no controller is found, it creates an HMDPointer
         /// </summary>
-        internal static void SetupControllerAsPointer(GameObject pointerPrefab, ExitPollManager.PointerInputButton inputButton, float pointerWidth, Gradient pointerGradient)
+        internal static void SetupControllerAsPointer(GameObject pointerPrefab, ExitPollManager.PointerInputButton inputButton, float pointerWidth, Vector3 positionOffset, Vector3 rotationOffset, Gradient pointerGradient)
         {
             if (pointerPrefab != null)
                 pointerInstance = GameObject.Instantiate(pointerPrefab);
@@ -52,6 +52,8 @@ namespace Cognitive3D
                 pointerInstance.transform.localRotation = Quaternion.identity;
                 if (pointerInstance.GetComponent<PointerInputHandler>())
                 {
+                    if (positionOffset != Vector3.zero) PointerInputHandler.PointerPosOffset = positionOffset;
+                    if (rotationOffset != Vector3.zero) PointerInputHandler.PointerRotOffset = rotationOffset;
                     pointerInstance.GetComponent<PointerInputHandler>().SetPointerType(inputButton);
                 }
                 if (pointerInstance.GetComponent<PointerVisualizer>())

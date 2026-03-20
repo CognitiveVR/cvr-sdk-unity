@@ -48,9 +48,9 @@ namespace Cognitive3D
         {
             if (Cognitive3D_Preferences.Instance.RecordFloorPosition)
             {
-                if (Cognitive3D_Manager.Instance.trackingSpace!= null)
+                if (Cognitive3D.Components.BoundaryUtil.TryGetTrackingSpaceTransform(out var trackingSpaceTransform))
                 {
-                    floorPos = Cognitive3D_Manager.Instance.trackingSpace.position;
+                    floorPos = trackingSpaceTransform.pos;
                     return true;
                 }
                 

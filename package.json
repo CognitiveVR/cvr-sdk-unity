@@ -1,9 +1,9 @@
 {
 	"name": "com.cognitive3d.c3d-sdk",
-	"version": "1.8.0",
+	"version": "2.3.0",
 	"displayName": "Cognitive3D Unity SDK",
 	"description": "Analytics Platform for VR/AR/MR",
-	"unity": "2019.4",
+	"unity": "2021.3",
 	"documentationUrl": "https://docs.cognitive3d.com/",
 	"changelogUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/releases/",
 	"licensesUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/blob/master/LICENSE",
@@ -38,6 +38,11 @@
 			"displayName": "Exitpoll Customization",
 			"description": "Copy of Exitpoll Prefabs that can be configured for your project's own visual style",
 			"path": "Samples~/Exitpoll Customization"
+		},
+		{
+			"displayName": "Data Connector",
+			"description": "Sample script for listening to all data collected by Cognitive3D SDK. Intended for realtime machine learning application",
+			"path": "Samples~/Data Connector"
 		}
 	]
 }

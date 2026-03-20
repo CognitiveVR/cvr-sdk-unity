@@ -64,6 +64,11 @@ namespace Cognitive3D
             return (long)(Cognitive3D.Util.Timestamp() * 1000);
         }
 
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
+        }
+
         int lastProcessedFrame;
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -120,6 +125,11 @@ namespace Cognitive3D
         long EyeCaptureTimestamp()
         {
             return (long)(Cognitive3D.Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -361,6 +371,27 @@ namespace Cognitive3D
 			return (long)(Util.Timestamp() * 1000);
 		}
 
+        double EyeCaptureTimestampSeconds()
+        {
+            if (useDataQueue1)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData1.timestamp;
+				var MsSincestart = currentData1.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart + MsSincestart / 1000;
+				return final;
+			}
+			else if (useDataQueue2)
+			{
+				if (startTimestamp == 0)
+					startTimestamp = currentData2.timestamp;
+				var MsSincestart = currentData2.timestamp - startTimestamp; //milliseconds since start
+				var final = epochStart + MsSincestart / 1000;
+				return final;
+			}
+			return Util.Timestamp();
+        }
+
         int lastProcessedFrame;
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -461,6 +492,15 @@ namespace Cognitive3D
             return (long)final;
         }
         
+        double EyeCaptureTimestampSeconds()
+        {
+            //currentData.captureTime //nanoseconds. steady clock
+            long sinceStart = currentData.captureTime - startTimestamp;
+            sinceStart = (sinceStart / 1000000); //remove NANOSECONDS
+            var final = epochStart + sinceStart / 1000;
+            return final;
+        }
+
         int lastQueueFrame = 0;
         Queue<Varjo.XR.VarjoEyeTracking.GazeData> queuedData = new Queue<Varjo.XR.VarjoEyeTracking.GazeData>();
 
@@ -544,6 +584,10 @@ namespace Cognitive3D
             return currentData.timestamp;
         }
 
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
+        }
         
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -584,6 +628,11 @@ namespace Cognitive3D
         {
             //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -646,6 +695,11 @@ namespace Cognitive3D
         {
             //TODO CONSIDER using return Microsoft.MixedReality.Toolkit.CoreServices.InputSystem.EyeGazeProvider.Timestamp
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -743,6 +797,11 @@ namespace Cognitive3D
             return (long)(Util.Timestamp() * 1000);
         }
 
+        double EyeCaptureTimestampSeconds()
+        {
+            return Cognitive3D.Util.Timestamp();
+        }
+
         int lastProcessedFrame;
         //returns true if there is another data point to work on
         bool GetNextData()
@@ -759,6 +818,43 @@ namespace Cognitive3D
 
         bool CombinedWorldGazeRay(out Ray ray)
         {
+#if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
+            VIVE.OpenXR.XR_HTC_eye_tracker.Interop.GetEyeGazeData(out VIVE.OpenXR.EyeTracker.XrSingleEyeGazeDataHTC[] out_gazes);
+
+            if (out_gazes != null && out_gazes.Length >= 2)
+            {
+                var leftGaze = out_gazes[(int)VIVE.OpenXR.EyeTracker.XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC];
+                var rightGaze = out_gazes[(int)VIVE.OpenXR.EyeTracker.XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC];
+
+                if (leftGaze.isValid && rightGaze.isValid)
+                {
+                    Vector3 leftPos = VIVE.OpenXR.OpenXRHelper.ToUnityVector(leftGaze.gazePose.position);
+                    Vector3 rightPos = VIVE.OpenXR.OpenXRHelper.ToUnityVector(rightGaze.gazePose.position);
+                    Quaternion leftRot = VIVE.OpenXR.OpenXRHelper.ToUnityQuaternion(leftGaze.gazePose.orientation);
+                    Quaternion rightRot = VIVE.OpenXR.OpenXRHelper.ToUnityQuaternion(rightGaze.gazePose.orientation);
+
+                    // Position: average of both eyes
+                    Vector3 centerPos = Vector3.Lerp(leftPos, rightPos, 0.5f);
+
+                    // Rotation: slerp between both
+                    Quaternion centerRot = Quaternion.Slerp(leftRot, rightRot, 0.5f);
+
+                    Vector3 worldDirection = centerRot * Vector3.forward;
+                    if (GameplayReferences.HMD.transform.parent != null)
+                    {
+                        worldDirection = GameplayReferences.HMD.transform.parent.TransformDirection(worldDirection);
+                        Vector3 worldOrigin = GameplayReferences.HMD.transform.parent.TransformPoint(centerPos);
+                        ray = new Ray(worldOrigin, worldDirection);
+                    }
+                    else
+                    {
+                        // fallback if no parent
+                        ray = new Ray(centerPos, centerRot * Vector3.forward);
+                    }
+                    return true;
+                }
+            }
+#endif
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
@@ -788,28 +884,51 @@ namespace Cognitive3D
             return false;
         }
 
-        bool LeftEyeOpen()
+        internal static bool LeftEyeOpen()
         {
+#if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
+            VIVE.OpenXR.XR_HTC_eye_tracker.Interop.GetEyeGeometricData(out VIVE.OpenXR.EyeTracker.XrSingleEyeGeometricDataHTC[] out_geometrics);
+
+            if (out_geometrics != null && out_geometrics.Length > 0)
+            {
+                VIVE.OpenXR.EyeTracker.XrSingleEyeGeometricDataHTC leftGeometric = out_geometrics[(int)VIVE.OpenXR.EyeTracker.XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC];
+                if (leftGeometric.isValid)
+                {
+                    return leftGeometric.eyeOpenness > 0.5f;
+                }
+            }
+#endif
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 float open;
                 if (eyes.TryGetLeftEyeOpenAmount(out open))
                 {
-                    return open > 0.6f;
+                    return open > 0.5f;
                 }
             }
             return false;
         }
-        bool RightEyeOpen()
+        internal static bool RightEyeOpen()
         {
+#if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
+            VIVE.OpenXR.XR_HTC_eye_tracker.Interop.GetEyeGeometricData(out VIVE.OpenXR.EyeTracker.XrSingleEyeGeometricDataHTC[] out_geometrics);
+            if (out_geometrics != null && out_geometrics.Length > 0)
+            {
+                VIVE.OpenXR.EyeTracker.XrSingleEyeGeometricDataHTC rightGeometric = out_geometrics[(int)VIVE.OpenXR.EyeTracker.XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC];
+                if (rightGeometric.isValid)
+                {
+                    return rightGeometric.eyeOpenness > 0.5f;
+                }
+            }
+#endif
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.RightEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
                 float open;
                 if (eyes.TryGetRightEyeOpenAmount(out open))
                 {
-                    return open > 0.6f;
+                    return open > 0.5f;
                 }
             }
             return false;
@@ -818,6 +937,11 @@ namespace Cognitive3D
         long EyeCaptureTimestamp()
         {
             return (long)(Util.Timestamp() * 1000);
+        }
+
+        double EyeCaptureTimestampSeconds()
+        {
+            return Util.Timestamp();
         }
 
         int lastProcessedFrame;
@@ -833,7 +957,7 @@ namespace Cognitive3D
         }
 #endif
 
-#endregion
+        #endregion
 
         //if active fixation is world space, in world space, this indicates the last several positions for the average fixation position
         //if active fixation is local space, these are in local space
@@ -997,6 +1121,7 @@ namespace Cognitive3D
                 //hit something as expected
                 EyeCaptures[index].WorldPosition = world;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                EyeCaptures[index].ViewportPos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(world);
                 SaccadeScreenPoints.Add(EyeCaptures[index].ScreenPos);
 
                 //IMPROVEMENT allocate this at startup
@@ -1027,6 +1152,7 @@ namespace Cognitive3D
                     EyeCaptures[index].OffTransform = false;
                     EyeCaptures[index].HitDynamicTransform = hitDynamic.transform;
                     DisplayGazePoints.Update();
+                    InvokeEyeDataRecord(EyeDataType.HitWorld, EyeCaptures[index].HmdPosition, EyeCaptures[index].WorldPosition, true, hitDynamic.GetId(), EyeCaptures[index].LocalPosition, EyeCaptures[index].ScreenPos, EyeCaptures[index].ViewportPos, EyeCaptureTimestampSeconds());
                 }
                 else
                 {
@@ -1038,6 +1164,7 @@ namespace Cognitive3D
                     EyeCaptures[index].OffTransform = false;
                     EyeCaptures[index].HitDynamicId = string.Empty;
                     DisplayGazePoints.Update();
+                    InvokeEyeDataRecord(EyeDataType.HitObject, EyeCaptures[index].HmdPosition, EyeCaptures[index].WorldPosition, false, string.Empty, Vector3.zero, EyeCaptures[index].ScreenPos, EyeCaptures[index].ViewportPos, EyeCaptureTimestampSeconds());
                 }
             }
             else if (hitresult == GazeRaycastResult.HitNothing)
@@ -1048,9 +1175,11 @@ namespace Cognitive3D
                 EyeCaptures[index].UseCaptureMatrix = false;
                 EyeCaptures[index].WorldPosition = world;
                 EyeCaptures[index].ScreenPos = GameplayReferences.HMDCameraComponent.WorldToScreenPoint(world);
+                EyeCaptures[index].ViewportPos = GameplayReferences.HMDCameraComponent.WorldToViewportPoint(world);
                 if (SaccadeScreenPoints.Count > 0)
                     SaccadeScreenPoints.RemoveAt(0);
                 EyeCaptures[index].OffTransform = true;
+                InvokeEyeDataRecord(EyeDataType.HitNothing, EyeCaptures[index].HmdPosition, Vector3.zero, false, string.Empty, Vector3.zero, EyeCaptures[index].ScreenPos, EyeCaptures[index].ViewportPos, EyeCaptureTimestampSeconds());
             }
             else if (hitresult == GazeRaycastResult.Invalid)
             {
@@ -1061,6 +1190,7 @@ namespace Cognitive3D
                 EyeCaptures[index].OffTransform = true;
                 if (SaccadeScreenPoints.Count > 0)
                     SaccadeScreenPoints.RemoveAt(0);
+                InvokeEyeDataRecord(EyeDataType.Invalid, EyeCaptures[index].HmdPosition, Vector3.zero, false, string.Empty, Vector3.zero, Vector3.zero, Vector3.zero, EyeCaptureTimestampSeconds());
             }
 
             if (SaccadeScreenPoints.Count > 15)
@@ -1150,6 +1280,23 @@ namespace Cognitive3D
             }
 
             return false;
+        }
+
+        //used for optional data connector script to indicate the type of eye tracking
+        public enum EyeDataType
+        {
+            Invalid, //eye tracking not calibrated, eyes not tracking because of blinking, etc
+            HitWorld,
+            HitObject,
+            HitNothing //hit the sky
+        }
+
+        public delegate void onEyeDataRecorded(EyeDataType type, Vector3 start, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenPos, Vector2 viewportPos, double unixTime);
+        public static event onEyeDataRecorded OnEyeDataRecorded;
+        internal static void InvokeEyeDataRecord(EyeDataType type, Vector3 start, Vector3 worldPoint, bool isLocal, string hitDynamicId, Vector3 localPoint, Vector2 screenPos, Vector2 viewportPos, double unixTime)
+        {
+            if (OnEyeDataRecorded != null)
+                OnEyeDataRecorded.Invoke(type, start, worldPoint, isLocal, hitDynamicId, localPoint, screenPos, viewportPos, unixTime);
         }
 
         public delegate void onFixationRecord(Fixation fixation);

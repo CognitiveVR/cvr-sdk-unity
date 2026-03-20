@@ -26,6 +26,8 @@ namespace Cognitive3D
                 new GradientColorKey(new Color(0.039f, 0.557f, 0.259f, 1f), 1f) // Green
             } 
         };
+        public Vector3 PointerPositionOffset;
+        public Vector3 PointerRotationOffset;
 
         public GameObject BoolPanelOverride;
         public GameObject HappyPanelOverride;

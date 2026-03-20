@@ -30,6 +30,7 @@ namespace Cognitive3D
             // Ensure the uses-permission elements are added
             AddPermission(manifestDoc, manifestRoot, androidNamespaceURI, "android.permission.ACCESS_WIFI_STATE");
             AddPermission(manifestDoc, manifestRoot, androidNamespaceURI, "android.permission.ACCESS_NETWORK_STATE");
+            AddPermission(manifestDoc, manifestRoot, androidNamespaceURI, "android.permission.RECORD_AUDIO");
 
             // Save the modified AndroidManifest.xml file
             manifestDoc.Save(manifestPath);
