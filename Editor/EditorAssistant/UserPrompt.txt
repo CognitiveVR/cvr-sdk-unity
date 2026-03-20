@@ -1,8 +1,0 @@
-Use the following context to respond the user prompt:
-{context}
-
-If user prompt related to troubleshooting, use the following fixes to respond and just respond with fix. Don't write the issue again in respond. Reword if needed too:
-{troubleshoot}
-
-User prompt:
-{userprompt}

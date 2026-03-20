@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm \"Editor/EditorAssistant/ChatGPTClient.cs\")",
+      "Bash(rm \"Editor/EditorAssistant/ChatGPTClient.cs.meta\")"
+    ]
+  }
+}

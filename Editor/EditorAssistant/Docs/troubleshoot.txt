@@ -1,8 +1,0 @@
-Issue: The Meta headset type appears incorrect in session details
-Fix: Ensure all intended headset types are selected in both the OVRManager component and the Oculus Project Settings.
-
-Issue: Session tag is not visible on the dashboard after setting it via Cognitive3D_Manager.SetSessionTag(condition.conditionName) in Unity
-Fix: Make sure the tag is created on the dashboard first. Go to the Tags icon → “Manage Session Tags” → create a tag matching the name used in Unity.
-
-Issue: No eye tracking data is captured when using HTC Vive headsets with eye tracking support
-Fix: Verify that the FixationRecorder is attached to your Cognitive3D_Manager, and that an appropriate eye tracking manager component is present in the scene.
