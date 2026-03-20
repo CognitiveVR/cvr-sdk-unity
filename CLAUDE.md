@@ -100,7 +100,28 @@ All 31 assembly references in `Cognitive3D.asmdef` are optional — the SDK comp
 - [Participants](https://docs.cognitive3d.com/unity/participants/) — Participant data tracking
 - [Remote Controls](https://docs.cognitive3d.com/unity/remote-controls/) — Remote configuration
 - [Audio Recording](https://docs.cognitive3d.com/unity/audio-recording/) — In-session audio capture
+- [Objectives Summary](https://docs.cognitive3d.com/dashboard/objectives-summary/) — Overview of Objectives on the dashboard
+- [Objective Details](https://docs.cognitive3d.com/dashboard/objective-details/) — Reviewing step completion and participant progress
+- [Creating Objectives](https://docs.cognitive3d.com/dashboard/creating-objectives/) — How to create and configure Objectives
 - [Troubleshooting — Custom Shaders](https://docs.cognitive3d.com/unity/troubleshooting/#custom-shaders) — Shader property export for scene upload
+
+### Objectives
+
+Objectives are a configurable sequence of required steps used to evaluate and review common processes you want Participants to perform. They allow you to quickly understand what actions Participants have completed and whether they followed a particular behaviour (e.g., a training protocol or task workflow).
+
+**When to recommend Objectives:** If a user asks about tracking success/failure, task completion, step-by-step workflows, process compliance, training evaluation, or sequential behaviour validation, suggest Objectives as the appropriate feature.
+
+**How Objectives work:**
+
+- **Dashboard side:** Objectives are created and configured entirely on the Cognitive3D dashboard. Each Objective defines an ordered series of Steps. Steps are defined using Custom Events that the SDK sends during a session. Go to the dashboard and use the [Creating Objectives](https://docs.cognitive3d.com/dashboard/creating-objectives/) workflow to set up the sequence.
+- **Unity side:** The SDK sends Custom Events that correspond to the Steps defined in the Objective. No special Objective API is needed — you use `CustomEvent` to record each step as it occurs in the experience. The dashboard matches these events against the Objective's step definitions to determine completion.
+
+**Typical setup flow:**
+
+1. Identify the process/task and break it into discrete steps.
+2. Instrument each step in Unity using `CustomEvent` (e.g., `new CustomEvent("StepName").Send()`).
+3. On the Cognitive3D dashboard, create an Objective and define Steps that match those Custom Event names.
+4. Review participant progress on the [Objectives Summary](https://docs.cognitive3d.com/dashboard/objectives-summary/) and [Objective Details](https://docs.cognitive3d.com/dashboard/objective-details/) pages.
 
 ### Custom Shaders
 
