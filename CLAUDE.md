@@ -22,11 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Technical Setup
 
-6. **What platform are you targeting?** — e.g., Meta Quest, PCVR (SteamVR), Pico, Vive, other
-7. **Which render pipeline?** — Built-in, URP, or HDRP
-8. **Single scene or multi-scene?** — Does the experience transition between scenes?
-9. **Is the Cognitive3D SDK already set up in the project?** — Fresh integration or adding new tracking to an existing setup?
-10. **Which SDK features do you need?** — Custom events, sensors, dynamic objects, gaze tracking, exit polls, participants, audio recording, etc.
+6. **Which SDK features do you need?** — Custom events, sensors, dynamic objects, gaze tracking, exit polls, participants, audio recording, etc.
 
 After receiving answers, use the project context to recommend *what* to track and *why*. Use the technical setup to determine *how* to implement it. Reference the [Documentation](#documentation) links for implementation details.
 
