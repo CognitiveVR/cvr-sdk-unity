@@ -130,14 +130,24 @@ namespace Cognitive3D
             {
                 string destination = string.Empty;
                 string content = string.Empty;
-                if (ic.PeekContent(ref destination, ref content))
+                bool sendAsBytes = false;
+                if (ic.PeekContent(ref destination, ref content, ref sendAsBytes))
                 {
                     if (!string.IsNullOrEmpty(destination) && !string.IsNullOrEmpty(content))
                     {
-                        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-                        uploadRequest = UnityWebRequest.Put(destination, bytes);
+                        if (!sendAsBytes)
+                        {
+                            var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(content);
+                            uploadRequest = UnityWebRequest.Put(destination, bytes);
+                            uploadRequest.SetRequestHeader("Content-Type", "application/json");
+                        }
+                        else
+                        {
+                            var bytes = System.Convert.FromBase64String(content);
+                            uploadRequest = UnityWebRequest.Put(destination, bytes);
+                            uploadRequest.SetRequestHeader("Content-Type", "application/octet-stream");
+                        }
                         uploadRequest.method = "POST";
-                        uploadRequest.SetRequestHeader("Content-Type", "application/json");
                         uploadRequest.SetRequestHeader("X-HTTP-Method-Override", "POST");
                         uploadRequest.SetRequestHeader("Authorization", "APIKEY:DATA " + Cognitive3D_Preferences.Instance.ApplicationKey);
                         uploadRequest.SendWebRequest();
@@ -170,7 +180,8 @@ namespace Cognitive3D
                     {
                         string destination = string.Empty;
                         string content = string.Empty;
-                        if (ic.PeekContent(ref destination, ref content))
+                        bool sendAsBytes = false;
+                        if (ic.PeekContent(ref destination, ref content, ref sendAsBytes))
                         {
                             ic.PopContent();
                             ic.WriteContent(destination, content);
@@ -181,7 +192,8 @@ namespace Cognitive3D
                 {
                     string destination = string.Empty;
                     string content = string.Empty;
-                    if (ic.PeekContent(ref destination, ref content))
+                    bool sendAsBytes = false;
+                    if (ic.PeekContent(ref destination, ref content, ref sendAsBytes))
                     {
                         ic.PopContent();
                         ic.WriteContent(destination, content);

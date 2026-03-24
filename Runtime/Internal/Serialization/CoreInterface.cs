@@ -306,6 +306,7 @@ namespace Cognitive3D
                     break;
                 case "boundary":
                     url = CognitiveStatics.PostBoundaryData(Cognitive3D_Manager.TrackingSceneId, Cognitive3D_Manager.TrackingSceneVersionNumber);
+                    Cognitive3D.Components.Boundary.InvokeBoundarySend();
                     break;
                 default: Util.logDevelopment("Invalid Web Post type"); return;
             }

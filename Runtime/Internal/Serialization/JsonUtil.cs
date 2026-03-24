@@ -145,13 +145,13 @@ namespace Cognitive3D.Serialization
 
             if (centimeterLimit)
             {
-                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[0]));
+                builder.Append(pos[0].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
                 builder.Append(",");
-                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[1]));
+                builder.Append(pos[1].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
                 builder.Append(",");
-                builder.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", pos[2]));
+                builder.Append(pos[2].ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
 
             }
             else
@@ -267,12 +267,42 @@ namespace Cognitive3D.Serialization
             return builder;
         }
 
-        //escapes linebreaks in strings
+        //escapes special characters in strings for valid JSON output
         static string EscapeString(string input)
         {
-            if (!input.Contains("\n")) { return input; }
-            return input.Replace("\n", "\\n");
+            // Fast path: check if any escaping is needed
+            bool needsEscape = false;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                if (c == '"' || c == '\\' || c == '\n' || c == '\r' || c == '\t' || c < 0x20)
+                {
+                    needsEscape = true;
+                    break;
+                }
+            }
+            if (!needsEscape) { return input; }
 
+            var sb = new System.Text.StringBuilder(input.Length + 8);
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                switch (c)
+                {
+                    case '"':  sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (c < 0x20)
+                            sb.Append("\\u").Append(((int)c).ToString("X4"));
+                        else
+                            sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
         }
     }
 }

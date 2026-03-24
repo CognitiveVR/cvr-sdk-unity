@@ -62,6 +62,7 @@ namespace Cognitive3D
         {
             var _userTraits = new SegmentUserTraits();
             _userTraits.sdkVersion = Cognitive3D_Manager.SDK_VERSION;
+            _userTraits.unityVersion = Application.unityVersion;
             if (userData != null)
             {
                 _userTraits.name = $"{userData.firstName} {userData.lastName}";
@@ -170,10 +171,11 @@ namespace Cognitive3D
                 var bytes = Encoding.UTF8.GetBytes(data);
 
                 using (var request = new UnityWebRequest(trackURL, UnityWebRequest.kHttpVerbPOST))
+                using (var uploadHandler = new UploadHandlerRaw(bytes))
                 {
                     request.disposeUploadHandlerOnDispose = true;
                     request.disposeDownloadHandlerOnDispose = true;
-                    request.uploadHandler = new UploadHandlerRaw(bytes);
+                    request.uploadHandler = uploadHandler;
                     request.downloadHandler = new DownloadHandlerBuffer();
 
                     request.SetRequestHeader("Content-Type", "application/json");
@@ -240,6 +242,7 @@ namespace Cognitive3D
             public string name;
             public string email;
             public string sdkVersion;
+            public string unityVersion;
             public int projectId;
             public string projectName;
         }

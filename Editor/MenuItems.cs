@@ -12,55 +12,58 @@ namespace Cognitive3D
         {
             ProjectSetupWindow.Init();
         }
-        [MenuItem("Cognitive3D/Feature Builder", priority = 10)]
+        [MenuItem("Cognitive3D/Scene Manager", priority = 10)]
+        static void Cognitive3DSceneManagerSetup()
+        {
+            SceneManagerWindow.Init();
+        }
+        [MenuItem("Cognitive3D/Feature Builder", priority = 15)]
         static void Cognitive3DFeatureBuilder()
         {
             FeaturesWindow.Init();
         }
-        [MenuItem("Cognitive3D/Project Validation", priority = 15)]
+        [MenuItem("Cognitive3D/Project Validation", priority = 20)]
         static void Cognitive3DProjectValidation()
         {
             ProjectValidationSettingsProvider.OpenSettingsWindow();
         }
-        [MenuItem("Cognitive3D/Preferences", priority = 20)]
+
+        [MenuItem("Cognitive3D/Preferences", priority = 55)]
         static void Cognitive3DPreferences()
         {
             PreferencesSettingsProvider.OpenSettingsWindow();
         }
-        [MenuItem("Cognitive3D/Data Uploader", priority = 25)]
+        [MenuItem("Cognitive3D/Data Uploader", priority = 60)]
         static void Cognitive3DDataUploader()
         {
             DataUploaderSettingsProvider.OpenSettingsWindow();
         }
-
-
-
-        [MenuItem("Cognitive3D/Legacy/Dynamic Objects", priority = 55)]
+        [MenuItem("Cognitive3D/Legacy/Dynamic Objects", priority = 65)]
         static void Cognitive3DLegacyDynamicObjects()
         {
             LegacyDynamicObjectsWindow.Init();
         }
-        [MenuItem("Cognitive3D/Legacy/Project Setup", priority = 60)]
+        [MenuItem("Cognitive3D/Legacy/Project Setup", priority = 70)]
         static void Cognitive3DLegacyProjectSetup()
         {
             LegacyProjectSetupWindow.Init();
         }
-        [MenuItem("Cognitive3D/Legacy/Scene Setup", priority = 65)]
+        [MenuItem("Cognitive3D/Legacy/Scene Setup", priority = 75)]
         static void Cognitive3DLegacySceneSetup()
         {
             LegacySceneSetupWindow.Init();
         }
-        [MenuItem("Cognitive3D/Legacy/Scene Management", priority = 70)]
+        [MenuItem("Cognitive3D/Legacy/Scene Management", priority = 80)]
         static void Cognitive3DLegacySceneManagement()
         {
             LegacySceneManagementWindow.Init();
         }
-        [MenuItem("Cognitive3D/Legacy/360 Setup", priority = 75)]
+        [MenuItem("Cognitive3D/Legacy/360 Setup", priority = 85)]
         static void Cognitive3DLegacy360Setup()
         {
             LegacySetup360Window.Init();
         }
-        [MenuItem("Cognitive3D/Legacy/Help", priority = 80)]
+        [MenuItem("Cognitive3D/Legacy/Help", priority = 90)]
         static void Cognitive3DLegacyHelp()
         {
             LegacyHelpWindow.Init();

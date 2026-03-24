@@ -18,19 +18,35 @@ namespace Cognitive3D
         //this can track up to 16 dynamic objects that appear in a session without a custom id. this helps session json reduce the number of entries in the manifest
         internal static DynamicObjectId[] DynamicObjectIdArray = new DynamicObjectId[16];
 
+        public delegate void onDynamicRecorded(string name, string mesh, double time, Vector3 pos, Quaternion rot, Vector3 scale);
+        //used by active session view
+        public static event onDynamicRecorded OnDynamicRecorded;
+        internal static void InvokeDynamicRecorded(string name, string mesh, double time, Vector3 pos, Quaternion rot, Vector3 scale)
+        {
+            if (OnDynamicRecorded != null)
+            {
+                OnDynamicRecorded.Invoke(name, mesh, time, pos, rot, scale);
+            }
+        }
+
         internal static void Initialize()
         {
             Cognitive3D_Manager.OnUpdate -= OnUpdate;
             Cognitive3D_Manager.OnLevelLoaded -= OnSceneLoaded;
+            PhysicsGaze.OnGazeTick -= OnGazeTick;
 
             Cognitive3D_Manager.OnUpdate += OnUpdate;
             Cognitive3D_Manager.OnLevelLoaded += OnSceneLoaded;
+            PhysicsGaze.OnGazeTick += OnGazeTick;
 
             //when the cognitive3d manager begins a new session, should mark all data in ActiveDynamicObjectsArray as needing to send manifest again
             for(int i = 0; i< ActiveDynamicObjectsArray.Length;i++)
             {
                 if (ActiveDynamicObjectsArray[i].active)
+                {
                     CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                    InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
+                }
             }
         }
 
@@ -135,7 +151,10 @@ namespace Cognitive3D
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteDynamicManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         //this doesn't directly remove a dynamic object - it sets 'remove' so it can be removed on the next tick
@@ -420,7 +439,10 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteControllerManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         internal static void RegisterController(DynamicData data)
@@ -455,7 +477,10 @@ namespace Cognitive3D
                 ActiveDynamicObjectsArray[nextFreeIndex] = data;
             }
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteControllerManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         internal static void RegisterHand(XRNode hand, bool isRight, string registerId = "")
@@ -503,7 +528,10 @@ namespace Cognitive3D
             }
 
             if (Cognitive3D_Manager.IsInitialized)
+            {
                 CoreInterface.WriteControllerManifestEntry(data);
+                InvokeDynamicRecorded(data.Id, data.MeshName, Util.Timestamp(Time.frameCount), data.LastPosition, data.LastRotation, data.LastScale);
+            }
         }
 
         internal static DynamicData GetInputDynamicData(InputUtil.InputType type, bool isRight)
@@ -518,8 +546,8 @@ namespace Cognitive3D
                 }
             }
             
-            Util.logError($"No DynamicData found for type {type} and isRight {isRight}");
-            return new DynamicData(); // Return null if no matching dynamic data is found
+            Util.logError($"No DynamicData found for type {type.ToString()} and isRight {isRight.ToString()}");
+            return new DynamicData(); // Return empty DynamicData if no matching dynamic data is found
         }
 
         internal static void UpdateDynamicInputEnabledState(InputUtil.InputType currentTrackedDevice)
@@ -640,7 +668,7 @@ namespace Cognitive3D
                     props = sb.ToString();
                 }
 
-                if (!ActiveDynamicObjectsArray[i].hasEnabled)
+                if (!ActiveDynamicObjectsArray[i].hasEnabled && !ActiveDynamicObjectsArray[i].remove)
                 {
                     ActiveDynamicObjectsArray[i].hasEnabled = true;
                     if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
@@ -673,6 +701,7 @@ namespace Cognitive3D
                     ActiveDynamicObjectsArray[i].Properties = null;
                 }
                 CoreInterface.WriteDynamicController(ActiveDynamicObjectsArray[i], props, writeScale, builder.ToString(),Util.Timestamp(Time.frameCount));
+                InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
             }
         }
 
@@ -768,6 +797,7 @@ namespace Cognitive3D
                     }
                     
                     CoreInterface.WriteDynamicController(ActiveInputsArray[i], props, false, builder.ToString(),Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(ActiveInputsArray[i].Id, ActiveInputsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveInputsArray[i].LastPosition, ActiveInputsArray[i].LastRotation, ActiveInputsArray[i].LastScale);
                 }
             }
             
@@ -963,7 +993,7 @@ namespace Cognitive3D
                         props = sb.ToString();
                     }
 
-                    if (!ActiveDynamicObjectsArray[i].hasEnabled)
+                    if (!ActiveDynamicObjectsArray[i].hasEnabled && !ActiveDynamicObjectsArray[i].remove)
                     {
                         ActiveDynamicObjectsArray[i].hasEnabled = true;
                         if (ActiveDynamicObjectsArray[i].HasProperties || !string.IsNullOrEmpty(props))
@@ -996,14 +1026,74 @@ namespace Cognitive3D
                         ActiveDynamicObjectsArray[i].Properties = null;
                     }
                     CoreInterface.WriteDynamic(ActiveDynamicObjectsArray[i], props, writeScale, Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                 }
             }
         }
 
         //allow ticking a limited number of dynamic objects per frame
         static int index = 0;
+        static int inputIndex = 0; // Separate index for input devices to avoid conflicts with dynamic objects
         static int maxTicks = 128;
         //IMPROVEMENT some function based on the number of dynamic objects to track and the intervals needed. should be as high as possible without causing 'overlap' between this tick and the next
+
+        /// <summary>
+        /// Called when gaze is recorded (synced with gaze tick interval)
+        /// This ensures controllers are sampled at the same time as gaze data
+        /// </summary>
+        private static void OnGazeTick()
+        {
+            if (!Cognitive3D_Manager.IsInitialized) { return; }
+            if (string.IsNullOrEmpty(Cognitive3D_Manager.TrackingSceneId)) { return; }
+
+            // Check thresholds and set dirty flag for controllers that moved
+            // Similar to RecordDynamic, but force write on gaze tick
+            for (int i = 0; i < ActiveInputsArray.Length; i++)
+            {
+                if (!ActiveInputsArray[i].active) continue;
+                if (!ActiveInputsArray[i].IsController) continue;
+
+                // Get current controller position and rotation
+                XRNode handNode = ActiveInputsArray[i].IsRightHand ? XRNode.RightHand : XRNode.LeftHand;
+                Vector3 pos;
+                Quaternion rot;
+
+                if (!InputUtil.TryGetControllerPosition(handNode, out pos)) continue;
+                if (!InputUtil.TryGetControllerRotation(handNode, out rot)) continue;
+
+                bool forceWrite = false;
+
+                //check distance
+                if (!forceWrite)
+                {
+                    if (Vector3.SqrMagnitude(pos - ActiveInputsArray[i].LastPosition) > ActiveInputsArray[i].PositionThreshold * ActiveInputsArray[i].PositionThreshold)
+                    {
+                        ActiveInputsArray[i].dirty = true;
+                        forceWrite = true;
+                    }
+                }
+
+                //check rotation
+                if (!forceWrite)
+                {
+                    float f = Quaternion.Dot(ActiveInputsArray[i].LastRotation, rot);
+
+                    float fabs = f < 0 ? f * -1 : f;
+                    float min = fabs < 1 ? fabs : 1;
+
+                    if (System.Math.Acos(min) * 114.59156f > ActiveInputsArray[i].RotationThreshold)
+                    {
+                        ActiveInputsArray[i].dirty = true;
+                    }
+                }
+            }
+
+            // Process controllers/hands at the same time as gaze
+            // Uses separate inputIndex to avoid conflicts with dynamic object processing
+            inputIndex = 0;
+            int numTicks = 0;
+                        ProcessInputDynamicArray(ref ActiveInputsArray, InputUtil.GetCurrentTrackedDevice(), 0, ref numTicks);
+        }
 
         //iterate through all dynamic objects
         //alternatively, could go iterate through chunks of dynamics each frame, instead of all at once
@@ -1015,10 +1105,7 @@ namespace Cognitive3D
             //limits the number of dynamic object data that can be processed each update loop
             int numTicks = 0;
 
-            // Process controllers/hands
-            ProcessInputDynamicArray(ref ActiveInputsArray, InputUtil.GetCurrentTrackedDevice(), deltaTime, ref numTicks);
-
-            // Process dynamic objects
+            // Process dynamic objects (controllers are synced with gaze via OnGazeTick)
             ProcessDynamicArray(ref ActiveDynamicObjectsArray, deltaTime, ref numTicks);
         }
 
@@ -1127,7 +1214,7 @@ namespace Cognitive3D
                         props = sb.ToString();
                     }
                     
-                    if (!array[index].hasEnabled)
+                    if (!array[index].hasEnabled && !array[index].remove)
                     {
                         array[index].hasEnabled = true;
                         if (array[index].HasProperties || !string.IsNullOrEmpty(props))
@@ -1161,6 +1248,7 @@ namespace Cognitive3D
                     }
 
                     CoreInterface.WriteDynamic(array[index], props, writeScale, Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(array[index].Id, array[index].MeshName, Util.Timestamp(Time.frameCount), array[index].LastPosition, array[index].LastRotation, array[index].LastScale);
                 }
 
                 if (array[index].remove)
@@ -1182,31 +1270,31 @@ namespace Cognitive3D
 
         private static void ProcessInputDynamicArray(ref DynamicData[] array, InputUtil.InputType currentInputTracking, float deltaTime, ref int numTicks)
         {
-            for (; index < array.Length; index++)
+            for (; inputIndex < array.Length; inputIndex++)
             {
-                if (!array[index].active) continue;
+                if (!array[inputIndex].active) continue;
 
-                if (!array[index].dirty && currentInputTracking.ToString() != array[index].InputType)
+                if (!array[inputIndex].dirty && currentInputTracking.ToString() != array[inputIndex].InputType)
                 {
                     continue;
                 }
 
-                if (!array[index].dirty && array[index].UpdateInterval < array[index].DesiredUpdateRate) 
+                if (!array[inputIndex].dirty && array[inputIndex].UpdateInterval < array[inputIndex].DesiredUpdateRate)
                 {
-                    array[index].UpdateInterval += deltaTime; 
+                    array[inputIndex].UpdateInterval += deltaTime;
                     continue;
                 }
-                array[index].UpdateInterval = 0;
+                array[inputIndex].UpdateInterval = 0;
 
-                bool writeData = array[index].dirty;
+                bool writeData = array[inputIndex].dirty;
 
                 // Get position, scale, rotation depending on whether it's a controller or dynamic object
                 Vector3 pos = Vector3.zero;
                 Quaternion rot = Quaternion.identity;
 
-                if (array[index].IsController)
+                if (array[inputIndex].IsController)
                 {
-                    XRNode handNode = array[index].IsRightHand ? XRNode.RightHand : XRNode.LeftHand;
+                    XRNode handNode = array[inputIndex].IsRightHand ? XRNode.RightHand : XRNode.LeftHand;
                     InputUtil.TryGetControllerPosition(handNode, out pos);
                     InputUtil.TryGetControllerRotation(handNode, out rot);
                 }
@@ -1215,9 +1303,9 @@ namespace Cognitive3D
                 if (!writeData)
                 {
                     //IMPROVEMENT INLINE SQRMAGNITUDE
-                    if (Vector3.SqrMagnitude(pos - array[index].LastPosition) > array[index].PositionThreshold * array[index].PositionThreshold)
+                    if (Vector3.SqrMagnitude(pos - array[inputIndex].LastPosition) > array[inputIndex].PositionThreshold * array[inputIndex].PositionThreshold)
                     {
-                        array[index].dirty = true;
+                        array[inputIndex].dirty = true;
                         writeData = true;
                     }
                 }
@@ -1226,65 +1314,66 @@ namespace Cognitive3D
                 if (!writeData)
                 {
                     //IMPROVEMENT INLINE DOT
-                    float f = Quaternion.Dot(array[index].LastRotation, rot);
+                    float f = Quaternion.Dot(array[inputIndex].LastRotation, rot);
 
                     float fabs = f < 0 ? f * -1 : f;
                     float min = fabs < 1 ? fabs : 1;
 
-                    if (System.Math.Acos(min) * 114.59156f > array[index].RotationThreshold)
+                    if (System.Math.Acos(min) * 114.59156f > array[inputIndex].RotationThreshold)
                     {
-                        array[index].dirty = true;
+                        array[inputIndex].dirty = true;
                         writeData = true;
                     }
                 }
 
                 // Update the dynamic object only if necessary
-                if (writeData || array[index].dirty || array[index].HasProperties || array[index].remove)
+                if (writeData || array[inputIndex].dirty || array[inputIndex].HasProperties || array[inputIndex].remove)
                 {
-                    array[index].dirty = false;
-                    array[index].LastPosition = pos;
-                    array[index].LastRotation = rot;
+                    array[inputIndex].dirty = false;
+                    array[inputIndex].LastPosition = pos;
+                    array[inputIndex].LastRotation = rot;
 
                     string props = null;
-                    if (array[index].HasProperties)
+                    if (array[inputIndex].HasProperties)
                     {
                         System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
-                        for (int j = 0; j < array[index].Properties.Count; j++)
+                        for (int j = 0; j < array[inputIndex].Properties.Count; j++)
                         {
                             if (j != 0)
                                 sb.Append(",");
                             sb.Append("{\"");
-                            sb.Append(array[index].Properties[j].Key);
+                            sb.Append(array[inputIndex].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (array[index].Properties[j].Value is string)
+                            if (array[inputIndex].Properties[j].Value is string)
                             {
                                 sb.Append("\"");
-                                sb.Append(array[index].Properties[j].Value);
+                                sb.Append(array[inputIndex].Properties[j].Value);
                                 sb.Append("\"");
-                            }else if (array[index].Properties[j].Value is bool) // Explicitly handle booleans
+                            }else if (array[inputIndex].Properties[j].Value is bool) // Explicitly handle booleans
                             {
-                                sb.Append(array[index].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
+                                sb.Append(array[inputIndex].Properties[j].Value.ToString().ToLower()); // Convert to lowercase
                             }
                             else
                             {
-                                sb.Append(array[index].Properties[j].Value);
+                                sb.Append(array[inputIndex].Properties[j].Value);
                             }
                             sb.Append("}");
                         }
                         props = sb.ToString();
 
-                        array[index].HasProperties = false;
-                        array[index].Properties = null;
+                        array[inputIndex].HasProperties = false;
+                        array[inputIndex].Properties = null;
                     }
 
-                    CoreInterface.WriteDynamic(array[index], props, false, Util.Timestamp(Time.frameCount));
+                    CoreInterface.WriteDynamic(array[inputIndex], props, false, Util.Timestamp(Time.frameCount));
+                    InvokeDynamicRecorded(array[inputIndex].Id, array[inputIndex].MeshName, Util.Timestamp(Time.frameCount), array[inputIndex].LastPosition, array[inputIndex].LastRotation, array[inputIndex].LastScale);
                 }
 
-                if (array[index].remove)
+                if (array[inputIndex].remove)
                 {
-                    array[index].active = false;
-                    array[index].remove = false;
+                    array[inputIndex].active = false;
+                    array[inputIndex].remove = false;
                 }
 
                 numTicks++;
@@ -1294,7 +1383,7 @@ namespace Cognitive3D
                     return;
                 }
             }
-            index = 0;
+            inputIndex = 0;
         }
 
 
@@ -1351,11 +1440,13 @@ namespace Cognitive3D
                             {
                                 //DynamicObjectCore.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
                                 CoreInterface.WriteControllerManifestEntry(ActiveDynamicObjectsArray[i]);
+                                InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                             }
                             else
                             {
                                 //DynamicObjectCore.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
                                 CoreInterface.WriteDynamicManifestEntry(ActiveDynamicObjectsArray[i]);
+                                InvokeDynamicRecorded(ActiveDynamicObjectsArray[i].Id, ActiveDynamicObjectsArray[i].MeshName, Util.Timestamp(Time.frameCount), ActiveDynamicObjectsArray[i].LastPosition, ActiveDynamicObjectsArray[i].LastRotation, ActiveDynamicObjectsArray[i].LastScale);
                             }
                         }
                     }

@@ -80,16 +80,31 @@ namespace Cognitive3D
         }
 
         static int uploadDelayFrames = 0;
+        static ICache activeUploadCache;
         private static void DelayUploadCache()
         {
             uploadDelayFrames--;
             if (uploadDelayFrames < 0)
             {
                 EditorApplication.update -= DelayUploadCache;
+                // Skip if a previous upload session still has the cache open
+                if (activeUploadCache != null) { return; }
                 ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 if (ic.HasContent())
-                    new EditorDataUploader(ic);
+                {
+                    activeUploadCache = ic;
+                    new EditorDataUploader(ic, OnEditorUploadComplete);
+                }
+                else
+                {
+                    ic.Close();
+                }
             }
+        }
+
+        static void OnEditorUploadComplete()
+        {
+            activeUploadCache = null;
         }
 
         public static DynamicObjectIdPool[] _cachedPoolAssets;
@@ -472,7 +487,7 @@ namespace Cognitive3D
                 }
 
                 RefreshSceneVersionComplete = refreshSceneVersionComplete;
-                string url = CognitiveStatics.GetSceneVersions(currentSettings.SceneId);
+                string url = CognitiveStatics.GetScenes();
                 Dictionary<string, string> headers = new Dictionary<string, string>();
                 headers.Add("Authorization", "APIKEY:DEVELOPER " + DeveloperKey);
                 EditorNetwork.Get(url, GetSceneVersionResponse, headers, true, "Get Scene Version");//AUTH
@@ -491,57 +506,115 @@ namespace Cognitive3D
         /// <param name="refreshSceneVersionComplete">Callback invoked after all valid version requests complete.</param>
         public static void RefreshAllScenesVersion(Action refreshSceneVersionComplete)
         {
-            if (Cognitive3D_Preferences.Instance.sceneSettings.Count == 0) return;
+            if (Cognitive3D_Preferences.Instance.sceneSettings.Count == 0)
+            {
+                refreshSceneVersionComplete?.Invoke();
+                return;
+            }
 
-            int pendingRequests = 0;
+            if (!IsDeveloperKeyValid)
+            {
+                Debug.Log("Developer key invalid");
+                refreshSceneVersionComplete?.Invoke();
+                return;
+            }
 
+            // Make a single API call to get all scenes (same as RefreshSceneVersion)
+            string url = CognitiveStatics.GetScenes();
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", "APIKEY:DEVELOPER " + DeveloperKey);
+
+            EditorNetwork.Get(url, (responseCode, error, text) =>
+            {
+                GetAllScenesVersionResponse(responseCode, error, text);
+                refreshSceneVersionComplete?.Invoke();
+            }, headers, true, "Get All Scene Versions");
+        }
+
+        /// <summary>
+        /// Handles the response from getting all scenes and updates all scene settings in preferences.
+        /// </summary>
+        private static void GetAllScenesVersionResponse(int responseCode, string error, string text)
+        {
+            if (responseCode != 200)
+            {
+                Debug.LogError("GetAllScenesVersionResponse [CODE] " + responseCode + " [ERROR] " + error);
+                EditorUtility.DisplayDialog("Error Getting Scene Versions",
+                    "There was an error getting scene data from the Cognitive3D Dashboard. Response code was " + responseCode + ".\n\nSee Console for more details", "Ok");
+                return;
+            }
+
+            // Parse the response containing all scenes (same format as RefreshSceneVersion)
+            var wrappedJson = "{\"scenes\":" + text + "}";
+            var collection = JsonUtility.FromJson<ScenesCollectionList>(wrappedJson);
+
+            if (collection == null || collection.scenes == null)
+            {
+                Debug.LogWarning("Failed to parse scenes collection from response");
+                return;
+            }
+
+            // Update each scene setting with its latest version
+            bool hasUpdates = false;
             foreach (var sceneSetting in Cognitive3D_Preferences.Instance.sceneSettings)
             {
-                if (!IsDeveloperKeyValid)
-                {
-                    Debug.Log("Developer key invalid");
-                    continue;
-                }
-
                 if (sceneSetting == null || string.IsNullOrEmpty(sceneSetting.SceneId))
-                {
                     continue;
-                }
 
-                string url = CognitiveStatics.GetSceneVersions(sceneSetting.SceneId);
-                var headers = new Dictionary<string, string>
+                // Find matching scene in the response
+                foreach (var sceneCollection in collection.scenes)
                 {
-                    { "Authorization", "APIKEY:DEVELOPER " + DeveloperKey }
-                };
-
-                pendingRequests++;
-                EditorNetwork.Get(url, (responseCode, error, text) =>
-                {
-                    if (responseCode != 200)
+                    if (sceneCollection.sdkFacingId == sceneSetting.SceneId)
                     {
-                        Debug.LogError($"Scene {sceneSetting.SceneId} error: {responseCode}, {error}");
-                    }
-                    else
-                    {
-                        var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
-                        if (collection != null)
+                        var latestVersion = sceneCollection.GetLatestVersion();
+                        if (latestVersion != null)
                         {
-                            var latest = collection.GetLatestVersion();
-                            sceneSetting.VersionId = latest.id;
-                            sceneSetting.VersionNumber = latest.versionNumber;
-                            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
-                            AssetDatabase.SaveAssets();
+                            sceneSetting.VersionId = latestVersion.id;
+                            sceneSetting.VersionNumber = latestVersion.versionNumber;
+                            sceneSetting.backendSceneId = sceneCollection.id;
+                            hasUpdates = true;
                         }
+                        break;
                     }
-
-                    // Done with one request
-                    pendingRequests--;
-                    if (pendingRequests == 0)
-                    {
-                        refreshSceneVersionComplete?.Invoke();
-                    }
-                }, headers, true, "Get Scene Version");
+                }
             }
+
+            if (hasUpdates)
+            {
+                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+                AssetDatabase.SaveAssets();
+            }
+        }
+
+        /// <summary>
+        /// Fetches scene data from the API and updates only the scenes that already exist in preferences.
+        /// Matches by SceneId and VersionNumber, then fills in missing fields such as VersionId.
+        /// Does not add or remove any scene settings entries.
+        /// </summary>
+        /// <param name="callback">Callback invoked after the request completes.</param>
+        public static void UpdateExistingSceneVersions(EditorNetwork.Response callback)
+        {
+            if (Cognitive3D_Preferences.Instance.sceneSettings.Count == 0)
+            {
+                // No API call needed. Treat as success so buttons remain usable
+                callback?.Invoke(200, null, null);
+                return;
+            }
+
+            if (!IsDeveloperKeyValid)
+            {
+                Debug.Log("Developer key invalid");
+                callback?.Invoke(0, "Developer key invalid", null);
+                return;
+            }
+
+            string url = CognitiveStatics.GetScenes();
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "Authorization", "APIKEY:DEVELOPER " + DeveloperKey }
+            };
+
+            EditorNetwork.Get(url, callback, headers, true, "Update Existing Scene Versions");
         }
 
         internal static void GetSceneVersionResponse(int responsecode, string error, string text)
@@ -563,13 +636,25 @@ namespace Cognitive3D
             }
 
             //receive and apply scene version data to preferences
-            var collection = JsonUtility.FromJson<SceneVersionCollection>(text);
+            var wrappedJson = $"{{\"scenes\":{text}}}";
+            var collection = JsonUtility.FromJson<ScenesCollectionList>(wrappedJson);
             if (collection != null)
             {
-                settings.VersionId = collection.GetLatestVersion().id;
-                settings.VersionNumber = collection.GetLatestVersion().versionNumber;
-                EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
-                AssetDatabase.SaveAssets();
+                foreach (var sceneCollection in collection.scenes)
+                {
+                    if (sceneCollection.sdkFacingId == settings.SceneId)
+                    {
+                        var latestVersion = sceneCollection.GetLatestVersion();
+                        if (latestVersion != null)
+                        {
+                            settings.VersionId = latestVersion.id;
+                            settings.VersionNumber = latestVersion.versionNumber;
+                            EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
+                            AssetDatabase.SaveAssets();
+                        }
+                        break;
+                    }
+                }
             }
             if (RefreshSceneVersionComplete != null)
             {
@@ -907,6 +992,39 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _logoCheckmark;
+        public static Texture2D LogoCheckmark
+        {
+            get
+            {
+                if (_logoCheckmark == null)
+                    _logoCheckmark = Resources.Load<Texture2D>("logo-checkmark");
+                return _logoCheckmark;
+            }
+        }
+
+        private static Texture2D _sceneGeometryIcon;
+        public static Texture2D SceneGeometryIcon
+        {
+            get
+            {
+                if (_sceneGeometryIcon == null)
+                    _sceneGeometryIcon = Resources.Load<Texture2D>("Icons/scene-geometry-icon");
+                return _sceneGeometryIcon;
+            }
+        }
+
+        private static Texture2D _exploreFeaturesIcon;
+        public static Texture2D ExploreFeaturesIcon
+        {
+            get
+            {
+                if (_exploreFeaturesIcon == null)
+                    _exploreFeaturesIcon = Resources.Load<Texture2D>("Icons/explore-features-icon");
+                return _exploreFeaturesIcon;
+            }
+        }
+
         private static Texture2D _background;
         public static Texture2D BackgroundTexture
         {
@@ -994,6 +1112,17 @@ namespace Cognitive3D
                 if (_remoteControlsIcon == null)
                     _remoteControlsIcon = Resources.Load<Texture2D>("Features/Icons/remote-controls");
                 return _remoteControlsIcon;
+            }
+        }
+
+        private static Texture2D _audioRecordingIcon;
+        public static Texture2D AudioRecordingIcon
+        {
+            get
+            {
+                if (_audioRecordingIcon == null)
+                    _audioRecordingIcon = Resources.Load<Texture2D>("Features/Icons/audio-recording");
+                return _audioRecordingIcon;
             }
         }
 
@@ -2243,7 +2372,7 @@ namespace Cognitive3D
 
             var files = Directory.GetFiles(sceneExportDirectory);
             bool hasBin = false;
-            bool hasGltf = false; ;
+            bool hasGltf = false;
             foreach (var f in files)
             {
                 if (f.EndsWith("scene.bin"))
@@ -2978,6 +3107,16 @@ namespace Cognitive3D
             public long expiration;
             public string planType;
             public bool isFreeTrial;
+
+            public EntitlementData entitlements;
+        }
+
+        [System.Serializable]
+        internal class EntitlementData
+        {
+            public bool can_access_session_audio;
+            public bool can_access_eye_tracking;
+            public bool can_create_ab_test;
         }
         #endregion
 
@@ -3150,6 +3289,16 @@ namespace Cognitive3D
         {
             var worldToLocalMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one).inverse;
             return worldToLocalMatrix.MultiplyPoint3x4(position);
+        }
+
+        /// <summary>
+        /// Generates a deterministic scene ID from a scene path using MD5 hashing.
+        /// </summary>
+        internal static string GenerateSceneIdFromPath(string scenePath)
+        {
+            using var md5 = System.Security.Cryptography.MD5.Create();
+            byte[] bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(scenePath));
+            return new System.Guid(bytes).ToString();
         }
     }
 

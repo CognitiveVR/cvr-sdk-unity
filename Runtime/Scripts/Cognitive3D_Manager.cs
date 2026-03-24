@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.1.0";
+        public static readonly string SDK_VERSION = "2.3.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -94,6 +94,13 @@ namespace Cognitive3D
             }
             if (BeginSessionAutomatically)
             {
+#if XRPF
+                // Wait for xrpf agreement before starting session
+                while (!XRPF.PrivacyFramework.Agreement.IsAgreementComplete)
+                {
+                    yield return null;
+                }
+#endif
                 BeginSession();
             }
         }
@@ -226,6 +233,12 @@ namespace Cognitive3D
                 Util.logWarning("The scene has not been uploaded to the dashboard. The user activity will not be captured.");
             }
 
+            // Record the start time for the initial scene
+            if (!string.IsNullOrEmpty(scene.path) && !SceneStartTimeDict.ContainsKey(scene.path))
+            {
+                SceneStartTimeDict.Add(scene.path, Time.time);
+            }
+
             // TODO: support for additive scenes? According to doc, it'll be somehow considered single mode
             InvokeLevelLoadedEvent(scene, UnityEngine.SceneManagement.LoadSceneMode.Single, true);
 
@@ -291,7 +304,7 @@ namespace Cognitive3D
                 fixationRecorder.Initialize();
             }
 #endif
-
+            SetSessionProperties();
             try
             {
                 InvokeSessionBeginEvent();
@@ -300,8 +313,6 @@ namespace Cognitive3D
             {
                 Debug.LogException(e);
             }
-
-            SetSessionProperties();
             FlushData();
             StartCoroutine(AutomaticSendData());
         }
@@ -333,7 +344,7 @@ namespace Cognitive3D
                     Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
                 }
             }
-            SetSessionProperty("c3d.app.inEditor", Application.isEditor);
+            SetSessionPropertyIfEmpty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
 #region XRPF_PROPERTIES
 #if XRPF
@@ -344,6 +355,7 @@ namespace Cognitive3D
                 SetSessionProperty("xrpf.allowed.bio.data", XRPF.PrivacyFramework.Agreement.IsBioDataAllowed);
                 SetSessionProperty("xrpf.allowed.spatial.data", XRPF.PrivacyFramework.Agreement.IsSpatialDataAllowed);
                 SetSessionProperty("xrpf.allowed.social.data", XRPF.PrivacyFramework.Agreement.IsSocialDataAllowed);
+                SetSessionProperty("xrpf.allowed.audio.data", XRPF.PrivacyFramework.Agreement.IsAudioDataAllowed);
             }
 #endif
 #endregion
@@ -719,6 +731,7 @@ namespace Cognitive3D
         void OnDestroy()
         {
             if (instance != this) { return; }
+            Application.wantsToQuit -= WantsToQuit;
             if (!Application.isPlaying) { return; }
 
             if (IsInitialized)
@@ -739,6 +752,7 @@ namespace Cognitive3D
             {
                 return true;
             }
+            if (this == null) { return true; }
             if (!IsInitialized) { return true; }
             double playtime = Util.Timestamp(Time.frameCount) - SessionTimeStamp;
             Util.logDebug("Session End. Duration: " + string.Format("{0:0.00}", playtime));

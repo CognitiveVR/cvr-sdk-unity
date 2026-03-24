@@ -21,7 +21,7 @@ namespace Cognitive3D
             window.GetSelectedSDKs();
             window.currentPage = Page.Welcome;
 
-            ExportUtility.ClearUploadSceneSettings();
+            UploadTools.ClearUploadSceneSettings();
         }
 
         internal static void Init(Page page)
@@ -36,7 +36,7 @@ namespace Cognitive3D
             window.LoadKeys();
             window.GetSelectedSDKs();
 
-            ExportUtility.ClearUploadSceneSettings();
+            UploadTools.ClearUploadSceneSettings();
         }
 
         internal static void Init(Rect position)
@@ -52,7 +52,7 @@ namespace Cognitive3D
             window.GetSelectedSDKs();
             window.currentPage = Page.Welcome;
 
-            ExportUtility.ClearUploadSceneSettings();
+            UploadTools.ClearUploadSceneSettings();
         }
 
         internal enum Page
