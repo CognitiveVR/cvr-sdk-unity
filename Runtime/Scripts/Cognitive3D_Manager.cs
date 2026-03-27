@@ -10,6 +10,7 @@ using Valve.VR;
 #endif
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3DEditor")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Cognitive3D.Editor.Tests")]
 
 /// <summary>
 /// Initializes Cognitive3D Analytics. Add components to track additional events
