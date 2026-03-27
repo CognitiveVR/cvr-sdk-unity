@@ -69,7 +69,7 @@ namespace Cognitive3D
             {
                 if (item.remoteVariableName == variableName)
                 {
-                    return ConvertValue<T>(item.valueString, item.valueBool, item.valueInt, defaultValue);
+                    return ConvertValue<T>(item.valueString, item.valueBoolean, item.valueInt, defaultValue);
                 }
             }
             return defaultValue;
@@ -119,7 +119,7 @@ namespace Cognitive3D
         public string type;
         public int valueInt;
         public string valueString;
-        public bool valueBool;
+        public bool valueBoolean;
 
         public override string ToString()
         {
@@ -133,7 +133,7 @@ namespace Cognitive3D
             }
             if (type == "bool")
             {
-                return string.Format("name:{0}, type:{1}, value:{2}", name, type, valueBool);
+                return string.Format("name:{0}, type:{1}, value:{2}", name, type, valueBoolean);
             }
 
             return string.Format("name:{0}, type:{1}", name, type);
