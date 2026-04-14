@@ -842,16 +842,17 @@ namespace Cognitive3D
                     checkAction: () =>
                     {
                         var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
-                        var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
-                        return !_questFeature.ForceRemoveInternetPermission;
+                        return _questFeature != null && !_questFeature.ForceRemoveInternetPermission;
                     },
                     fixAction: () =>
                     {
                         var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
-                        var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
-                        _questFeature.ForceRemoveInternetPermission = false;
+                        if (_questFeature != null)
+                            _questFeature.ForceRemoveInternetPermission = false;
                     }
                 );
             }
