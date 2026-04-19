@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_ANDROID
+using UnityEngine.Android;
+#endif
+
 namespace Cognitive3D.Components
 {
     [RequireComponent(typeof(AndroidPlugin))]
@@ -47,12 +51,19 @@ namespace Cognitive3D.Components
 
         private IEnumerator RequestMicrophoneAndEnableRecording()
         {
-            if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+            if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
             {
-                yield return Application.RequestUserAuthorization(UserAuthorization.Microphone);
+                var callbacks = new PermissionCallbacks();
+                bool done = false;
+                callbacks.PermissionGranted += _ => done = true;
+                callbacks.PermissionDenied += _ => done = true;
+                callbacks.PermissionDeniedAndDontAskAgain += _ => done = true;
+
+                Permission.RequestUserPermission(Permission.Microphone, callbacks);
+                while (!done) yield return null;
             }
 
-            bool granted = Application.HasUserAuthorization(UserAuthorization.Microphone);
+            bool granted = Permission.HasUserAuthorizedPermission(Permission.Microphone);
             Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", granted);
 
             if (granted)
