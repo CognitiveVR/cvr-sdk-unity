@@ -27,8 +27,9 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Triggered once the Android plugin instance is created. 
-        /// Starts audio recording on the plugin.
+        /// Triggered once the Android plugin instance is created.
+        /// Runs XRPF checks, then starts the microphone-permission flow
+        /// that enables session-long audio recording on the plugin if granted.
         /// </summary>
         private void AndroidPlugin_OnInstanceCreated()
         {
@@ -41,23 +42,33 @@ namespace Cognitive3D.Components
                 return; // Don't proceed with setting up audio recording
             }
 #endif
-            // Request permission if not already granted
+            StartCoroutine(RequestMicrophoneAndEnableRecording());
+        }
+
+        private IEnumerator RequestMicrophoneAndEnableRecording()
+        {
             if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
             {
-                Application.RequestUserAuthorization(UserAuthorization.Microphone);
+                yield return Application.RequestUserAuthorization(UserAuthorization.Microphone);
             }
-            // Audio Recording
-            AndroidPlugin.Instance.Call("startAudioRecording");
-            Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", true);
+
+            bool granted = Application.HasUserAuthorization(UserAuthorization.Microphone);
+            Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", granted);
+
+            if (granted)
+            {
+                AndroidPlugin.Instance.Call("setAudioRecordingEnabled", true);
+            }
         }
 
         /// <summary>
-        /// Called when the application is quitting. Stops audio recording on the plugin.
-        /// Also handling pause/resume cases on Plugin side where Unity pause/resume callbacks may not fire correctly.
+        /// Called when the application is quitting. Disables audio recording on the plugin,
+        /// which releases the microphone. Pause/resume during the session is handled on the
+        /// Java side via ActivityLifecycleCallbacks while the flag is enabled.
         /// </summary>
         void OnApplicationQuit()
         {
-            AndroidPlugin.Instance?.Call("stopAudioRecording");
+            AndroidPlugin.Instance?.Call("setAudioRecordingEnabled", false);
         }
 #endif
 
