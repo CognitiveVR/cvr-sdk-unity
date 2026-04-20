@@ -216,6 +216,10 @@ namespace Cognitive3D
                             string sceneId = EditorCore.GenerateSceneIdFromPath(currentScenePath);
 
                             Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);
+                            
+                            // Immediately mark preferences as dirty and save to persist the new scene setting
+                            EditorUtility.SetDirty(EditorCore.GetPreferences());
+                            AssetDatabase.SaveAssets();
                         }
 
                         // Check if geometry should be exported
