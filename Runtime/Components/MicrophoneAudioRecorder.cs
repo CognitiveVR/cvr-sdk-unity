@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_ANDROID
+using UnityEngine.Android;
+#endif
+
 namespace Cognitive3D.Components
 {
     [RequireComponent(typeof(AndroidPlugin))]
@@ -27,8 +31,9 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Triggered once the Android plugin instance is created. 
-        /// Starts audio recording on the plugin.
+        /// Triggered once the Android plugin instance is created.
+        /// Runs XRPF checks, then starts the microphone-permission flow
+        /// that enables session-long audio recording on the plugin if granted.
         /// </summary>
         private void AndroidPlugin_OnInstanceCreated()
         {
@@ -41,23 +46,40 @@ namespace Cognitive3D.Components
                 return; // Don't proceed with setting up audio recording
             }
 #endif
-            // Request permission if not already granted
-            if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+            StartCoroutine(RequestMicrophoneAndEnableRecording());
+        }
+
+        private IEnumerator RequestMicrophoneAndEnableRecording()
+        {
+            if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
             {
-                Application.RequestUserAuthorization(UserAuthorization.Microphone);
+                var callbacks = new PermissionCallbacks();
+                bool done = false;
+                callbacks.PermissionGranted += _ => done = true;
+                callbacks.PermissionDenied += _ => done = true;
+                callbacks.PermissionDeniedAndDontAskAgain += _ => done = true;
+
+                Permission.RequestUserPermission(Permission.Microphone, callbacks);
+                while (!done) yield return null;
             }
-            // Audio Recording
-            AndroidPlugin.Instance.Call("startAudioRecording");
-            Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", true);
+
+            bool granted = Permission.HasUserAuthorizedPermission(Permission.Microphone);
+            Cognitive3D_Manager.SetSessionProperty("c3d.device.audio_tracking.enabled", granted);
+
+            if (granted)
+            {
+                AndroidPlugin.Instance.Call("setAudioRecordingEnabled", true);
+            }
         }
 
         /// <summary>
-        /// Called when the application is quitting. Stops audio recording on the plugin.
-        /// Also handling pause/resume cases on Plugin side where Unity pause/resume callbacks may not fire correctly.
+        /// Called when the application is quitting. Disables audio recording on the plugin,
+        /// which releases the microphone. Pause/resume during the session is handled on the
+        /// Java side via ActivityLifecycleCallbacks while the flag is enabled.
         /// </summary>
         void OnApplicationQuit()
         {
-            AndroidPlugin.Instance?.Call("stopAudioRecording");
+            AndroidPlugin.Instance?.Call("setAudioRecordingEnabled", false);
         }
 #endif
 

@@ -216,6 +216,10 @@ namespace Cognitive3D
                             string sceneId = EditorCore.GenerateSceneIdFromPath(currentScenePath);
 
                             Cognitive3D_Preferences.AddSceneSettings(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), sceneId, 1);
+                            
+                            // Immediately mark preferences as dirty and save to persist the new scene setting
+                            EditorUtility.SetDirty(EditorCore.GetPreferences());
+                            AssetDatabase.SaveAssets();
                         }
 
                         // Check if geometry should be exported
@@ -244,8 +248,13 @@ namespace Cognitive3D
                             DebugInformationWindow.WriteDebugToFile(path + "debug.log");
                         }
 
-                        UnityEditor.EditorUtility.SetDirty(EditorCore.GetPreferences());
-                        UnityEditor.AssetDatabase.SaveAssets();
+                        EditorUtility.SetDirty(EditorCore.GetPreferences());
+                        AssetDatabase.SaveAssets();
+                        var preferencesAssetPath = AssetDatabase.GetAssetPath(EditorCore.GetPreferences());
+                        if (!string.IsNullOrEmpty(preferencesAssetPath))
+                        {
+                            AssetDatabase.ImportAsset(preferencesAssetPath);
+                        }
 
                         // Advance state after export completes
                         sceneUploadState = SceneManagementUploadState.StartUpload;
@@ -922,6 +931,11 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
+            var preferencesAssetPath = AssetDatabase.GetAssetPath(Cognitive3D_Preferences.Instance);
+            if (!string.IsNullOrEmpty(preferencesAssetPath))
+            {
+                AssetDatabase.ImportAsset(preferencesAssetPath);
+            }
 
             SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Phase1", "SceneSetupSceneUpdatePage");
             StartPhase2Update();
@@ -1048,6 +1062,11 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
+            var preferencesAssetPath = AssetDatabase.GetAssetPath(Cognitive3D_Preferences.Instance);
+            if (!string.IsNullOrEmpty(preferencesAssetPath))
+            {
+                AssetDatabase.ImportAsset(preferencesAssetPath);
+            }
 
             SegmentAnalytics.TrackEvent("UploadingSceneComplete_Phase1", "SceneSetupSceneUploadPage");
             StartPhase2Upload();
@@ -1575,12 +1594,18 @@ namespace Cognitive3D
                 EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
                 UploadSceneSettings.SceneId = responseText;
                 AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
 
             UploadSceneSettings.LastRevision = System.DateTime.UtcNow.ToString(System.Globalization.CultureInfo.InvariantCulture);
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
+            var preferencesAssetPath = AssetDatabase.GetAssetPath(Cognitive3D_Preferences.Instance);
+            if (!string.IsNullOrEmpty(preferencesAssetPath))
+            {
+                AssetDatabase.ImportAsset(preferencesAssetPath);
+            }
 
             if (UploadComplete != null)
             {
