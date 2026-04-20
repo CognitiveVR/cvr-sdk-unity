@@ -246,7 +246,11 @@ namespace Cognitive3D
 
                         EditorUtility.SetDirty(EditorCore.GetPreferences());
                         AssetDatabase.SaveAssets();
-                        AssetDatabase.Refresh();
+                        var preferencesAssetPath = AssetDatabase.GetAssetPath(EditorCore.GetPreferences());
+                        if (!string.IsNullOrEmpty(preferencesAssetPath))
+                        {
+                            AssetDatabase.ImportAsset(preferencesAssetPath);
+                        }
 
                         // Advance state after export completes
                         sceneUploadState = SceneManagementUploadState.StartUpload;
@@ -923,7 +927,11 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            var preferencesAssetPath = AssetDatabase.GetAssetPath(Cognitive3D_Preferences.Instance);
+            if (!string.IsNullOrEmpty(preferencesAssetPath))
+            {
+                AssetDatabase.ImportAsset(preferencesAssetPath);
+            }
 
             SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Phase1", "SceneSetupSceneUpdatePage");
             StartPhase2Update();
@@ -1050,7 +1058,11 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            var preferencesAssetPath = AssetDatabase.GetAssetPath(Cognitive3D_Preferences.Instance);
+            if (!string.IsNullOrEmpty(preferencesAssetPath))
+            {
+                AssetDatabase.ImportAsset(preferencesAssetPath);
+            }
 
             SegmentAnalytics.TrackEvent("UploadingSceneComplete_Phase1", "SceneSetupSceneUploadPage");
             StartPhase2Upload();
@@ -1585,7 +1597,11 @@ namespace Cognitive3D
             GUI.FocusControl("NULL");
             EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
             AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
+            var preferencesAssetPath = AssetDatabase.GetAssetPath(Cognitive3D_Preferences.Instance);
+            if (!string.IsNullOrEmpty(preferencesAssetPath))
+            {
+                AssetDatabase.ImportAsset(preferencesAssetPath);
+            }
 
             if (UploadComplete != null)
             {

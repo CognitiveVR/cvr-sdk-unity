@@ -134,7 +134,7 @@ Dashboard Concepts: https://docs.cognitive3d.com/dashboard/concepts/
 
 ## Project Overview
 
-Cognitive3D Unity SDK (`com.cognitive3d.c3d-sdk` v2.3.0) — an analytics platform for VR/AR/MR experiences. Distributed as a Unity Package Manager (UPM) package. Requires Unity 2021.3 LTS or newer.
+Cognitive3D Unity SDK (`com.cognitive3d.c3d-sdk`) — an analytics platform for VR/AR/MR experiences. Distributed as a Unity Package Manager (UPM) package. Requires Unity 2021.3 LTS or newer.
 
 This is a UPM package, not a standalone Unity project. There is no build command or test suite. No CI/CD pipelines, linters, or automated tests configured. To develop: import into a Unity project via Package Manager and iterate using the Unity Editor.
 
