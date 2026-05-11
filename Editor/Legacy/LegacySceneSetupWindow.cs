@@ -296,9 +296,9 @@ namespace Cognitive3D
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<PhotonView>();
                 }
     #else
-                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>() != null)
+                if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonPunMultiplayer>() != null)
                 {
-                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonMultiplayer>());
+                    DestroyImmediate(Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonPunMultiplayer>());
                 }
                 if (Cognitive3D_Manager.Instance.gameObject.GetComponent<PhotonView>() != null)
                 {

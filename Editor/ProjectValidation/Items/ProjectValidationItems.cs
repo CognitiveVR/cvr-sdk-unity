@@ -667,14 +667,13 @@ namespace Cognitive3D
 #elif C3D_DEFAULT
 
 #if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
-            var viveFeature = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android).
-                                GetFeature<VIVE.OpenXR.VIVEFocus3Feature>();
+            var androidSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            var viveFeature = androidSettings?.GetFeature<VIVE.OpenXR.VIVEFocus3Feature>();
 
             if (viveFeature != null && viveFeature.enabled)
             {
                 // Check hand tracking
-                var handTrackingFeature = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android)
-                                            .GetFeature<VIVE.OpenXR.Hand.ViveHandTracking>();
+                var handTrackingFeature = androidSettings?.GetFeature<VIVE.OpenXR.Hand.ViveHandTracking>();
                 
                 if (handTrackingFeature != null)
                 {
@@ -828,6 +827,7 @@ namespace Cognitive3D
 
 #if COGNITIVE3D_INCLUDE_OPENXR_1_9_0_OR_NEWER && UNITY_ANDROID
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            if (androidOpenXRSettings == null) return;
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
             // Check if Meta Quest Support exists and enabled in OpenXR Android settings
@@ -842,16 +842,19 @@ namespace Cognitive3D
                     checkAction: () =>
                     {
                         var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
-                        var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        if (_androidOpenXRSettings == null) return false;
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
-                        return !_questFeature.ForceRemoveInternetPermission;
+                        return _questFeature != null && !_questFeature.ForceRemoveInternetPermission;
                     },
                     fixAction: () =>
                     {
                         var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
-                        var _questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        if (_androidOpenXRSettings == null) return;
+                        var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
-                        _questFeature.ForceRemoveInternetPermission = false;
+                        if (_questFeature != null)
+                            _questFeature.ForceRemoveInternetPermission = false;
                     }
                 );
             }
@@ -859,6 +862,7 @@ namespace Cognitive3D
 
 #if COGNITIVE3D_INCLUDE_OPENXR_1_8_1_OR_1_8_2 && UNITY_ANDROID
             var androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+            if (androidOpenXRSettings == null) return;
             var questFeature = androidOpenXRSettings.GetFeature<MetaQuestFeature>();
 
             // Check if Meta Quest Support exists and enabled in OpenXR Android settings
@@ -873,14 +877,16 @@ namespace Cognitive3D
                     checkAction: () =>
                     {
                         var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        if (_androidOpenXRSettings == null) return false;
                         var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        if (_questFeature == null) return false;
                         var _questFeatureType = _questFeature.GetType();
 
                         var _forceRemoveInternetPermission = _questFeatureType.GetField("forceRemoveInternetPermission", BindingFlags.NonPublic | BindingFlags.Instance);
 
                         if(_forceRemoveInternetPermission != null)
                         {
-                            object _permission = _forceRemoveInternetPermission.GetValue(questFeature);
+                            object _permission = _forceRemoveInternetPermission.GetValue(_questFeature);
 
                             return !(bool)_permission;
                         }
@@ -890,14 +896,16 @@ namespace Cognitive3D
                     fixAction: () =>
                     {
                         var _androidOpenXRSettings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                        if (_androidOpenXRSettings == null) return;
                         var _questFeature = _androidOpenXRSettings.GetFeature<MetaQuestFeature>();
+                        if (_questFeature == null) return;
                         var _questFeatureType = _questFeature.GetType();
 
                         var _forceRemoveInternetPermission = _questFeatureType.GetField("forceRemoveInternetPermission", BindingFlags.NonPublic | BindingFlags.Instance);
 
                         if(_forceRemoveInternetPermission != null)
                         {
-                            _forceRemoveInternetPermission.SetValue(questFeature, false);
+                            _forceRemoveInternetPermission.SetValue(_questFeature, false);
                         }
                     }
                 );

@@ -183,7 +183,7 @@ namespace Cognitive3D
         }
 
         //GET request question set
-        //https://data.cognitive3d.com/v0/scenes/questionSetHooks/[hookName]/questionSet
+        //https://data.cognitive3d.com/v0/questionSetHooks/[hookName]/questionSet
         internal static string GetExitpollQuestionSet(string hookname)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version, "/questionSetHooks/", hookname, "/questionSet");
@@ -196,7 +196,7 @@ namespace Cognitive3D
         }
 
         //POST question set responses
-        //https://data.cognitive3d.com/v0/scenes/questionSets/[questionSetName]/[questionSetVersion]/responses
+        //https://data.cognitive3d.com/v0/questionSets/[questionSetName]/[questionSetVersion]/responses
         internal static string PostExitpollResponses(string questionsetname, int questionsetversion)
         {
             return string.Concat(Cognitive3D_Preferences.Instance.Protocol, "://", Cognitive3D_Preferences.Instance.Gateway, "/v", version,"/questionSets/", questionsetname, "/",questionsetversion.ToString(), "/responses");
