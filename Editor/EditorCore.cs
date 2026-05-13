@@ -562,10 +562,12 @@ namespace Cognitive3D
                     continue;
 
                 // Find matching scene in the response
+                bool foundOnBackend = false;
                 foreach (var sceneCollection in collection.scenes)
                 {
                     if (sceneCollection.sdkFacingId == sceneSetting.SceneId)
                     {
+                        foundOnBackend = true;
                         var latestVersion = sceneCollection.GetLatestVersion();
                         if (latestVersion != null)
                         {
@@ -577,6 +579,13 @@ namespace Cognitive3D
                         break;
                     }
                 }
+
+                // Scene is not on the current project's backend, clear stale upload state
+                if (!foundOnBackend && HasBackendState(sceneSetting))
+                {
+                    ClearBackendState(sceneSetting);
+                    hasUpdates = true;
+                }
             }
 
             if (hasUpdates)
@@ -584,6 +593,27 @@ namespace Cognitive3D
                 EditorUtility.SetDirty(Cognitive3D_Preferences.Instance);
                 AssetDatabase.SaveAssets();
             }
+        }
+
+        /// <summary>
+        /// Returns true if a scene setting carries backend-sourced state that needs
+        /// to be cleared when the backend no longer recognizes the scene
+        /// </summary>
+        internal static bool HasBackendState(Cognitive3D_Preferences.SceneSettings sceneSetting)
+        {
+            if (sceneSetting == null) return false;
+            return !string.IsNullOrEmpty(sceneSetting.backendSceneId)
+                || sceneSetting.VersionId > 0;
+        }
+
+        /// <summary>
+        /// Clears backend-sourced fields on a scene setting
+        /// </summary>
+        internal static void ClearBackendState(Cognitive3D_Preferences.SceneSettings sceneSetting)
+        {
+            if (sceneSetting == null) return;
+            sceneSetting.backendSceneId = string.Empty;
+            sceneSetting.VersionId = 0;
         }
 
         /// <summary>
