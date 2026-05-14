@@ -1644,6 +1644,18 @@ namespace Cognitive3D.Serialization
         static List<KeyValuePair<double, Cognitive3D.Components.CustomTransform>> trackingSpaces = new List<KeyValuePair<double, Cognitive3D.Components.CustomTransform>>();
 
         /// <summary>
+        /// Room layout manifest
+        /// Data is keyed by id + time
+        /// </summary>
+        static List<Cognitive3D.RoomManifestEntry> roomManifests = new List<Cognitive3D.RoomManifestEntry>(4);
+        static List<Cognitive3D.RoomDataEntry> roomDataEntries = new List<Cognitive3D.RoomDataEntry>(16);
+
+        /// <summary>
+        /// Dedupes consecutive identical enabled-only toggles per id
+        /// </summary>
+        static Dictionary<string, bool> lastRoomEnabled = new Dictionary<string, bool>();
+
+        /// <summary>
         /// Threshold for tracking space count
         /// Not in preferences; don't want users changing this
         /// </summary>
@@ -1696,6 +1708,36 @@ namespace Cognitive3D.Serialization
             {
                 SerializeBoundaryShapes(false);
             }
+        }
+
+        /// <summary>
+        /// Buffers a room manifest entry
+        /// </summary>
+        internal static void RecordRoomManifest(Cognitive3D.RoomManifestEntry entry)
+        {
+            if (!IsInitialized) { return; }
+            if (string.IsNullOrEmpty(entry.id)) { return; }
+            if (boundarybuilder == null) { InitializeBoundary(4); }
+            roomManifests.Add(entry);
+        }
+
+        /// <summary>
+        /// Buffers a room data entry
+        /// </summary>
+        internal static void RecordRoomData(Cognitive3D.RoomDataEntry entry)
+        {
+            if (!IsInitialized) { return; }
+            if (string.IsNullOrEmpty(entry.id)) { return; }
+            if (boundarybuilder == null) { InitializeBoundary(4); }
+
+            if (!entry.hasTransform &&
+                lastRoomEnabled.TryGetValue(entry.id, out var prev) &&
+                prev == entry.enabled)
+            {
+                return;
+            }
+            lastRoomEnabled[entry.id] = entry.enabled;
+            roomDataEntries.Add(entry);
         }
 
         /// <summary>
@@ -1762,6 +1804,26 @@ namespace Cognitive3D.Serialization
             boundarybuilder.Append("]");
             boundarybuilder.Append(",");
 
+            /// Room manifest
+            boundarybuilder.Append("\"roomManifest\":[");
+            for (int i = 0; i < roomManifests.Count; i++)
+            {
+                if (i > 0) boundarybuilder.Append(",");
+                AppendRoomManifestEntry(roomManifests[i], boundarybuilder);
+            }
+            boundarybuilder.Append("]");
+            boundarybuilder.Append(",");
+
+            /// Room data
+            boundarybuilder.Append("\"roomData\":[");
+            for (int i = 0; i < roomDataEntries.Count; i++)
+            {
+                if (i > 0) boundarybuilder.Append(",");
+                AppendRoomDataEntry(roomDataEntries[i], boundarybuilder);
+            }
+            boundarybuilder.Append("]");
+            boundarybuilder.Append(",");
+
             /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
@@ -1784,14 +1846,72 @@ namespace Cognitive3D.Serialization
             // Clear and prepare for next batch
             trackingSpaces.Clear();
             boundaryShapes.Clear();
+            roomManifests.Clear();
+            roomDataEntries.Clear();
+            // lastRoomEnabled persists across flushes — it's session-scoped dedupe state.
             boundarybuilder.Clear();
             boundarybuilder.Append("{\"data\":[");
+        }
+
+        static void AppendRoomManifestEntry(Cognitive3D.RoomManifestEntry r, StringBuilder sb)
+        {
+            sb.Append("{");
+            JsonUtil.SetString("id", r.id, sb);
+            if (!string.IsNullOrEmpty(r.label))
+            {
+                sb.Append(",");
+                JsonUtil.SetString("label", r.label, sb);
+            }
+            sb.Append(",\"anchors\":[");
+            if (r.anchors != null)
+            {
+                for (int i = 0; i < r.anchors.Count; i++)
+                {
+                    if (i > 0) sb.Append(",");
+                    var a = r.anchors[i];
+                    // Manifest entries carry only id/label/shape — intrinsic size used
+                    // to live here but was dropped per the agreed wire format.
+                    sb.Append("{");
+                    JsonUtil.SetString("id", a.id, sb);
+                    sb.Append(",");
+                    JsonUtil.SetString("label", a.label ?? string.Empty, sb);
+                    sb.Append(",");
+                    JsonUtil.SetString("shape", a.shape ?? string.Empty, sb);
+                    sb.Append("}");
+                }
+            }
+            sb.Append("]}");
+        }
+
+        static void AppendRoomDataEntry(Cognitive3D.RoomDataEntry d, StringBuilder sb)
+        {
+            sb.Append("{");
+            JsonUtil.SetString("id", d.id, sb);
+            sb.Append(",");
+            JsonUtil.SetDouble("time", d.time, sb);
+            if (d.hasTransform)
+            {
+                sb.Append(",");
+                JsonUtil.SetVector("p", new float[] { d.position.x, d.position.y, d.position.z }, sb);
+                sb.Append(",");
+                JsonUtil.SetQuat("r", new float[] { d.rotation.x, d.rotation.y, d.rotation.z, d.rotation.w }, sb);
+                sb.Append(",");
+                // scale is always Vec3 on the wire. For plane shapes the z component is forced to 0 by convention
+                float sz = d.isPlane ? 0f : d.scale.z;
+                JsonUtil.SetVector("s", new float[] { d.scale.x, d.scale.y, sz }, sb);
+            }
+            sb.Append(",");
+            sb.Append("\"enabled\":").Append(d.enabled ? "true" : "false");
+            sb.Append("}");
         }
 
         static void ResetBoundary()
         {
             boundarybuilder = null;
             boundaryJsonPart = 1;
+            roomManifests.Clear();
+            roomDataEntries.Clear();
+            lastRoomEnabled.Clear();
         }
 
         #endregion

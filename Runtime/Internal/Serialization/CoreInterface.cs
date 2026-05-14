@@ -201,6 +201,22 @@ namespace Cognitive3D
             SharedCore.RecordTrackingSpaceTransform(transform, timestamp);
         }
 
+        /// <summary>
+        /// Buffers a room manifest entry onto the boundary stream
+        /// </summary>
+        internal static void RecordRoomManifest(RoomManifestEntry entry)
+        {
+            SharedCore.RecordRoomManifest(entry);
+        }
+
+        /// <summary>
+        /// Buffers a room data entry onto the boundary stream
+        /// </summary>
+        internal static void RecordRoomData(RoomDataEntry entry)
+        {
+            SharedCore.RecordRoomData(entry);
+        }
+
         #endregion
 
         #region Fixation
