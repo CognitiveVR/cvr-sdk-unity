@@ -18,7 +18,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
             Cognitive3D_Manager.OnLevelLoaded += OnLevelLoaded;
 
-#if C3D_OCULUS 
+#if COGNITIVE3D_META_MRUK_68_OR_NEWER 
             provider = new MetaRoomLayoutProvider(); 
 #endif
             provider?.Start();

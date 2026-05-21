@@ -92,6 +92,11 @@
             "name": "com.htc.upm.vive.openxr",
             "expression": "2.5.0",
             "define": "COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "68.00",
+            "define": "COGNITIVE3D_META_MRUK_68_OR_NEWER"
         }
     ],
     "noEngineReferences": false
