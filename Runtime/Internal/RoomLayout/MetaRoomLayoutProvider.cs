@@ -29,29 +29,49 @@ namespace Cognitive3D
             StartMrukListeners();
         }
 
+        private static readonly List<RaycastHit> _mrukHitsBuffer = new List<RaycastHit>(32);
+        private static readonly List<MRUKAnchor> _mrukAnchorsBuffer = new List<MRUKAnchor>(32);
+
         public virtual bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out Vector3 localHit, out float distance)
         {
             anchorId = null;
             worldHit = Vector3.zero;
             localHit = Vector3.zero;
-            distance = 0f;
+            distance = float.MaxValue;
 
             if (MRUK.Instance == null) return false;
-            if (GameplayReferences.HMDCameraComponent == null) return false;
+
+            bool found = false;
 
             foreach (var room in MRUK.Instance.Rooms)
             {
                 if (room == null) continue;
-                if (!room.Raycast(ray, maxDistance, out RaycastHit hit, out MRUKAnchor anchor)) continue;
-                if (anchor == null) continue;
 
-                anchorId = anchor.Anchor.Uuid.ToString();
-                worldHit = hit.point;
-                distance = hit.distance;
-                localHit = anchor.transform.InverseTransformPoint(hit.point);
-                return true;
+                _mrukHitsBuffer.Clear();
+                _mrukAnchorsBuffer.Clear();
+
+                // RaycastAll returns true if at least one anchor was hit; lists are populated
+                if (!room.RaycastAll(ray, maxDistance, default, _mrukHitsBuffer, _mrukAnchorsBuffer))
+                    continue;
+
+                for (int i = 0; i < _mrukHitsBuffer.Count; i++)
+                {
+                    var anchor = _mrukAnchorsBuffer[i];
+                    if (anchor == null) continue;
+
+                    float d = _mrukHitsBuffer[i].distance;
+                    if (d >= distance) continue;   // not closer than what we have
+
+                    distance = d;
+                    worldHit = _mrukHitsBuffer[i].point;
+                    anchorId = anchor.Anchor.Uuid.ToString();
+                    localHit = anchor.transform.InverseTransformPoint(worldHit);
+                    found = true;
+                }
             }
-            return false;
+
+            if (!found) distance = 0f;
+            return found;
         }
 
         private struct RoomListeners

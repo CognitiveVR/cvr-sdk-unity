@@ -1654,12 +1654,6 @@ namespace Cognitive3D.Serialization
             gazebuilder.Append("}");
             string gazeBody = gazebuilder.ToString();
 
-            // TEMP DEBUG: log gaze batches that include room-anchor gaze records ("ra")
-            if (gazeBody.Contains("\"ra\":"))
-            {
-                UnityEngine.Debug.LogError("[RoomAnchorGaze] outgoing batch part=" + (gazeJsonPart - 1) + " body=" + gazeBody);
-            }
-
             WebPost("gaze", gazeBody, writeToCache);
             gazebuilder.Length = 9;
         }
