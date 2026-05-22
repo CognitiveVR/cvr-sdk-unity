@@ -9,6 +9,6 @@ namespace Cognitive3D
         void Start();
         void Stop();
         void Restart(); 
-        bool TryGetGazedAnchor(out string anchorId, out Vector3 worldHit);
+        bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out float distance);
     }
 }

@@ -29,6 +29,29 @@ namespace Cognitive3D
             StartMrukListeners();
         }
 
+        public virtual bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out float distance)
+        {
+            anchorId = null;
+            worldHit = Vector3.zero;
+            distance = 0f;
+
+            if (MRUK.Instance == null) return false;
+            if (GameplayReferences.HMDCameraComponent == null) return false;
+
+            foreach (var room in MRUK.Instance.Rooms)
+            {
+                if (room == null) continue;
+                if (!room.Raycast(ray, maxDistance, out RaycastHit hit, out MRUKAnchor anchor)) continue;
+                if (anchor == null) continue;
+
+                anchorId = anchor.Anchor.Uuid.ToString();
+                worldHit = hit.point;
+                distance = hit.distance;
+                return true;
+            }
+            return false;
+        }
+
         private struct RoomListeners
         {
             public MRUKRoom room;
@@ -284,30 +307,6 @@ namespace Cognitive3D
             {
                 set.Remove(anchorId);
             }
-        }
-
-        public virtual bool TryGetGazedAnchor(out string anchorId, out Vector3 worldHit)
-        {
-            anchorId = null;
-            worldHit = Vector3.zero;
-
-            if (MRUK.Instance == null) return false;
-            if (GameplayReferences.HMDCameraComponent == null) return false;
-
-            Ray ray = GazeHelper.GetCurrentWorldGazeRay();
-            float far = GameplayReferences.HMDCameraComponent.farClipPlane;
-
-            foreach (var room in MRUK.Instance.Rooms)
-            {
-                if (room == null) continue;
-                if (!room.Raycast(ray, far, out RaycastHit hit, out MRUKAnchor anchor)) continue;
-                if (anchor == null) continue;
-
-                anchorId = anchor.Anchor.Uuid.ToString();
-                worldHit = hit.point;
-                return true;
-            }
-            return false;
         }
 
         /// <summary>
