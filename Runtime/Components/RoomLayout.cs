@@ -68,13 +68,14 @@ namespace Cognitive3D.Components
         /// Raycast against the active room layout provider.
         /// Returns false if no provider, no rooms, or no hit
         /// </summary>
-        public bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out float distance)
+        public bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out Vector3 localHit, out float distance)
         {
             anchorId = null;
             worldHit = Vector3.zero;
+            localHit = Vector3.zero;
             distance = 0f;
             if (provider == null) return false;
-            return provider.TryGetGazedAnchor(ray, maxDistance, out anchorId, out worldHit, out distance);
+            return provider.TryGetGazedAnchor(ray, maxDistance, out anchorId, out worldHit, out localHit, out distance);
         }
     }
 }

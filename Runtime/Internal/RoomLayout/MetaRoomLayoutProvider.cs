@@ -29,10 +29,11 @@ namespace Cognitive3D
             StartMrukListeners();
         }
 
-        public virtual bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out float distance)
+        public virtual bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out Vector3 localHit, out float distance)
         {
             anchorId = null;
             worldHit = Vector3.zero;
+            localHit = Vector3.zero;
             distance = 0f;
 
             if (MRUK.Instance == null) return false;
@@ -47,6 +48,7 @@ namespace Cognitive3D
                 anchorId = anchor.Anchor.Uuid.ToString();
                 worldHit = hit.point;
                 distance = hit.distance;
+                localHit = anchor.transform.InverseTransformPoint(hit.point);
                 return true;
             }
             return false;
