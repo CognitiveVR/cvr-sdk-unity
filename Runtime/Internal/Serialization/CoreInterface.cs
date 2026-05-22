@@ -159,6 +159,19 @@ namespace Cognitive3D
                 useGeo
                 );
         }
+        internal static void RecordRoomAnchorGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string anchorId, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
+        {
+            SharedCore.RecordGazeRoomAnchor(
+                new float[] { position.x, position.y, position.z },
+                new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
+                new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
+                anchorId,
+                time,
+                new float[] { floorPos.x, floorPos.y, floorPos.z },
+                useFloor,
+                new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
+                useGeo);
+        }
         internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeSky(

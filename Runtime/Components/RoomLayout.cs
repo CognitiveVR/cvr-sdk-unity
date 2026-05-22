@@ -28,8 +28,8 @@ namespace Cognitive3D.Components
 
             instance = this;
 
-#if COGNITIVE3D_META_MRUK_68_OR_NEWER 
-            provider = new MetaRoomLayoutProvider(); 
+#if COGNITIVE3D_META_MRUK_68_OR_NEWER
+            provider = new MetaRoomLayoutProvider();
 #endif
             provider?.Start();
         }
@@ -43,25 +43,26 @@ namespace Cognitive3D.Components
         protected override void OnDisable()
         {
             base.OnDisable();
-            Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
-            Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
-
-            instance = null;
+            CleanupSubscriptions();
         }
 
         void OnDestroy()
         {
-            Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
-            Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
-
-            instance = null;
+            CleanupSubscriptions();
         }
 
         private void OnPreSessionEnd()
         {
+            CleanupSubscriptions();
+        }
+
+        private void CleanupSubscriptions()
+        {
             Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
             Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
             provider?.Stop();
+            provider = null;
+            instance = null;
         }
 
         /// <summary>

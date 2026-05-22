@@ -1360,6 +1360,44 @@ namespace Cognitive3D.Serialization
             }
         }
 
+        internal static void RecordGazeRoomAnchor(float[] hmdpoint, float[] hmdrotation, float[] localgazepoint, string anchorid, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
+        {
+            if (!IsInitialized) { return; }
+            gazebuilder.Append("{");
+            JsonUtil.SetDouble("time", timestamp, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetString("ra", anchorid, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetVector("p", hmdpoint, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetQuat("r", hmdrotation, gazebuilder);
+            gazebuilder.Append(",");
+            JsonUtil.SetVector("g", localgazepoint, gazebuilder);
+            if (useGeo)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("gpsloc", geo, gazebuilder);
+                gazebuilder.Append(",");
+                JsonUtil.SetFloat("compass", geo[3], gazebuilder);
+            }
+            if (includeFloor)
+            {
+                gazebuilder.Append(",");
+                JsonUtil.SetVector("f", floorPos, gazebuilder);
+            }
+            gazebuilder.Append("}");
+
+            gazeCount++;
+            if (gazeCount >= GazeThreshold)
+            {
+                SerializeGaze(false);
+            }
+            else
+            {
+                gazebuilder.Append(",");
+            }
+        }
+
         internal static void RecordGazeWorld(float[] hmdpoint, float[] hmdrotation, float[] gazepoint, double timestamp, float[] floorPos, bool includeFloor, float[] geo, bool useGeo)
         {
             if (!IsInitialized) { return; }
@@ -1614,7 +1652,15 @@ namespace Cognitive3D.Serialization
             }
 
             gazebuilder.Append("}");
-            WebPost("gaze", gazebuilder.ToString(), writeToCache);
+            string gazeBody = gazebuilder.ToString();
+
+            // TEMP DEBUG: log gaze batches that include room-anchor gaze records ("ra")
+            if (gazeBody.Contains("\"ra\":"))
+            {
+                UnityEngine.Debug.LogError("[RoomAnchorGaze] outgoing batch part=" + (gazeJsonPart - 1) + " body=" + gazeBody);
+            }
+
+            WebPost("gaze", gazeBody, writeToCache);
             gazebuilder.Length = 9;
         }
 
