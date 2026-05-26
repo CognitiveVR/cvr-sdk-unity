@@ -26,7 +26,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
             Cognitive3D_Manager.OnLevelLoaded += OnLevelLoaded;
 
-            instance = this;
+            if (instance == null) instance = this;
 
 #if COGNITIVE3D_META_MRUK_68_OR_NEWER
             provider = new MetaRoomLayoutProvider();
@@ -62,7 +62,6 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
             provider?.Stop();
             provider = null;
-            instance = null;
         }
 
         /// <summary>

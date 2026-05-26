@@ -149,10 +149,10 @@ namespace Cognitive3D
             {
                 foreach (var aid in anchorIds)
                 {
-                    CoreInterface.RecordRoomData(BuildRemoval(aid));
+                    CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRemoval(aid));
                 }
             }
-            CoreInterface.RecordRoomData(BuildRoomToggle(roomId, false));
+            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(roomId, false));
 
             // Detach listeners and forget membership
             if (_attached.TryGetValue(roomId, out var listeners))
@@ -172,7 +172,7 @@ namespace Cognitive3D
                 anchors = new List<AnchorManifestEntry>()
             };
             CoreInterface.RecordRoomManifest(entry);
-            CoreInterface.RecordRoomData(BuildRoomToggle(roomId, true));
+            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(roomId, true));
         }
 
         // -------- Anchor event handlers --------
@@ -204,7 +204,7 @@ namespace Cognitive3D
                 }
 
                 // Initial transform + enabled:true
-                CoreInterface.RecordRoomData(BuildAnchorData(a, scale, enabled: true, isPlane: amEntry.isPlane));
+                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: true, isPlane: amEntry.isPlane));
             }
         }
 
@@ -222,14 +222,14 @@ namespace Cognitive3D
             {
                 scale = a.VolumeBounds.Value.size;
             }
-            CoreInterface.RecordRoomData(BuildAnchorData(a, scale, enabled: true, isPlane: isPlane));
+            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation,scale, enabled: true, isPlane: isPlane));
         }
 
         private void OnAnchorRemoved(string roomId, MRUKAnchor a)
         {
             if (a == null) return;
             string aid = a.Anchor.Uuid.ToString();
-            CoreInterface.RecordRoomData(BuildRemoval(aid));
+            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRemoval(aid));
             UntrackAnchorId(roomId, aid);
         }
 
@@ -244,7 +244,7 @@ namespace Cognitive3D
             CoreInterface.RecordRoomManifest(manifest);
 
             // Room is enabled
-            CoreInterface.RecordRoomData(BuildRoomToggle(roomId, true));
+            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(roomId, true));
 
             // Seed anchor membership + initial data
             if (!_roomAnchors.TryGetValue(roomId, out var idSet))
@@ -269,7 +269,7 @@ namespace Cognitive3D
                     scale = a.VolumeBounds.Value.size;
                 }
                 if (!TryBuildAnchorManifest(a, out var amEntry)) continue;
-                CoreInterface.RecordRoomData(BuildAnchorData(a, scale, enabled: true, isPlane: amEntry.isPlane));
+                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: true, isPlane: amEntry.isPlane));
             }
         }
 
@@ -377,52 +377,6 @@ namespace Cognitive3D
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Builds a data entry for an anchor: pos/rot/scale + enabled
-        /// </summary>
-        internal static RoomDataEntry BuildAnchorData(MRUKAnchor anchor, Vector3 scale, bool enabled, bool isPlane)
-        {
-            return new RoomDataEntry
-            {
-                id = anchor.Anchor.Uuid.ToString(),
-                time = Util.Timestamp(),
-                position = anchor.transform.position,
-                rotation = anchor.transform.rotation,
-                scale = scale,
-                enabled = enabled,
-                hasTransform = true,
-                isPlane = isPlane
-            };
-        }
-
-        /// <summary>
-        /// Data entry for a removed anchor, only id/time/enabled meaningful
-        /// </summary>
-        internal static RoomDataEntry BuildRemoval(string id)
-        {
-            return new RoomDataEntry
-            {
-                id = id,
-                time = Util.Timestamp(),
-                enabled = false,
-                hasTransform = false
-            };
-        }
-
-        /// <summary>
-        /// Data entry for a room toggle, only id/time/enabled meaningful
-        /// </summary>
-        internal static RoomDataEntry BuildRoomToggle(string roomId, bool enabled)
-        {
-            return new RoomDataEntry
-            {
-                id = roomId,
-                time = Util.Timestamp(),
-                enabled = enabled,
-                hasTransform = false
-            };
         }
     }
 #endif
