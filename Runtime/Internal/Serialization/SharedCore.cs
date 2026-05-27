@@ -1867,7 +1867,7 @@ namespace Cognitive3D.Serialization
             /// Headers
             JsonUtil.SetString("userid", DeviceId, boundarybuilder);
             boundarybuilder.Append(",");
-            JsonUtil.SetDouble("time", (int) SessionTimestamp, boundarybuilder);
+            JsonUtil.SetDouble("timestamp", (int) SessionTimestamp, boundarybuilder);
             boundarybuilder.Append(",");
             JsonUtil.SetString("sessionid", SessionId, boundarybuilder);
             boundarybuilder.Append(",");
