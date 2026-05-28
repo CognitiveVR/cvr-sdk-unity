@@ -6,14 +6,14 @@ using UnityEngine;
 using Cognitive3D.Components;
 
 
-#if C3D_VIVEWAVE
+#if C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
 using Wave.Native;
 using Wave.Essence.ScenePerception;
 #endif
 
 namespace Cognitive3D
 {
-#if C3D_VIVEWAVE
+#if C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
     public class ViveWaveRoomLayoutProvider : IRoomLayoutProvider
     {
         private const string SYNTHETIC_ROOM_ID = "wave-room";

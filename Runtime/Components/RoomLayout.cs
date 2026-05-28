@@ -30,7 +30,7 @@ namespace Cognitive3D.Components
 
 #if COGNITIVE3D_META_MRUK_68_OR_NEWER
             provider = new MetaRoomLayoutProvider();
-#elif C3D_VIVEWAVE
+#elif C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
             provider = new ViveWaveRoomLayoutProvider();
 #endif
             provider?.Start();

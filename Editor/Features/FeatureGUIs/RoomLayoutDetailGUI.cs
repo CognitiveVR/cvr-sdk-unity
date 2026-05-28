@@ -6,7 +6,7 @@ namespace Cognitive3D
 {
     public class RoomLayoutDetailGUI : IFeatureDetailGUI
     {
-        private const string WAVE_SCENEPERCEPTION_DEFINE = "COGNITIVE3D_VIVE_SCENEPERCEPTION";
+        private const string WAVE_SCENEPERCEPTION_DEFINE = "C3D_VIVEWAVE_SCENEPERCEPTION";
 
         public void OnGUI()
         {
