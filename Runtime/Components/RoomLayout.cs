@@ -30,6 +30,8 @@ namespace Cognitive3D.Components
 
 #if COGNITIVE3D_META_MRUK_68_OR_NEWER
             provider = new MetaRoomLayoutProvider();
+#elif C3D_VIVEWAVE
+            provider = new ViveWaveRoomLayoutProvider();
 #endif
             provider?.Start();
         }
@@ -62,6 +64,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnLevelLoaded -= OnLevelLoaded;
             provider?.Stop();
             provider = null;
+            if (instance == this) instance = null;
         }
 
         /// <summary>

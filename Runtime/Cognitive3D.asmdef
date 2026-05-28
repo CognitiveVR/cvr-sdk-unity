@@ -28,7 +28,8 @@
         "Unity.XR.Hands",
         "VIVE.OpenXR",
         "Unity.XR.OpenXR",
-        "Fusion.Unity"
+        "Fusion.Unity",
+        "Wave.Essence.ScenePerception"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
