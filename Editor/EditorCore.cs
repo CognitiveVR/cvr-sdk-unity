@@ -1126,6 +1126,17 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _roomLayoutIcon;
+        public static Texture2D RoomLayoutIcon
+        {
+            get
+            {
+                if (_roomLayoutIcon == null)
+                    _roomLayoutIcon = Resources.Load<Texture2D>("Features/Icons/room-layout");
+                return _roomLayoutIcon;
+            }
+        }
+
         private static Texture2D _socialPlatformIcon;
         public static Texture2D SocialPlatformIcon
         {

@@ -245,6 +245,19 @@ namespace Cognitive3D
                     },
                     new AudioRecordingDetailGUI()
                 ),
+                new FeatureData(
+                    false,
+                    "Room Layout",
+                    "Capture room anchors and surfaces for mixed-reality experiences",
+                    EditorCore.RoomLayoutIcon,
+                    () =>
+                    {
+                        setFeatureIndex(9);
+                        SegmentAnalytics.TrackEvent("RoomLayoutWindow_Opened", "RoomLayoutWindow", "new");
+                    },
+                    new List<FeatureAction>(),
+                    new RoomLayoutDetailGUI()
+                ),
             };
         }
 
