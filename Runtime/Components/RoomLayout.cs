@@ -32,6 +32,8 @@ namespace Cognitive3D.Components
             provider = new MetaRoomLayoutProvider();
 #elif C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
             provider = new ViveWaveRoomLayoutProvider();
+#elif COGNITIVE3D_AR_FOUNDATION
+            provider = new ARFoundationLayoutProvider();
 #endif
             provider?.Start();
         }

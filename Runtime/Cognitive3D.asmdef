@@ -29,7 +29,9 @@
         "VIVE.OpenXR",
         "Unity.XR.OpenXR",
         "Fusion.Unity",
-        "Wave.Essence.ScenePerception"
+        "Wave.Essence.ScenePerception",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -98,6 +100,11 @@
             "name": "com.meta.xr.mrutilitykit",
             "expression": "68.00",
             "define": "COGNITIVE3D_META_MRUK_68_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "",
+            "define": "COGNITIVE3D_AR_FOUNDATION"
         }
     ],
     "noEngineReferences": false
