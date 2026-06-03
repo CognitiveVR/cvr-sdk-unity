@@ -1952,6 +1952,8 @@ namespace Cognitive3D.Serialization
             roomManifests.Clear();
             roomDataEntries.Clear();
             lastRoomEnabled.Clear();
+            boundaryShapes.Clear();
+            trackingSpaces.Clear();
         }
 
         #endregion
