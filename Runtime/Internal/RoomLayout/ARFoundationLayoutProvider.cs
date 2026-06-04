@@ -188,8 +188,8 @@ namespace Cognitive3D
         void HandleBox(ARBoundingBox b)
         {
             string id = b.trackableId.ToString();
-            var pos = b.transform.position;
-            var rot = b.transform.rotation;
+            var pos = b.pose.position;
+            var rot = b.pose.rotation;
             var scale = b.size;
 
             var boxManifest = new AnchorManifestEntry {
