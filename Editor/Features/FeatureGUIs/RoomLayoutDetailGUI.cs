@@ -20,7 +20,7 @@ namespace Cognitive3D
             GUILayout.Label(
                 "Captures spatial layout (walls, floors, furniture, etc.) for mixed-reality experiences. " +
                 "Records anchor poses and supports gaze tracking on room surfaces. " +
-                "Supports Meta MRUK and HTC Vive Wave Scene Perception.",
+                "Supports Meta MRUK, HTC Vive Wave Scene Perception, and Unity AR Foundation.",
                 EditorStyles.wordWrappedLabel);
 
             EditorGUILayout.Space(10);
@@ -50,7 +50,7 @@ namespace Cognitive3D
                 metaMrukDetected
                     ? "Meta MRUK 68 or newer detected. The Meta provider will be used automatically when running on Quest hardware."
                     : "Meta MRUK 68+ not detected. Install the Meta XR MR Utility Kit package (com.meta.xr.mrutilitykit) to enable Meta room layout support.",
-                metaMrukDetected ? MessageType.Info : MessageType.None);
+                metaMrukDetected ? MessageType.Info : MessageType.Warning);
 
             EditorGUILayout.Space(15);
 
@@ -76,8 +76,8 @@ namespace Cognitive3D
             var waveLabel = !viveWaveDetected
                 ? "Wave SDK Not Detected"
                 : (defineSet
-                    ? "Disable Wave Scene Perception Support"
-                    : "Enable Wave Scene Perception Support");
+                    ? "Disable Cognitive3D Wave Scene Perception Support"
+                    : "Enable Cognitive3D Wave Scene Perception Support");
 
             if (GUILayout.Button(waveLabel, GUILayout.Height(30)))
             {
@@ -91,6 +91,21 @@ namespace Cognitive3D
                 }
             }
             GUI.enabled = true;
+
+            EditorGUILayout.Space(15);
+
+            GUILayout.Label("Unity AR Foundation", EditorCore.styles.FeatureTitle);
+
+            bool arFoundationDetected = false;
+#if COGNITIVE3D_AR_FOUNDATION
+            arFoundationDetected = true;
+#endif
+            EditorGUILayout.HelpBox(
+                arFoundationDetected
+                    ? "Unity AR Foundation detected. The AR Foundation provider is used automatically on AR Foundation platforms. " +
+                      "Requires an AR Session with an ARPlaneManager and/or ARBoundingBoxManager for capture, and an ARRaycastManager for gaze on surfaces."
+                    : "AR Foundation not detected. Install Unity AR Foundation (com.unity.xr.arfoundation) to enable AR Foundation room layout support.",
+                arFoundationDetected ? MessageType.Info : MessageType.Warning);
         }
     }
 }

@@ -98,7 +98,7 @@
         },
         {
             "name": "com.meta.xr.mrutilitykit",
-            "expression": "68.00",
+            "expression": "68.0.0",
             "define": "COGNITIVE3D_META_MRUK_68_OR_NEWER"
         },
         {
