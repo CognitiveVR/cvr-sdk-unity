@@ -247,16 +247,16 @@ namespace Cognitive3D
                 ),
                 new FeatureData(
                     false,
-                    "Room Layout",
+                    "Room Capture",
                     "Capture room anchors and surfaces for mixed-reality experiences",
-                    EditorCore.RoomLayoutIcon,
+                    EditorCore.RoomCaptureIcon,
                     () =>
                     {
                         setFeatureIndex(9);
-                        SegmentAnalytics.TrackEvent("RoomLayoutWindow_Opened", "RoomLayoutWindow", "new");
+                        SegmentAnalytics.TrackEvent("RoomCaptureWindow_Opened", "RoomCaptureWindow", "new");
                     },
                     new List<FeatureAction>(),
-                    new RoomLayoutDetailGUI()
+                    new RoomCaptureDetailGUI()
                 ),
             };
         }

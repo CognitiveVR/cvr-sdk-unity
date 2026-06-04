@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    internal static class RoomLayoutUtil
+    internal static class RoomCaptureUtil
     {
         /// <summary>
         /// Data entry for an anchor's pose + enabled state

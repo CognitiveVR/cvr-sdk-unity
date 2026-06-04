@@ -9,7 +9,7 @@ using Meta.XR.MRUtilityKit;
 
 namespace Cognitive3D.Components
 {
-    [System.Obsolete("Replaced by RoomLayout, which records floor dimensions in the room data stream")]
+    [System.Obsolete("Replaced by RoomCapture, which records floor dimensions in the room data stream")]
     [MovedFrom(true, "Cognitive3D.Components", null, "Cognitive3D_MetaSceneMesh")]
     [DisallowMultipleComponent]
     [AddComponentMenu("Cognitive3D/Components/MetaPhysicalRoomSize")]

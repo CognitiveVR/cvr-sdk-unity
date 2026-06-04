@@ -6,19 +6,19 @@ using UnityEngine.SceneManagement;
 namespace Cognitive3D.Components
 {
     /// <summary>
-    /// Captures room layout (anchors, planes, volumes)
+    /// Captures room geometry (anchors, planes, volumes)
     /// </summary>
-    internal class RoomLayout : AnalyticsComponentBase
+    internal class RoomCapture : AnalyticsComponentBase
     {
-        private static RoomLayout instance;
-        public static RoomLayout Instance => instance;
+        private static RoomCapture instance;
+        public static RoomCapture Instance => instance;
 
         /// <summary>
-        /// True if a room layout provider exists and has been initialized for this session
+        /// True if a room capture provider exists and has been initialized for this session
         /// </summary>
         public bool IsAvailable => isActiveAndEnabled && provider != null;
 
-        IRoomLayoutProvider provider;
+        IRoomCaptureProvider provider;
 
         protected override void OnSessionBegin()
         {
@@ -29,11 +29,11 @@ namespace Cognitive3D.Components
             if (instance == null) instance = this;
 
 #if COGNITIVE3D_META_MRUK_68_OR_NEWER
-            provider = new MetaRoomLayoutProvider();
+            provider = new MetaRoomCaptureProvider();
 #elif C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
-            provider = new ViveWaveRoomLayoutProvider();
+            provider = new ViveWaveRoomCaptureProvider();
 #elif COGNITIVE3D_AR_FOUNDATION
-            provider = new ARFoundationLayoutProvider();
+            provider = new ARFoundationRoomCaptureProvider();
 #endif
             provider?.Start();
         }
@@ -70,7 +70,7 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Raycast against the active room layout provider.
+        /// Raycast against the active room capture provider.
         /// Returns false if no provider, no rooms, or no hit
         /// </summary>
         public bool TryGetGazedAnchor(Ray ray, float maxDistance, out string anchorId, out Vector3 worldHit, out Vector3 localHit, out float distance)

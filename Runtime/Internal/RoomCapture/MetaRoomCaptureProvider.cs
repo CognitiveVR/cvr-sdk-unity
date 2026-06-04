@@ -11,7 +11,7 @@ using Meta.XR.MRUtilityKit;
 namespace Cognitive3D
 {
 #if COGNITIVE3D_META_MRUK_68_OR_NEWER
-    internal class MetaRoomLayoutProvider : IRoomLayoutProvider
+    internal class MetaRoomCaptureProvider : IRoomCaptureProvider
     {
         public virtual void Start()
         {
@@ -149,10 +149,10 @@ namespace Cognitive3D
             {
                 foreach (var aid in anchorIds)
                 {
-                    CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRemoval(aid));
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(aid));
                 }
             }
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(roomId, false));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(roomId, false));
 
             // Detach listeners and forget membership
             if (_attached.TryGetValue(roomId, out var listeners))
@@ -172,7 +172,7 @@ namespace Cognitive3D
                 anchors = new List<AnchorManifestEntry>()
             };
             CoreInterface.RecordRoomManifest(entry);
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(roomId, true));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(roomId, true));
         }
 
         // -------- Anchor event handlers --------
@@ -204,7 +204,7 @@ namespace Cognitive3D
                 }
 
                 // Initial transform + enabled:true
-                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: true, isPlane: amEntry.isPlane));
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: true, isPlane: amEntry.isPlane));
             }
         }
 
@@ -222,14 +222,14 @@ namespace Cognitive3D
             {
                 scale = a.VolumeBounds.Value.size;
             }
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation,scale, enabled: true, isPlane: isPlane));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation,scale, enabled: true, isPlane: isPlane));
         }
 
         private void OnAnchorRemoved(string roomId, MRUKAnchor a)
         {
             if (a == null) return;
             string aid = a.Anchor.Uuid.ToString();
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRemoval(aid));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(aid));
             UntrackAnchorId(roomId, aid);
         }
 
@@ -244,7 +244,7 @@ namespace Cognitive3D
             CoreInterface.RecordRoomManifest(manifest);
 
             // Room is enabled
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(roomId, true));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(roomId, true));
 
             // Seed anchor membership + initial data
             if (!_roomAnchors.TryGetValue(roomId, out var idSet))
@@ -269,7 +269,7 @@ namespace Cognitive3D
                     scale = a.VolumeBounds.Value.size;
                 }
                 if (!TryBuildAnchorManifest(a, out var amEntry)) continue;
-                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: true, isPlane: amEntry.isPlane));
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: true, isPlane: amEntry.isPlane));
             }
         }
 

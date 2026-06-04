@@ -9,7 +9,7 @@ using UnityEngine.XR.ARSubsystems;
 namespace Cognitive3D
 {
 #if COGNITIVE3D_AR_FOUNDATION
-    public class ARFoundationLayoutProvider : IRoomLayoutProvider
+    public class ARFoundationRoomCaptureProvider : IRoomCaptureProvider
     {
         const string SYNTHETIC_ROOM_ID = "arfoundation-room";
 
@@ -51,7 +51,7 @@ namespace Cognitive3D
 
             if (planeManager == null && boundingBoxManager == null)
             {
-                Util.logWarning("ARFoundationLayoutProvider: no ARPlaneManager or ARBoundingBoxManager found. Room layout will not be captured.");
+                Util.logWarning("ARFoundationRoomCaptureProvider: no ARPlaneManager or ARBoundingBoxManager found. Room layout will not be captured.");
                 return;
             }
 
@@ -60,7 +60,7 @@ namespace Cognitive3D
                 id = SYNTHETIC_ROOM_ID, label = SYNTHETIC_ROOM_ID,
                 anchors = new List<AnchorManifestEntry>()
             });
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(SYNTHETIC_ROOM_ID, true));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(SYNTHETIC_ROOM_ID, true));
 
             if (boundingBoxManager != null)
             {
@@ -143,7 +143,7 @@ namespace Cognitive3D
             foreach (var kvp in changes.removed)
             {
                 string id = kvp.Key.ToString();
-                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRemoval(id));
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(id));
                 lastReported.Remove(id);
             }
         }
@@ -155,7 +155,7 @@ namespace Cognitive3D
             foreach (var kvp in changes.removed)
             {
                 string id = kvp.Key.ToString();
-                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRemoval(id));
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(id));
                 lastReported.Remove(id);
             }
         }
@@ -181,7 +181,7 @@ namespace Cognitive3D
             }    
             else if (ShouldReport(id, pos, scale))
             {
-               CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(id, pos, rot, scale, enabled: true, isPlane: true)); 
+               CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, pos, rot, scale, enabled: true, isPlane: true)); 
             }    
         }
 
@@ -205,7 +205,7 @@ namespace Cognitive3D
             } 
             else if (ShouldReport(id, pos, scale))
             {
-                CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(id, pos, rot, scale, enabled: true, isPlane: false));
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, pos, rot, scale, enabled: true, isPlane: false));
             }   
         }
 
@@ -216,7 +216,7 @@ namespace Cognitive3D
                 id = SYNTHETIC_ROOM_ID,
                 anchors = new List<AnchorManifestEntry> { m }
             });
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildAnchorData(id, pos, rot, scale, enabled: true, isPlane: isPlane));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, pos, rot, scale, enabled: true, isPlane: isPlane));
             lastReported[id] = (pos, scale, Time.unscaledTime);
         }
 

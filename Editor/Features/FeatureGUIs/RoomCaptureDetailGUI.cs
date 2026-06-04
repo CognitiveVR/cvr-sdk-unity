@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace Cognitive3D
 {
-    public class RoomLayoutDetailGUI : IFeatureDetailGUI
+    public class RoomCaptureDetailGUI : IFeatureDetailGUI
     {
         private const string WAVE_SCENEPERCEPTION_DEFINE = "C3D_VIVEWAVE_SCENEPERCEPTION";
 
@@ -12,7 +12,7 @@ namespace Cognitive3D
         {
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Room Layout", EditorCore.styles.FeatureTitle);
+                GUILayout.Label("Room Capture", EditorCore.styles.FeatureTitle);
                 GUILayout.FlexibleSpace();
             }
             GUILayout.EndHorizontal();
@@ -26,15 +26,15 @@ namespace Cognitive3D
             EditorGUILayout.Space(10);
 
             GUILayout.Label("Add to Cognitive3D_Manager prefab", EditorCore.styles.FeatureTitle);
-            GUILayout.Label("Adds the Room Layout component to the Cognitive3D_Manager prefab.", EditorStyles.wordWrappedLabel);
+            GUILayout.Label("Adds the Room Capture component to the Cognitive3D_Manager prefab.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space(5);
 
-            var roomLayoutLabel = FeatureLibrary.TryGetComponent<Cognitive3D.Components.RoomLayout>()
-                ? "Remove Room Layout"
-                : "Add Room Layout";
+            var roomLayoutLabel = FeatureLibrary.TryGetComponent<Cognitive3D.Components.RoomCapture>()
+                ? "Remove Room Capture"
+                : "Add Room Capture";
             if (GUILayout.Button(roomLayoutLabel, GUILayout.Height(30)))
             {
-                FeatureLibrary.AddOrRemoveComponent<Cognitive3D.Components.RoomLayout>();
+                FeatureLibrary.AddOrRemoveComponent<Cognitive3D.Components.RoomCapture>();
             }
 
             EditorGUILayout.Space(15);

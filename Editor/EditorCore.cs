@@ -1126,14 +1126,14 @@ namespace Cognitive3D
             }
         }
 
-        private static Texture2D _roomLayoutIcon;
-        public static Texture2D RoomLayoutIcon
+        private static Texture2D _roomCaptureIcon;
+        public static Texture2D RoomCaptureIcon
         {
             get
             {
-                if (_roomLayoutIcon == null)
-                    _roomLayoutIcon = Resources.Load<Texture2D>("Features/Icons/room-layout");
-                return _roomLayoutIcon;
+                if (_roomCaptureIcon == null)
+                    _roomCaptureIcon = Resources.Load<Texture2D>("Features/Icons/room-layout");
+                return _roomCaptureIcon;
             }
         }
 

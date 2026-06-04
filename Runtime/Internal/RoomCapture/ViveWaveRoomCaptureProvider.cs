@@ -14,7 +14,7 @@ using Wave.Essence.ScenePerception;
 namespace Cognitive3D
 {
 #if C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
-    public class ViveWaveRoomLayoutProvider : IRoomLayoutProvider
+    public class ViveWaveRoomCaptureProvider : IRoomCaptureProvider
     {
         private const string SYNTHETIC_ROOM_ID = "wave-room";
 
@@ -31,14 +31,14 @@ namespace Cognitive3D
             _manager = Object.FindFirstObjectByType<ScenePerceptionManager>();
             if (_manager == null)
             {
-                Util.logWarning("ViveWaveRoomLayoutProvider: ScenePerceptionManager not found in scene. Room layout will not be captured.");
+                Util.logWarning("ViveWaveRoomCaptureProvider: ScenePerceptionManager not found in scene. Room layout will not be captured.");
                 return;
             }
 
             // Confirm device supports it
             if ((Interop.WVR_GetSupportedFeatures() & (ulong)WVR_SupportedFeature.WVR_SupportedFeature_ScenePerception) == 0)
             {
-                Util.logWarning("ViveWaveRoomLayoutProvider: Device does not support Scene Perception.");
+                Util.logWarning("ViveWaveRoomCaptureProvider: Device does not support Scene Perception.");
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace Cognitive3D
             // 2D plane perception is required
             if (_manager.StartScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane) != WVR_Result.WVR_Success)
             {
-                Util.logWarning("ViveWaveRoomLayoutProvider: failed to start 2D plane perception.");
+                Util.logWarning("ViveWaveRoomCaptureProvider: failed to start 2D plane perception.");
                 _manager.StopScene();
                 return;
             }
@@ -60,7 +60,7 @@ namespace Cognitive3D
             }
             else
             {
-                Util.logWarning("ViveWaveRoomLayoutProvider: failed to start 3D object perception. Volumes will not be captured this session.");
+                Util.logWarning("ViveWaveRoomCaptureProvider: failed to start 3D object perception. Volumes will not be captured this session.");
             }
 
             _cts = new CancellationTokenSource();
@@ -96,7 +96,7 @@ namespace Cognitive3D
                 }
 
                 // Timed out. Emit whatever data is available rather than silently skipping
-                Util.logWarning($"ViveWaveRoomLayoutProvider: perception incomplete after 10s. planesDone={planesDone} objectsDone={objectsDone}. Emitting available data.");
+                Util.logWarning($"ViveWaveRoomCaptureProvider: perception incomplete after 10s. planesDone={planesDone} objectsDone={objectsDone}. Emitting available data.");
                 EmitInitialManifest();
             }
             catch (System.OperationCanceledException) { }
@@ -152,7 +152,7 @@ namespace Cognitive3D
             }
 
             CoreInterface.RecordRoomManifest(manifest);
-            CoreInterface.RecordRoomData(RoomLayoutUtil.BuildRoomToggle(SYNTHETIC_ROOM_ID, true));
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(SYNTHETIC_ROOM_ID, true));
 
             if (planesAvailable)
             {

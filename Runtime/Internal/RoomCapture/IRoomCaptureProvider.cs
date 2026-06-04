@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cognitive3D
 {
-    internal interface IRoomLayoutProvider
+    internal interface IRoomCaptureProvider
     {
         void Start();
         void Stop();

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Platform-neutral room-layout data shared by every IRoomLayoutProvider.
+// Platform-neutral room-layout data shared by every IRoomCaptureProvider.
 // Providers convert their native anchor/room representations into these structs and pass
 // them to CoreInterface.
 namespace Cognitive3D
