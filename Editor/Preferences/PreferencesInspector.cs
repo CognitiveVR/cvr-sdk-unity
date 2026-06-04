@@ -32,6 +32,7 @@ namespace Cognitive3D
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Player Tracking", EditorStyles.boldLabel);
             p.EnableGaze = EditorGUILayout.Toggle(new GUIContent("Record Gaze", "Use a raycast to find the gaze point in world space.\nDisabling this will still record HMD position and rotation"), p.EnableGaze);
+            p.RecordGazeOnRoomAnchors = EditorGUILayout.Toggle(new GUIContent("Record Gaze on Room Anchors", "Record gaze on Room Capture surfaces (walls, floors, furniture).\nRecommended for static AR/MR. Disable for VR experiences with virtual locomotion, where room anchors no longer align with the moving view."), p.RecordGazeOnRoomAnchors);
             p.DynamicObjectSearchInParent = EditorGUILayout.Toggle(new GUIContent("Dynamic Object Search in Parent", "When capturing gaze on a Dynamic Object, also search in the collider's parent for the dynamic object component"), p.DynamicObjectSearchInParent);
 
             if (p.GazeType == GazeType.Physics)
