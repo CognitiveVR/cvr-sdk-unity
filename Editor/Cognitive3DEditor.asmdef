@@ -105,8 +105,8 @@
         },
         {
             "name": "com.unity.xr.arfoundation",
-            "expression": "",
-            "define": "COGNITIVE3D_AR_FOUNDATION"
+            "expression": "6.0.7",
+            "define": "COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER"
         }
     ],
     "noEngineReferences": false

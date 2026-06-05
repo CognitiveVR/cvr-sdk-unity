@@ -140,7 +140,7 @@ namespace Cognitive3D
                 UIRaycastResult uiHit = RaycastToUIElements(ray.origin, ray.direction);
                 bool roomLayoutAvailable = Cognitive3D_Preferences.Instance.RecordGazeOnRoomAnchors && RoomCapture.Instance != null && RoomCapture.Instance.IsAvailable;
 
-                // Room-surface (anchor) raycast, computed once so a dynamic hit can be compared
+                // Room surface (anchor) raycast, computed once so a dynamic hit can be compared
                 // against a surface hit by distance, whichever is closer wins.
                 string anchorId = null;
                 Vector3 anchorWorldHit = Vector3.zero;

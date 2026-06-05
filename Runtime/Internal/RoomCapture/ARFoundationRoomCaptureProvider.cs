@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-#if COGNITIVE3D_AR_FOUNDATION
+#if COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 #endif
 
 namespace Cognitive3D
 {
-#if COGNITIVE3D_AR_FOUNDATION
+#if COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
     public class ARFoundationRoomCaptureProvider : IRoomCaptureProvider
     {
         const string SYNTHETIC_ROOM_ID = "arfoundation-room";

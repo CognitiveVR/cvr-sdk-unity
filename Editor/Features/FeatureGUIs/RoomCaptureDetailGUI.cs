@@ -97,14 +97,14 @@ namespace Cognitive3D
             GUILayout.Label("Unity AR Foundation", EditorCore.styles.FeatureTitle);
 
             bool arFoundationDetected = false;
-#if COGNITIVE3D_AR_FOUNDATION
+#if COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
             arFoundationDetected = true;
 #endif
             EditorGUILayout.HelpBox(
                 arFoundationDetected
                     ? "Unity AR Foundation detected. The AR Foundation provider is used automatically on AR Foundation platforms. " +
                       "Requires an AR Session with an ARPlaneManager and/or ARBoundingBoxManager for capture, and an ARRaycastManager for gaze on surfaces."
-                    : "AR Foundation not detected. Install Unity AR Foundation (com.unity.xr.arfoundation) to enable AR Foundation room layout support.",
+                    : "AR Foundation not detected. Install Unity AR Foundation (com.unity.xr.arfoundation) 6.0.7 or newer to enable AR Foundation room layout support.",
                 arFoundationDetected ? MessageType.Info : MessageType.Warning);
         }
     }
