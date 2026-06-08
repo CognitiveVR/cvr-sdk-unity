@@ -43,6 +43,11 @@ namespace Cognitive3D
           | PlaneClassifications.DoorFrame
           | PlaneClassifications.WindowFrame;
 
+        // When there's no ARBoundingBoxManager, furniture (table, couch, seat, ...) would
+        // never be captured, since it's normally reported as bounding-box volumes. In that
+        // case we widen the plane filter to capture every classification instead.
+        bool captureAllPlanes;
+
         public virtual void Start()
         {
             planeManager = UnityEngine.Object.FindAnyObjectByType<ARPlaneManager>();
@@ -54,6 +59,8 @@ namespace Cognitive3D
                 Util.logWarning("ARFoundationRoomCaptureProvider: no ARPlaneManager or ARBoundingBoxManager found. Room layout will not be captured.");
                 return;
             }
+
+            captureAllPlanes = boundingBoxManager == null;
 
             // Room exists for this session
             CoreInterface.RecordRoomManifest(new RoomManifestEntry {
@@ -162,7 +169,7 @@ namespace Cognitive3D
 
         void HandlePlane(ARPlane p)
         {
-            if ((p.classifications & StructuralPlanes) == 0) return; // skip furniture / unclassified planes
+            if (!captureAllPlanes && (p.classifications & StructuralPlanes) == 0) return;
             string id = p.trackableId.ToString();
             var pos = p.pose.position;
             var rot = p.pose.rotation * planeOffset;
