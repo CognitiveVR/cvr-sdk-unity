@@ -92,6 +92,29 @@ namespace Cognitive3D
 #elif COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
                 var feature = UnityEngine.XR.OpenXR.OpenXRSettings.Instance.GetFeature<VIVE.OpenXR.EyeTracker.ViveEyeTracker>();
                 return feature != null && feature.enabled;
+#elif COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+                List<UnityEngine.XR.ARSubsystems.XRFaceSubsystem> faceSubsystem = new List<UnityEngine.XR.ARSubsystems.XRFaceSubsystem>();
+                SubsystemManager.GetSubsystems(faceSubsystem);
+                foreach (var subsystem in faceSubsystem)
+                {
+                    if (subsystem.subsystemDescriptor.supportsEyeTracking)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+#elif COGNITIVE3D_ANDROIDXR_OPENXR
+                var faceSubsystems = new List<UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXRFaceSubsystem>();
+                SubsystemManager.GetSubsystems(faceSubsystems);
+
+                foreach(var faceSubsystem in faceSubsystems)
+                {
+                    if (faceSubsystem.subsystemDescriptor.supportsEyeTracking)
+                    {
+                        return true;
+                    }
+                }
+                return false;
 #elif C3D_DEFAULT
                 var head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
                 Eyes eyedata;
