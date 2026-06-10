@@ -208,6 +208,44 @@ namespace Cognitive3D
             }
         }
 #else
+
+#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+        const string k_EyeTrackingPermission = "android.permission.EYE_TRACKING_COARSE";
+        const string k_FaceTrackingPermission = "android.permission.FACE_TRACKING";
+        internal static UnityEngine.XR.ARFoundation.ARFaceManager ARFaceManager;
+
+        static bool HasEyeTrackingPermissions()
+        {
+            return UnityEngine.Android.Permission.HasUserAuthorizedPermission(k_EyeTrackingPermission)
+                && UnityEngine.Android.Permission.HasUserAuthorizedPermission(k_FaceTrackingPermission);
+        }
+
+        // Finds (or creates) and enables the ARFaceManager once the client has granted eye/face permissions
+        static void InitializeARFaceManager()
+        {
+            if (!HasEyeTrackingPermissions())
+            {
+                return;
+            }
+
+            // reuse an existing manager if the scene already has one
+            ARFaceManager = UnityEngine.Object.FindAnyObjectByType<UnityEngine.XR.ARFoundation.ARFaceManager>();
+
+            if (ARFaceManager == null)
+            {
+                // ARFaceManager is an AR trackable manager and must live on the XR Origin GameObject
+                var origin = UnityEngine.Object.FindAnyObjectByType<Unity.XR.CoreUtils.XROrigin>();
+                if (origin == null)
+                {
+                    // origin may not be in the scene yet; try again next frame
+                    return;
+                }
+                ARFaceManager = origin.gameObject.AddComponent<UnityEngine.XR.ARFoundation.ARFaceManager>();
+            }
+
+            ARFaceManager.enabled = true;
+        }
+#endif
         static Vector3 GetLookDirection()
         {
 #if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
@@ -233,6 +271,32 @@ namespace Cognitive3D
                         if (GameplayReferences.HMD.transform.parent != null)
                         {
                             worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(centerRot * Vector3.forward);
+                        }
+                        return worldGazeDirection;
+                    }
+                }
+            }
+#endif
+
+#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+            if (ARFaceManager == null)
+            {
+                InitializeARFaceManager();
+            }
+            else
+            {
+                foreach (var face in ARFaceManager.trackables)
+                {
+                    if (face.leftEye != null && face.rightEye != null)
+                    {
+                        var leftEyeRot = face.leftEye.rotation;
+                        var rightEyeRot = face.rightEye.rotation;
+                        var centerEyeRot = Quaternion.Slerp(leftEyeRot, rightEyeRot, 0.5f);
+
+                        Vector3 worldGazeDirection = centerEyeRot * Vector3.forward;
+                        if (GameplayReferences.HMD.transform.parent != null)
+                        {
+                            worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(centerEyeRot * Vector3.forward);
                         }
                         return worldGazeDirection;
                     }
