@@ -855,6 +855,39 @@ namespace Cognitive3D
                 }
             }
 #endif
+
+#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+            if (GazeHelper.ARFaceManager != null)
+            {
+                foreach (var face in GazeHelper.ARFaceManager.trackables)
+                {
+                    if (face.leftEye != null && face.rightEye != null)
+                    {
+                        var leftEyePos = face.leftEye.position;
+                        var rightEyePos = face.rightEye.position;
+                        Vector3 centerPos = Vector3.Lerp(leftEyePos, rightEyePos, 0.5f);
+
+                        var leftEyeRot = face.leftEye.rotation;
+                        var rightEyeRot = face.rightEye.rotation;
+                        var centerEyeRot = Quaternion.Slerp(leftEyeRot, rightEyeRot, 0.5f);
+
+                        Vector3 worldDirection = centerEyeRot * Vector3.forward;
+                        if (GameplayReferences.HMD.transform.parent != null)
+                        {
+                            worldDirection = GameplayReferences.HMD.transform.parent.TransformDirection(worldDirection);
+                            Vector3 worldOrigin = GameplayReferences.HMD.transform.parent.TransformPoint(centerPos);
+                            ray = new Ray(worldOrigin, worldDirection);
+                        }
+                        else
+                        {
+                            // fallback if no parent
+                            ray = new Ray(centerPos, centerEyeRot * Vector3.forward);
+                        }
+                        return true;
+                    }
+                }
+            }
+#endif
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.CenterEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
@@ -898,6 +931,25 @@ namespace Cognitive3D
                 }
             }
 #endif
+
+#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+            if (GazeHelper.ARFaceManager != null)
+            {
+                foreach (var face in GazeHelper.ARFaceManager.trackables)
+                {
+                    if (face.leftEye != null)
+                    {
+                        var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
+                        if (result.status.IsSuccess())
+                        {
+                            var bs = result.value;
+                            float leftOpenness  = 1f - bs[12].weight;
+                            return leftOpenness > 0.5f;
+                        }
+                    }
+                }
+            }
+#endif
             UnityEngine.XR.Eyes eyes;
             if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftEye).TryGetFeatureValue(UnityEngine.XR.CommonUsages.eyesData, out eyes))
             {
@@ -919,6 +971,25 @@ namespace Cognitive3D
                 if (rightGeometric.isValid)
                 {
                     return rightGeometric.eyeOpenness > 0.5f;
+                }
+            }
+#endif
+
+#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+            if (GazeHelper.ARFaceManager != null)
+            {
+                foreach (var face in GazeHelper.ARFaceManager.trackables)
+                {
+                    if (face.rightEye != null)
+                    {
+                        var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
+                        if (result.status.IsSuccess())
+                        {
+                            var bs = result.value;
+                            float rightOpenness  = 1f - bs[13].weight;
+                            return rightOpenness > 0.5f;
+                        }
+                    }
                 }
             }
 #endif
