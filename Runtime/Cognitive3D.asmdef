@@ -28,7 +28,10 @@
         "Unity.XR.Hands",
         "VIVE.OpenXR",
         "Unity.XR.OpenXR",
-        "Fusion.Unity"
+        "Fusion.Unity",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems",
+        "Unity.XR.AndroidOpenXR"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -92,6 +95,16 @@
             "name": "com.htc.upm.vive.openxr",
             "expression": "2.5.0",
             "define": "COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "5.2.2",
+            "define": "COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.androidxr-openxr",
+            "expression": "",
+            "define": "COGNITIVE3D_ANDROIDXR_OPENXR"
         }
     ],
     "noEngineReferences": false
