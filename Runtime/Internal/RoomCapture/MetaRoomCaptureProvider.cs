@@ -369,7 +369,7 @@ namespace Cognitive3D
                 entry = new AnchorManifestEntry
                 {
                     id = obj.Anchor.Uuid.ToString(),
-                    label = obj.Label.ToString(),
+                    label = RoomCaptureUtil.NormalizeLabel(obj.Label.ToString()),
                     shape = "plane",
                     isPlane = true
                 };
@@ -380,7 +380,7 @@ namespace Cognitive3D
                 entry = new AnchorManifestEntry
                 {
                     id = obj.Anchor.Uuid.ToString(),
-                    label = obj.Label.ToString(),
+                    label = RoomCaptureUtil.NormalizeLabel(obj.Label.ToString()),
                     shape = "volume",
                     isPlane = false
                 };

@@ -130,7 +130,7 @@ namespace Cognitive3D
                     manifest.anchors.Add(new AnchorManifestEntry
                     {
                         id = plane.uuid.ToString(),
-                        label = plane.planeLabel.ToString(),
+                        label = RoomCaptureUtil.NormalizeLabel(plane.planeLabel.ToString()),
                         shape = "plane",
                         isPlane = true,
                     });
@@ -144,7 +144,7 @@ namespace Cognitive3D
                     manifest.anchors.Add(new AnchorManifestEntry
                     {
                         id = obj.uuid.ToString(),
-                        label = obj.semanticName,
+                        label = RoomCaptureUtil.NormalizeLabel(obj.semanticName),
                         shape = "volume",
                         isPlane = false,
                     });

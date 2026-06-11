@@ -181,7 +181,7 @@ namespace Cognitive3D
 
             var planeManifest = new AnchorManifestEntry {
                 id = p.trackableId.ToString(),
-                label = p.classifications.ToString(),   // "WallFace", "Floor", "Table", ...
+                label = RoomCaptureUtil.NormalizeLabel(p.classifications.ToString()),   // "wall-face", "floor", "table", ...
                 shape = "plane",
                 isPlane = true,
             };
@@ -205,7 +205,7 @@ namespace Cognitive3D
 
             var boxManifest = new AnchorManifestEntry {
                 id = b.trackableId.ToString(),
-                label = b.classifications.ToString(),
+                label = RoomCaptureUtil.NormalizeLabel(b.classifications.ToString()),
                 shape = "volume",
                 isPlane = false,
             };
