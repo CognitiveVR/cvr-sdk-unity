@@ -25,20 +25,6 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Data entry for a removed anchor, only id/time/enabled meaningful.
-        /// </summary>
-        internal static RoomDataEntry BuildRemoval(string id)
-        {
-            return new RoomDataEntry
-            {
-                id = id,
-                time = Util.Timestamp(),
-                enabled = false,
-                hasTransform = false,
-            };
-        }
-
-        /// <summary>
         /// Data entry for a room toggle, only id/time/enabled meaningful.
         /// </summary>
         internal static RoomDataEntry BuildRoomToggle(string roomId, bool enabled)

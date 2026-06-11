@@ -149,8 +149,9 @@ namespace Cognitive3D
             foreach (var b in changes.updated) HandleBox(b);
             foreach (var kvp in changes.removed)
             {
+                var b = kvp.Value;
                 string id = kvp.Key.ToString();
-                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(id));
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, b.pose.position, b.pose.rotation, b.size, enabled: false, isPlane: false));
                 lastReported.Remove(id);
             }
         }
@@ -161,8 +162,11 @@ namespace Cognitive3D
             foreach (var p in changes.updated) HandlePlane(p);
             foreach (var kvp in changes.removed)
             {
+                var p = kvp.Value;
                 string id = kvp.Key.ToString();
-                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(id));
+                var rot = p.pose.rotation * planeOffset;
+                var scale = new Vector3(p.size.x, p.size.y, 0f);
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, p.pose.position, rot, scale, enabled: false, isPlane: true));
                 lastReported.Remove(id);
             }
         }
