@@ -149,7 +149,7 @@ namespace Cognitive3D
             {
                 foreach (var aid in anchorIds)
                 {
-                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(aid));
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(aid, Vector3.zero, Quaternion.identity, Vector3.one, enabled: false, isPlane: false));
                 }
             }
             CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(roomId, false));
@@ -228,9 +228,19 @@ namespace Cognitive3D
         private void OnAnchorRemoved(string roomId, MRUKAnchor a)
         {
             if (a == null) return;
-            string aid = a.Anchor.Uuid.ToString();
-            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRemoval(aid));
-            UntrackAnchorId(roomId, aid);
+            bool isPlane = a.PlaneRect.HasValue;
+            Vector3 scale = Vector3.one;
+            if (a.PlaneRect.HasValue)
+            {
+                var r = a.PlaneRect.Value;
+                scale = new Vector3(r.width, r.height, 0f);
+            }
+            else if (a.VolumeBounds.HasValue)
+            {
+                scale = a.VolumeBounds.Value.size;
+            }
+            CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(a.Anchor.Uuid.ToString(), a.transform.position, a.transform.rotation, scale, enabled: false, isPlane: isPlane));
+            UntrackAnchorId(roomId, a.Anchor.Uuid.ToString());
         }
 
         // -------- Helpers --------
