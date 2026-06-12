@@ -23,6 +23,13 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
+#if XRPF
+            if (!XRPF.PrivacyFramework.Agreement.IsRoomCaptureDataAllowed)
+            {
+                return;
+            }
+#endif
+
             Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
             Cognitive3D_Manager.OnLevelLoaded += OnLevelLoaded;
 
