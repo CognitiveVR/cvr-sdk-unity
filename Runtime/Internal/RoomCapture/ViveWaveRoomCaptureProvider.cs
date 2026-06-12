@@ -37,6 +37,17 @@ namespace Cognitive3D
         private readonly Dictionary<string, ScenePlane> prevPlanes = new Dictionary<string, ScenePlane>();
         private readonly Dictionary<string, SceneObject> prevObjects = new Dictionary<string, SceneObject>();
 
+        // Wave returns scene poses in tracking space (relative to the tracking origin); 
+        // Convert through the manager's own TrackingOrigin
+        private void ToWorld(Pose local, out Vector3 worldPos, out Quaternion worldRot)
+        {
+            if (manager != null &&
+                ScenePerceptionObjectTools.TrackingSpaceToWorldSpace(manager.TrackingOrigin, local.position, local.rotation, out worldPos, out worldRot))
+                return;
+            worldPos = local.position;
+            worldRot = local.rotation;
+        }
+
         public void Start()
         {
             // Locate the Wave perception manager in the scene
@@ -145,7 +156,8 @@ namespace Cognitive3D
             foreach (var id in staleScratch)
             {
                 var prev = prevPlanes[id];
-                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, prev.pose.position, prev.pose.rotation,
+                ToWorld(prev.pose, out var wpos, out var wrot);
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, wpos, wrot,
                     new Vector3(prev.extent.x, prev.extent.y, 0f), enabled: false, isPlane: true));
                 prevPlanes.Remove(id);
             }
@@ -156,6 +168,7 @@ namespace Cognitive3D
                 string id = kv.Key;
                 var plane = kv.Value;
                 var scale = new Vector3(plane.extent.x, plane.extent.y, 0f);
+                ToWorld(plane.pose, out var wpos, out var wrot);
 
                 if (!prevPlanes.ContainsKey(id))
                 {
@@ -173,12 +186,12 @@ namespace Cognitive3D
                             }
                         }
                     });
-                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, plane.pose.position, plane.pose.rotation, scale, enabled: true, isPlane: true));
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, wpos, wrot, scale, enabled: true, isPlane: true));
                     prevPlanes[id] = plane;
                 }
                 else if (PoseOrSizeChanged(prevPlanes[id].pose, new Vector3(prevPlanes[id].extent.x, prevPlanes[id].extent.y, 0f), plane.pose, scale))
                 {
-                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, plane.pose.position, plane.pose.rotation, scale, enabled: true, isPlane: true));
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, wpos, wrot, scale, enabled: true, isPlane: true));
                     prevPlanes[id] = plane;
                 }
             }
@@ -199,7 +212,8 @@ namespace Cognitive3D
             foreach (var id in staleScratch)
             {
                 var prev = prevObjects[id];
-                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, prev.pose.position, prev.pose.rotation,
+                ToWorld(prev.pose, out var wpos, out var wrot);
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, wpos, wrot,
                     prev.extent, enabled: false, isPlane: false));
                 prevObjects.Remove(id);
             }
@@ -208,6 +222,7 @@ namespace Cognitive3D
             {
                 string id = kv.Key;
                 var obj = kv.Value;
+                ToWorld(obj.pose, out var wpos, out var wrot);
 
                 if (!prevObjects.ContainsKey(id))
                 {
@@ -225,12 +240,12 @@ namespace Cognitive3D
                             }
                         }
                     });
-                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, obj.pose.position, obj.pose.rotation, obj.extent, enabled: true, isPlane: false));
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, wpos, wrot, obj.extent, enabled: true, isPlane: false));
                     prevObjects[id] = obj;
                 }
                 else if (PoseOrSizeChanged(prevObjects[id].pose, prevObjects[id].extent, obj.pose, obj.extent))
                 {
-                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, obj.pose.position, obj.pose.rotation, obj.extent, enabled: true, isPlane: false));
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, wpos, wrot, obj.extent, enabled: true, isPlane: false));
                     prevObjects[id] = obj;
                 }
             }
