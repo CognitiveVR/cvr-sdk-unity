@@ -73,7 +73,7 @@ namespace Cognitive3D
         //player tracking
 
         public bool EnableGaze = true;
-        public bool RecordGazeOnRoomAnchors = false;
+        public bool RecordGazeOnRoomAnchors;
         public bool DynamicObjectSearchInParent = true;
         public bool TrackGPSLocation;
         public float GPSAccuracy = 2;
