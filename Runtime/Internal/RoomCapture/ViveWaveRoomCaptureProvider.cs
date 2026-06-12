@@ -18,18 +18,30 @@ namespace Cognitive3D
     {
         private const string SYNTHETIC_ROOM_ID = "wave-room";
 
-        private ScenePerceptionManager _manager;
-        private ScenePlane[] _cachedPlanes;
-        private SceneObject[] _cachedObjects;
-        private bool _perceptionStarted;            // 2D plane perception
-        private bool _objectsPerceptionStarted;     // 3D object perception
-        private CancellationTokenSource _cts;       // cancels the perception-completion poll on Stop()
+        // Wave has no add/update/remove events; we poll the perception state and diff the current
+        // snapshot against the previous one by uuid
+        private const int POLL_INTERVAL_MS = 1000;
+        private const float POS_EPSILON = 0.02f;     // 2 cm
+        private const float SCALE_EPSILON = 0.02f;   // 2 cm
+        private const float ROT_EPSILON_DEG = 1.0f;  // degrees
+
+        private ScenePerceptionManager manager;
+        private ScenePlane[] cachedPlanes;           // latest snapshot, used by the gaze raycast
+        private SceneObject[] cachedObjects;
+        private bool perceptionStarted;              // 2D plane perception
+        private bool objectsPerceptionStarted;       // 3D object perception
+        private bool roomEmitted;                    // room manifest + toggle emitted once
+        private CancellationTokenSource cts;         // cancels the poll loop on Stop()
+
+        // Last reported anchor per uuid, so we can diff for add/update/remove and so a removal can carry the anchor's last pose
+        private readonly Dictionary<string, ScenePlane> prevPlanes = new Dictionary<string, ScenePlane>();
+        private readonly Dictionary<string, SceneObject> prevObjects = new Dictionary<string, SceneObject>();
 
         public void Start()
         {
             // Locate the Wave perception manager in the scene
-            _manager = Object.FindFirstObjectByType<ScenePerceptionManager>();
-            if (_manager == null)
+            manager = Object.FindFirstObjectByType<ScenePerceptionManager>();
+            if (manager == null)
             {
                 Util.logWarning("ViveWaveRoomCaptureProvider: ScenePerceptionManager not found in scene. Room layout will not be captured.");
                 return;
@@ -42,62 +54,58 @@ namespace Cognitive3D
                 return;
             }
 
-            if (_manager.StartScene() != WVR_Result.WVR_Success) return;
+            if (manager.StartScene() != WVR_Result.WVR_Success) return;
 
             // 2D plane perception is required
-            if (_manager.StartScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane) != WVR_Result.WVR_Success)
+            if (manager.StartScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane) != WVR_Result.WVR_Success)
             {
                 Util.logWarning("ViveWaveRoomCaptureProvider: failed to start 2D plane perception.");
-                _manager.StopScene();
+                manager.StopScene();
                 return;
             }
-            _perceptionStarted = true;
+            perceptionStarted = true;
 
             // 3D object perception is best effort
-            if (_manager.StartScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_3dObject) == WVR_Result.WVR_Success)
+            if (manager.StartScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_3dObject) == WVR_Result.WVR_Success)
             {
-                _objectsPerceptionStarted = true;
+                objectsPerceptionStarted = true;
             }
             else
             {
                 Util.logWarning("ViveWaveRoomCaptureProvider: failed to start 3D object perception. Volumes will not be captured this session.");
             }
 
-            _cts = new CancellationTokenSource();
-            _ = WaitForCompletionAndSweepAsync(_cts.Token);
+            cts = new CancellationTokenSource();
+            _ = PollLoopAsync(cts.Token);
         }
 
-        private async Task WaitForCompletionAndSweepAsync(CancellationToken token)
+        // Polls perception state and reconciles the current snapshot against the previous one.
+        // Replaces the old one-shot "wait up to 10s then emit once" approach so layout changes and
+        // rescans are captured continuously, the same way the AR Foundation / Meta providers do.
+        private async Task PollLoopAsync(CancellationToken token)
         {
             try
             {
-                // Poll until perception completes for both targets, or timeout.
-                // If 3D object perception wasn't started (StartScenePerception failed for that target), we treat it as already done so we don't block on it
-                float deadline = Time.realtimeSinceStartup + 10f;
-                bool planesDone = false;
-                bool objectsDone = !_objectsPerceptionStarted;
-
-                while (Time.realtimeSinceStartup < deadline)
+                while (true)
                 {
                     token.ThrowIfCancellationRequested();
 
-                    if (!planesDone)
-                        planesDone = IsPerceptionCompleted(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane);
-                    if (!objectsDone)
-                        objectsDone = IsPerceptionCompleted(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_3dObject);
-
-                    if (planesDone && objectsDone)
+                    if (perceptionStarted
+                        && IsPerceptionCompleted(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane)
+                        && manager.GetScenePlanes(ScenePerceptionManager.GetTrackingOriginModeFlags(), out var planes) == WVR_Result.WVR_Success)
                     {
-                        EmitInitialManifest();
-                        return;
+                        ReconcilePlanes(planes);
                     }
 
-                    await Task.Delay(250, token);
-                }
+                    if (objectsPerceptionStarted
+                        && IsPerceptionCompleted(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_3dObject)
+                        && manager.GetSceneObjects(ScenePerceptionManager.GetTrackingOriginModeFlags(), out var objects) == WVR_Result.WVR_Success)
+                    {
+                        ReconcileObjects(objects);
+                    }
 
-                // Timed out. Emit whatever data is available rather than silently skipping
-                Util.logWarning($"ViveWaveRoomCaptureProvider: perception incomplete after 10s. planesDone={planesDone} objectsDone={objectsDone}. Emitting available data.");
-                EmitInitialManifest();
+                    await Task.Delay(POLL_INTERVAL_MS, token);
+                }
             }
             catch (System.OperationCanceledException) { }
             catch (System.Exception e) { Debug.LogException(e); }
@@ -106,114 +114,165 @@ namespace Cognitive3D
         private bool IsPerceptionCompleted(WVR_ScenePerceptionTarget target)
         {
             WVR_ScenePerceptionState state = WVR_ScenePerceptionState.WVR_ScenePerceptionState_Empty;
-            return _manager.GetScenePerceptionState(target, ref state) == WVR_Result.WVR_Success
+            return manager.GetScenePerceptionState(target, ref state) == WVR_Result.WVR_Success
                 && state == WVR_ScenePerceptionState.WVR_ScenePerceptionState_Completed;
         }
 
-        private void EmitInitialManifest()
+        // Emits the synthetic room manifest + enabled toggle once on the first anchor data
+        private void EnsureRoomEmitted()
         {
-            var planesAvailable = _manager.GetScenePlanes(ScenePerceptionManager.GetTrackingOriginModeFlags(), out _cachedPlanes) == WVR_Result.WVR_Success;
-            var objectsAvailable = _manager.GetSceneObjects(ScenePerceptionManager.GetTrackingOriginModeFlags(), out _cachedObjects) == WVR_Result.WVR_Success;
-            if (!planesAvailable && !objectsAvailable) return;
-
-            var manifest = new RoomManifestEntry
+            if (roomEmitted) return;
+            roomEmitted = true;
+            CoreInterface.RecordRoomManifest(new RoomManifestEntry
             {
                 id = SYNTHETIC_ROOM_ID,
                 label = "Wave Room",
                 anchors = new List<AnchorManifestEntry>()
-            };
-
-            if (planesAvailable)
-            {
-                foreach (var plane in _cachedPlanes)
-                {
-                    manifest.anchors.Add(new AnchorManifestEntry
-                    {
-                        id = plane.uuid.ToString(),
-                        label = RoomCaptureUtil.NormalizeLabel(plane.planeLabel.ToString()),
-                        shape = "plane",
-                        isPlane = true,
-                    });
-                }
-            }
-
-            if (objectsAvailable)
-            {
-                foreach (var obj in _cachedObjects)
-                {
-                    manifest.anchors.Add(new AnchorManifestEntry
-                    {
-                        id = obj.uuid.ToString(),
-                        label = RoomCaptureUtil.NormalizeLabel(obj.semanticName),
-                        shape = "volume",
-                        isPlane = false,
-                    });
-                }
-            }
-
-            CoreInterface.RecordRoomManifest(manifest);
+            });
             CoreInterface.RecordRoomData(RoomCaptureUtil.BuildRoomToggle(SYNTHETIC_ROOM_ID, true));
+        }
 
-            if (planesAvailable)
+        private void ReconcilePlanes(ScenePlane[] current)
+        {
+            EnsureRoomEmitted();
+            currentPlaneIds.Clear();
+            foreach (var p in current) currentPlaneIds[p.uuid.ToString()] = p;
+
+            // Removals: any previously-reported plane absent from the current snapshot
+            staleScratch.Clear();
+            foreach (var kvp in prevPlanes)
+                if (!currentPlaneIds.ContainsKey(kvp.Key)) staleScratch.Add(kvp.Key);
+            foreach (var id in staleScratch)
             {
-                foreach (var plane in _cachedPlanes)
+                var prev = prevPlanes[id];
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, prev.pose.position, prev.pose.rotation,
+                    new Vector3(prev.extent.x, prev.extent.y, 0f), enabled: false, isPlane: true));
+                prevPlanes.Remove(id);
+            }
+
+            // Adds + updates
+            foreach (var kv in currentPlaneIds)
+            {
+                string id = kv.Key;
+                var plane = kv.Value;
+                var scale = new Vector3(plane.extent.x, plane.extent.y, 0f);
+
+                if (!prevPlanes.ContainsKey(id))
                 {
-                    CoreInterface.RecordRoomData(new RoomDataEntry
+                    CoreInterface.RecordRoomManifest(new RoomManifestEntry
                     {
-                        id = plane.uuid.ToString(),
-                        time = Util.Timestamp(),
-                        position = plane.pose.position,
-                        rotation = plane.pose.rotation,
-                        scale = new Vector3(plane.extent.x, plane.extent.y, 0f),
-                        enabled = true,
-                        hasTransform = true,
-                        isPlane = true,
+                        id = SYNTHETIC_ROOM_ID,
+                        anchors = new List<AnchorManifestEntry>
+                        {
+                            new AnchorManifestEntry
+                            {
+                                id = id,
+                                label = RoomCaptureUtil.NormalizeLabel(plane.planeLabel.ToString()),
+                                shape = "plane",
+                                isPlane = true,
+                            }
+                        }
                     });
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, plane.pose.position, plane.pose.rotation, scale, enabled: true, isPlane: true));
+                    prevPlanes[id] = plane;
+                }
+                else if (PoseOrSizeChanged(prevPlanes[id].pose, new Vector3(prevPlanes[id].extent.x, prevPlanes[id].extent.y, 0f), plane.pose, scale))
+                {
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, plane.pose.position, plane.pose.rotation, scale, enabled: true, isPlane: true));
+                    prevPlanes[id] = plane;
                 }
             }
 
-            if (objectsAvailable)
+            cachedPlanes = current;
+        }
+
+        private void ReconcileObjects(SceneObject[] current)
+        {
+            EnsureRoomEmitted();
+
+            currentObjectIds.Clear();
+            foreach (var o in current) currentObjectIds[o.uuid.ToString()] = o;
+
+            staleScratch.Clear();
+            foreach (var kvp in prevObjects)
+                if (!currentObjectIds.ContainsKey(kvp.Key)) staleScratch.Add(kvp.Key);
+            foreach (var id in staleScratch)
             {
-                foreach (var obj in _cachedObjects)
+                var prev = prevObjects[id];
+                CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, prev.pose.position, prev.pose.rotation,
+                    prev.extent, enabled: false, isPlane: false));
+                prevObjects.Remove(id);
+            }
+
+            foreach (var kv in currentObjectIds)
+            {
+                string id = kv.Key;
+                var obj = kv.Value;
+
+                if (!prevObjects.ContainsKey(id))
                 {
-                    CoreInterface.RecordRoomData(new RoomDataEntry
+                    CoreInterface.RecordRoomManifest(new RoomManifestEntry
                     {
-                        id = obj.uuid.ToString(),
-                        time = Util.Timestamp(),
-                        position = obj.pose.position,
-                        rotation = obj.pose.rotation,
-                        scale = obj.extent,
-                        enabled = true,
-                        hasTransform = true,
-                        isPlane = false,
+                        id = SYNTHETIC_ROOM_ID,
+                        anchors = new List<AnchorManifestEntry>
+                        {
+                            new AnchorManifestEntry
+                            {
+                                id = id,
+                                label = RoomCaptureUtil.NormalizeLabel(obj.semanticName),
+                                shape = "volume",
+                                isPlane = false,
+                            }
+                        }
                     });
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, obj.pose.position, obj.pose.rotation, obj.extent, enabled: true, isPlane: false));
+                    prevObjects[id] = obj;
+                }
+                else if (PoseOrSizeChanged(prevObjects[id].pose, prevObjects[id].extent, obj.pose, obj.extent))
+                {
+                    CoreInterface.RecordRoomData(RoomCaptureUtil.BuildAnchorData(id, obj.pose.position, obj.pose.rotation, obj.extent, enabled: true, isPlane: false));
+                    prevObjects[id] = obj;
                 }
             }
+
+            cachedObjects = current;
+        }
+
+        private readonly List<string> staleScratch = new List<string>();
+        private readonly Dictionary<string, ScenePlane> currentPlaneIds = new Dictionary<string, ScenePlane>();
+        private readonly Dictionary<string, SceneObject> currentObjectIds = new Dictionary<string, SceneObject>();
+
+        private static bool PoseOrSizeChanged(Pose a, Vector3 extentA, Pose b, Vector3 extentB)
+        {
+            return (a.position - b.position).sqrMagnitude > POS_EPSILON * POS_EPSILON
+                || (extentA - extentB).sqrMagnitude > SCALE_EPSILON * SCALE_EPSILON
+                || Quaternion.Angle(a.rotation, b.rotation) > ROT_EPSILON_DEG;
         }
 
         public void Stop()
         {
-            if (_cts != null)
+            if (cts != null)
             {
-                _cts.Cancel();
-                _cts.Dispose();
-                _cts = null;
+                cts.Cancel();
+                cts.Dispose();
+                cts = null;
             }
-            if (_manager != null && _perceptionStarted)
+            if (manager != null && perceptionStarted)
             {
-                _manager.StopScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane);
-                if (_objectsPerceptionStarted)
-                    _manager.StopScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_3dObject);
-                _manager.StopScene();
+                manager.StopScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_2dPlane);
+                if (objectsPerceptionStarted)
+                    manager.StopScenePerception(WVR_ScenePerceptionTarget.WVR_ScenePerceptionTarget_3dObject);
+                manager.StopScene();
             }
 
-            // Clear so Restart() / next Start() re-finds the manager in the new scene
-            // rather than reusing a potentially destroyed reference from the old one
-            _manager = null;
-            _perceptionStarted = false;
-            _objectsPerceptionStarted = false;
-            _cachedPlanes = null;
-            _cachedObjects = null;
+            manager = null;
+            perceptionStarted = false;
+            objectsPerceptionStarted = false;
+            roomEmitted = false;
+            cachedPlanes = null;
+            cachedObjects = null;
+            prevPlanes.Clear();
+            prevObjects.Clear();
         }
 
         public void Restart()
@@ -228,15 +287,15 @@ namespace Cognitive3D
             worldHit = Vector3.zero;
             localHit = Vector3.zero;
             distance = float.MaxValue;
-            if (_manager == null) return false;
-            if (_cachedPlanes == null && _cachedObjects == null) return false;
+            if (manager == null) return false;
+            if (cachedPlanes == null && cachedObjects == null) return false;
 
             bool found = false;
 
             // ---- Planes (2D) ----
-            if (_cachedPlanes != null)
+            if (cachedPlanes != null)
             {
-                foreach (var plane in _cachedPlanes)
+                foreach (var plane in cachedPlanes)
                 {
                     // Transform the world ray into the plane's local frame.
                     // Wave planes lie on local z=0, normal along +Z, sized by extent (X = width, Y = height)
@@ -264,9 +323,9 @@ namespace Cognitive3D
             }
 
             // ---- Volumes (3D) ----
-            if (_cachedObjects != null)
+            if (cachedObjects != null)
             {
-                foreach (var obj in _cachedObjects)
+                foreach (var obj in cachedObjects)
                 {
                     Quaternion invRot = Quaternion.Inverse(obj.pose.rotation);
                     Vector3 localOrigin = invRot * (ray.origin - obj.pose.position);
