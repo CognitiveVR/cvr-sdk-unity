@@ -49,6 +49,29 @@ namespace Cognitive3D
 
             EditorGUILayout.Space(15);
 
+            GUILayout.Label("Gaze on Room Surfaces", EditorCore.styles.FeatureTitle);
+            var prefs = EditorCore.GetPreferences();
+            if (prefs != null)
+            {
+                float prevLabelWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 220;
+                EditorGUI.BeginChangeCheck();
+                bool recordGaze = EditorGUILayout.Toggle(
+                    new GUIContent("Record Gaze on Room Anchors",
+                        "Record gaze on Room Capture surfaces (walls, floors, furniture).\n" +
+                        "Recommended for static AR/MR. Disable for VR experiences with virtual locomotion, where room anchors no longer align with the moving view.\n\n" +
+                        "Same global setting as in Cognitive3D Preferences."),
+                    prefs.RecordGazeOnRoomAnchors);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    prefs.RecordGazeOnRoomAnchors = recordGaze;
+                    EditorUtility.SetDirty(prefs);
+                }
+                EditorGUIUtility.labelWidth = prevLabelWidth;
+            }
+
+            EditorGUILayout.Space(15);
+
             // Meta MRUK status (read-only)
             GUILayout.Label("Meta MRUK", EditorCore.styles.FeatureTitle);
 
