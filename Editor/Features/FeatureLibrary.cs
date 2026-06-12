@@ -255,7 +255,17 @@ namespace Cognitive3D
                         setFeatureIndex(9);
                         SegmentAnalytics.TrackEvent("RoomCaptureWindow_Opened", "RoomCaptureWindow", "new");
                     },
-                    new List<FeatureAction>(),
+                    new List<FeatureAction>
+                    {
+                        new FeatureAction(
+                            FeatureActionType.LinkTo,
+                            "Link to Room Capture documentation",
+                            () =>
+                            {
+                                Application.OpenURL("https://docs.cognitive3d.com/unity/room-capture/");
+                            }
+                        )
+                    },
                     new RoomCaptureDetailGUI()
                 ),
             };

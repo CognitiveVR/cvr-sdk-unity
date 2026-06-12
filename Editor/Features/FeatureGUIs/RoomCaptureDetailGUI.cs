@@ -13,6 +13,16 @@ namespace Cognitive3D
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Room Capture", EditorCore.styles.FeatureTitle);
+
+                float iconSize = EditorGUIUtility.singleLineHeight;
+                Rect iconRect = GUILayoutUtility.GetRect(iconSize, iconSize, GUILayout.Width(iconSize), GUILayout.Height(iconSize));
+
+                GUIContent buttonContent = new GUIContent(EditorCore.ExternalIcon, "Open Audio Recording documentation");
+                if (GUI.Button(iconRect, buttonContent, EditorCore.styles.InfoButton))
+                {
+                    Application.OpenURL("https://docs.cognitive3d.com/unity/room-capture/");
+                }
+                
                 GUILayout.FlexibleSpace();
             }
             GUILayout.EndHorizontal();
