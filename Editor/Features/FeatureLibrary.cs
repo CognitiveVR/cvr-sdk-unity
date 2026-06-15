@@ -245,6 +245,29 @@ namespace Cognitive3D
                     },
                     new AudioRecordingDetailGUI()
                 ),
+                new FeatureData(
+                    false,
+                    "Room Capture",
+                    "Capture room anchors and surfaces for mixed-reality experiences",
+                    EditorCore.RoomCaptureIcon,
+                    () =>
+                    {
+                        setFeatureIndex(9);
+                        SegmentAnalytics.TrackEvent("RoomCaptureWindow_Opened", "RoomCaptureWindow", "new");
+                    },
+                    new List<FeatureAction>
+                    {
+                        new FeatureAction(
+                            FeatureActionType.LinkTo,
+                            "Link to Room Capture documentation",
+                            () =>
+                            {
+                                Application.OpenURL("https://docs.cognitive3d.com/unity/room-capture/");
+                            }
+                        )
+                    },
+                    new RoomCaptureDetailGUI()
+                ),
             };
         }
 

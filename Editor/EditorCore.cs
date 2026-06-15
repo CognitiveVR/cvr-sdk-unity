@@ -224,10 +224,9 @@ namespace Cognitive3D
                 if (v.StartsWith("C3D_"))
                 {
                     C3DSymbols.Add(v);
-                    return true;
                 }
             }
-            return false;
+            return C3DSymbols.Count > 0;
         }
 
         public static void SetPlayerDefine(List<string> C3DSymbols)
@@ -1153,6 +1152,17 @@ namespace Cognitive3D
                 if (_audioRecordingIcon == null)
                     _audioRecordingIcon = Resources.Load<Texture2D>("Features/Icons/audio-recording");
                 return _audioRecordingIcon;
+            }
+        }
+
+        private static Texture2D _roomCaptureIcon;
+        public static Texture2D RoomCaptureIcon
+        {
+            get
+            {
+                if (_roomCaptureIcon == null)
+                    _roomCaptureIcon = Resources.Load<Texture2D>("Features/Icons/room-layout");
+                return _roomCaptureIcon;
             }
         }
 

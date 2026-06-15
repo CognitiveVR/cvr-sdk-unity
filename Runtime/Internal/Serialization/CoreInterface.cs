@@ -159,6 +159,19 @@ namespace Cognitive3D
                 useGeo
                 );
         }
+        internal static void RecordRoomAnchorGaze(Vector3 position, Quaternion rotation, Vector3 gazePoint, string anchorId, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
+        {
+            SharedCore.RecordGazeRoomAnchor(
+                new float[] { position.x, position.y, position.z },
+                new float[] { rotation.x, rotation.y, rotation.z, rotation.w },
+                new float[] { gazePoint.x, gazePoint.y, gazePoint.z },
+                anchorId,
+                time,
+                new float[] { floorPos.x, floorPos.y, floorPos.z },
+                useFloor,
+                new float[] { geolocation.x, geolocation.y, geolocation.z, geolocation.w },
+                useGeo);
+        }
         internal static void RecordSkyGaze(Vector3 position, Quaternion rotation, double time, Vector3 floorPos, bool useFloor, Vector4 geolocation, bool useGeo)
         {
             SharedCore.RecordGazeSky(
@@ -199,6 +212,22 @@ namespace Cognitive3D
         internal static void RecordTrackingSpaceTransform(Cognitive3D.Components.CustomTransform transform, double timestamp)
         {
             SharedCore.RecordTrackingSpaceTransform(transform, timestamp);
+        }
+
+        /// <summary>
+        /// Buffers a room manifest entry onto the boundary stream
+        /// </summary>
+        internal static void RecordRoomManifest(RoomManifestEntry entry)
+        {
+            SharedCore.RecordRoomManifest(entry);
+        }
+
+        /// <summary>
+        /// Buffers a room data entry onto the boundary stream
+        /// </summary>
+        internal static void RecordRoomData(RoomDataEntry entry)
+        {
+            SharedCore.RecordRoomData(entry);
         }
 
         #endregion
