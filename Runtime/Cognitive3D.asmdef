@@ -28,7 +28,10 @@
         "Unity.XR.Hands",
         "VIVE.OpenXR",
         "Unity.XR.OpenXR",
-        "Fusion.Unity"
+        "Fusion.Unity",
+        "Wave.Essence.ScenePerception",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -92,6 +95,21 @@
             "name": "com.htc.upm.vive.openxr",
             "expression": "2.5.0",
             "define": "COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "68.0.0",
+            "define": "COGNITIVE3D_META_MRUK_68_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "6.0.7",
+            "define": "COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER"
+        },
+        {
+            "name": "com.xrpf.privacyframework",
+            "expression": "3.0.0",
+            "define": "XRPF_ROOM_CAPTURE"
         }
     ],
     "noEngineReferences": false
