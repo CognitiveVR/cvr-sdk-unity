@@ -23,7 +23,7 @@ namespace Cognitive3D.Components
         protected override void OnSessionBegin()
         {
             base.OnSessionBegin();
-#if XRPF
+#if XRPF_ROOM_CAPTURE
             if (!XRPF.PrivacyFramework.Agreement.IsRoomCaptureDataAllowed)
             {
                 return;
