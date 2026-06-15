@@ -224,10 +224,9 @@ namespace Cognitive3D
                 if (v.StartsWith("C3D_"))
                 {
                     C3DSymbols.Add(v);
-                    return true;
                 }
             }
-            return false;
+            return C3DSymbols.Count > 0;
         }
 
         public static void SetPlayerDefine(List<string> C3DSymbols)

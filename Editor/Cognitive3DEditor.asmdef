@@ -26,7 +26,9 @@
         "meta.xr.mrutilitykit",
         "Unity.Netcode.Runtime",
         "Normal.Realtime.Shared",
-        "VIVE.OpenXR"
+        "VIVE.OpenXR",
+        "Wave.Essence.ScenePerception",
+        "Unity.XR.ARFoundation"
     ],
     "includePlatforms": [
         "Editor"
