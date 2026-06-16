@@ -861,6 +861,32 @@ namespace Cognitive3D
             {
                 foreach (var face in GazeHelper.ARFaceManager.trackables)
                 {
+#if COGNITIVE3D_ANDROIDXR_OPENXR && COGNITIVE3D_GOOGLE_XR_EXTENSIONS
+                    if (GazeHelper.HasFineEyeTrackingPermission() && Google.XR.Extensions.ARFaceExtensions.TryGetFineEyePoses(face, out var states, out var leftPose, out var rightPose) && states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.LeftEyePoseValid) && states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.RightEyePoseValid))
+                    {
+                        var leftEyePos = leftPose.position;
+                        var rightEyePos = rightPose.position;
+                        Vector3 centerPos = Vector3.Lerp(leftEyePos, rightEyePos, 0.5f);
+
+                        var leftEyeRot = leftPose.rotation;
+                        var rightEyeRot = rightPose.rotation;
+                        var centerEyeRot = Quaternion.Slerp(leftEyeRot, rightEyeRot, 0.5f);
+
+                        Vector3 worldGazeDirection = centerEyeRot * Vector3.forward;
+                        if (GameplayReferences.HMD.transform.parent != null)
+                        {
+                            worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(worldGazeDirection);
+                            Vector3 worldOrigin = GameplayReferences.HMD.transform.parent.TransformPoint(centerPos);
+                            ray = new Ray(worldOrigin, worldGazeDirection);
+                        }
+                        else
+                        {
+                            // fallback if no parent
+                            ray = new Ray(centerPos, centerEyeRot * Vector3.forward);
+                        }
+                        return true;
+                    }
+#endif
                     if (face.leftEye != null && face.rightEye != null)
                     {
                         var leftEyePos = face.leftEye.position;
@@ -937,6 +963,12 @@ namespace Cognitive3D
             {
                 foreach (var face in GazeHelper.ARFaceManager.trackables)
                 {
+#if COGNITIVE3D_ANDROIDXR_OPENXR && COGNITIVE3D_GOOGLE_XR_EXTENSIONS
+                    if (GazeHelper.HasFineEyeTrackingPermission() && Google.XR.Extensions.ARFaceExtensions.TryGetFineEyePoses(face, out var states, out var leftPose, out var rightPose) && states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.LeftEyePoseValid))
+                    {
+                        return !states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.LeftEyeShut);
+                    }
+#endif
                     if (face.leftEye != null)
                     {
                         var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
@@ -980,6 +1012,12 @@ namespace Cognitive3D
             {
                 foreach (var face in GazeHelper.ARFaceManager.trackables)
                 {
+#if COGNITIVE3D_ANDROIDXR_OPENXR && COGNITIVE3D_GOOGLE_XR_EXTENSIONS
+                    if (GazeHelper.HasFineEyeTrackingPermission() && Google.XR.Extensions.ARFaceExtensions.TryGetFineEyePoses(face, out var states, out var leftPose, out var rightPose) && states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.RightEyePoseValid))
+                    {
+                        return !states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.RightEyeShut);
+                    }
+#endif
                     if (face.rightEye != null)
                     {
                         var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);

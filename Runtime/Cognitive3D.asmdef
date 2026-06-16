@@ -32,7 +32,8 @@
         "Unity.XR.ARFoundation",
         "Unity.XR.ARSubsystems",
         "Unity.XR.AndroidOpenXR",
-        "Wave.Essence.ScenePerception"
+        "Wave.Essence.ScenePerception",
+        "Google.XR.Extensions"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -106,6 +107,11 @@
             "name": "com.unity.xr.androidxr-openxr",
             "expression": "",
             "define": "COGNITIVE3D_ANDROIDXR_OPENXR"
+        },
+        {
+            "name": "com.google.xr.extensions",
+            "expression": "",
+            "define": "COGNITIVE3D_GOOGLE_XR_EXTENSIONS"
         },
         {
             "name": "com.meta.xr.mrutilitykit",
