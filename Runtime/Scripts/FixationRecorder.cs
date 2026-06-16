@@ -974,9 +974,12 @@ namespace Cognitive3D
                         var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
                         if (result.status.IsSuccess())
                         {
-                            var bs = result.value;
-                            float leftOpenness  = 1f - bs[12].weight;
-                            return leftOpenness > 0.5f;
+                            using var bs = result.value;
+                            if (bs.Length > 12)
+                            {
+                                float leftOpenness = 1f - bs[12].weight;
+                                return leftOpenness > 0.5f;
+                            }
                         }
                     }
                 }
@@ -1023,9 +1026,12 @@ namespace Cognitive3D
                         var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
                         if (result.status.IsSuccess())
                         {
-                            var bs = result.value;
-                            float rightOpenness  = 1f - bs[13].weight;
-                            return rightOpenness > 0.5f;
+                            using var bs = result.value;
+                            if (bs.Length > 13)
+                            {
+                                float rightOpenness = 1f - bs[13].weight;
+                                return rightOpenness > 0.5f;
+                            }
                         }
                     }
                 }

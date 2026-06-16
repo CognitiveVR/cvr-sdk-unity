@@ -246,7 +246,10 @@ namespace Cognitive3D
 #endif
             // reuse an existing manager if the scene already has one
             ARFaceManager = UnityEngine.Object.FindAnyObjectByType<UnityEngine.XR.ARFoundation.ARFaceManager>();
-            ARFaceManager.enabled = true;
+            if (ARFaceManager != null)
+            {
+                ARFaceManager.enabled = true;
+            }
         }
 #endif
         static Vector3 GetLookDirection()
