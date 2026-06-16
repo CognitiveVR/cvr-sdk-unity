@@ -29,9 +29,11 @@
         "VIVE.OpenXR",
         "Unity.XR.OpenXR",
         "Fusion.Unity",
-        "Wave.Essence.ScenePerception",
         "Unity.XR.ARFoundation",
-        "Unity.XR.ARSubsystems"
+        "Unity.XR.ARSubsystems",
+        "Unity.XR.AndroidOpenXR",
+        "Wave.Essence.ScenePerception",
+        "Google.XR.Extensions"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -97,14 +99,24 @@
             "define": "COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER"
         },
         {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "6.2.0",
+            "define": "COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.androidxr-openxr",
+            "expression": "",
+            "define": "COGNITIVE3D_ANDROIDXR_OPENXR"
+        },
+        {
+            "name": "com.google.xr.extensions",
+            "expression": "",
+            "define": "COGNITIVE3D_GOOGLE_XR_EXTENSIONS"
+        },
+        {
             "name": "com.meta.xr.mrutilitykit",
             "expression": "68.0.0",
             "define": "COGNITIVE3D_META_MRUK_68_OR_NEWER"
-        },
-        {
-            "name": "com.unity.xr.arfoundation",
-            "expression": "6.0.7",
-            "define": "COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER"
         },
         {
             "name": "com.xrpf.privacyframework",

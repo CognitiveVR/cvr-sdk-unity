@@ -130,7 +130,7 @@ namespace Cognitive3D
             GUILayout.Label("Unity AR Foundation", EditorCore.styles.FeatureTitle);
 
             bool arFoundationDetected = false;
-#if COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             arFoundationDetected = true;
 #endif
             EditorGUILayout.HelpBox(

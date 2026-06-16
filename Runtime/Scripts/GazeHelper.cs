@@ -210,6 +210,48 @@ namespace Cognitive3D
             }
         }
 #else
+
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
+        internal static UnityEngine.XR.ARFoundation.ARFaceManager ARFaceManager;
+
+#if COGNITIVE3D_ANDROIDXR_OPENXR
+        // Android XR gates eye/face data behind runtime permissions
+        const string k_EyeTrackingPermission = "android.permission.EYE_TRACKING_COARSE";
+        const string k_FaceTrackingPermission = "android.permission.FACE_TRACKING";
+        const string k_FineEyeTrackingPermission = "android.permission.EYE_TRACKING_FINE";
+
+        static bool HasEyeTrackingPermissions()
+        {
+            return UnityEngine.Android.Permission.HasUserAuthorizedPermission(k_EyeTrackingPermission)
+                && UnityEngine.Android.Permission.HasUserAuthorizedPermission(k_FaceTrackingPermission);
+        }
+
+        // Fine eye is optional: when granted, the higher-precision fine-eye poses are used;
+        // otherwise the SDK falls back to the coarse ARFace eye poses.
+        internal static bool HasFineEyeTrackingPermission()
+        {
+            return UnityEngine.Android.Permission.HasUserAuthorizedPermission(k_FineEyeTrackingPermission);
+        }
+#endif
+
+        // Finds and enables the ARFaceManager. On Android XR this waits until the client has
+        // granted the eye/face permissions; other AR Foundation platforms enable it directly.
+        static void InitializeARFaceManager()
+        {
+#if COGNITIVE3D_ANDROIDXR_OPENXR
+            if (!HasEyeTrackingPermissions())
+            {
+                return;
+            }
+#endif
+            // reuse an existing manager if the scene already has one
+            ARFaceManager = UnityEngine.Object.FindAnyObjectByType<UnityEngine.XR.ARFoundation.ARFaceManager>();
+            if (ARFaceManager != null)
+            {
+                ARFaceManager.enabled = true;
+            }
+        }
+#endif
         static Vector3 GetLookDirection()
         {
 #if COGNITIVE3D_VIVE_OPENXR_2_5_OR_NEWER
@@ -235,6 +277,47 @@ namespace Cognitive3D
                         if (GameplayReferences.HMD.transform.parent != null)
                         {
                             worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(centerRot * Vector3.forward);
+                        }
+                        return worldGazeDirection;
+                    }
+                }
+            }
+#endif
+
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
+            if (ARFaceManager == null)
+            {
+                InitializeARFaceManager();
+            }
+            else
+            {
+                foreach (var face in ARFaceManager.trackables)
+                {
+#if COGNITIVE3D_ANDROIDXR_OPENXR && COGNITIVE3D_GOOGLE_XR_EXTENSIONS
+                    if (HasFineEyeTrackingPermission() && Google.XR.Extensions.ARFaceExtensions.TryGetFineEyePoses(face, out var states, out var leftPose, out var rightPose) && states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.LeftEyePoseValid) && states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.RightEyePoseValid))
+                    {
+                        var leftEyeRot = leftPose.rotation;
+                        var rightEyeRot = rightPose.rotation;
+                        var centerEyeRot = Quaternion.Slerp(leftEyeRot, rightEyeRot, 0.5f);
+
+                        Vector3 worldGazeDirection = centerEyeRot * Vector3.forward;
+                        if (GameplayReferences.HMD.transform.parent != null)
+                        {
+                            worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(centerEyeRot * Vector3.forward);
+                        }
+                        return worldGazeDirection;
+                    }
+#endif
+                    if (face.leftEye != null && face.rightEye != null)
+                    {
+                        var leftEyeRot = face.leftEye.rotation;
+                        var rightEyeRot = face.rightEye.rotation;
+                        var centerEyeRot = Quaternion.Slerp(leftEyeRot, rightEyeRot, 0.5f);
+
+                        Vector3 worldGazeDirection = centerEyeRot * Vector3.forward;
+                        if (GameplayReferences.HMD.transform.parent != null)
+                        {
+                            worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(centerEyeRot * Vector3.forward);
                         }
                         return worldGazeDirection;
                     }
