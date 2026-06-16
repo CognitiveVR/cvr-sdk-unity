@@ -986,7 +986,7 @@ namespace Cognitive3D
                         go.AddComponent<Wave.Essence.ScenePerception.ScenePerceptionManager>();
                     }
                 );
-#elif COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
+#elif COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
                 ProjectValidation.AddItem(
                     level: ProjectValidation.ItemLevel.Recommended,
                     category: CATEGORY,

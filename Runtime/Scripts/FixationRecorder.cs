@@ -856,7 +856,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             if (GazeHelper.ARFaceManager != null)
             {
                 foreach (var face in GazeHelper.ARFaceManager.trackables)
@@ -958,7 +958,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             if (GazeHelper.ARFaceManager != null)
             {
                 foreach (var face in GazeHelper.ARFaceManager.trackables)
@@ -1010,7 +1010,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             if (GazeHelper.ARFaceManager != null)
             {
                 foreach (var face in GazeHelper.ARFaceManager.trackables)

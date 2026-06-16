@@ -39,7 +39,7 @@ namespace Cognitive3D.Components
             provider = new MetaRoomCaptureProvider();
 #elif C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
             provider = new ViveWaveRoomCaptureProvider();
-#elif COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
+#elif COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             provider = new ARFoundationRoomCaptureProvider();
 #endif
             provider?.Start();
@@ -92,7 +92,7 @@ namespace Cognitive3D.Components
 
                 public override string GetDescription()
         {
-#if (C3D_OCULUS && COGNITIVE3D_META_MRUK_68_OR_NEWER) || (C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION) || COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
+#if (C3D_OCULUS && COGNITIVE3D_META_MRUK_68_OR_NEWER) || (C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION) || COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             return "Captures room layout (walls, floors, furniture) and gaze on surfaces via Meta MRUK, Vive Wave, or AR Foundation.";
 #else
             return "Requires Meta MRUK, Vive Wave, or AR Foundation. No supported provider detected.";
@@ -101,7 +101,7 @@ namespace Cognitive3D.Components
 
         public override bool GetWarning()
         {
-#if (C3D_OCULUS && COGNITIVE3D_META_MRUK_68_OR_NEWER) || (C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION) || COGNITIVE3D_AR_FOUNDATION_6_0_OR_NEWER
+#if (C3D_OCULUS && COGNITIVE3D_META_MRUK_68_OR_NEWER) || (C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION) || COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             return false;
 #else
             return true;

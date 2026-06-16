@@ -211,7 +211,7 @@ namespace Cognitive3D
         }
 #else
 
-#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
         internal static UnityEngine.XR.ARFoundation.ARFaceManager ARFaceManager;
 
 #if COGNITIVE3D_ANDROIDXR_OPENXR
@@ -284,7 +284,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+#if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
             if (ARFaceManager == null)
             {
                 InitializeARFaceManager();

@@ -104,7 +104,7 @@ namespace Cognitive3D
                     }
                 }
                 return false;
-#elif COGNITIVE3D_AR_FOUNDATION_5_2_OR_NEWER
+#elif COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
                 List<UnityEngine.XR.ARSubsystems.XRFaceSubsystem> faceSubsystem = new List<UnityEngine.XR.ARSubsystems.XRFaceSubsystem>();
                 SubsystemManager.GetSubsystems(faceSubsystem);
                 foreach (var subsystem in faceSubsystem)
