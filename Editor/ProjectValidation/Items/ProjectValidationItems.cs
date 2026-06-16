@@ -633,6 +633,7 @@ namespace Cognitive3D
                     if (_waveRigs != null && _waveRigs.Count != 0)
                     {
                         _waveRigs[0].TrackingOrigin = UnityEngine.XR.TrackingOriginModeFlags.Floor;
+                        UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                     }
                 }
             );
@@ -660,6 +661,7 @@ namespace Cognitive3D
                         if (_waveRigs[0].GetComponent<DynamicObject>())
                         {
                             Object.DestroyImmediate(_waveRigs[0].GetComponent<DynamicObject>() as Object, true);
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                         }
                     }
                 }
@@ -725,6 +727,7 @@ namespace Cognitive3D
                         if (_xrorigins != null && _xrorigins.Count != 0)
                         {
                             _xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                         }
                     }
                 );
@@ -789,6 +792,7 @@ namespace Cognitive3D
                         if (_cameraOffset != null && _cameraOffset.Count != 0)
                         {
                             _cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                         }
                     }
                 );
