@@ -145,6 +145,41 @@ namespace Cognitive3D
             DynamicGazeRecordEvent(timestamp, objectid, localgazepoint, hmdpoint, hmdrotation);
         }
 
+        //gaze on room anchor
+        internal static void RecordRoomAnchorGazePoint(double timestamp, string anchorId, Vector3 localgazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at a room anchor
+        {
+            if (Cognitive3D_Manager.IsInitialized == false)
+            {
+                Cognitive3D.Util.logWarning("Gaze cannot be sent before Session Begin!");
+                return;
+            }
+            if (Cognitive3D_Manager.TrackingScene == null)
+            {
+                if (!hasDisplayedSceneIdWarning)
+                {
+                    hasDisplayedSceneIdWarning = true;
+                    Cognitive3D.Util.logWarning("GazeCore RecordGazePoint invalid SceneId");
+                }
+                return;
+            }
+
+            Vector3 floorPos = new Vector3();
+            //if floor position is enabled and if the hmd is over a surface
+            bool validFloor = GetFloorPosition(ref floorPos);
+
+            Vector4 geo = new Vector4();
+            bool useGeo = false;
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+                    useGeo = true;
+                }
+            }
+
+            CoreInterface.RecordRoomAnchorGaze(hmdpoint, hmdrotation, localgazepoint, anchorId, timestamp, floorPos, validFloor, geo, useGeo);
+        }
+
         //world position
         internal static void RecordGazePoint(double timestamp, Vector3 gazepoint, Vector3 hmdpoint, Quaternion hmdrotation) //looking at world
         {

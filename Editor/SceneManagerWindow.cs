@@ -862,10 +862,12 @@ namespace Cognitive3D
                 if (sceneSetting == null || string.IsNullOrEmpty(sceneSetting.SceneId))
                     continue;
 
+                bool foundOnBackend = false;
                 foreach (var sceneCollection in collection.scenes)
                 {
                     if (sceneCollection.sdkFacingId == sceneSetting.SceneId)
                     {
+                        foundOnBackend = true;
                         var matchingVersion = sceneCollection.GetVersion(sceneSetting.VersionNumber);
                         if (matchingVersion != null)
                         {
@@ -875,6 +877,13 @@ namespace Cognitive3D
                         }
                         break;
                     }
+                }
+
+                // Scene is not on the current project's backend, clear stale upload state
+                if (!foundOnBackend && EditorCore.HasBackendState(sceneSetting))
+                {
+                    EditorCore.ClearBackendState(sceneSetting);
+                    hasUpdates = true;
                 }
             }
 

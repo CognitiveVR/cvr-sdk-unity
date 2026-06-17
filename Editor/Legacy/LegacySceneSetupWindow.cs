@@ -104,7 +104,7 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<Passthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<SocialPlatform>();
-                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<MetaPhysicalRoomSize>();
             }
 #endif
         }
@@ -152,7 +152,7 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<Passthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<SocialPlatform>();
-                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<Cognitive3D_MetaSceneMesh>();
+                wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<MetaPhysicalRoomSize>();
             }
 #endif
         }
@@ -1055,10 +1055,10 @@ namespace Cognitive3D
             {
 #if !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
                 // Do not modify OVRManager permissions
-                var sceneApi = FindFirstObjectByType<Cognitive3D_MetaSceneMesh>();
+                var sceneApi = FindFirstObjectByType<MetaPhysicalRoomSize>();
                 if (sceneApi == null)
                 {
-                    Cognitive3D_Manager.Instance.gameObject.AddComponent<Cognitive3D_MetaSceneMesh>();
+                    Cognitive3D_Manager.Instance.gameObject.AddComponent<MetaPhysicalRoomSize>();
                 }
                 GameObject sceneManager = FindFirstObjectByType<OVRSceneManager>()?.gameObject;
                 if (sceneManager == null)
@@ -1111,7 +1111,7 @@ namespace Cognitive3D
                 // Do not modify OVRManager permissions
                 
                 // Component in C3D_Manager prefab
-                var sceneApi = FindFirstObjectByType<Cognitive3D_MetaSceneMesh>();
+                var sceneApi = FindFirstObjectByType<MetaPhysicalRoomSize>();
                 if (sceneApi != null)
                 {
                     DestroyImmediate(sceneApi);
