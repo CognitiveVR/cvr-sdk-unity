@@ -171,6 +171,16 @@ namespace Cognitive3D
                 return;
             }
 
+            // Scenes deleted on disk can linger in Build Settings, leaving entries that point at
+            // missing files. Skip them so OpenScene doesn't throw and abort the whole upload.
+            if (!System.IO.File.Exists(entries[sceneIndex].path))
+            {
+                Debug.LogWarning($"<color=yellow>Skipping scene upload: scene file not found at '{entries[sceneIndex].path}'. It may have been deleted but is still listed in Build Settings.</color>");
+                sceneIndex++;
+                sceneUploadState = SceneManagementUploadState.Init;
+                return;
+            }
+
             switch (sceneUploadState)
             {
                 case SceneManagementUploadState.Init:
