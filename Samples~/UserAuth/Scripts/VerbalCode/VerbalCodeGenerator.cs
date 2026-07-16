@@ -6,7 +6,7 @@ namespace Cognitive3D.Auth
     public static class VerbalCodeGenerator
     {
         /// <summary>
-        /// Generates a random numeric string of the specified length.
+        /// Generates a random numeric string of the specified length
         /// </summary>
         public static string GenerateCode(int length = 6)
         {
@@ -19,8 +19,8 @@ namespace Cognitive3D.Auth
         }
 
         /// <summary>
-        /// Formats a code string for display by inserting a dash at the midpoint.
-        /// "472815" becomes "472-815".
+        /// Formats a code string for display by inserting a dash at the midpoint
+        /// "472815" becomes "472-815"
         /// </summary>
         public static string FormatForDisplay(string code)
         {
