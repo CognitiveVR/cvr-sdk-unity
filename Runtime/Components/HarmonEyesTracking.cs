@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Cognitive3D.Components
 {
+    [AddComponentMenu("Cognitive3D/Components/HarmonEyes Tracking")]
     public class HarmonEyesTracking : AnalyticsComponentBase
     {
 #if C3D_HARMONEYES
@@ -124,26 +125,24 @@ namespace Cognitive3D.Components
             if (result == null) return;
             SensorRecorder.RecordDataPoint("c3d.harmoneyes.mental_workload_level", result.level);
         }
-
-        public override string GetDescription()
-        {
-            return "Records HarmonEyes cognitive-state metrics (Mental Workload, Fatigue, Attention and Mental Readiness) as sensors";
-        }
-
-        public override bool GetWarning()
-        {
-            return FindFirstObjectByType<HarmonEyes.EyeTracking.Common.AnalyzeEyeTrackingData>() == null;
-        }
-#else
-        public override string GetDescription()
-        {
-            return "Records HarmonEyes cognitive-state metrics (Mental Workload, Fatigue, Attention and Mental Readiness) as sensors. Requires the HarmonEyes Unity SDK in your project and the C3D_HARMONEYES scripting define symbol to be set.";
-        }
-
-        public override bool GetWarning()
-        {
-            return true;
-        }
 #endif
+
+        public override string GetDescription()
+        {
+#if C3D_HARMONEYES
+            return "Records HarmonEyes cognitive-state metrics (Mental Workload, Fatigue, Attention and Mental Readiness) as sensors";
+#else
+            return "Records HarmonEyes cognitive-state metrics (Mental Workload, Fatigue, Attention and Mental Readiness) as sensors. Requires the HarmonEyes Unity SDK in your project and the C3D_HARMONEYES scripting define symbol to be set.";
+#endif
+        }
+
+        public override bool GetWarning()
+        {
+#if C3D_HARMONEYES
+            return false;
+#else
+            return true;
+#endif
+        }
     }
 }
