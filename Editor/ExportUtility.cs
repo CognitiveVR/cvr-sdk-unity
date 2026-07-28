@@ -444,6 +444,11 @@ namespace Cognitive3D
                 currentTask++;
                 EditorUtility.DisplayProgressBar("Export GLTF", "Bake Terrains " + currentTask + "/" + Terrains.Length, currentProgress);
                 if (!v.isActiveAndEnabled) { continue; }
+                if (v.terrainData == null)
+                {
+                    Util.logWarning($"Skipping Terrain '{v.gameObject.name}' because it has no Terrain Data assigned.", v);
+                    continue;
+                }
                 if (rootDynamic == null && v.GetComponentInParent<DynamicObject>() != null)
                 {
                     //terrain as child of dynamic when exporting scene
@@ -874,6 +879,8 @@ namespace Cognitive3D
         /// <param name="terrain">the terrain to bake</param>
         public static Mesh GenerateTerrainMesh(Terrain terrain)
         {
+            if (terrain == null || terrain.terrainData == null) { return null; }
+
             //CONSIDER splitting terrain into different mesh. too many polygons causes issues?
             float downsample = terrain.terrainData.heightmapResolution / 256f;
             downsample = Mathf.Max(downsample, 1);
