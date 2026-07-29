@@ -61,7 +61,7 @@ namespace Cognitive3D
                 }
                 else
                 {
-                    EditorCore.SetPlayerDefine(HarmonEyesDefine);
+                    EditorCore.AddDefine(HarmonEyesDefine);
                 }
             }
 
