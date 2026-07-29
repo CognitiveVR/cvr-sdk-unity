@@ -88,6 +88,22 @@ namespace Cognitive3D.Components
 
         void Cognitive3D_Manager_OnPreSessionEnd()
         {
+            CleanupSubscriptions();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            CleanupSubscriptions();
+        }
+        
+        void OnDestroy()
+        {
+            CleanupSubscriptions();
+        }
+
+        void CleanupSubscriptions()
+        {
             SetPolling(false);
             if (subscribedAnalyzer != null)
             {
