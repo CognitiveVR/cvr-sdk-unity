@@ -1111,6 +1111,17 @@ namespace Cognitive3D
             }
         }
 
+        private static Texture2D _eyeTrackingIcon;
+        public static Texture2D EyeTrackingIcon
+        {
+            get
+            {
+                if (_eyeTrackingIcon == null)
+                    _eyeTrackingIcon = Resources.Load<Texture2D>("Features/Icons/eye-tracking");
+                return _eyeTrackingIcon;
+            }
+        }
+
         private static Texture2D _sensorIcon;
         public static Texture2D SensorIcon
         {
