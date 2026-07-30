@@ -187,6 +187,7 @@ namespace Cognitive3D.Identify
             {
                 Cognitive3D_Manager.SetParticipantId(currentCode);
                 Cognitive3D_Manager.SetParticipantFullName(currentCode);
+                Cognitive3D_Manager.SetSessionProperty("c3d.identify.method", GetMethodName());
             }
 
             ConfirmIdentification();

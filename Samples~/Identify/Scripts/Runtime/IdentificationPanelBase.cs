@@ -272,7 +272,7 @@ namespace Cognitive3D.Identify
         private void SetIdAndProperties(string id)
         {
             Cognitive3D_Manager.SetParticipantId(id);
-            Cognitive3D_Manager.SetSessionProperty("c3d.auth.method", GetMethodName());
+            Cognitive3D_Manager.SetSessionProperty("c3d.identify.method", GetMethodName());
         }
 
         /// <summary>
