@@ -182,6 +182,13 @@ namespace Cognitive3D.Identify
         {
             if (readyButton != null)
                 readyButton.interactable = false;
+
+            if (!string.IsNullOrEmpty(currentCode))
+            {
+                Cognitive3D_Manager.SetParticipantId(currentCode);
+                Cognitive3D_Manager.SetParticipantFullName(currentCode);
+            }
+
             ConfirmIdentification();
             OnReady?.Invoke();
         }
