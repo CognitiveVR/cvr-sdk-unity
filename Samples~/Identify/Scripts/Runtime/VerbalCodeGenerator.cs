@@ -6,7 +6,7 @@ namespace Cognitive3D.Auth
     public static class VerbalCodeGenerator
     {
         /// <summary>
-        /// Generates a random numeric string of the specified length
+        /// Generates a random numeric string of the specified length.
         /// </summary>
         public static string GenerateCode(int length = 6)
         {

@@ -1,0 +1,28 @@
+{
+    "name": "Cognitive3D.Auth.Editor",
+    "rootNamespace": "Cognitive3D.Auth",
+    "references": [
+        "Cognitive3DEditor",
+        "Cognitive3D",
+        "Cognitive3D.Auth"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "C3D_TMPRO"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "",
+            "define": "C3D_TMPRO"
+        }
+    ],
+    "noEngineReferences": false
+}

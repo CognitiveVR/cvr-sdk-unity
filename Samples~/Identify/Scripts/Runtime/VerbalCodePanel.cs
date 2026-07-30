@@ -1,25 +1,25 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Cognitive3D.Auth
 {
     /// <summary>
-    /// Displays a randomly generated 6-digit code for supervised VR sessions.
-    /// The participant reads the code aloud to an instructor, who enters it
-    /// on their end to link the session to that participant.
+    /// Displays a randomly generated code for supervised VR sessions. The participant
+    /// reads it aloud to an instructor, who enters it to link the session to them.
     /// </summary>
     [AddComponentMenu("Cognitive3D/Auth/Verbal Code Panel")]
-    public class VerbalCodePanel : IdentificationPanelBase
+    public class VerbalCodePanel : IdentificationPanelBase, IPanelColorScheme
     {
         [Header("UI References")]
-        [SerializeField] private Text headerText;
-        [SerializeField] private Text subtitleText;
-        [SerializeField] private Text instructionText;
-        [SerializeField] private Text[] digitTexts;
-        [SerializeField] private Text dashText;
+        [SerializeField] private TMP_Text headerText;
+        [SerializeField] private TMP_Text subtitleText;
+        [SerializeField] private TMP_Text instructionText;
+        [SerializeField] private TMP_Text[] digitTexts;
+        [SerializeField] private TMP_Text dashText;
         [SerializeField] private Button readyButton;
-        [SerializeField] private Text readyButtonText;
+        [SerializeField] private TMP_Text readyButtonText;
 
         [Header("Theming")]
         [Tooltip("Optional color scheme. Changes apply in editor and on Activate().")]
