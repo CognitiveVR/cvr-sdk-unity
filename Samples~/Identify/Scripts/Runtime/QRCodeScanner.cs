@@ -2,64 +2,47 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
-#if UNITY_ANDROID && !UNITY_EDITOR
-using UnityEngine.Android;
-#endif
 using ZXing;
 
 namespace Cognitive3D.Identify
 {
     /// <summary>
-    /// Scans QR codes using the headset passthrough camera via Unity's WebCamTexture,
-    /// decoding frames in C# with ZXing.Net.
+    /// Scans QR codes from the headset camera and decodes them in C# with ZXing.Net.
     ///
-    /// Works on devices that expose the passthrough/front camera as a WebCamDevice:
-    ///   - Meta Quest 3 / 3S / Pro (Horizon OS v74+), permission "horizonos.permission.HEADSET_CAMERA"
-    ///   - Android XR (GalaxyXR) permission "android.permission.CAMERA"
+    /// Camera frames come from an <see cref="IIdentifyCameraSource"/>:
+    ///   - Meta Quest: the Meta Passthrough Camera API, when the Meta MRUK SDK is present (C3D_IDENTIFY_PCA).
+    ///   - Other Android XR: Unity's WebCamTexture as a fallback.
     /// </summary>
     [AddComponentMenu("Cognitive3D/Identify/QR Code Scanner")]
     public class QRCodeScanner : MonoBehaviour
     {
-        [Header("Camera")]
-        [Tooltip("Requested camera resolution. The device picks the closest supported size.")]
+        [Header("Camera (WebCamTexture fallback only)")]
+        [Tooltip("Requested camera resolution for the WebCamTexture fallback. The device picks the closest supported size.")]
         [SerializeField] private int requestedWidth = 1280;
         [SerializeField] private int requestedHeight = 960;
         [SerializeField] private int requestedFps = 30;
-        [Tooltip("Substring used to prefer a specific camera device name (case-insensitive). " +
-                 "Falls back to any world-facing device, then the first device.")]
+        [Tooltip("Substring used to prefer a specific camera device name (WebCamTexture fallback, case-insensitive).")]
         [SerializeField] private string preferredCameraNameContains = "passthrough";
 
         [Header("Decoding")]
         [Tooltip("Seconds between decode attempts. Lower = more responsive, higher = less CPU.")]
         [SerializeField] private float decodeInterval = 0.4f;
 
-        /// <summary>
-        /// Fired when a QR code is successfully decoded. Parameter is the decoded string
-        /// </summary>
+        // Fired when a QR code is successfully decoded. Parameter is the decoded string
         public event Action<string> OnQRCodeDecoded;
 
-        /// <summary>
-        /// Fired when the camera preview texture becomes available (assign to a RawImage)
-        /// </summary>
+        // Fired when the camera preview texture becomes available (assign to a RawImage)
         public event Action<Texture> OnPreviewFrameUpdated;
 
-        /// <summary>
-        /// Fired if the scanner encounters an error (e.g., no camera permission)
-        /// </summary>
+        // Fired if the scanner encounters an error (e.g., no camera permission)
         public event Action<string> OnScanError;
 
         public bool IsScanning { get; private set; }
 
-        // Meta passthrough camera permission (Horizon OS v74+). Custom permission strings
-        // work with the UnityEngine.Android.Permission APIs.
-        private const string HeadsetCameraPermission = "horizonos.permission.HEADSET_CAMERA";
-        private const string AndroidCameraPermission = "android.permission.CAMERA";
-
-        private WebCamTexture webCamTexture;
+        private IIdentifyCameraSource cameraSource;
         private Coroutine scanCoroutine;
-        private Texture2D editorPreviewTexture;
 
-        // ZXing decoder, configured for QR codes only.
+        // ZXing decoder, configured for QR codes only
         private readonly BarcodeReader barcodeReader = new BarcodeReader
         {
             AutoRotate = true,
@@ -70,8 +53,8 @@ namespace Cognitive3D.Identify
             }
         };
 
-        // Background decode hand-off (decode runs off the main thread to avoid VR hitches).
-        private Color32[] decodeBuffer;
+        // Background decode hand-off (decode runs off the main thread to avoid VR hitches)
+        private Color32[] frameBuffer;
         private volatile bool decodeInProgress;
         private volatile string pendingResult;
 
@@ -82,10 +65,7 @@ namespace Cognitive3D.Identify
         {
             if (IsScanning) return;
             IsScanning = true;
-
-#if !UNITY_EDITOR && UNITY_ANDROID
-            scanCoroutine = StartCoroutine(RequestPermissionsAndScan());
-#endif
+            scanCoroutine = StartCoroutine(ScanRoutine());
         }
 
         /// <summary>
@@ -102,169 +82,76 @@ namespace Cognitive3D.Identify
                 scanCoroutine = null;
             }
 
-            if (webCamTexture != null)
-            {
-                if (webCamTexture.isPlaying) webCamTexture.Stop();
-                Destroy(webCamTexture);
-                webCamTexture = null;
-            }
+            cameraSource?.Dispose();
+            cameraSource = null;
         }
 
-        private void OnDestroy()
+        private void OnDestroy() => StopScanning();
+
+        private IIdentifyCameraSource CreateCameraSource()
         {
-            StopScanning();
-            if (editorPreviewTexture != null)
-                Destroy(editorPreviewTexture);
-        }
-
-        // =============================================
-        // WebCamTexture scanning (device)
-        // =============================================
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-        private IEnumerator RequestPermissionsAndScan()
-        {
-            if (!HasAnyCameraPermission())
-            {
-                Permission.RequestUserPermission(HeadsetCameraPermission);
-                Permission.RequestUserPermission(AndroidCameraPermission);
-
-                float timeout = 30f;
-                while (!HasAnyCameraPermission() && timeout > 0f)
-                {
-                    timeout -= 0.25f;
-                    yield return new WaitForSeconds(0.25f);
-                }
-
-                if (!HasAnyCameraPermission())
-                {
-                    Debug.LogError("[COGNITIVE3D] Camera permission denied. " +
-                        "Add \"horizonos.permission.HEADSET_CAMERA\" (Meta) and/or " +
-                        "\"android.permission.CAMERA\" (PICO) to AndroidManifest.xml and grant at runtime.");
-                    IsScanning = false;
-                    OnScanError?.Invoke("Camera permission denied");
-                    yield break;
-                }
-            }
-
-            yield return StartCoroutine(StartWebCam());
-        }
-
-        private static bool HasAnyCameraPermission()
-        {
-            return Permission.HasUserAuthorizedPermission(HeadsetCameraPermission)
-                || Permission.HasUserAuthorizedPermission(AndroidCameraPermission);
-        }
+#if C3D_IDENTIFY_PCA
+            return new MetaPassthroughCameraSource();
+#else
+            return new WebCamIdentifyCameraSource(requestedWidth, requestedHeight, requestedFps, preferredCameraNameContains);
 #endif
+        }
 
-        private IEnumerator StartWebCam()
+        private IEnumerator ScanRoutine()
         {
-            // On Meta Quest the passthrough cameras often aren't enumerated the instant the
-            // HEADSET_CAMERA permission is granted, so poll for 10 seconds before giving up
-            // rather than failing on the first empty read
-            WebCamDevice[] devices = WebCamTexture.devices;
-            float deviceWait = 0f;
-            while ((devices == null || devices.Length == 0) && deviceWait < 10f && IsScanning)
-            {
-                deviceWait += 0.25f;
-                yield return new WaitForSeconds(0.25f);
-                devices = WebCamTexture.devices;
-            }
+            cameraSource = CreateCameraSource();
 
-            if (devices == null || devices.Length == 0)
+            bool failed = false;
+            yield return cameraSource.Initialize(this, msg =>
             {
-                Debug.LogError("[COGNITIVE3D] QRCodeScanner: No camera devices found after waiting. " +
-                    "On Quest this requires Horizon OS v74+ on Quest 3/3S/Pro with the HEADSET_CAMERA permission granted.");
+                failed = true;
                 IsScanning = false;
-                OnScanError?.Invoke("No camera available");
-                yield break;
-            }
+                OnScanError?.Invoke(msg);
+                Debug.LogError("[COGNITIVE3D] QRCodeScanner: " + msg);
+            });
 
-            string chosen = ChooseCamera(devices);
-
-            webCamTexture = new WebCamTexture(chosen, requestedWidth, requestedHeight, requestedFps);
-            webCamTexture.Play();
-
-            // Wait for the camera to initialize (width stays <=16 until the first frame arrives).
-            float waitTime = 0f;
-            while ((webCamTexture.width <= 16 || !webCamTexture.didUpdateThisFrame) && waitTime < 10f && IsScanning)
+            if (failed || !IsScanning || cameraSource == null || !cameraSource.IsReady)
             {
-                waitTime += 0.1f;
-                yield return new WaitForSeconds(0.1f);
-            }
-
-            if (webCamTexture.width <= 16)
-            {
-                Debug.LogError("[COGNITIVE3D] QRCodeScanner: Camera did not produce frames after 10s.");
-                IsScanning = false;
-                OnScanError?.Invoke("Camera failed to start");
+                cameraSource?.Dispose();
+                cameraSource = null;
                 yield break;
             }
 
             Debug.Log("QRCodeScanner: Camera ready at " +
-                webCamTexture.width + "x" + webCamTexture.height);
-            OnPreviewFrameUpdated?.Invoke(webCamTexture);
+                cameraSource.Resolution.x + "x" + cameraSource.Resolution.y);
+            OnPreviewFrameUpdated?.Invoke(cameraSource.PreviewTexture);
 
-            yield return StartCoroutine(DecodeLoop());
-        }
-
-        private string ChooseCamera(WebCamDevice[] devices)
-        {
-            // 1) Preferred name substring (e.g. "passthrough").
-            if (!string.IsNullOrEmpty(preferredCameraNameContains))
-            {
-                foreach (var d in devices)
-                {
-                    if (d.name != null &&
-                        d.name.IndexOf(preferredCameraNameContains, StringComparison.OrdinalIgnoreCase) >= 0)
-                        return d.name;
-                }
-            }
-
-            // 2) A world-facing camera (not the user-facing one).
-            foreach (var d in devices)
-            {
-                if (!d.isFrontFacing) return d.name;
-            }
-
-            // 3) Fallback: first device.
-            return devices[0].name;
+            yield return DecodeLoop();
         }
 
         private IEnumerator DecodeLoop()
         {
             var wait = new WaitForSeconds(decodeInterval);
 
-            while (IsScanning && webCamTexture != null)
+            while (IsScanning && cameraSource != null)
             {
-                // A decode finished on the background thread. Handle the result on the main thread
+                // A decode finished on the background thread. Handle the result on the main thread.
                 string result = pendingResult;
                 if (!string.IsNullOrEmpty(result))
                 {
                     pendingResult = null;
-                    Debug.Log("QR code decoded: " + result);
+                    Debug.Log("[COGNITIVE3D] QR code decoded: " + result);
                     OnQRCodeDecoded?.Invoke(result);
 
-                    // The callback may have stopped scanning (e.g. stopOnFirstDecode),
-                    // which disposes webCamTexture. Bail out before touching it again
-                    if (!IsScanning || webCamTexture == null)
+                    // The callback may have stopped scanning (which disposes the source). Bail out.
+                    if (!IsScanning || cameraSource == null)
                         yield break;
                 }
 
-                // Kick off the next decode if one isn't already running and a fresh frame exists
-                if (!decodeInProgress && webCamTexture.didUpdateThisFrame)
+                // Kick off the next decode if one isn't already running and a fresh frame exists.
+                if (!decodeInProgress && cameraSource.IsReady && cameraSource.TryGetLatestFrame(ref frameBuffer))
                 {
-                    int w = webCamTexture.width;
-                    int h = webCamTexture.height;
-
-                    if (decodeBuffer == null || decodeBuffer.Length != w * h)
-                        decodeBuffer = new Color32[w * h];
-
-                    // GetPixels32 must run on the main thread
-                    webCamTexture.GetPixels32(decodeBuffer);
+                    Vector2Int size = cameraSource.Resolution;
+                    int w = size.x;
+                    int h = size.y;
+                    Color32[] frame = frameBuffer;
 
                     decodeInProgress = true;
-                    Color32[] frame = decodeBuffer;
                     Task.Run(() =>
                     {
                         try
@@ -275,7 +162,7 @@ namespace Cognitive3D.Identify
                         }
                         catch (Exception e)
                         {
-                            Debug.LogWarning("QRCodeScanner: Decode error: " + e.Message);
+                            Debug.LogWarning("[COGNITIVE3D] QRCodeScanner: Decode error: " + e.Message);
                         }
                         finally
                         {

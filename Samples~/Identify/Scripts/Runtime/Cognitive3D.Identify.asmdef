@@ -4,7 +4,9 @@
     "references": [
         "Cognitive3D",
         "Unity.XR.Interaction.Toolkit",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "meta.xr.mrutilitykit",
+        "Oculus.VR"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -25,6 +27,11 @@
             "name": "com.unity.textmeshpro",
             "expression": "",
             "define": "C3D_TMPRO"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "74.0.0",
+            "define": "C3D_IDENTIFY_PCA"
         }
     ],
     "noEngineReferences": false
