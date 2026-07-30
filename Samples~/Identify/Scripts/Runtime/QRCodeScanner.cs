@@ -181,7 +181,6 @@ namespace Cognitive3D.Identify
             }
 
             string chosen = ChooseCamera(devices);
-            Util.Log("QRCodeScanner: Selected camera \"" + chosen + "\"");
 
             webCamTexture = new WebCamTexture(chosen, requestedWidth, requestedHeight, requestedFps);
             webCamTexture.Play();
@@ -202,7 +201,7 @@ namespace Cognitive3D.Identify
                 yield break;
             }
 
-            Util.Log("QRCodeScanner: Camera ready at " +
+            Debug.Log("QRCodeScanner: Camera ready at " +
                 webCamTexture.width + "x" + webCamTexture.height);
             OnPreviewFrameUpdated?.Invoke(webCamTexture);
 
@@ -211,12 +210,6 @@ namespace Cognitive3D.Identify
 
         private string ChooseCamera(WebCamDevice[] devices)
         {
-            for (int i = 0; i < devices.Length; i++)
-            {
-                Util.Log("Camera device [" + i + "] name=\"" + devices[i].name +
-                    "\" frontFacing=" + devices[i].isFrontFacing);
-            }
-
             // 1) Preferred name substring (e.g. "passthrough").
             if (!string.IsNullOrEmpty(preferredCameraNameContains))
             {
@@ -249,7 +242,7 @@ namespace Cognitive3D.Identify
                 if (!string.IsNullOrEmpty(result))
                 {
                     pendingResult = null;
-                    Util.Log("QR code decoded: " + result);
+                    Debug.Log("QR code decoded: " + result);
                     OnQRCodeDecoded?.Invoke(result);
 
                     // The callback may have stopped scanning (e.g. stopOnFirstDecode),
@@ -282,7 +275,7 @@ namespace Cognitive3D.Identify
                         }
                         catch (Exception e)
                         {
-                            Util.LogWarning("QRCodeScanner: Decode error: " + e.Message);
+                            Debug.LogWarning("QRCodeScanner: Decode error: " + e.Message);
                         }
                         finally
                         {
