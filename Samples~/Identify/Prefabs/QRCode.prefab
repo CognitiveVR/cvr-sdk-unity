@@ -251,7 +251,7 @@ MonoBehaviour:
       m_NumColorKeys: 3
       m_NumAlphaKeys: 2
     PointerPositionOffset: {x: 0, y: 0, z: 0}
-    PointerRotationOffset: {x: 60, y: 0, z: 0}
+    PointerRotationOffset: {x: 0, y: 0, z: 0}
   anchorMode: 0
   anchorDistance: 1
   anchorCameraOverride: {fileID: 0}
