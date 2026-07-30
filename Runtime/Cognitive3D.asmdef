@@ -33,7 +33,8 @@
         "Unity.XR.ARSubsystems",
         "Unity.XR.AndroidOpenXR",
         "Wave.Essence.ScenePerception",
-        "Google.XR.Extensions"
+        "Google.XR.Extensions",
+        "HarmonEyes.EyeTracking.Common"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
