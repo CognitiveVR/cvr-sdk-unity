@@ -324,7 +324,9 @@ namespace Cognitive3D
         {
             SetSessionProperty("c3d.app.name", Application.productName);
             SetSessionProperty("c3d.app.version", Application.version);
+            SetSessionProperty("c3d.app.package", Application.identifier);
             SetSessionProperty("c3d.app.engine.version", Application.unityVersion);
+
 #if XRPF
             if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
