@@ -1,4 +1,4 @@
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Generates and formats random numeric codes for the Verbal Code identification method.

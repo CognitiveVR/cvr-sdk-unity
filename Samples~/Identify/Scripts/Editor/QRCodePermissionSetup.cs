@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEditor.Android;
 using System.Xml;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Automatically adds the camera permissions to AndroidManifest.xml on build.

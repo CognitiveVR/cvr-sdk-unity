@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Inspector for PanelCameraFollower. When a parent IdentificationPanelBase governs it,

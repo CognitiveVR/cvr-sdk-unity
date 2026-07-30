@@ -1641,7 +1641,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2981205061283106328}
-        m_TargetAssemblyTypeName: Cognitive3D.Auth.QRConfirmationPanel, Cognitive3D.Auth
+        m_TargetAssemblyTypeName: Cognitive3D.Identify.QRConfirmationPanel, Cognitive3D.Identify
         m_MethodName: ShowSuccess
         m_Mode: 1
         m_Arguments:

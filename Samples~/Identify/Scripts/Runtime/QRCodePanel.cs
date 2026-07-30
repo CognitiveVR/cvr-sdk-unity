@@ -4,13 +4,13 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Displays a QR code scanning panel that scans a token via the headset camera
     /// and resolves it into participant info via TokenResolver
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/QR Code Panel")]
+    [AddComponentMenu("Cognitive3D/Identify/QR Code Panel")]
     public class QRCodePanel : IdentificationPanelBase, IPanelColorScheme
     {
         [Header("UI References")]
@@ -156,7 +156,7 @@ namespace Cognitive3D.Auth
             }
             else
             {
-                Debug.LogWarning("[Cognitive3D Auth] No TokenResolver assigned. Using raw QR token as participant ID.");
+                Debug.LogWarning("[COGNITIVE3D] No TokenResolver assigned. Using raw QR token as participant ID.");
                 resolvedParticipantId = token;
                 OnIdentificationReady();
             }
@@ -169,7 +169,7 @@ namespace Cognitive3D.Auth
                 string error = result?.ErrorMessage ?? "Token resolution failed.";
                 UpdateStatus("Error: " + error, "Try scanning again...");
                 SetScanState(ScanState.Error);
-                Debug.LogWarning("[Cognitive3D Auth] Token resolution failed: " + error);
+                Debug.LogWarning("[COGNITIVE3D] Token resolution failed: " + error);
 
                 // Hand off to the confirmation (failure) view
                 SetScanViewActive(false);
@@ -216,7 +216,7 @@ namespace Cognitive3D.Auth
         private void OnScanError(string error)
         {
             UpdateStatus("Camera error", error);
-            Debug.LogError("[Cognitive3D Auth] QR Scanner error: " + error);
+            Debug.LogError("[COGNITIVE3D] QR Scanner error: " + error);
         }
 
         // =============================================
@@ -363,7 +363,7 @@ namespace Cognitive3D.Auth
 
             // Spawn under a temporary INACTIVE holder so Awake/OnEnable/Activate don't run until
             // we've copied our settings in, otherwise Activate() runs with the prefab's own defaults
-            var holder = new GameObject("~AuthFallbackSpawn");
+            var holder = new GameObject("~IdentifyFallbackSpawn");
             holder.SetActive(false);
 
             fallbackInstance = Instantiate(fallbackPanelPrefab, holder.transform);

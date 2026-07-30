@@ -3,13 +3,13 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Confirmation screen shown after a token resolve; fires OnContinueSuccess/OnContinueFailure
     /// when the user taps Continue.
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/Confirmation Panel")]
+    [AddComponentMenu("Cognitive3D/Identify/Confirmation Panel")]
     public class ConfirmationPanel : MonoBehaviour, IPanelColorScheme
     {
         [Header("UI References")]
@@ -62,7 +62,7 @@ namespace Cognitive3D.Auth
 
         private void OnEnable()
         {
-            Debug.LogError("[Cognitive3D Auth] QRConfirmationPanel: Showing confirmation panel.");
+            Debug.LogError("[COGNITIVE3D] QRConfirmationPanel: Showing confirmation panel.");
         }
 
         /// <summary>

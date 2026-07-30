@@ -6,7 +6,7 @@ using UnityEngine.XR.Interaction.Toolkit.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 #endif
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Configures a panel's Canvas and button for VR interaction
@@ -196,7 +196,7 @@ namespace Cognitive3D.Auth
         {
             if (settings.PointerPrefab == null)
             {
-                Debug.LogWarning("[Cognitive3D Auth] Pointer Prefab is not assigned — cannot spawn fallback pointer.");
+                Debug.LogWarning("[COGNITIVE3D] Pointer Prefab is not assigned — cannot spawn fallback pointer.");
                 return null;
             }
 

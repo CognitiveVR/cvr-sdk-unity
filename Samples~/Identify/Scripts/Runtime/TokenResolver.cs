@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Result of resolving a QR token into participant information.
@@ -61,7 +61,7 @@ namespace Cognitive3D.Auth
                 if (request.result == UnityWebRequest.Result.ConnectionError ||
                     request.result == UnityWebRequest.Result.ProtocolError)
                 {
-                    Debug.LogError("[Cognitive3D Auth] TokenResolver: Request failed: " + request.error);
+                    Debug.LogError("[COGNITIVE3D] TokenResolver: Request failed: " + request.error);
                     onComplete?.Invoke(new TokenResult
                     {
                         Success = false,
@@ -71,7 +71,7 @@ namespace Cognitive3D.Auth
                 }
 
                 string responseBody = request.downloadHandler.text;
-                Debug.Log("[Cognitive3D Auth] TokenResolver: Response: " + responseBody);
+                Debug.Log("[COGNITIVE3D] TokenResolver: Response: " + responseBody);
 
                 try
                 {
@@ -88,7 +88,7 @@ namespace Cognitive3D.Auth
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError("[Cognitive3D Auth] TokenResolver: Failed to parse response: " + e.Message);
+                    Debug.LogError("[COGNITIVE3D] TokenResolver: Failed to parse response: " + e.Message);
                     onComplete?.Invoke(new TokenResult
                     {
                         Success = false,

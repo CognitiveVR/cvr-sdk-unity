@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// How the user interacts with the panel button in VR.
@@ -229,7 +229,7 @@ namespace Cognitive3D.Auth
             string id = ParticipantIdValue;
             if (string.IsNullOrEmpty(id))
             {
-                Debug.LogWarning("[Cognitive3D Auth] Cannot confirm identification: ParticipantIdValue is empty.");
+                Debug.LogWarning("[COGNITIVE3D] Cannot confirm identification: ParticipantIdValue is empty.");
                 return;
             }
 

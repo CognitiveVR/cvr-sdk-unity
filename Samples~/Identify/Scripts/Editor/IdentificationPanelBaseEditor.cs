@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Shared inspector for IdentificationPanelBase-derived panels

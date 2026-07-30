@@ -3,13 +3,13 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Displays a numeric keypad for entering a PIN code for user identification.
     /// Supports 4 or 6 digit PINs. Each digit appears in a display box as typed.
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/Pin Code Panel")]
+    [AddComponentMenu("Cognitive3D/Identify/Pin Code Panel")]
     public class PinCodePanel : IdentificationPanelBase, IPanelColorScheme
     {
         [Header("UI References")]
@@ -113,7 +113,7 @@ namespace Cognitive3D.Auth
             }
             else
             {
-                Debug.LogWarning("[Cognitive3D Auth] TokenResolver not assigned");
+                Debug.LogWarning("[COGNITIVE3D] TokenResolver not assigned");
             }
         }
 
@@ -122,7 +122,7 @@ namespace Cognitive3D.Auth
             if (result == null || !result.Success)
             {
                 string error = result?.ErrorMessage ?? "Incorrect PIN. Please try again.";
-                Debug.LogWarning("[Cognitive3D Auth] Token resolution failed: " + error);
+                Debug.LogWarning("[COGNITIVE3D] Token resolution failed: " + error);
 
                 if (confirmationPanel != null)
                 {

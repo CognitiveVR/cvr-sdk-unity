@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Implemented by any panel that can be re-tinted from a PanelColorScheme
@@ -14,7 +14,7 @@ namespace Cognitive3D.Auth
     /// Reusable color scheme for identification panel prefabs.
     /// Assign this to any panel that supports theming.
     /// </summary>
-    [CreateAssetMenu(fileName = "NewColorScheme", menuName = "Cognitive3D/Auth/Panel Color Scheme")]
+    [CreateAssetMenu(fileName = "NewColorScheme", menuName = "Cognitive3D/Identify/Panel Color Scheme")]
     public class PanelColorScheme : ScriptableObject
     {
         [Header("Panel")]

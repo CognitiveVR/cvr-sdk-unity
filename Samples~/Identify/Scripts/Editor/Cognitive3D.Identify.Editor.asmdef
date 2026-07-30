@@ -1,12 +1,14 @@
 {
-    "name": "Cognitive3D.Auth",
-    "rootNamespace": "Cognitive3D.Auth",
+    "name": "Cognitive3D.Identify.Editor",
+    "rootNamespace": "Cognitive3D.Identify",
     "references": [
+        "Cognitive3DEditor",
         "Cognitive3D",
-        "Unity.XR.Interaction.Toolkit",
-        "Unity.TextMeshPro"
+        "Cognitive3D.Identify"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
@@ -16,11 +18,6 @@
         "C3D_TMPRO"
     ],
     "versionDefines": [
-        {
-            "name": "com.unity.xr.interaction.toolkit",
-            "expression": "",
-            "define": "COGNITIVE3D_XRI"
-        },
         {
             "name": "com.unity.textmeshpro",
             "expression": "",

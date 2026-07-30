@@ -289,7 +289,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4880568951505030223}
-        m_TargetAssemblyTypeName: Cognitive3D.Auth.QRConfirmationPanel, Cognitive3D.Auth
+        m_TargetAssemblyTypeName: Cognitive3D.Identify.QRConfirmationPanel, Cognitive3D.Identify
         m_MethodName: ShowSuccess
         m_Mode: 1
         m_Arguments:
@@ -304,7 +304,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4880568951505030223}
-        m_TargetAssemblyTypeName: Cognitive3D.Auth.QRConfirmationPanel, Cognitive3D.Auth
+        m_TargetAssemblyTypeName: Cognitive3D.Identify.QRConfirmationPanel, Cognitive3D.Identify
         m_MethodName: ShowFailure
         m_Mode: 1
         m_Arguments:
@@ -500,7 +500,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 3033305030381630920}
-        m_TargetAssemblyTypeName: Cognitive3D.Auth.QRCodePanel, Cognitive3D.Auth
+        m_TargetAssemblyTypeName: Cognitive3D.Identify.QRCodePanel, Cognitive3D.Identify
         m_MethodName: ShowPinView
         m_Mode: 1
         m_Arguments:
@@ -1255,7 +1255,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7624398748835610260, guid: 9e7890dd1d30ed74481bfd1d2b5a83e5, type: 3}
       propertyPath: OnContinueFailure.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: Cognitive3D.Auth.QRCodePanel, Cognitive3D.Auth
+      value: Cognitive3D.Identify.QRCodePanel, Cognitive3D.Identify
       objectReference: {fileID: 0}
     - target: {fileID: 7624398748835610260, guid: 9e7890dd1d30ed74481bfd1d2b5a83e5, type: 3}
       propertyPath: OnContinueFailure.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName

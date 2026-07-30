@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Virtual button for the Cognitive3D custom pointer, driven by PointerInputHandler
     /// (controller ray and gaze/hand pinch). Tints a target Graphic on focus state.
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/Virtual Button")]
+    [AddComponentMenu("Cognitive3D/Identify/Virtual Button")]
     public class VirtualButton : MonoBehaviour, IPointerFocus
     {
         [Tooltip("Graphic tinted by pointer focus state. If unassigned, the sibling Button's target graphic (or any sibling Graphic) is used.")]

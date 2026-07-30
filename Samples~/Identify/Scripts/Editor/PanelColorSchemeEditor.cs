@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     [CustomEditor(typeof(PanelColorScheme))]
     public class PanelColorSchemeEditor : Editor

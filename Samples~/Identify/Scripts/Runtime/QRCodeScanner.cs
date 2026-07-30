@@ -7,7 +7,7 @@ using UnityEngine.Android;
 #endif
 using ZXing;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Scans QR codes using the headset passthrough camera via Unity's WebCamTexture,
@@ -17,7 +17,7 @@ namespace Cognitive3D.Auth
     ///   - Meta Quest 3 / 3S / Pro (Horizon OS v74+), permission "horizonos.permission.HEADSET_CAMERA"
     ///   - Android XR (GalaxyXR) permission "android.permission.CAMERA"
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/QR Code Scanner")]
+    [AddComponentMenu("Cognitive3D/Identify/QR Code Scanner")]
     public class QRCodeScanner : MonoBehaviour
     {
         [Header("Camera")]
@@ -138,7 +138,7 @@ namespace Cognitive3D.Auth
 
                 if (!HasAnyCameraPermission())
                 {
-                    Debug.LogError("[Cognitive3D Auth] Camera permission denied. " +
+                    Debug.LogError("[COGNITIVE3D] Camera permission denied. " +
                         "Add \"horizonos.permission.HEADSET_CAMERA\" (Meta) and/or " +
                         "\"android.permission.CAMERA\" (PICO) to AndroidManifest.xml and grant at runtime.");
                     IsScanning = false;
@@ -159,18 +159,29 @@ namespace Cognitive3D.Auth
 
         private IEnumerator StartWebCam()
         {
+            // On Meta Quest the passthrough cameras often aren't enumerated the instant the
+            // HEADSET_CAMERA permission is granted, so poll for 10 seconds before giving up
+            // rather than failing on the first empty read
             WebCamDevice[] devices = WebCamTexture.devices;
+            float deviceWait = 0f;
+            while ((devices == null || devices.Length == 0) && deviceWait < 10f && IsScanning)
+            {
+                deviceWait += 0.25f;
+                yield return new WaitForSeconds(0.25f);
+                devices = WebCamTexture.devices;
+            }
+
             if (devices == null || devices.Length == 0)
             {
-                Debug.LogError("[Cognitive3D Auth] QRCodeScanner: No camera devices found. " +
-                    "On Quest this requires Horizon OS v74+ on Quest 3/3S/Pro with passthrough camera enabled.");
+                Debug.LogError("[COGNITIVE3D] QRCodeScanner: No camera devices found after waiting. " +
+                    "On Quest this requires Horizon OS v74+ on Quest 3/3S/Pro with the HEADSET_CAMERA permission granted.");
                 IsScanning = false;
                 OnScanError?.Invoke("No camera available");
                 yield break;
             }
 
             string chosen = ChooseCamera(devices);
-            Debug.Log("[Cognitive3D Auth] QRCodeScanner: Selected camera \"" + chosen + "\"");
+            Util.Log("QRCodeScanner: Selected camera \"" + chosen + "\"");
 
             webCamTexture = new WebCamTexture(chosen, requestedWidth, requestedHeight, requestedFps);
             webCamTexture.Play();
@@ -185,13 +196,13 @@ namespace Cognitive3D.Auth
 
             if (webCamTexture.width <= 16)
             {
-                Debug.LogError("[Cognitive3D Auth] QRCodeScanner: Camera did not produce frames after 10s.");
+                Debug.LogError("[COGNITIVE3D] QRCodeScanner: Camera did not produce frames after 10s.");
                 IsScanning = false;
                 OnScanError?.Invoke("Camera failed to start");
                 yield break;
             }
 
-            Debug.Log("[Cognitive3D Auth] QRCodeScanner: Camera ready at " +
+            Util.Log("QRCodeScanner: Camera ready at " +
                 webCamTexture.width + "x" + webCamTexture.height);
             OnPreviewFrameUpdated?.Invoke(webCamTexture);
 
@@ -202,7 +213,7 @@ namespace Cognitive3D.Auth
         {
             for (int i = 0; i < devices.Length; i++)
             {
-                Debug.Log("[Cognitive3D Auth] Camera device [" + i + "] name=\"" + devices[i].name +
+                Util.Log("Camera device [" + i + "] name=\"" + devices[i].name +
                     "\" frontFacing=" + devices[i].isFrontFacing);
             }
 
@@ -238,7 +249,7 @@ namespace Cognitive3D.Auth
                 if (!string.IsNullOrEmpty(result))
                 {
                     pendingResult = null;
-                    Debug.Log("[Cognitive3D Auth] QR code decoded: " + result);
+                    Util.Log("QR code decoded: " + result);
                     OnQRCodeDecoded?.Invoke(result);
 
                     // The callback may have stopped scanning (e.g. stopOnFirstDecode),
@@ -271,7 +282,7 @@ namespace Cognitive3D.Auth
                         }
                         catch (Exception e)
                         {
-                            Debug.LogWarning("[Cognitive3D Auth] QRCodeScanner: Decode error: " + e.Message);
+                            Util.LogWarning("QRCodeScanner: Decode error: " + e.Message);
                         }
                         finally
                         {

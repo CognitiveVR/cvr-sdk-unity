@@ -1,12 +1,12 @@
 using UnityEngine;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Anchors an identification panel when enabled (FollowCamera head-locks, PlayerRelative
     /// places once, WorldSpace keeps authored pose). Only FollowCamera re-parents the panel.
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/Panel Camera Follower")]
+    [AddComponentMenu("Cognitive3D/Identify/Panel Camera Follower")]
     public class PanelCameraFollower : MonoBehaviour
     {
         [Tooltip("How the panel is anchored when enabled. On IdentificationPanelBase panels this is " +
@@ -105,7 +105,7 @@ namespace Cognitive3D.Auth
             Transform cam = ResolveCamera();
             if (cam == null)
             {
-                Debug.LogWarning("[Cognitive3D Auth] PanelCameraFollower: No camera found to follow.");
+                Debug.LogWarning("[COGNITIVE3D] PanelCameraFollower: No camera found to follow.");
                 return;
             }
 
@@ -125,7 +125,7 @@ namespace Cognitive3D.Auth
             Transform cam = ResolveCamera();
             if (cam == null)
             {
-                Debug.LogWarning("[Cognitive3D Auth] PanelCameraFollower: No camera found to place relative to.");
+                Debug.LogWarning("[COGNITIVE3D] PanelCameraFollower: No camera found to place relative to.");
                 return;
             }
 

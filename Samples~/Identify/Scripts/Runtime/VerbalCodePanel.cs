@@ -3,13 +3,13 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
 
-namespace Cognitive3D.Auth
+namespace Cognitive3D.Identify
 {
     /// <summary>
     /// Displays a randomly generated code for supervised VR sessions. The participant
     /// reads it aloud to an instructor, who enters it to link the session to them.
     /// </summary>
-    [AddComponentMenu("Cognitive3D/Auth/Verbal Code Panel")]
+    [AddComponentMenu("Cognitive3D/Identify/Verbal Code Panel")]
     public class VerbalCodePanel : IdentificationPanelBase, IPanelColorScheme
     {
         [Header("UI References")]
