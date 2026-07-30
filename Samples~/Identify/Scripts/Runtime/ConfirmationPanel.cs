@@ -60,11 +60,6 @@ namespace Cognitive3D.Identify
             }
         }
 
-        private void OnEnable()
-        {
-            Debug.LogError("[COGNITIVE3D] QRConfirmationPanel: Showing confirmation panel.");
-        }
-
         /// <summary>
         /// Populates the success content. Does NOT activate the GameObject, enable it after
         /// </summary>
