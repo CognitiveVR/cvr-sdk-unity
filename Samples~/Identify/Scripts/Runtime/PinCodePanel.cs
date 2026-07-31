@@ -143,13 +143,7 @@ namespace Cognitive3D.Identify
                     Cognitive3D.Cognitive3D_Manager.SetParticipantFullName(result.ParticipantName);
                 if (!string.IsNullOrEmpty(result.ParticipantEmail))
                     Cognitive3D.Cognitive3D_Manager.SetParticipantProperty("email", result.ParticipantEmail);
-                Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.auth.method", "pin_code");
-            }
-
-            if (result.Properties != null)
-            {
-                foreach (var kvp in result.Properties)
-                    Cognitive3D_Manager.SetSessionProperty(kvp.Key, kvp.Value);
+                Cognitive3D.Cognitive3D_Manager.SetSessionProperty("c3d.identify.method", "pin_code");
             }
 
             ClearError();

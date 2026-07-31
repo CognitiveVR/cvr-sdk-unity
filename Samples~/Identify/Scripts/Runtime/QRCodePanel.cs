@@ -187,12 +187,6 @@ namespace Cognitive3D.Identify
             if (!string.IsNullOrEmpty(result.ParticipantName))
                 Cognitive3D_Manager.SetParticipantFullName(result.ParticipantName);
 
-            if (result.Properties != null)
-            {
-                foreach (var kvp in result.Properties)
-                    Cognitive3D_Manager.SetSessionProperty(kvp.Key, kvp.Value);
-            }
-
             UpdateStatus("Identified!", "");
             SetScanState(ScanState.Found);
 
@@ -290,7 +284,7 @@ namespace Cognitive3D.Identify
 
         private bool IsScanningSupported()
         {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
             return true;
 #else
             return false;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -15,7 +14,6 @@ namespace Cognitive3D.Identify
         public string ParticipantId;
         public string ParticipantName;
         public string ParticipantEmail;
-        public Dictionary<string, string> Properties;
         public string ErrorMessage;
     }
 
@@ -71,7 +69,6 @@ namespace Cognitive3D.Identify
                 }
 
                 string responseBody = request.downloadHandler.text;
-                Debug.Log("[COGNITIVE3D] TokenResolver: Response: " + responseBody);
 
                 try
                 {

@@ -135,7 +135,7 @@ namespace Cognitive3D.Identify
                 if (!string.IsNullOrEmpty(result))
                 {
                     pendingResult = null;
-                    Debug.Log("[COGNITIVE3D] QR code decoded: " + result);
+                    Debug.Log("[COGNITIVE3D] QRCodeScanner: QR code decoded");
                     OnQRCodeDecoded?.Invoke(result);
 
                     // The callback may have stopped scanning (which disposes the source). Bail out.
@@ -160,9 +160,10 @@ namespace Cognitive3D.Identify
                             if (r != null && !string.IsNullOrEmpty(r.Text))
                                 pendingResult = r.Text;
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
-                            Debug.LogWarning("[COGNITIVE3D] QRCodeScanner: Decode error: " + e.Message);
+                            // Decode failed for this frame; skip it. Logging is avoided here because
+                            // this runs on a background thread.
                         }
                         finally
                         {
