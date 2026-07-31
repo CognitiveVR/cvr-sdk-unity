@@ -279,7 +279,7 @@ namespace Cognitive3D.Identify
                 if (Application.isPlaying)
                     Object.Destroy(comp);
                 else
-                    Object.DestroyImmediate(comp);
+                    Object.DestroyImmediate(comp, true);
             }
         }
     }
