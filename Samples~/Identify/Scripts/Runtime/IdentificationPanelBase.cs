@@ -229,7 +229,6 @@ namespace Cognitive3D.Identify
             string id = ParticipantIdValue;
             if (string.IsNullOrEmpty(id))
             {
-                Debug.LogWarning("[COGNITIVE3D] Cannot confirm identification: ParticipantIdValue is empty.");
                 return;
             }
 

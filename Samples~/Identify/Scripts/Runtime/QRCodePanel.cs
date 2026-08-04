@@ -156,7 +156,6 @@ namespace Cognitive3D.Identify
             }
             else
             {
-                Debug.LogWarning("[COGNITIVE3D] No TokenResolver assigned. Using raw QR token as participant ID.");
                 resolvedParticipantId = token;
                 OnIdentificationReady();
             }
@@ -169,7 +168,6 @@ namespace Cognitive3D.Identify
                 string error = result?.ErrorMessage ?? "Token resolution failed.";
                 UpdateStatus("Error: " + error, "Try scanning again...");
                 SetScanState(ScanState.Error);
-                Debug.LogWarning("[COGNITIVE3D] Token resolution failed: " + error);
 
                 // Hand off to the confirmation (failure) view
                 SetScanViewActive(false);
@@ -274,12 +272,15 @@ namespace Cognitive3D.Identify
             const string label = "Searching for QR code";
             var wait = new WaitForSeconds(0.4f);
             int dots = 1;
-            while (true)
+
+            while (isActiveAndEnabled && statusText != null)
             {
                 statusText.text = label + new string('.', dots);
                 dots = dots % 3 + 1;
                 yield return wait;
             }
+
+            searchingRoutine = null;
         }
 
         private bool IsScanningSupported()

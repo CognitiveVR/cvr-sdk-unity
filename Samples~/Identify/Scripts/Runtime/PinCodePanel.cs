@@ -111,10 +111,6 @@ namespace Cognitive3D.Identify
             {
                 tokenResolver.ResolveToken(token, OnTokenResolved);
             }
-            else
-            {
-                Debug.LogWarning("[COGNITIVE3D] TokenResolver not assigned");
-            }
         }
 
         private void OnTokenResolved(TokenResult result)
@@ -122,7 +118,6 @@ namespace Cognitive3D.Identify
             if (result == null || !result.Success)
             {
                 string error = result?.ErrorMessage ?? "Incorrect PIN. Please try again.";
-                Debug.LogWarning("[COGNITIVE3D] Token resolution failed: " + error);
 
                 if (confirmationPanel != null)
                 {

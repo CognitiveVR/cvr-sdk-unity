@@ -105,7 +105,6 @@ namespace Cognitive3D.Identify
             Transform cam = ResolveCamera();
             if (cam == null)
             {
-                Debug.LogWarning("[COGNITIVE3D] PanelCameraFollower: No camera found to follow.");
                 return;
             }
 
@@ -125,7 +124,6 @@ namespace Cognitive3D.Identify
             Transform cam = ResolveCamera();
             if (cam == null)
             {
-                Debug.LogWarning("[COGNITIVE3D] PanelCameraFollower: No camera found to place relative to.");
                 return;
             }
 

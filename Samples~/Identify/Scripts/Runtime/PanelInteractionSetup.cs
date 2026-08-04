@@ -196,7 +196,6 @@ namespace Cognitive3D.Identify
         {
             if (settings.PointerPrefab == null)
             {
-                Debug.LogWarning("[COGNITIVE3D] Pointer Prefab is not assigned — cannot spawn fallback pointer.");
                 return null;
             }
 

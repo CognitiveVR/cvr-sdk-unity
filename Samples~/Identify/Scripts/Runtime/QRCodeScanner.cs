@@ -117,8 +117,9 @@ namespace Cognitive3D.Identify
                 yield break;
             }
 
-            Debug.Log("QRCodeScanner: Camera ready at " +
-                cameraSource.Resolution.x + "x" + cameraSource.Resolution.y);
+#if DEVELOPMENT_BUILD
+            Debug.Log("QRCodeScanner: Camera ready at " + cameraSource.Resolution.x + "x" + cameraSource.Resolution.y);
+#endif
             OnPreviewFrameUpdated?.Invoke(cameraSource.PreviewTexture);
 
             yield return DecodeLoop();
@@ -135,7 +136,9 @@ namespace Cognitive3D.Identify
                 if (!string.IsNullOrEmpty(result))
                 {
                     pendingResult = null;
+#if DEVELOPMENT_BUILD
                     Debug.Log("[COGNITIVE3D] QRCodeScanner: QR code decoded");
+#endif
                     OnQRCodeDecoded?.Invoke(result);
 
                     // The callback may have stopped scanning (which disposes the source). Bail out.
