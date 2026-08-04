@@ -11,7 +11,7 @@ namespace Cognitive3D.Identify
     /// Supplies camera frames for QR decoding plus a preview texture. Implementations wrap a
     /// platform camera: the Meta Passthrough Camera API on Quest, generic WebCamTexture elsewhere.
     /// </summary>
-    internal interface IIdentifyCameraSource
+    internal interface IIdentifyCameraSource : IDisposable
     {
         bool IsReady { get; }
         Vector2Int Resolution { get; }
@@ -22,8 +22,6 @@ namespace Cognitive3D.Identify
 
         // Copies the latest frame into buffer (reallocated if the size changed). False if none is available.
         bool TryGetLatestFrame(ref Color32[] buffer);
-
-        void Dispose();
     }
 
     /// <summary>

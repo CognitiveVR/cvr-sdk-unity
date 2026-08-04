@@ -41,6 +41,9 @@ namespace Cognitive3D.Identify
                         go.AddComponent<GraphicRaycaster>();
 #endif
                     break;
+
+                default:
+                    break;
             }
         }
 

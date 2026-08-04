@@ -55,7 +55,7 @@ namespace Cognitive3D.Identify
 
         [Tooltip("Show the Back button. Off by default (standalone use). QRCodePanel turns this " +
                  "on when it spawns the PIN panel as its fallback, so the user can return to QR.")]
-        [SerializeField] private bool showBackButton = false;
+        [SerializeField] private bool showBackButton;
 
         [Header("Events")]
         [Tooltip("Fired when the entered PIN resolves successfully. Wire scene transitions or other success actions here.")]

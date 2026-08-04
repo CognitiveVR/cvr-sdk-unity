@@ -94,6 +94,8 @@ namespace Cognitive3D.Identify
                 case PanelAnchorMode.WorldSpace:
                     ApplyWorldSpace();
                     break;
+                default:
+                    break;
             }
         }
 

@@ -37,7 +37,7 @@ namespace Cognitive3D.Identify
     public class PanelFollowSettings
     {
         [Tooltip("Panel follows the player's positional movement (walking), not head rotation.")]
-        public bool stickWindow = false;
+        public bool stickWindow;
 
         [Tooltip("Keep the panel level with the head (locks its Y to the HMD's Y).")]
         public bool lockYPosition = true;
@@ -60,15 +60,15 @@ namespace Cognitive3D.Identify
     public class PanelWorldSpaceSettings
     {
         [Tooltip("Place the panel at Override Position (world) instead of its authored position.")]
-        public bool useOverridePosition = false;
+        public bool useOverridePosition;
         public Vector3 overridePosition;
 
         [Tooltip("Rotate the panel to Override Rotation (world euler degrees) instead of its authored rotation.")]
-        public bool useOverrideRotation = false;
+        public bool useOverrideRotation;
         public Vector3 overrideRotationEuler;
 
         [Tooltip("Parent the panel to this transform after placing it (keeps its world pose).")]
-        public bool useAttachTransform = false;
+        public bool useAttachTransform;
         public Transform attachTransform;
     }
 
@@ -84,7 +84,7 @@ namespace Cognitive3D.Identify
         public float PointerLineWidth = 0.01f;
         public Gradient PointerGradient = new Gradient
         {
-            colorKeys = new GradientColorKey[]
+            colorKeys = new[]
             {
                 new GradientColorKey(new Color(0.286f, 0.106f, 0.631f, 1f), 0f),
                 new GradientColorKey(new Color(0.055f, 0.416f, 0.624f, 1f), 0.5f),

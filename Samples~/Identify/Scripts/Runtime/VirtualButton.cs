@@ -32,7 +32,7 @@ namespace Cognitive3D.Identify
         [Tooltip("If true, the button re-arms after each confirm (once the trigger is released, or " +
                  "the gaze leaves) so it can be pressed repeatedly — e.g. a keypad digit. If false, " +
                  "it confirms once and latches (one-shot), e.g. a Continue button.")]
-        [SerializeField] public bool repeatable = false;
+        [SerializeField] public bool repeatable;
 
         [Tooltip("Seconds of gaze / hand pinch dwell required before the button confirms.")]
         [SerializeField] private float fillDuration = 1f;
