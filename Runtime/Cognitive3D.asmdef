@@ -34,7 +34,8 @@
         "Unity.XR.AndroidOpenXR",
         "Wave.Essence.ScenePerception",
         "Google.XR.Extensions",
-        "HarmonEyes.EyeTracking.Common"
+        "HarmonEyes.EyeTracking.Common",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
