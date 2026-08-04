@@ -14,9 +14,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [
-        "C3D_TMPRO"
-    ],
+    "defineConstraints": [],
     "versionDefines": [
         {
             "name": "com.unity.xr.interaction.toolkit",

@@ -91,10 +91,10 @@ namespace Cognitive3D.Identify
         private IIdentifyCameraSource CreateCameraSource()
         {
 #if C3D_IDENTIFY_PCA
-            return new MetaPassthroughCameraSource();
-#else
-            return new WebCamIdentifyCameraSource(requestedWidth, requestedHeight, requestedFps, preferredCameraNameContains);
+            if (MetaPassthroughCameraSource.IsSupported)
+                return new MetaPassthroughCameraSource();
 #endif
+            return new WebCamIdentifyCameraSource(requestedWidth, requestedHeight, requestedFps, preferredCameraNameContains);
         }
 
         private IEnumerator ScanRoutine()

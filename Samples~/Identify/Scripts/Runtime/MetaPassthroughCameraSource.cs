@@ -15,8 +15,7 @@ namespace Cognitive3D.Identify
     /// </summary>
     internal class MetaPassthroughCameraSource : IIdentifyCameraSource
     {
-        private const PassthroughCameraAccess.CameraPositionType Position =
-            PassthroughCameraAccess.CameraPositionType.Left;
+        private const PassthroughCameraAccess.CameraPositionType Position = PassthroughCameraAccess.CameraPositionType.Left;
 
         private PassthroughCameraAccess access;
         private bool ownsAccess; // true only when we created the component and must destroy it
@@ -24,6 +23,18 @@ namespace Cognitive3D.Identify
         public bool IsReady => access != null && access.IsPlaying;
         public Vector2Int Resolution => access != null ? access.CurrentResolution : Vector2Int.zero;
         public Texture PreviewTexture => access != null && access.IsPlaying ? access.GetTexture() : null;
+
+        // True only when the Meta passthrough camera is available on the current device
+        // Used for handling cases where the Meta package is installed but isn't 
+        // the active runtime (e.g. Android XR fallback)
+        public static bool IsSupported
+        {
+            get
+            {
+                try { return PassthroughCameraAccess.IsSupported; }
+                catch { return false; }
+            }
+        }
 
         public IEnumerator Initialize(MonoBehaviour host, Action<string> onError)
         {
