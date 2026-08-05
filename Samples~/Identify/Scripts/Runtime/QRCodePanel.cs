@@ -54,7 +54,7 @@ namespace Cognitive3D.Identify
         [Header("Events")]
         [Tooltip("Fired when the scanned QR resolves successfully. Wire your confirmation UI here (enable).")]
         public UnityEvent OnQRSuccess;
-        [Tooltip("Fired when the scanned QR fails to resolve. The panel resumes scanning so the user can retry.")]
+        [Tooltip("Fired when the scanned QR fails to resolve. Shows the failure confirmation view; call ResumeScanning (e.g., via ConfirmationPanel.OnContinueFailure) to retry.")]
         public UnityEvent OnQRFailure;
 
         private QRCodeScanner scanner;
@@ -299,8 +299,16 @@ namespace Cognitive3D.Identify
             if (scanningIndicator != null)
                 scanningIndicator.SetActive(false);
             
-            // Show the fallback panel (PIN entry) if assigned, otherwise just show the fallback button
-            ShowPinView();
+            // Show the fallback panel (PIN entry) if assigned, otherwise keep the QR view visible.
+            if (fallbackPanelPrefab != null)
+            {
+                ShowPinView();
+            }
+            else
+            {
+                if (qrView != null) qrView.SetActive(true);
+                if (fallbackButton != null) fallbackButton.gameObject.SetActive(true);
+            }
         }
 
         private void ConfigureInteraction()

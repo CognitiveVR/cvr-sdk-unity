@@ -288,7 +288,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4880568951505030223}
-        m_TargetAssemblyTypeName: Cognitive3D.Identify.QRConfirmationPanel, Cognitive3D.Identify
+        m_TargetAssemblyTypeName: Cognitive3D.Identify.ConfirmationPanel, Cognitive3D.Identify
         m_MethodName: ShowSuccess
         m_Mode: 1
         m_Arguments:
@@ -303,7 +303,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4880568951505030223}
-        m_TargetAssemblyTypeName: Cognitive3D.Identify.QRConfirmationPanel, Cognitive3D.Identify
+        m_TargetAssemblyTypeName: Cognitive3D.Identify.ConfirmationPanel, Cognitive3D.Identify
         m_MethodName: ShowFailure
         m_Mode: 1
         m_Arguments:

@@ -43,6 +43,18 @@ namespace Cognitive3D.Identify
 
         private IEnumerator SendRequest(string code, Action<TokenResult> onComplete)
         {
+            if (string.IsNullOrEmpty(code))
+            {
+                onComplete?.Invoke(new TokenResult { Success = false, ErrorMessage = "Missing token" });
+                yield break;
+            }
+            
+            if (!Cognitive3D_Preferences.Instance.IsApplicationKeyValid)
+            {
+                onComplete?.Invoke(new TokenResult { Success = false, ErrorMessage = "Cognitive3D Application Key is not set" });
+                yield break;
+            }
+
             string json = JsonUtility.ToJson(new AuthRequest { code = code });
 
             using (UnityWebRequest request = new UnityWebRequest(endpointUrl, "POST"))
