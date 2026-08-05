@@ -386,8 +386,31 @@ namespace Cognitive3D
             SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
             //unrounded value exactly as the platform reports it, in megabytes
             SetSessionProperty("c3d.device.memoryInMegabytes", SystemInfo.systemMemorySize);
-            SetSessionProperty("c3d.device.screen.width", Screen.width);
-            SetSessionProperty("c3d.device.screen.height", Screen.height);
+            //Screen.width/height are the game window - on a tethered headset that is the desktop
+            //mirror window, which the player can resize at any time. that is not a device fact,
+            //so the device properties report the native resolution of the display instead
+            int displayWidthInPixels = UnityEngine.Display.main.systemWidth;
+            int displayHeightInPixels = UnityEngine.Display.main.systemHeight;
+            if (displayWidthInPixels > 0 && displayHeightInPixels > 0)
+            {
+                SetSessionProperty("c3d.device.screen.width", displayWidthInPixels);
+                SetSessionProperty("c3d.device.screen.height", displayHeightInPixels);
+            }
+            //per-eye render target of the active XR display. this is scaled by
+            //XRSettings.eyeTextureResolutionScale, which the application sets, so it describes the
+            //application's configuration rather than the panel and is reported as an app property.
+            //XRSettings comes from the built-in XR module, the same one that supplies InputDevices
+            //below, so it needs no package or platform guard
+            if (UnityEngine.XR.XRSettings.isDeviceActive)
+            {
+                int eyeTextureWidthInPixels = UnityEngine.XR.XRSettings.eyeTextureWidth;
+                int eyeTextureHeightInPixels = UnityEngine.XR.XRSettings.eyeTextureHeight;
+                if (eyeTextureWidthInPixels > 0 && eyeTextureHeightInPixels > 0)
+                {
+                    SetSessionProperty("c3d.app.xr.eyetexture.width", eyeTextureWidthInPixels);
+                    SetSessionProperty("c3d.app.xr.eyetexture.height", eyeTextureHeightInPixels);
+                }
+            }
             SetSessionProperty("c3d.deviceid", DeviceId);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
             SendXRRuntimeDataAsSessionProperty();
@@ -452,7 +475,14 @@ namespace Cognitive3D
         /// </summary>
         private void SendXRRuntimeDataAsSessionProperty()
         {
-#if COGNITIVE3D_INCLUDE_OPENXR
+            //the OpenXR version define only proves the OpenXR package is in the project manifest.
+            //it says nothing about the build target. OpenXRRuntime is a thin managed wrapper over
+            //a native plugin, and that plugin only ships for Windows x64, macOS, Android and UWP -
+            //everywhere else the managed code still compiles and then fails at link or call time.
+            //the supported targets are listed rather than excluding the unsupported ones: if this
+            //list ever goes stale the cost is one missing property, whereas a stale exclusion list
+            //breaks the build on whichever platform was overlooked
+#if COGNITIVE3D_INCLUDE_OPENXR && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_ANDROID || UNITY_WSA)
             //empty when the OpenXR package is installed but is not the active loader
             if (!string.IsNullOrEmpty(UnityEngine.XR.OpenXR.OpenXRRuntime.name))
             {
@@ -472,6 +502,10 @@ namespace Cognitive3D
             foreach (UnityEngine.XR.XRInputSubsystem inputSubsystem in inputSubsystems)
             {
                 if (inputSubsystem == null || inputSubsystem.subsystemDescriptor == null) { continue; }
+                //stopped instances stay in this list until the loader deinitializes them, so a
+                //session started in that window would otherwise name a runtime that is not
+                //servicing it. if nothing is running the property is omitted entirely
+                if (!inputSubsystem.running) { continue; }
                 if (inputSubsystemIds.Length > 0) { inputSubsystemIds += ","; }
                 inputSubsystemIds += inputSubsystem.subsystemDescriptor.id;
             }
