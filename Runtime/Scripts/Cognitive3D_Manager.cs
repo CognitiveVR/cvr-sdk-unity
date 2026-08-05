@@ -484,10 +484,22 @@ namespace Cognitive3D
             //breaks the build on whichever platform was overlooked
 #if COGNITIVE3D_INCLUDE_OPENXR && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_ANDROID || UNITY_WSA)
             //empty when the OpenXR package is installed but is not the active loader
-            if (!string.IsNullOrEmpty(UnityEngine.XR.OpenXR.OpenXRRuntime.name))
+            var xrSettings = UnityEngine.XR.Management.XRGeneralSettings.Instance;
+            var activeLoader = (xrSettings != null && xrSettings.Manager != null) ? xrSettings.Manager.activeLoader : null;
+            if (activeLoader is UnityEngine.XR.OpenXR.OpenXRLoaderBase)
             {
-                SetSessionProperty("c3d.app.openxr.runtime.name", UnityEngine.XR.OpenXR.OpenXRRuntime.name);
-                SetSessionProperty("c3d.app.openxr.runtime.version", UnityEngine.XR.OpenXR.OpenXRRuntime.version);
+                try
+                {
+                    if (!string.IsNullOrEmpty(UnityEngine.XR.OpenXR.OpenXRRuntime.name))
+                    {
+                        SetSessionProperty("c3d.app.openxr.runtime.name", UnityEngine.XR.OpenXR.OpenXRRuntime.name);
+                        SetSessionProperty("c3d.app.openxr.runtime.version", UnityEngine.XR.OpenXR.OpenXRRuntime.version);
+                    }
+                }
+                catch (System.DllNotFoundException e)
+                {
+                    Util.logWarning("OpenXR runtime name/version unavailable (UnityOpenXR native plugin not loaded): " + e.Message);
+                }
             }
 #endif
             List<UnityEngine.XR.XRInputSubsystem> inputSubsystems = new List<UnityEngine.XR.XRInputSubsystem>();
