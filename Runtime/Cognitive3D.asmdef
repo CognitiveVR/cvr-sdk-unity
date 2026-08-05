@@ -111,6 +111,11 @@
             "define": "COGNITIVE3D_AR_FOUNDATION_6_3_OR_NEWER"
         },
         {
+            "name": "com.unity.xr.openxr",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_OPENXR"
+        },
+        {
             "name": "com.unity.xr.androidxr-openxr",
             "expression": "",
             "define": "COGNITIVE3D_ANDROIDXR_OPENXR"
