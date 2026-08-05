@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.5.0";
+        public static readonly string SDK_VERSION = "2.6.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -161,6 +161,9 @@ namespace Cognitive3D
             CognitiveStatics.Initialize();
 
 #if UNITY_WEBGL
+            //browsers expose no stable hardware identifier, so this id is session-scoped and
+            //will differ on every run. it must not be treated as device-persistent.
+            //c3d.device.platform_name reports WebGLPlayer, which is how a consumer can tell
             DeviceId = System.Guid.NewGuid().ToString();
 #else
             DeviceId = SystemInfo.deviceUniqueIdentifier;
@@ -341,10 +344,8 @@ namespace Cognitive3D
                 {
                     Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", activeLoader.name);
                 }
-                else
-                {
-                    Cognitive3D_Manager.SetSessionProperty("c3d.app.xrplugin", "null");
-                }
+                //when there is no active loader the property is omitted entirely.
+                //a placeholder string would be indistinguishable from a loader actually named that
             }
             SetSessionPropertyIfEmpty("c3d.app.inEditor", Application.isEditor);
             SetSessionProperty("c3d.version", SDK_VERSION);
@@ -363,20 +364,33 @@ namespace Cognitive3D
 #endregion
         }
 
+        /// <summary>
+        /// reports device properties exactly as the platform returns them.
+        /// these are raw signals - device category, family and runtime host are resolved
+        /// downstream from these values, never here
+        /// </summary>
         private void SendHardwareDataAsSessionProperty()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            SetSessionProperty("c3d.device.type", "Web");
-#else
+            //raw Unity DeviceType enum (Desktop, Handheld, Console, Unknown).
+            //this is a hardware fact and must not be replaced by a build-target constant
             SetSessionProperty("c3d.device.type", SystemInfo.deviceType.ToString());
-#endif
+            //raw RuntimePlatform enum (WindowsPlayer, Android, IPhonePlayer, WebGLPlayer, ...)
+            SetSessionProperty("c3d.device.platform_name", Application.platform.ToString());
             SetSessionProperty("c3d.device.cpu", SystemInfo.processorType);
             SetSessionProperty("c3d.device.model", SystemInfo.deviceModel);
             SetSessionProperty("c3d.device.gpu", SystemInfo.graphicsDeviceName);
+            SetSessionProperty("c3d.device.gpu.vendor", SystemInfo.graphicsDeviceVendor);
+            SetSessionProperty("c3d.device.gpu.vendor.id", SystemInfo.graphicsDeviceVendorID);
             SetSessionProperty("c3d.device.os", SystemInfo.operatingSystem);
+            //existing property, kept for compatibility. value is whole gigabytes, rounded
             SetSessionProperty("c3d.device.memory", Mathf.RoundToInt((float)SystemInfo.systemMemorySize / 1024));
+            //unrounded value exactly as the platform reports it, in megabytes
+            SetSessionProperty("c3d.device.memoryInMegabytes", SystemInfo.systemMemorySize);
+            SetSessionProperty("c3d.device.screen.width", Screen.width);
+            SetSessionProperty("c3d.device.screen.height", Screen.height);
             SetSessionProperty("c3d.deviceid", DeviceId);
             SetSessionProperty("c3d.device.hmd.type", UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head).name);
+            SendXRRuntimeDataAsSessionProperty();
 
             #region SDK_SPECIFIC
 #if C3D_STEAMVR2
@@ -386,7 +400,8 @@ namespace Cognitive3D
 #endif
 
 #if C3D_OCULUS
-        SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString().Replace('_', ' '));
+        //raw enum name, underscores intact (for example Quest_3), matching what this SDK reads internally elsewhere
+        SetSessionProperty("c3d.device.hmd.type", OVRPlugin.GetSystemHeadsetType().ToString());
         SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "Oculus");
 #elif C3D_PICOVR
@@ -428,6 +443,43 @@ namespace Cognitive3D
             #endregion
         }
 
+        /// <summary>
+        /// reports which XR runtime is servicing the app, verbatim.
+        /// this is the signal that distinguishes otherwise identical tethered PC setups
+        /// (for example a headset running through SteamVR versus through its own vendor runtime),
+        /// which the compile-time SDK symbol alone cannot express.
+        /// called from SendHardwareDataAsSessionProperty so it inherits the same hardware-data consent gate
+        /// </summary>
+        private void SendXRRuntimeDataAsSessionProperty()
+        {
+#if COGNITIVE3D_INCLUDE_OPENXR
+            //empty when the OpenXR package is installed but is not the active loader
+            if (!string.IsNullOrEmpty(UnityEngine.XR.OpenXR.OpenXRRuntime.name))
+            {
+                SetSessionProperty("c3d.app.openxr.runtime.name", UnityEngine.XR.OpenXR.OpenXRRuntime.name);
+                SetSessionProperty("c3d.app.openxr.runtime.version", UnityEngine.XR.OpenXR.OpenXRRuntime.version);
+            }
+#endif
+            List<UnityEngine.XR.XRInputSubsystem> inputSubsystems = new List<UnityEngine.XR.XRInputSubsystem>();
+#if UNITY_6000_0_OR_NEWER
+            SubsystemManager.GetSubsystems<UnityEngine.XR.XRInputSubsystem>(inputSubsystems);
+#else
+            SubsystemManager.GetInstances<UnityEngine.XR.XRInputSubsystem>(inputSubsystems);
+#endif
+            //descriptor ids are reported unmodified. multiple ids are joined with commas
+            //only because a session property value has to be a single scalar
+            string inputSubsystemIds = string.Empty;
+            foreach (UnityEngine.XR.XRInputSubsystem inputSubsystem in inputSubsystems)
+            {
+                if (inputSubsystem == null || inputSubsystem.subsystemDescriptor == null) { continue; }
+                if (inputSubsystemIds.Length > 0) { inputSubsystemIds += ","; }
+                inputSubsystemIds += inputSubsystem.subsystemDescriptor.id;
+            }
+            if (inputSubsystemIds.Length > 0)
+            {
+                SetSessionProperty("c3d.app.xr.inputsubsystems", inputSubsystemIds);
+            }
+        }
 
         /// <summary>
         /// registered to unity's OnSceneLoaded callback. sends outstanding data, then sets correct tracking scene id and refreshes dynamic object session manifest
