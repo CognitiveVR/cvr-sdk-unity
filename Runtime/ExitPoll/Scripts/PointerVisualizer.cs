@@ -50,6 +50,10 @@ namespace Cognitive3D
         /// <param name="end">The ending position of the pointer ray</param>
         public void UpdatePointer(Vector3 start, Vector3 end)
         {
+            if (lineRenderer == null)
+                lineRenderer = GetComponent<LineRenderer>();
+            if (lineRenderer == null) return;
+            
             pointsArray[0] = start;
             pointsArray[1] = end;
 

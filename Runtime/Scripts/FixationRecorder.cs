@@ -969,6 +969,7 @@ namespace Cognitive3D
                         return !states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.LeftEyeShut);
                     }
 #endif
+#if COGNITIVE3D_AR_FOUNDATION_6_3_OR_NEWER
                     if (face.leftEye != null)
                     {
                         var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
@@ -982,6 +983,7 @@ namespace Cognitive3D
                             }
                         }
                     }
+#endif
                 }
             }
 #endif
@@ -1021,6 +1023,7 @@ namespace Cognitive3D
                         return !states.HasFlag(UnityEngine.XR.OpenXR.Features.Android.AndroidOpenXREyeTrackingStates.RightEyeShut);
                     }
 #endif
+#if COGNITIVE3D_AR_FOUNDATION_6_3_OR_NEWER
                     if (face.rightEye != null)
                     {
                         var result = GazeHelper.ARFaceManager.TryGetBlendShapes(face, Unity.Collections.Allocator.Temp);
@@ -1034,6 +1037,7 @@ namespace Cognitive3D
                             }
                         }
                     }
+#endif
                 }
             }
 #endif

@@ -33,7 +33,9 @@
         "Unity.XR.ARSubsystems",
         "Unity.XR.AndroidOpenXR",
         "Wave.Essence.ScenePerception",
-        "Google.XR.Extensions"
+        "Google.XR.Extensions",
+        "HarmonEyes.EyeTracking.Common",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -104,6 +106,16 @@
             "define": "COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER"
         },
         {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "6.3.0",
+            "define": "COGNITIVE3D_AR_FOUNDATION_6_3_OR_NEWER"
+        },
+        {
+            "name": "com.unity.xr.openxr",
+            "expression": "",
+            "define": "COGNITIVE3D_INCLUDE_OPENXR"
+        },
+        {
             "name": "com.unity.xr.androidxr-openxr",
             "expression": "",
             "define": "COGNITIVE3D_ANDROIDXR_OPENXR"
@@ -122,6 +134,11 @@
             "name": "com.xrpf.privacyframework",
             "expression": "3.0.0",
             "define": "XRPF_ROOM_CAPTURE"
+        },
+        {
+            "name": "com.unity.xr.picoxr",
+            "expression": "3.0.0",
+            "define": "COGNITIVE3D_PICOXR_3_0_OR_NEWER"
         }
     ],
     "noEngineReferences": false

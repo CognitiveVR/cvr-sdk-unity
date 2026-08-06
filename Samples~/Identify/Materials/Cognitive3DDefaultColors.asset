@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06d309ecbfb80644b8deb922023529a8, type: 3}
+  m_Name: Cognitive3DDefaultColors
+  m_EditorClassIdentifier: 
+  panelBackground: {r: 0.14509805, g: 0.07450981, b: 0.22352941, a: 0.98039216}
+  headerText: {r: 1, g: 1, b: 1, a: 1}
+  subtitleText: {r: 0.627451, g: 0.64705884, b: 0.7058824, a: 1}
+  instructionText: {r: 0.50980395, g: 0.5294118, b: 0.60784316, a: 1}
+  digitBoxBackground: {r: 0.24313727, g: 0.14117648, b: 0.37254903, a: 1}
+  digitBoxOutline: {r: 0.33333334, g: 0.1764706, b: 0.5137255, a: 1}
+  digitText: {r: 0.94117653, g: 0.94117653, b: 0.94117653, a: 1}
+  dashText: {r: 0.6156863, g: 0.5921569, b: 0.86666673, a: 1}
+  instructionRowBackground: {r: 0.09803922, g: 0.11764706, b: 0.19607843, a: 1}
+  errorText: {r: 0.9019608, g: 0.3137255, b: 0.3137255, a: 1}
+  errorBoxBackground: {r: 0.3137255, g: 0.09803922, b: 0.11764706, a: 1}
+  errorBoxOutline: {r: 0.7058824, g: 0.23529412, b: 0.23529412, a: 1}
+  errorDotColor: {r: 0.8235294, g: 0.3529412, b: 0.27450982, a: 1}
+  buttonBackground: {r: 0.4431373, g: 0.78823537, b: 0.64705884, a: 1}
+  buttonText: {r: 0.09019608, g: 0.078431375, b: 0.19215688, a: 1}
+  buttonHighlighted: {r: 0.31764707, g: 0.6156863, b: 0.49411768, a: 1}
+  buttonPressed: {r: 0.1137255, g: 0.61960787, b: 0.45882356, a: 1}
+  buttonDisabled: {r: 0.6, g: 0.6, b: 0.6, a: 0.5019608}
+  backButtonBackground: {r: 0.627451, g: 0.64705884, b: 0.7058824, a: 0.78431374}
+  backButtonIcon: {r: 0.627451, g: 0.64705884, b: 0.7058824, a: 1}

@@ -1,6 +1,6 @@
 {
 	"name": "com.cognitive3d.c3d-sdk",
-	"version": "2.4.0",
+	"version": "2.5.0",
 	"displayName": "Cognitive3D Unity SDK",
 	"description": "Analytics Platform for VR/AR/MR",
 	"unity": "2021.3",
@@ -43,6 +43,11 @@
 			"displayName": "Data Connector",
 			"description": "Sample script for listening to all data collected by Cognitive3D SDK. Intended for realtime machine learning application",
 			"path": "Samples~/Data Connector"
+		},
+		{
+			"displayName": "Identify",
+			"description": "Configurable in-VR identification panels (PIN code, QR code, and verbal code) for associating sessions with a participant",
+			"path": "Samples~/Identify"
 		}
 	]
 }
