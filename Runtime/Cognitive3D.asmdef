@@ -35,7 +35,9 @@
         "Wave.Essence.ScenePerception",
         "Google.XR.Extensions",
         "HarmonEyes.EyeTracking.Common",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Netcode.Components",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
