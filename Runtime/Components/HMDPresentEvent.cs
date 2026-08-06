@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-using UnityEngine.XR;
-#if C3D_STEAMVR || C3D_STEAMVR2
-using Valve.VR;
+#if UNITY_ANDROID && ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
 #endif
 
 /// <summary>
-/// Sends a Custom Event when a player removes or wears HMD
-/// NOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD
+/// Sends a Custom Event when a player removes or wears the HMD.
+/// NOTE - SteamVR proximity sensor seems to have a delay of 10 seconds when removing the HMD.
 /// </summary>
 
 namespace Cognitive3D.Components
@@ -15,118 +14,122 @@ namespace Cognitive3D.Components
     [AddComponentMenu("Cognitive3D/Components/HMD Present Event")]
     public class HMDPresentEvent : AnalyticsComponentBase
     {
-        InputDevice currentHmd;
-        bool wasUserPresentPreviously;
+        const float ProximityWornThreshold = 1f;
+
+        UnityEngine.XR.InputDevice currentHmd;
+
+        // Assume the user is wearing the headset at session start so we don't emit an "equipped" event on the first frame
+        bool wasUserPresentPreviously = true;
+        double? removedTimestamp;
+
+        /// <summary>
+        /// True when hardware data may be recorded. Always true unless the XR Privacy
+        /// Framework is present and has withheld consent
+        /// </summary>
+        bool IsHardwareDataAllowed
+        {
+            get
+            {
+#if XRPF
+                return XRPF.PrivacyFramework.Agreement.IsAgreementComplete
+                    && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed;
+#else
+                return true;
+#endif
+            }
+        }
 
         protected override void OnSessionBegin()
         {
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
-#endif
-            {
-                if (!currentHmd.isValid)
-                {
-                    currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-                    currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
-                }
-                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
-                Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
-                Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+            if (!IsHardwareDataAllowed) { return; }
+
+            Cognitive3D_Manager.OnPreSessionEnd += Cognitive3D_Manager_OnPreSessionEnd;
+
 #if C3D_OCULUS
-                OVRManager.HMDMounted += HandleHMDMounted;
-                OVRManager.HMDUnmounted += HandleHMDUnmounted;
+            OVRManager.HMDMounted += HeadsetEquipped;
+            OVRManager.HMDUnmounted += HeadsetRemoved;
+#else
+            Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
 #endif
-            }
         }
 
-
+#if !C3D_OCULUS
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
-            // We don't want these lines to execute if component disabled
-            // Without this condition, these lines will execute regardless
-            //      of component being disabled since this function is bound to C3D_Manager.Update on SessionBegin()  
-            if (isActiveAndEnabled)
+            if (!isActiveAndEnabled) { return; }
+
+            if (!TryGetUserPresence(out bool isUserPresent)) { return; }
+
+            if (isUserPresent && !wasUserPresentPreviously) // put the headset back on
             {
-#if !C3D_OMNICEPT && !C3D_VIVEWAVE && !C3D_OCULUS
+                HeadsetEquipped();
+            }
+            else if (!isUserPresent && wasUserPresentPreviously) // took the headset off
+            {
+                HeadsetRemoved();
+            }
+
+            wasUserPresentPreviously = isUserPresent;
+        }
+
+        bool TryGetUserPresence(out bool isUserPresent)
+        {
+            isUserPresent = false;
+            if (!IsHardwareDataAllowed) { return false; }
+
+#if UNITY_ANDROID && ENABLE_INPUT_SYSTEM
+            var sensor = ProximitySensor.current;
+            if (sensor == null) { return false; }
+
+            if (!sensor.enabled)
+            {
+                InputSystem.EnableDevice(sensor);
+            }
+
+            isUserPresent = sensor.distance.ReadValue() < ProximityWornThreshold;
+            return true;
+#else
             if (!currentHmd.isValid)
             {
-                currentHmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
-                currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out wasUserPresentPreviously);
+                currentHmd = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.Head);
             }
-            else
-            {
-                CheckUserPresence();
-            }
+
+            return currentHmd.TryGetFeatureValue(UnityEngine.XR.CommonUsages.userPresence, out isUserPresent);
 #endif
-            }
-            else
-            {
-                Debug.LogWarning("HMD Present component is disabled. Please enable in inspector.");
-            }
         }
-
-        double? removedTimestamp;
-
-        void HandleHMDMounted()
-        {
-            double currentTimestamp = Util.Timestamp();
-
-            // Check if headset was previously removed and timestamp is valid
-            if (removedTimestamp.HasValue && currentTimestamp > removedTimestamp)
-            {
-                CustomEvent equippedEvent = new CustomEvent("c3d.User equipped headset").SetProperty("Seconds headset was removed", currentTimestamp - removedTimestamp);
-                equippedEvent.Send();
-                return;
-            }
-
-            CustomEvent.SendCustomEvent("c3d.User equipped headset", GameplayReferences.HMD.position);
-        }
-
-        void HandleHMDUnmounted()
-        {
-            CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
-
-            // Store the removal timestamp
-            removedTimestamp = Util.Timestamp();
-        }
-
-        void CheckUserPresence()
-        {
-#if XRPF
-            if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsHardwareDataAllowed)
 #endif
+
+        void HeadsetEquipped()
+        {
+            var equippedEvent = new CustomEvent("c3d.User equipped headset");
+
+            if (removedTimestamp.HasValue)
             {
-                bool isUserCurrentlyPresent;
-                if (currentHmd.TryGetFeatureValue(CommonUsages.userPresence, out isUserCurrentlyPresent))
+                double secondsRemoved = Util.Timestamp() - removedTimestamp.Value;
+                if (secondsRemoved > 0)
                 {
-                    if (isUserCurrentlyPresent && !wasUserPresentPreviously) // put on headset after removing
-                    {
-                        double currentTimestamp = Util.Timestamp();
-                        if (removedTimestamp.HasValue && currentTimestamp > removedTimestamp)
-                        {
-                            CustomEvent equippedEvent = new CustomEvent("c3d.User equipped headset").SetProperty("Seconds headset was removed", currentTimestamp - removedTimestamp);
-                            equippedEvent.Send();
-                        }
-                        wasUserPresentPreviously = true;
-                    }
-                    else if (!isUserCurrentlyPresent && wasUserPresentPreviously) // removing headset
-                    {
-                        // Store the removal timestamp
-                        removedTimestamp = Util.Timestamp();
-                        CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
-                        wasUserPresentPreviously = false;
-                    }
+                    equippedEvent.SetProperty("Seconds headset was removed", secondsRemoved);
                 }
+                removedTimestamp = null;
             }
+
+            equippedEvent.Send(GameplayReferences.HMD.position);
+        }
+
+        void HeadsetRemoved()
+        {
+            removedTimestamp = Util.Timestamp();
+            CustomEvent.SendCustomEvent("c3d.User removed headset", GameplayReferences.HMD.position);
         }
 
         private void Cognitive3D_Manager_OnPreSessionEnd()
         {
 #if C3D_OCULUS
-            OVRManager.HMDMounted -= HandleHMDMounted;
-            OVRManager.HMDUnmounted -= HandleHMDUnmounted;
-#endif
+            OVRManager.HMDMounted -= HeadsetEquipped;
+            OVRManager.HMDUnmounted -= HeadsetRemoved;
+#else
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
+#endif
             Cognitive3D_Manager.OnPreSessionEnd -= Cognitive3D_Manager_OnPreSessionEnd;
         }
 

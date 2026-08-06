@@ -155,12 +155,35 @@ namespace Cognitive3D
                 ),
                 new FeatureData(
                     false,
+                    "Eye Tracking",
+                    "Capture gaze and fixations, plus HarmonEyes metrics",
+                    EditorCore.EyeTrackingIcon,
+                    () =>
+                    {
+                        setFeatureIndex(5);
+                        SegmentAnalytics.TrackEvent("EyeTrackingWindow_Opened", "EyeTrackingWindow", "new");
+                    },
+                    new List<FeatureAction>
+                    {
+                        new FeatureAction(
+                            FeatureActionType.LinkTo,
+                            "Link to Gaze & Fixations documentation",
+                            () =>
+                            {
+                                Application.OpenURL("https://docs.cognitive3d.com/unity/gaze-fixations/");
+                            }
+                        )
+                    },
+                    new EyeTrackingDetailGUI()
+                ),
+                new FeatureData(
+                    false,
                     "Sensors",
                     "API reference and examples for recording custom sensors",
                     EditorCore.SensorIcon,
                     () =>
                     {
-                        setFeatureIndex(5);
+                        setFeatureIndex(6);
                         SegmentAnalytics.TrackEvent("SensorsWindow_Opened", "SensorsWindow", "new");
                     },
                     new List<FeatureAction>
@@ -183,7 +206,7 @@ namespace Cognitive3D
                     EditorCore.MultiplayerIcon,
                     () =>
                     {
-                        setFeatureIndex(6);
+                        setFeatureIndex(7);
                         SegmentAnalytics.TrackEvent("MultiplayerWindow_Opened", "MultiplayerWindow", "new");
                     },
                     new List<FeatureAction>
@@ -206,7 +229,7 @@ namespace Cognitive3D
                     EditorCore.MediaIcon,
                     () =>
                     {
-                        setFeatureIndex(7);
+                        setFeatureIndex(8);
                         SegmentAnalytics.TrackEvent("Media360Window_Opened", "Media360Window", "new");
                     },
                     new List<FeatureAction>
@@ -229,7 +252,7 @@ namespace Cognitive3D
                     EditorCore.AudioRecordingIcon,
                     () =>
                     {
-                        setFeatureIndex(8);
+                        setFeatureIndex(9);
                         SegmentAnalytics.TrackEvent("AudioRecordingWindow_Opened", "AudioRecordingWindow", "new");
                     },
                     new List<FeatureAction>
@@ -244,6 +267,29 @@ namespace Cognitive3D
                         )
                     },
                     new AudioRecordingDetailGUI()
+                ),
+                new FeatureData(
+                    false,
+                    "Room Capture",
+                    "Capture room anchors and surfaces for mixed-reality experiences",
+                    EditorCore.RoomCaptureIcon,
+                    () =>
+                    {
+                        setFeatureIndex(10);
+                        SegmentAnalytics.TrackEvent("RoomCaptureWindow_Opened", "RoomCaptureWindow", "new");
+                    },
+                    new List<FeatureAction>
+                    {
+                        new FeatureAction(
+                            FeatureActionType.LinkTo,
+                            "Link to Room Capture documentation",
+                            () =>
+                            {
+                                Application.OpenURL("https://docs.cognitive3d.com/unity/room-capture/");
+                            }
+                        )
+                    },
+                    new RoomCaptureDetailGUI()
                 ),
             };
         }

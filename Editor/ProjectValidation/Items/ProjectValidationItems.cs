@@ -633,6 +633,7 @@ namespace Cognitive3D
                     if (_waveRigs != null && _waveRigs.Count != 0)
                     {
                         _waveRigs[0].TrackingOrigin = UnityEngine.XR.TrackingOriginModeFlags.Floor;
+                        UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                     }
                 }
             );
@@ -660,6 +661,7 @@ namespace Cognitive3D
                         if (_waveRigs[0].GetComponent<DynamicObject>())
                         {
                             Object.DestroyImmediate(_waveRigs[0].GetComponent<DynamicObject>() as Object, true);
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                         }
                     }
                 }
@@ -725,6 +727,7 @@ namespace Cognitive3D
                         if (_xrorigins != null && _xrorigins.Count != 0)
                         {
                             _xrorigins[0].RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                         }
                     }
                 );
@@ -789,6 +792,7 @@ namespace Cognitive3D
                         if (_cameraOffset != null && _cameraOffset.Count != 0)
                         {
                             _cameraOffset[0].requestedTrackingMode = UnityEditor.XR.LegacyInputHelpers.UserRequestedTrackingMode.Floor;
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
                         }
                     }
                 );
@@ -948,6 +952,101 @@ namespace Cognitive3D
                 }
             );
 #endif
+
+            ProjectValidation.FindComponentInActiveScene<RoomCapture>(out var roomCapture);
+            if (roomCapture != null && roomCapture.Count != 0)
+            {
+#if C3D_OCULUS && COGNITIVE3D_META_MRUK_68_OR_NEWER
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended,
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "Room Capture is enabled for Meta but no MRUK (MR Utility Kit) instance was found in the scene. Without it, no room data will be recorded. Add one?",
+                    fixmessage: "MRUK instance found in the scene.",
+                    checkAction: () =>
+                    {
+                        return ProjectValidation.FindComponentInActiveScene<Meta.XR.MRUtilityKit.MRUK>();
+                    },
+                    fixAction: () =>
+                    {
+                        var go = new GameObject("MRUK");
+                        go.AddComponent<Meta.XR.MRUtilityKit.MRUK>();
+                    }
+                );
+#elif C3D_VIVEWAVE && C3D_VIVEWAVE_SCENEPERCEPTION
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended,
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "Room Capture is enabled for Vive Wave but no ScenePerceptionManager was found in the scene. Without it, no room data will be recorded. Add one?",
+                    fixmessage: "ScenePerceptionManager found in the scene.",
+                    checkAction: () =>
+                    {
+                        return ProjectValidation.FindComponentInActiveScene<Wave.Essence.ScenePerception.ScenePerceptionManager>();
+                    },
+                    fixAction: () =>
+                    {
+                        var go = new GameObject("ScenePerceptionManager");
+                        go.AddComponent<Wave.Essence.ScenePerception.ScenePerceptionManager>();
+                    }
+                );
+#elif COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended,
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Edit,
+                    message: "Room Capture is enabled but no ARPlaneManager or ARBoundingBoxManager was found in the scene. AR Foundation room data is read from these managers, so without one no room data will be recorded. See the Room Capture documentation.",
+                    fixmessage: "An ARPlaneManager or ARBoundingBoxManager is present in the scene.",
+                    checkAction: () =>
+                    {
+                        return ProjectValidation.FindComponentInActiveScene<UnityEngine.XR.ARFoundation.ARPlaneManager>()
+                            || ProjectValidation.FindComponentInActiveScene<UnityEngine.XR.ARFoundation.ARBoundingBoxManager>();
+                    },
+                    fixAction: () =>
+                    {
+                        Application.OpenURL("https://docs.cognitive3d.com/unity/room-capture/");
+                    }
+                );
+
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Recommended,
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Edit,
+                    message: "Record Gaze on Room Anchors is enabled but no ARRaycastManager was found in the scene. Surface gaze is resolved with a raycast against AR trackables, so without an ARRaycastManager gaze on room surfaces won't be recorded.",
+                    fixmessage: "Gaze on room surfaces is configured (either disabled, or an ARRaycastManager is present).",
+                    checkAction: () =>
+                    {
+                        var prefs = EditorCore.GetPreferences();
+                        if (prefs == null || !prefs.RecordGazeOnRoomAnchors) return true; // not applicable
+                        return ProjectValidation.FindComponentInActiveScene<UnityEngine.XR.ARFoundation.ARRaycastManager>();
+                    },
+                    fixAction: () =>
+                    {
+                        Application.OpenURL("https://docs.cognitive3d.com/unity/room-capture/");
+                    }
+                );
+#elif C3D_VIVEWAVE
+                ProjectValidation.AddItem(
+                    level: ProjectValidation.ItemLevel.Required,
+                    category: CATEGORY,
+                    actionType: ProjectValidation.ItemAction.Fix,
+                    message: "Room Capture component is found on Cognitive3D_Manager but no C3D_VIVEWAVE_SCENEPERCEPTION is set. Without this player definition, the room data will not be recorded.",
+                    fixmessage: "Room Capture component is found on Cognitive3D_Manager and C3D_VIVEWAVE_SCENEPERCEPTION is set.",
+                    checkAction: () =>
+                    {
+                        if (EditorCore.GetPlayerDefines().Contains("C3D_VIVEWAVE_SCENEPERCEPTION"))
+                        {
+                            return true;
+                        }
+                        return false;
+                    },
+                    fixAction: () =>
+                    {
+                        EditorCore.AddDefine("C3D_VIVEWAVE_SCENEPERCEPTION");
+                    }
+                );
+#endif
+            }
 
             #region Multiplayer Support
 #if C3D_PHOTON

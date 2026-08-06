@@ -56,15 +56,19 @@ namespace Cognitive3D.Components
             YieldInstruction wait = new WaitForSeconds(Interval);
 
             //median
+            //iterate a fixed number of times so the loop always ends after SampleCount ticks regardless of tracking reliability.
+            //only reliable readings advance validSampleCount and feed the median, so skipped (unreliable) samples don't leave zero-holes.
+            int validSampleCount = 0;
             for (int i = 0; i < SampleCount; i++)
             {
                 yield return wait;
                 if (TryGetHeight(out float currentheight))
                 {
-                    heights[i] = currentheight;
-                    if (Mathf.Approximately(i % SAMPLE_INTERVAL, 0.0f))
+                    heights[validSampleCount] = currentheight;
+                    validSampleCount++;
+                    if (Mathf.Approximately(validSampleCount % SAMPLE_INTERVAL, 0.0f))
                     {
-                        RecordAndSendMedian(heights, i);
+                        RecordAndSendMedian(heights, validSampleCount);
                     }
                 }
             }
@@ -87,49 +91,48 @@ namespace Cognitive3D.Components
 #if C3D_OCULUS
             // Calculates height according to camera offset relative to Floor level and rig customization
             height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
+            return true;
 #elif C3D_VIVEWAVE
             if (waveRig == null)
             {
                 waveRig = FindObjectOfType<WaveRig>();
             }
 
-            if (waveRig != null)
+            if (waveRig == null)
             {
-                if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Device)
-                {
-                    height = GameplayReferences.HMD.position.y + waveRig.CameraYOffset - trackingSpaceTransform.pos.y;
-                }
-                else if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor 
-                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unknown 
-                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.TrackingReference
-                    || waveRig.TrackingOrigin == TrackingOriginModeFlags.Unbounded) // unknown and tracking gives incorrect values
-                {
-                    height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
-                }
+                // Rig not resolved yet; can't trust a height reading.
+                return false;
             }
+
+            // Device tracking origin reports the HMD relative to the headset, not the user's physical height. Skip recording.
+            if (waveRig.TrackingOrigin == TrackingOriginModeFlags.Floor)
+            {
+                height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
+                return true;
+            }
+
+            return false;
 
 #elif C3D_DEFAULT
 
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
             if (xrOrigin == null)
             {
-                xrOrigin = FindFirstObjectByType<XROrigin>(); 
-            }  
+                xrOrigin = FindFirstObjectByType<XROrigin>();
+            }
 
             if (xrOrigin != null)
             {
-                if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
-                {
-                    // Calculates the height based on the customized camera offset relative to the Device and rig settings (Does not account for the user's actual physical height)
-                    // TODO: Determine the user's accurate height by computing the camera offset relative to the floor level
-                    height = GameplayReferences.HMD.position.y + xrOrigin.CameraYOffset - trackingSpaceTransform.pos.y;
-                }
-                else if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                // Device origin computes height from the configured camera offset, which does not reflect the user's actual physical height. Skip recording.
+                if (xrOrigin.CurrentTrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor)
                 {
                     // Calculates height based on the camera offset relative to Floor level and rig settings
                     height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
+                    return true;
                 }
-            } 
+
+                return false;
+            }
 #endif
 
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
@@ -137,24 +140,25 @@ namespace Cognitive3D.Components
             {
                 cameraOffset = FindFirstObjectByType<CameraOffset>();
             }
-            
+
             if (cameraOffset != null)
             {
-                if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Device)
-                {
-                    height = GameplayReferences.HMD.position.y + cameraOffset.cameraYOffset - trackingSpaceTransform.pos.y;
-                }
-                else if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor || cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Unknown)
+                if (cameraOffset.TrackingOriginMode == UnityEngine.XR.TrackingOriginModeFlags.Floor)
                 {
                     height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
+                    return true;
                 }
+
+                return false;
             }
 #endif
+
+            // No rig/origin resolved; can't trust a height reading.
+            return false;
 #else // C3D_DEFAULT == FALSE
             height = GameplayReferences.HMD.position.y - trackingSpaceTransform.pos.y;
-#endif
-
             return true;
+#endif
         }
 
         private void RecordAndSendMedian(float[] heights, int lastIndex)

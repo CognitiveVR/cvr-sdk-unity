@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Cognitive3D;
+using Cognitive3D.Components;
 
 //physics raycast from camera
 //adds gazepoint at hit.point
@@ -137,13 +138,26 @@ namespace Cognitive3D
 
                 // Unified raycast to all UI elements (Canvas and UI Image DynamicObjects)
                 UIRaycastResult uiHit = RaycastToUIElements(ray.origin, ray.direction);
+                bool roomLayoutAvailable = Cognitive3D_Preferences.Instance.RecordGazeOnRoomAnchors && RoomCapture.Instance != null && RoomCapture.Instance.IsAvailable;
+
+                // Room surface (anchor) raycast, computed once so a dynamic hit can be compared
+                // against a surface hit by distance, whichever is closer wins.
+                string anchorId = null;
+                Vector3 anchorWorldHit = Vector3.zero;
+                Vector3 anchorLocalHit = Vector3.zero;
+                float anchorDistance = float.MaxValue;
+                bool hitAnchor = roomLayoutAvailable && GameplayReferences.HMDCameraComponent
+                    && RoomCapture.Instance.TryGetGazedAnchor(ray, GameplayReferences.HMDCameraComponent.farClipPlane, out anchorId, out anchorWorldHit, out anchorLocalHit, out anchorDistance);
 
                 if (Cognitive3D_Preferences.Instance.EnableGaze == true && GameplayReferences.HMDCameraComponent && DynamicRaycast(ray.origin, ray.direction, GameplayReferences.HMDCameraComponent.farClipPlane, 0.05f, out var hitDistance, out var hitDynamic, out var hitWorld, out var hitLocal, out var hitcoord)) //hit dynamic
                 {
-                    // Determine which hit is closest: UI element or regular dynamic
-                    if (uiHit.didHit && uiHit.distance < hitDistance)
+                    // Pick the closest of: UI element, room surface, or dynamic object
+                    float uiDistance = uiHit.didHit ? uiHit.distance : float.MaxValue;
+                    float surfaceDistance = hitAnchor ? anchorDistance : float.MaxValue;
+
+                    if (uiHit.didHit && uiDistance < hitDistance && uiDistance < surfaceDistance)
                     {
-                        // UI element is closer than the dynamic object
+                        // UI element is closest
                         if (uiHit.isUIImageDynamic)
                         {
                             GazeHelper.RecordUIImageGaze(uiHit.dynamicObject, uiHit.localPosition, uiHit.worldPosition, ray);
@@ -152,6 +166,15 @@ namespace Cognitive3D
                         {
                             GazeHelper.RecordCanvasGaze(uiHit.dynamicObject, uiHit.rectTransform, uiHit.worldPosition, ray);
                         }
+                    }
+                    else if (hitAnchor && surfaceDistance < hitDistance)
+                    {
+                        // Room surface is closer than the dynamic object
+                        GazeCore.RecordRoomAnchorGazePoint(Util.Timestamp(Time.frameCount), anchorId, anchorLocalHit, ray.origin, GameplayReferences.HMD.rotation);
+
+                        if (DrawDebugLines)
+                            DrawGazePoint(GameplayReferences.HMD.position, anchorWorldHit, Color.yellow);
+                        AddGazeToDisplay(anchorWorldHit);
                     }
                     else
                     {
@@ -175,6 +198,31 @@ namespace Cognitive3D
 
                         //active session view
                         AddGazeToDisplay(hitWorld, hitLocal, hitDynamic);
+                    }
+                }
+                else if (Cognitive3D_Preferences.Instance.EnableGaze && hitAnchor)
+                {
+                    // Determine which hit is closest: UI element or room surface
+                    if (uiHit.didHit && uiHit.distance < anchorDistance)
+                    {
+                        // UI element is closer than the room surface
+                        if (uiHit.isUIImageDynamic)
+                        {
+                            GazeHelper.RecordUIImageGaze(uiHit.dynamicObject, uiHit.localPosition, uiHit.worldPosition, ray);
+                        }
+                        else
+                        {
+                            GazeHelper.RecordCanvasGaze(uiHit.dynamicObject, uiHit.rectTransform, uiHit.worldPosition, ray);
+                        }
+                    }
+                    else
+                    {
+                        // Room layout anchor gaze point is closest
+                        GazeCore.RecordRoomAnchorGazePoint(Util.Timestamp(Time.frameCount), anchorId, anchorLocalHit, ray.origin, GameplayReferences.HMD.rotation);
+
+                        if (DrawDebugLines)
+                            DrawGazePoint(GameplayReferences.HMD.position, anchorWorldHit, Color.yellow);
+                        AddGazeToDisplay(anchorWorldHit);
                     }
                 }
                 else if (Cognitive3D_Preferences.Instance.EnableGaze == true && GameplayReferences.HMDCameraComponent && Physics.Raycast(ray, out var hit, GameplayReferences.HMDCameraComponent.farClipPlane, Cognitive3D_Preferences.Instance.GazeLayerMask, Cognitive3D_Preferences.Instance.TriggerInteraction))

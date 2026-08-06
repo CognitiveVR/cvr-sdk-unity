@@ -1,0 +1,36 @@
+{
+    "name": "Cognitive3D.Identify",
+    "rootNamespace": "Cognitive3D.Identify",
+    "references": [
+        "Cognitive3D",
+        "Unity.XR.Interaction.Toolkit",
+        "Unity.TextMeshPro",
+        "meta.xr.mrutilitykit",
+        "Oculus.VR"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.interaction.toolkit",
+            "expression": "",
+            "define": "COGNITIVE3D_XRI"
+        },
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "",
+            "define": "C3D_TMPRO"
+        },
+        {
+            "name": "com.meta.xr.mrutilitykit",
+            "expression": "74.0.0",
+            "define": "C3D_IDENTIFY_PCA"
+        }
+    ],
+    "noEngineReferences": false
+}
