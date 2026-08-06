@@ -134,6 +134,11 @@
             "name": "com.xrpf.privacyframework",
             "expression": "3.0.0",
             "define": "XRPF_ROOM_CAPTURE"
+        },
+        {
+            "name": "com.unity.xr.picoxr",
+            "expression": "3.0.0",
+            "define": "COGNITIVE3D_PICOXR_3_0_OR_NEWER"
         }
     ],
     "noEngineReferences": false

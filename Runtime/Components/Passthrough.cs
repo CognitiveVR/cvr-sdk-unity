@@ -134,6 +134,8 @@ namespace Cognitive3D.Components
             }
 #elif C3D_VIVEWAVE
             return Wave.Native.Interop.WVR_IsPassthroughOverlayVisible() ? 1f : 0f;
+#elif C3D_PICOXR && COGNITIVE3D_PICOXR_3_0_OR_NEWER
+            return Unity.XR.PXR.PXR_Manager.EnableVideoSeeThrough ? 1f : 0f;
 #else
 
 #if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
@@ -166,6 +168,8 @@ namespace Cognitive3D.Components
             return OVRManager.GetPassthroughCapabilities().SupportsPassthrough;
 #elif C3D_VIVEWAVE
             return (Wave.Native.Interop.WVR_GetSupportedFeatures() & (ulong)Wave.Native.WVR_SupportedFeature.WVR_SupportedFeature_PassthroughOverlay) != 0;
+#elif C3D_PICOXR && COGNITIVE3D_PICOXR_3_0_OR_NEWER
+            return Unity.XR.PXR.PXR_Plugin.System.UPxr_GetConfigInt(Unity.XR.PXR.ConfigType.SupportQuickSeethrough) != 0;
 #else
 
 #if COGNITIVE3D_AR_FOUNDATION_6_2_OR_NEWER
