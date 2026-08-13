@@ -314,11 +314,8 @@ namespace Cognitive3D
                         var rightEyeRot = face.rightEye.rotation;
                         var centerEyeRot = Quaternion.Slerp(leftEyeRot, rightEyeRot, 0.5f);
 
+                        // ARFace eye Transforms are already in world space
                         Vector3 worldGazeDirection = centerEyeRot * Vector3.forward;
-                        if (GameplayReferences.HMD.transform.parent != null)
-                        {
-                            worldGazeDirection = GameplayReferences.HMD.transform.parent.TransformDirection(centerEyeRot * Vector3.forward);
-                        }
                         return worldGazeDirection;
                     }
                 }
