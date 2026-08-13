@@ -37,7 +37,8 @@
         "HarmonEyes.EyeTracking.Common",
         "Unity.InputSystem",
         "Unity.Netcode.Components",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Photon.Realtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
