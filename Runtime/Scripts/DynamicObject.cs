@@ -67,6 +67,8 @@ namespace Cognitive3D
         [SerializeField]
         internal string CustomId;
         public float UpdateRate = 0.1f;
+        internal string SyncId;
+        internal string OwnerId;
 
 
         //only used to indicate that the mesh needs to be exported/uploaded. false for controllers
@@ -210,20 +212,18 @@ namespace Cognitive3D
                 registerid = CustomId;
             }
 
-            var syncID = "";
-            var ownerID = "";
             if (isNetworkedObject)
             {
                 if (MultiplayerUtil.IsPlayerAvatar(gameObject))
                 {
-                    ownerID = MultiplayerUtil.GetOwnerId(gameObject);
+                    OwnerId = MultiplayerUtil.GetOwnerId(gameObject);
                 }
                 else
                 {
-                    syncID = MultiplayerUtil.GetNetworkId(gameObject);
+                    SyncId = MultiplayerUtil.GetNetworkId(gameObject);
                 }
             }
-            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, inputType.ToString(), controllerDisplayType.ToString(), IsRight, syncID, ownerID);
+            var Data = new DynamicData(gameObject.name, registerid, registerMeshName, transform, transform.position, transform.rotation, transform.lossyScale, PositionThreshold, RotationThreshold, ScaleThreshold, UpdateRate, IsController, inputType.ToString(), controllerDisplayType.ToString(), IsRight, SyncId, OwnerId);
 
             DataId = Data.Id;
 
