@@ -108,7 +108,7 @@ namespace Cognitive3D
         /// to all clients via the IsPlayerAvatarVar NetworkVariable.
         /// </summary>
         /// <param name="objectId">The NetworkObjectId to check</param>
-        [ServerRpc(RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         void RequestIsPlayerAvatarServerRpc(ulong objectId)
         {
             bool result = false;
