@@ -1451,8 +1451,6 @@ namespace Cognitive3D
                         }
                     }
                 }
-
-                SendData(false); //not 100% necessary. immediately sends dynamic manifest and snapshot to new scene
             }
         }
 
