@@ -1,0 +1,111 @@
+# Canonical copy maintained in the team's internal orchestration repo — edit there first, then re-roll.
+#
+# WHAT THIS IS. A VISIBLE (non-required) check that fails when a pull request carries
+# neither the `adversarial-reviewed` nor the `review-exempt` label. It makes review
+# status impossible to miss at the merge button without ever blocking a merge —
+# enforcement mode is a branch-protection decision made separately (deliberately NOT
+# required at rollout: a required check also blocks merges when the labeler is
+# unavailable, and the failure mode being fixed is "nobody noticed", not
+# "someone overrode").
+#
+# FALSE-POSITIVE RATE IS THE FEATURE. The first audit-script cut flagged 32 of 34 open
+# PRs and would have become wallpaper. Hence the Tier-C auto-classification below:
+# dependabot and dependency bumps never need a human label. Keep that list TIGHT — it
+# is the gate's blind spot.
+#
+# The check re-runs on label add/remove and on title edits, so applying the label (or
+# fixing a DO-NOT-MERGE title) flips the result without a push.
+#
+# KNOWN LIMITATION (deliberate): posting the `<!-- adversarial-review: ... -->` marker
+# comment does NOT retrigger this check — only label/title/push events do. Self-healing
+# on comments would need an `issue_comment`-triggered status-producing job; not worth it
+# for a visible-only gate whose documented flow is label-first.
+name: review gate
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - converted_to_draft   # a failing PR converted to draft gets the draft auto-pass
+      - labeled
+      - unlabeled
+      - edited               # title edits: adding/removing DO NOT MERGE or chore(deps must re-evaluate
+      - synchronize
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  review-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for a recorded review
+        env:
+          # Everything from the event payload comes in via env, never inline
+          # expression-interpolation into the script — PR titles are attacker-
+          # controlled text and `run:` interpolation is the classic injection sink.
+          # Label membership is computed with contains() on the label-name ARRAY
+          # (exact-element match) rather than string-joining, because label names
+          # may themselves contain commas.
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_DRAFT: ${{ github.event.pull_request.draft }}
+          HAS_REVIEWED_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'adversarial-reviewed') }}
+          HAS_EXEMPT_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'review-exempt') }}
+          HAS_DEPENDENCIES_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'dependencies') }}
+        run: |
+          set -euo pipefail
+
+          # Not a merge candidate — the author has said so.
+          if [ "$PR_DRAFT" = "true" ]; then
+            echo "::notice::Draft PR — review gate not applied until ready for review."
+            exit 0
+          fi
+          case "$PR_TITLE" in *"DO NOT MERGE"*)
+            echo "::notice::Title says DO NOT MERGE — not a merge candidate; gate not applied."
+            exit 0;;
+          esac
+
+          # Tier C auto-classification — kept in lockstep with the canonical source.
+          # Exact bot login only — a glob like dependabot* would also exempt any fork
+          # author whose login merely starts with "dependabot".
+          if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
+            echo "::notice::Tier C auto (dependabot) — no human review label required."
+            exit 0
+          fi
+          case "$PR_TITLE" in "chore(deps"*)
+            echo "::notice::Tier C auto (dependency bump) — no human review label required."
+            exit 0;;
+          esac
+          if [ "$HAS_DEPENDENCIES_LABEL" = "true" ]; then
+            echo "::notice::Tier C auto (dependencies label) — no human review label required."
+            exit 0
+          fi
+
+          # The markers.
+          if [ "$HAS_REVIEWED_LABEL" = "true" ]; then
+            echo "Reviewed — 'adversarial-reviewed' label present."
+            exit 0
+          fi
+          if [ "$HAS_EXEMPT_LABEL" = "true" ]; then
+            echo "::notice::'review-exempt' — exemption reason should be stated in a PR comment."
+            exit 0
+          fi
+
+          # Fallback: a reconciled review write-up posted as a comment, label forgotten.
+          # Capture first, then grep — `gh api --paginate | grep -q` would let grep close
+          # the pipe early and turn gh's SIGPIPE into a bogus nonzero pipeline status.
+          COMMENT_BODIES="$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '.[].body')"
+          if printf '%s' "$COMMENT_BODIES" | grep -q '<!-- adversarial-review:'; then
+            echo "::warning::Review marker comment found but the label is missing — apply 'adversarial-reviewed' so the status is visible at the merge button."
+            exit 0
+          fi
+
+          echo "::error::No adversarial review is recorded on this PR. Either run the review and apply the 'adversarial-reviewed' label, or apply 'review-exempt' with the reason in a comment. This check re-runs on label and title changes — note that posting the marker comment alone will NOT retrigger it; the label is what flips it green."
+          exit 1
