@@ -73,7 +73,6 @@ namespace Cognitive3D
             {
     #if PHOTON_UNITY_NETWORKING
                 FeatureLibrary.AddOrRemoveComponent<Cognitive3D.Components.PhotonPunMultiplayer>();
-                FeatureLibrary.AddOrRemoveComponent<Photon.Pun.PhotonView>();
     #endif
             }
             GUI.enabled = true;

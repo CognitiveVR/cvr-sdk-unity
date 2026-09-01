@@ -1085,6 +1085,54 @@ namespace Cognitive3D
 #endif
 #endif
 
+#if C3D_PHOTON && PHOTON_UNITY_NETWORKING
+            // Migration: for older versions that have a PhotonView on the Cognitive3D_Manager
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required,
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "An obsolete PhotonView is on the Cognitive3D_Manager. It is no longer used for Photon PUN 2 support and causes ViewID collisions on scene load. Remove it.",
+                fixmessage: "The obsolete PhotonView has been removed from the Cognitive3D_Manager.",
+                checkAction: () =>
+                {
+                    GameObject prefab = EditorCore.GetCognitive3DManagerPrefab();
+                    bool prefabHasView = prefab != null && prefab.GetComponent<Photon.Pun.PhotonView>() != null;
+                    bool sceneHasView = Cognitive3D_Manager.Instance != null
+                        && Cognitive3D_Manager.Instance.GetComponent<Photon.Pun.PhotonView>() != null;
+                    return !prefabHasView && !sceneHasView;
+                },
+                fixAction: () =>
+                {
+                    // Prefab asset (Feature Builder installs)
+                    GameObject prefab = EditorCore.GetCognitive3DManagerPrefab();
+                    if (prefab != null)
+                    {
+                        string assetPath = AssetDatabase.GetAssetPath(prefab);
+                        GameObject contents = PrefabUtility.LoadPrefabContents(assetPath);
+                        Photon.Pun.PhotonView prefabView = contents.GetComponent<Photon.Pun.PhotonView>();
+                        if (prefabView != null)
+                        {
+                            Object.DestroyImmediate(prefabView);
+                            PrefabUtility.SaveAsPrefabAsset(contents, assetPath);
+                        }
+                        PrefabUtility.UnloadPrefabContents(contents);
+                    }
+
+                    // Active-scene instance (legacy setup window installs)
+                    if (Cognitive3D_Manager.Instance != null)
+                    {
+                        Photon.Pun.PhotonView sceneView = Cognitive3D_Manager.Instance.GetComponent<Photon.Pun.PhotonView>();
+                        if (sceneView != null)
+                        {
+                            Object.DestroyImmediate(sceneView);
+                            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                                Cognitive3D_Manager.Instance.gameObject.scene);
+                        }
+                    }
+                }
+            );
+#endif
+
 #if FUSION2
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Recommended,
