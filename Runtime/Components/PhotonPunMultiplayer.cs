@@ -2,13 +2,23 @@ using UnityEngine;
 #if PHOTON_UNITY_NETWORKING
 using Photon.Pun;
 using Photon.Realtime;
+using ExitGames.Client.Photon;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 namespace Cognitive3D.Components
 {
     [DisallowMultipleComponent]
     // Can't inherit multiple classes: https://forum.unity.com/threads/multiple-inheritance-implementation-alternative.367802/
-    public class PhotonPunMultiplayer : MonoBehaviourPunCallbacks
+    public class PhotonPunMultiplayer : MonoBehaviourPunCallbacks, IOnEventCallback
     {
+        // Photon event codes used instead of PhotonView RPCs, so this component does not
+        // require a PhotonView on Cognitive3D_Manager (a scene PhotonView on a persistent
+        // manager collides with scene ViewIDs in newly loaded scenes). Codes 0-199 are
+        // available for application use; 200-255 are reserved by Photon.
+        private const byte EVENT_PLAYER_JOINED = 1;
+        private const byte EVENT_CALCULATE_CONNECTIONS = 2;
+        private const string LOBBY_ID_ROOM_PROPERTY = "c3d.lobbyId";
+
         private int playerPhotonActorNumber;
         private int maxPlayerPhotonActorConnected;
         private int currentPlayerPhotonActorConnected;
@@ -53,9 +63,9 @@ namespace Cognitive3D.Components
                 Debug.LogWarning("Photon Multiplayer component is disabled. Please enable in inspector.");
             }
         }
-   
+
         /// <summary>
-        /// Records sensor values for 
+        /// Records sensor values for
         /// </summary>
         private void RecordSensorValues()
         {
@@ -84,7 +94,6 @@ namespace Cognitive3D.Components
                     .SetProperty("Player ID", playerPhotonActorNumber)
                     .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                     .Send();
-                GenerateAndSetLobbyIDForAllClients();
             }
         }
 
@@ -103,8 +112,23 @@ namespace Cognitive3D.Components
                     .SetProperty("Player ID", playerPhotonActorNumber)
                     .SetProperty("Number of players in room", PhotonNetwork.CurrentRoom.PlayerCount)
                     .Send();
-                this.photonView.RPC("SendCustomEventOnJoin", RpcTarget.All, playerPhotonActorNumber);
-                this.photonView.RPC("CalculateNumberConnections", RpcTarget.AllBuffered);
+                // Broadcast to everyone (incl. self)
+                PhotonNetwork.RaiseEvent(EVENT_PLAYER_JOINED, playerPhotonActorNumber,
+                    new RaiseEventOptions { Receivers = ReceiverGroup.All }, SendOptions.SendReliable);
+
+                // Broadcast to everyone and cache for late joiners
+                PhotonNetwork.RaiseEvent(EVENT_CALCULATE_CONNECTIONS, null,
+                    new RaiseEventOptions { Receivers = ReceiverGroup.All, CachingOption = EventCaching.AddToRoomCache },
+                    SendOptions.SendReliable);
+
+                // The master client generates the lobby id once and stores it in room state.
+                // Every client (including clients that join later) reads it below / via
+                // OnRoomPropertiesUpdate, so all sessions share the same lobby id.
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    EnsureLobbyId();
+                }
+                ApplyLobbyIdFromRoomProperties();
             }
         }
 
@@ -161,6 +185,21 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
+        /// Called when room custom properties change. Applies the shared lobby id as soon
+        /// as the master client publishes it (covers clients that were already in the room
+        /// before the id was assigned).
+        /// </summary>
+        /// <param name="propertiesThatChanged">The room properties that changed</param>
+        public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+        {
+            base.OnRoomPropertiesUpdate(propertiesThatChanged);
+            if (propertiesThatChanged != null && propertiesThatChanged.ContainsKey(LOBBY_ID_ROOM_PROPERTY))
+            {
+                ApplyLobbyIdFromRoomProperties();
+            }
+        }
+
+        /// <summary>
         /// Sets session properties for multiplayer related details
         /// </summary>
         private void SetMultiplayerSessionProperties()
@@ -176,32 +215,63 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Generate and assigns a lobby id for all participants
-        /// Helpful for identifying multiple individual sessions as part of a multiplayer sessions
-        /// For more info, see: https://docs.cognitive3d.com/unity/multiplayer/#lobby-id
+        /// Master-client only: generates the shared lobby id and writes it into room state once,
+        /// if it hasn't been set yet. The "already set" check keeps the id stable across master
+        /// migration. Helpful for identifying multiple individual sessions as part of one
+        /// multiplayer session
         /// </summary>
-        private void GenerateAndSetLobbyIDForAllClients()
+        private void EnsureLobbyId()
         {
-            string lobbyID = System.Guid.NewGuid().ToString();
-            this.photonView.RPC("SetLobbyAndViewID", RpcTarget.AllBuffered, lobbyID);
+            if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(LOBBY_ID_ROOM_PROPERTY, out object existing)
+                && existing is string existingId && !string.IsNullOrEmpty(existingId))
+            {
+                return; // already assigned (e.g. by a previous master client)
+            }
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+            {
+                { LOBBY_ID_ROOM_PROPERTY, System.Guid.NewGuid().ToString() }
+            });
+        }
+
+        /// <summary>
+        /// Reads the shared lobby id from the current room's properties
+        /// No-op if the id hasn't been published yet.
+        /// </summary>
+        private void ApplyLobbyIdFromRoomProperties()
+        {
+            if (PhotonNetwork.CurrentRoom != null
+                && PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(LOBBY_ID_ROOM_PROPERTY, out object value)
+                && value is string lobbyId && !string.IsNullOrEmpty(lobbyId))
+            {
+                Cognitive3D_Manager.SetLobbyId(lobbyId);
+            }
         }
 
 
-#region RPC
+#region Photon Events
         /// <summary>
-        /// RPC to set lobbyID for all participants
+        /// Receives the Photon events raised in place of RPCs. Registration is handled by
+        /// MonoBehaviourPunCallbacks (AddCallbackTarget on enable, removed on disable), since
+        /// this class implements IOnEventCallback.
         /// </summary>
-        /// <param name="lobbyID">The lobbyID as a string</param>
-        [PunRPC]
-        private void SetLobbyAndViewID(string lobbyID)
+        /// <param name="photonEvent">The received Photon event</param>
+        public void OnEvent(EventData photonEvent)
         {
-            Cognitive3D_Manager.SetLobbyId(lobbyID);
+            switch (photonEvent.Code)
+            {
+                case EVENT_PLAYER_JOINED:
+                    SendCustomEventOnJoin((int)photonEvent.CustomData);
+                    break;
+                case EVENT_CALCULATE_CONNECTIONS:
+                    CalculateNumberConnections();
+                    break;
+            }
         }
 
         /// <summary>
         /// Calculates the maximum players in the room
         /// </summary>
-        [PunRPC]
         private void CalculateNumberConnections()
         {
             if (PhotonNetwork.CurrentRoom != null)
@@ -215,10 +285,9 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// RPC when a player joins a room <br/>
+        /// Fired when a player joins a room <br/>
         /// For other users: Participant A sends event when participant B joins
         /// </summary>
-        [PunRPC]
         private void SendCustomEventOnJoin(int actorNumber)
         {
             if (PhotonNetwork.CurrentRoom != null)
