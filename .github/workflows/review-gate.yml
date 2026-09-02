@@ -1,4 +1,11 @@
-# Canonical copy maintained in the team's internal orchestration repo — edit there first, then re-roll.
+# Canonical copy maintained in the team's internal orchestration repo — edit there first,
+# then re-roll to each repo as .github/workflows/review-gate.yml. Keep the Tier-C
+# auto-classification in lockstep with the canonical audit script.
+#
+# THIS FILE SHIPS TO PUBLIC REPOSITORIES. Keep it free of internal ticket IDs, internal
+# repo/service names, private paths and incident narratives — the rationale belongs in the
+# internal tracker, not here. Two of the four repos it rolls out to are public, and a
+# previous roll-out silently replaced this sanitised header with the internal one.
 #
 # WHAT THIS IS. A VISIBLE (non-required) check that fails when a pull request carries
 # neither the `adversarial-reviewed` nor the `review-exempt` label. It makes review
@@ -56,6 +63,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_DRAFT: ${{ github.event.pull_request.draft }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           HAS_REVIEWED_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'adversarial-reviewed') }}
           HAS_EXEMPT_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'review-exempt') }}
           HAS_DEPENDENCIES_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'dependencies') }}
@@ -72,7 +80,7 @@ jobs:
             exit 0;;
           esac
 
-          # Tier C auto-classification — kept in lockstep with the canonical source.
+          # Tier C auto-classification — kept in lockstep with the canonical audit script.
           # Exact bot login only — a glob like dependabot* would also exempt any fork
           # author whose login merely starts with "dependabot".
           if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
@@ -88,23 +96,63 @@ jobs:
             exit 0
           fi
 
-          # The markers.
-          if [ "$HAS_REVIEWED_LABEL" = "true" ]; then
-            echo "Reviewed — 'adversarial-reviewed' label present."
-            exit 0
-          fi
+          # A deliberate no-review. Not head-sensitive: an exemption is a judgement about
+          # the KIND of change, so it does not go stale when the branch moves.
           if [ "$HAS_EXEMPT_LABEL" = "true" ]; then
             echo "::notice::'review-exempt' — exemption reason should be stated in a PR comment."
             exit 0
           fi
 
-          # Fallback: a reconciled review write-up posted as a comment, label forgotten.
           # Capture first, then grep — `gh api --paginate | grep -q` would let grep close
           # the pipe early and turn gh's SIGPIPE into a bogus nonzero pipeline status.
           COMMENT_BODIES="$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '.[].body')"
-          if printf '%s' "$COMMENT_BODIES" | grep -q '<!-- adversarial-review:'; then
-            echo "::warning::Review marker comment found but the label is missing — apply 'adversarial-reviewed' so the status is visible at the merge button."
-            exit 0
+
+          # HEAD-DRIFT CHECK.
+          #
+          # Until this existed the gate was HEAD-BLIND: it passed on label presence alone
+          # and never read the marker's head=. Because it fires on `synchronize` — the one
+          # event that INVALIDATES a marker — it re-ran and confidently passed exactly when
+          # it was most likely wrong. That has happened: a feature reached a production
+          # branch fully unreviewed while the PR carried a valid `adversarial-reviewed`
+          # label and two human approvals throughout. A head-blind REQUIRED check is worse
+          # than an advisory one, so this landed before enforcement mode was considered.
+          #
+          # Semantics are deliberately identical to the canonical audit script (keep them in
+          # lockstep — two answers to "is this reviewed?" that disagree is its own defect):
+          #   * take the LAST head= across all marker comments, because a supplemental pass
+          #     re-anchors the marker to a newer head and must win;
+          #   * a marker carrying NO head= is "cannot verify", NOT "drifted" — older markers
+          #     predate the field, and failing them would punish history rather than risk.
+          # Two flags here are load-bearing, and both were caught by break-testing rather
+          # than by reading:
+          #   * `|| true` — under `set -o pipefail` a grep that matches nothing returns 1
+          #     and would abort the whole step;
+          #   * `--color=never` — a colourising grep wraps the MATCH itself in ANSI escapes,
+          #     so MARKER_HEAD would never string-equal PR_HEAD_SHA and the gate would
+          #     report HEAD DRIFT on every correctly-reviewed PR. It fails closed and loud,
+          #     but it is wrong, and it only reproduces where grep decides to colourise.
+          MARKER_HEAD="$(printf '%s' "$COMMENT_BODIES" \
+            | grep -o --color=never 'head=[0-9a-f]\{40\}' | tail -1 | sed 's/head=//' || true)"
+
+          if [ "$HAS_REVIEWED_LABEL" = "true" ] \
+             || printf '%s' "$COMMENT_BODIES" | grep -q '<!-- adversarial-review:'; then
+
+            if [ "$HAS_REVIEWED_LABEL" != "true" ]; then
+              echo "::warning::Review marker comment found but the label is missing — apply 'adversarial-reviewed' so the status is visible at the merge button."
+            fi
+
+            if [ -z "$MARKER_HEAD" ]; then
+              echo "::warning::A review is recorded, but no marker carries head=<sha>, so it cannot be verified against the current head ${PR_HEAD_SHA}. Not proven stale — not proven current either. Re-post the marker with head=<full 40-char sha>."
+              exit 0
+            fi
+
+            if [ "$MARKER_HEAD" = "$PR_HEAD_SHA" ]; then
+              echo "Reviewed — marker covers the current head ${PR_HEAD_SHA}."
+              exit 0
+            fi
+
+            echo "::error::HEAD DRIFT — the review marker covers ${MARKER_HEAD} but this PR's head is now ${PR_HEAD_SHA}. Commits landed since the review was posted, so the recorded review no longer covers what would actually merge. Diff ${MARKER_HEAD}..${PR_HEAD_SHA} to scope the delta, run a supplemental review on it, and post an updated marker with the new head."
+            exit 1
           fi
 
           echo "::error::No adversarial review is recorded on this PR. Either run the review and apply the 'adversarial-reviewed' label, or apply 'review-exempt' with the reason in a comment. This check re-runs on label and title changes — note that posting the marker comment alone will NOT retrigger it; the label is what flips it green."
