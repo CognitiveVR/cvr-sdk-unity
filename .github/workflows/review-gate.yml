@@ -1,6 +1,11 @@
-# CANONICAL COPY — ~/reviews/tools/adversarial-review-gate.yml (moved from the meta-repo 2026-08-17).
-# Rolled out per-repo as .github/workflows/review-gate.yml (C3D-2204). Edit HERE first,
-# then re-roll; keep the Tier-C auto-classification in lockstep with tools/review-gate.sh.
+# Canonical copy maintained in the team's internal orchestration repo — edit there first,
+# then re-roll to each repo as .github/workflows/review-gate.yml. Keep the Tier-C
+# auto-classification in lockstep with the canonical audit script.
+#
+# THIS FILE SHIPS TO PUBLIC REPOSITORIES. Keep it free of internal ticket IDs, internal
+# repo/service names, private paths and incident narratives — the rationale belongs in the
+# internal tracker, not here. Two of the four repos it rolls out to are public, and a
+# previous roll-out silently replaced this sanitised header with the internal one.
 #
 # WHAT THIS IS. A VISIBLE (non-required) check that fails when a pull request carries
 # neither the `adversarial-reviewed` nor the `review-exempt` label. It makes review
@@ -75,7 +80,7 @@ jobs:
             exit 0;;
           esac
 
-          # Tier C auto-classification (lockstep with the meta-repo review-gate script).
+          # Tier C auto-classification — kept in lockstep with the canonical audit script.
           # Exact bot login only — a glob like dependabot* would also exempt any fork
           # author whose login merely starts with "dependabot".
           if [ "$PR_AUTHOR" = "dependabot[bot]" ]; then
@@ -102,18 +107,17 @@ jobs:
           # the pipe early and turn gh's SIGPIPE into a bogus nonzero pipeline status.
           COMMENT_BODIES="$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '.[].body')"
 
-          # HEAD-DRIFT CHECK (added 2026-09-02, C3D-2204).
+          # HEAD-DRIFT CHECK.
           #
           # Until this existed the gate was HEAD-BLIND: it passed on label presence alone
           # and never read the marker's head=. Because it fires on `synchronize` — the one
           # event that INVALIDATES a marker — it re-ran and confidently passed exactly when
-          # it was most likely wrong. That is not theoretical: c3d-mcp-server#170 shipped a
-          # real feature to production fully unreviewed while carrying a valid
-          # `adversarial-reviewed` label and two human approvals the whole time.
-          # A head-blind REQUIRED check is worse than an advisory one, so this had to land
-          # before enforcement mode is switched on.
+          # it was most likely wrong. That has happened: a feature reached a production
+          # branch fully unreviewed while the PR carried a valid `adversarial-reviewed`
+          # label and two human approvals throughout. A head-blind REQUIRED check is worse
+          # than an advisory one, so this landed before enforcement mode was considered.
           #
-          # Semantics are deliberately identical to tools/review-gate.sh (keep them in
+          # Semantics are deliberately identical to the canonical audit script (keep them in
           # lockstep — two answers to "is this reviewed?" that disagree is its own defect):
           #   * take the LAST head= across all marker comments, because a supplemental pass
           #     re-anchors the marker to a newer head and must win;
