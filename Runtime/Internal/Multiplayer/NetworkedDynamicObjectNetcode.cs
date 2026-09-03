@@ -82,6 +82,26 @@ namespace Cognitive3D
         }
 
         /// <summary>
+        /// Returns the transform holding the NetworkObject this object belongs to.
+        /// </summary>
+        internal override Transform GetNetworkRootTransform()
+        {
+            if (networkObject != null)
+            {
+                return networkObject.transform;
+            }
+
+            if (networkTransform != null)
+            {
+                return networkTransform.NetworkObject != null
+                    ? networkTransform.NetworkObject.transform
+                    : networkTransform.transform;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Checks if this NetworkObject is a player avatar/rig.
         /// Requests server verification and returns the cached NetworkVariable value.
         /// </summary>

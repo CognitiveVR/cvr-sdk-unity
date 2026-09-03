@@ -271,6 +271,26 @@ namespace Cognitive3D
             return false;
         }
 
+        /// <summary>
+        /// Returns the transform holding the NetworkObject this object belongs to.
+        /// </summary>
+        internal override Transform GetNetworkRootTransform()
+        {
+            if (networkObject != null)
+            {
+                return networkObject.transform;
+            }
+
+            if (networkTransform != null)
+            {
+                return networkTransform.Object != null
+                    ? networkTransform.Object.transform
+                    : networkTransform.transform;
+            }
+
+            return null;
+        }
+
         public static GameObject GetHighestParent(GameObject obj)
         {
             if (obj == null)

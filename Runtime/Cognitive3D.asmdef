@@ -38,11 +38,12 @@
         "Unity.InputSystem",
         "Unity.Netcode.Components",
         "Unity.Collections",
-        "Photon.Realtime"
+        "Photon.Realtime",
+        "Unity.Services.Multiplayer"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

@@ -249,6 +249,7 @@ namespace Cognitive3D.Components
         public void OnObjectExitAOI(NetworkRunner runner, NetworkObject player, PlayerRef playerRef) { }
 
         public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject player, PlayerRef playerRef)  { }
+        void INetworkRunnerCallbacks.OnReliableDataReceived(NetworkRunner runner, PlayerRef playerRef, ReliableKey key, ReadOnlySpan<byte> bytes) { }
 
         void INetworkRunnerCallbacks.OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
 

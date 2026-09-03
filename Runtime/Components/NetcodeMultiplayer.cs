@@ -22,15 +22,62 @@ namespace Cognitive3D.Components
         private const float NETCODE_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
         private float currentTime = 0;
 
-        // private static string lobbyID = string.Empty;
+        // Server-authoritative lobby ID, replicated to every client. The server is the only writer
         public NetworkVariable<FixedString64Bytes> lobbyID = new(
             new FixedString64Bytes(),
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server
         );
 
+        // Optional lobby ID supplied by the game via SetLobbyId(). When present it is used
+        // instead of a generated GUID. Static so it can be set before this object spawns.
+        private static string externalLobbyId;
+
+        // Tracks the active instance so a late SetLobbyId() call can push the value onto
+        // the NetworkVariable once the object is spawned on the server.
+        private static NetcodeMultiplayer instance;
+
+        /// <summary>
+        /// Provide an authoritative lobby/room ID from your matchmaking layer
+        /// (for example <c>Lobby.Id</c> from Unity's Lobby service)
+        /// </summary>
+        /// <param name="lobbyId">The authoritative lobby ID, or null/empty to clear the override.</param>
+        public static void SetLobbyId(string lobbyId)
+        {
+            externalLobbyId = lobbyId;
+
+            // If the server instance is already live, apply immediately so a late-arriving
+            // ID (e.g. from an async lobby join) still replicates to connected clients.
+            if (!string.IsNullOrEmpty(lobbyId) && instance != null && instance.IsSpawned && instance.IsServer)
+            {
+                instance.lobbyID.Value = lobbyId;
+            }
+        }
+
+        /// <summary>
+        /// Returns the game-supplied lobby ID when one was provided, otherwise a new GUID.
+        /// </summary>
+        private static string ResolveLobbyId()
+        {
+            return string.IsNullOrEmpty(externalLobbyId) ? Guid.NewGuid().ToString() : externalLobbyId;
+        }
+
+        /// <summary>
+        /// Server-only: assigns the replicated lobby ID once, if it hasn't been set yet.
+        /// </summary>
+        private void EnsureLobbyId()
+        {
+            if (IsServer && string.IsNullOrEmpty(lobbyID.Value.ToString()))
+            {
+                lobbyID.Value = ResolveLobbyId();
+                Debug.Log($"Netcode lobby ID set: {lobbyID.Value}");
+            }
+        }
+
         protected void Awake()
         {
+            instance = this;
+
             Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
@@ -184,11 +231,9 @@ namespace Cognitive3D.Components
         /// </summary>
         protected void OnServerStartedCallback()
         {
-            // Generate lobby ID when server starts (for dedicated servers with no host player)
-            if (IsServer && string.IsNullOrEmpty(lobbyID.Value.ToString()))
-            {
-                lobbyID.Value = Guid.NewGuid().ToString();
-            }
+            // Assign the lobby ID when the server starts (game-supplied ID if provided,
+            // otherwise a generated GUID). Covers dedicated servers with no host player.
+            EnsureLobbyId();
 
             new CustomEvent("c3d.multiplayer.server_started")
                     .Send();
@@ -214,11 +259,23 @@ namespace Cognitive3D.Components
                     .Send();
             }
 
-            // Reset lobby ID so a new one is generated when creating a new room
+            // Clear the replicated lobby ID so the next room gets a fresh one. If the game
+            // supplied an ID via SetLobbyId(), it should set a new one (or SetLobbyId(null))
+            // before starting the next room, otherwise the previous override is reused.
             if (IsServer)
             {
                 lobbyID.Value = new FixedString64Bytes();
             }
+        }
+
+        public override void OnDestroy()
+        {
+            if (instance == this)
+            {
+                instance = null;
+            }
+
+            base.OnDestroy();
         }
 
         /// <summary>
@@ -246,10 +303,8 @@ namespace Cognitive3D.Components
         [Rpc(SendTo.Server)]
         private void RequestLobbyIDServerRpc()
         {
-            if (string.IsNullOrEmpty(lobbyID.Value.ToString()))
-            {
-                lobbyID.Value = Guid.NewGuid().ToString();
-            }
+            // Safety net for a client that connected before the server assigned the ID.
+            EnsureLobbyId();
         }
 
         /// <summary>

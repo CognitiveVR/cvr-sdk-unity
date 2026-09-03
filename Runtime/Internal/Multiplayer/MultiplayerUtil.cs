@@ -20,6 +20,11 @@ namespace Cognitive3D
             {
                 return true;
             }
+#elif C3D_PHOTON && PUN_2_0_OR_NEWER
+            if (obj.GetComponent<Photon.Pun.PhotonView>() || obj.GetComponent<Photon.Pun.PhotonTransformView>())
+            {
+                return true;
+            }
 #elif COGNITIVE3D_INCLUDE_UNITY_NETCODE
             if (obj.GetComponent<Unity.Netcode.NetworkObject>() || obj.GetComponent<Unity.Netcode.Components.NetworkTransform>())
             {
@@ -39,6 +44,8 @@ namespace Cognitive3D
             if (obj == null || obj.GetComponent<NetworkedDynamicObjectBase>()) return;
 #if FUSION2
             obj.AddComponent<NetworkedDynamicObjectPhotonFusion>();
+#elif C3D_PHOTON && PUN_2_0_OR_NEWER
+            obj.AddComponent<NetworkedDynamicObjectPhotonPun2>();
 #elif COGNITIVE3D_INCLUDE_UNITY_NETCODE
             obj.AddComponent<NetworkedDynamicObjectNetcode>();
 #elif COGNITIVE3D_INCLUDE_NORMCORE
@@ -82,10 +89,24 @@ namespace Cognitive3D
             var networkedComponent = obj.GetComponent<NetworkedDynamicObjectBase>();
             if (networkedComponent != null)
             {
-                return networkedComponent.GetNetworkIdString();
+                return AppendRelativeId(networkedComponent.GetNetworkIdString(), networkedComponent);
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Appends the deterministic per-child relative id to a base network id, so that
+        /// objects sharing a parent's network id remain distinguishable across clients.
+        /// The relative id is empty when the object holds the network identity itself,
+        /// in which case the base id is returned unchanged.
+        /// </summary>
+        private static string AppendRelativeId(string baseId, NetworkedDynamicObjectBase networkedComponent)
+        {
+            if (string.IsNullOrEmpty(baseId)) return baseId;
+
+            string relativeId = networkedComponent.GetNetworkRelativeId();
+            return string.IsNullOrEmpty(relativeId) ? baseId : baseId + "-" + relativeId;
         }
 
         /// <summary>
@@ -100,7 +121,7 @@ namespace Cognitive3D
             var networkedComponent = obj.GetComponent<NetworkedDynamicObjectBase>();
             if (networkedComponent != null)
             {
-                return networkedComponent.GetOwnerId();
+                return AppendRelativeId(networkedComponent.GetOwnerId(), networkedComponent);
             }
 
             return null;
