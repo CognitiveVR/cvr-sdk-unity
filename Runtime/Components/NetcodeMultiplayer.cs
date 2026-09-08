@@ -22,11 +22,11 @@ namespace Cognitive3D.Components
         private const float NETCODE_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
         private float currentTime = 0;
 
-        // Server-authoritative lobby ID, replicated to every client. The server is the only writer
+        // Authority-owned lobby ID, replicated to every client
         public NetworkVariable<FixedString64Bytes> lobbyID = new(
             new FixedString64Bytes(),
             NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
+            NetworkVariableWritePermission.Owner
         );
 
         // Optional lobby ID supplied by the game via SetLobbyId(). When present it is used
@@ -46,9 +46,8 @@ namespace Cognitive3D.Components
         {
             externalLobbyId = lobbyId;
 
-            // If the server instance is already live, apply immediately so a late-arriving
-            // ID (e.g. from an async lobby join) still replicates to connected clients.
-            if (!string.IsNullOrEmpty(lobbyId) && instance != null && instance.IsSpawned && instance.IsServer)
+            // If the authority instance is already live, apply immediately so a late-arriving
+            if (!string.IsNullOrEmpty(lobbyId) && instance != null && instance.IsSpawned && instance.IsOwner)
             {
                 instance.lobbyID.Value = lobbyId;
             }
@@ -63,11 +62,12 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Server-only: assigns the replicated lobby ID once, if it hasn't been set yet.
+        /// Authority-only (the owner: server in client-server, session owner in distributed
+        /// authority): assigns the replicated lobby ID once, if it hasn't been set yet.
         /// </summary>
         private void EnsureLobbyId()
         {
-            if (IsServer && string.IsNullOrEmpty(lobbyID.Value.ToString()))
+            if (IsOwner && string.IsNullOrEmpty(lobbyID.Value.ToString()))
             {
                 lobbyID.Value = ResolveLobbyId();
                 Debug.Log($"Netcode lobby ID set: {lobbyID.Value}");
@@ -95,6 +95,45 @@ namespace Cognitive3D.Components
             if (!string.IsNullOrEmpty(newValueStr))
             {
                 Cognitive3D_Manager.SetLobbyId(newValueStr);
+            }
+        }
+
+        /// <summary>
+        /// Spawned on every peer. The authority (server in client-server, session owner in
+        /// distributed authority) assigns the lobby ID here
+        /// </summary>
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (IsOwner)
+            {
+                EnsureLobbyId();
+            }
+            else
+            {
+                // Non-authority peers: adopt the already-replicated value for this session.
+                // OnValueChanged does not fire for the initial synchronized value.
+                string currentLobbyId = lobbyID.Value.ToString();
+                if (!string.IsNullOrEmpty(currentLobbyId))
+                {
+                    Cognitive3D_Manager.SetLobbyId(currentLobbyId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fires when this peer becomes the owner (e.g. session-owner promotion in distributed
+        /// authority after the previous owner leaves). Ensures the lobby ID exists on the new
+        /// authority; the existing value is preserved because EnsureLobbyId only assigns when empty.
+        /// </summary>
+        public override void OnGainedOwnership()
+        {
+            base.OnGainedOwnership();
+
+            if (IsOwner)
+            {
+                EnsureLobbyId();
             }
         }
 
@@ -165,8 +204,8 @@ namespace Cognitive3D.Components
         /// <param name="clientId"></param>
         protected void OnClientConnectedCallback(ulong clientId)
         {
-            // Request server to initialize lobby ID if needed
-            RequestLobbyIDServerRpc();
+            // Ask the authority (owner) to initialize the lobby ID if needed
+            RequestLobbyIDOwnerRpc();
 
             // Clients need to sync the lobby ID when they first connect (OnValueChanged doesn't fire for initial sync)
             if (IsClient && !IsServer)
@@ -262,7 +301,7 @@ namespace Cognitive3D.Components
             // Clear the replicated lobby ID so the next room gets a fresh one. If the game
             // supplied an ID via SetLobbyId(), it should set a new one (or SetLobbyId(null))
             // before starting the next room, otherwise the previous override is reused.
-            if (IsServer)
+            if (IsOwner)
             {
                 lobbyID.Value = new FixedString64Bytes();
             }
@@ -298,12 +337,12 @@ namespace Cognitive3D.Components
 
         #region RPC
         /// <summary>
-        /// Requests the server to generate a lobby ID if one doesn't exist
+        /// Requests the authority (owner) to generate a lobby ID if one doesn't exist
         /// </summary>
-        [Rpc(SendTo.Server)]
-        private void RequestLobbyIDServerRpc()
+        [Rpc(SendTo.Owner)]
+        private void RequestLobbyIDOwnerRpc()
         {
-            // Safety net for a client that connected before the server assigned the ID.
+            // Safety net for a peer that connected before the authority assigned the ID
             EnsureLobbyId();
         }
 
