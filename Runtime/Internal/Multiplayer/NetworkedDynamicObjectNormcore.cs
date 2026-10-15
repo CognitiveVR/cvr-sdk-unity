@@ -15,7 +15,7 @@ namespace Cognitive3D
     {
         private RealtimeView realtimeView;
 
-        protected override void OnEnable()
+        internal override void OnEnable()
         {
             realtimeView = GetComponent<RealtimeView>();
             base.OnEnable();
@@ -24,25 +24,31 @@ namespace Cognitive3D
         /// <summary>
         /// Checks if the Normcore RealtimeView is connected and has a valid ID.
         /// </summary>
-        protected override bool IsNetworkObjectValid()
+        internal override bool IsNetworkObjectValid()
         {
-            // Check if RealtimeView exists, is connected to room, and has a valid view UUID
-            return realtimeView != null &&
-                   realtimeView.isOwnedLocally != null && // This checks if realtime is connected
-                   realtimeView.viewUUID != 0; // ViewUUID is assigned when spawned
+            // Ownership properties throw until the view has a model, so only check
+            // connection state and the view UUID here (owned locally or remotely is still valid)
+            return HasModel() &&
+                   string.IsNullOrEmpty(realtimeView.viewUUID) == false; // ViewUUID is assigned when spawned
         }
 
         /// <summary>
-        /// Logs information about the Normcore RealtimeView including ownership.
+        /// True once the RealtimeView is registered with a connected Realtime instance,
+        /// which is when Normcore assigns its model and ownership can be queried safely.
         /// </summary>
-        protected override void LogNetworkObjectInfo()
+        private bool HasModel()
         {
-            if (realtimeView != null)
-            {
-                string ownerType = realtimeView.isOwnedLocally ? "LOCAL" : "REMOTE";
-                string ownerId = GetOwnerId();
-                Debug.Log($"[Normcore] [{ownerType}] RealtimeView UUID: {realtimeView.viewUUID}, Owner: {ownerId}, Name: {gameObject.name}, Total Count: {MultiplayerUtil.networkedObjCounter}");
-            }
+            return realtimeView != null &&
+                   realtimeView.realtime != null &&
+                   realtimeView.realtime.connected;
+        }
+
+        /// <summary>
+        /// Gets the RealtimeView UUID that Normcore assigns to this object.
+        /// </summary>
+        internal override string GetNetworkIdString()
+        {
+            return realtimeView != null ? realtimeView.viewUUID : null;
         }
 
         /// <summary>
@@ -50,9 +56,9 @@ namespace Cognitive3D
         /// In Normcore, ownership is determined by the ownerIDInHierarchy or ownerID.
         /// </summary>
         /// <returns>The owner's client ID as a string, or "None" if unowned</returns>
-        public override string GetOwnerId()
+        internal override string GetOwnerId()
         {
-            if (realtimeView != null)
+            if (HasModel())
             {
                 // ownerIDInHierarchy includes ownership from parent objects
                 int ownerId = realtimeView.ownerIDInHierarchy;
@@ -70,59 +76,27 @@ namespace Cognitive3D
         /// </summary>
         internal override bool IsOwnedLocally()
         {
-            return realtimeView != null && realtimeView.isOwnedLocally;
+            return HasModel() && realtimeView.isOwnedLocallySelf;
         }
 
         /// <summary>
         /// Checks if this RealtimeView is a player avatar/rig.
         /// For Normcore, checks:
-        /// 1. If it has a RealtimeAvatar component (Normcore's built-in avatar system)
-        /// 2. Component name patterns (Player, Avatar, etc.)
-        /// 3. GameObject name patterns
+        /// 1. If it is, or sits under, a RealtimeAvatar (Normcore's built-in avatar system)
+        /// 2. GameObject name patterns in the hierarchy
+        /// Component type names are not checked because they misclassify props (e.g. "Rig" matches Rigidbody).
         /// </summary>
         internal override bool IsPlayerAvatar()
         {
-            if (realtimeView == null || realtimeView.viewUUID == 0) return false;
+            if (realtimeView == null || string.IsNullOrEmpty(realtimeView.viewUUID)) return false;
 
             // Method 1: Check for RealtimeAvatar component (Normcore's avatar system) in hierarchy
-            var realtimeAvatar = GetComponentInParent<Normal.Realtime.RealtimeAvatar>();
-            if (realtimeAvatar != null)
+            if (GetComponentInParent<RealtimeAvatar>(true) != null)
             {
                 return true;
             }
 
-            var realtimeAvatarInChildren = GetComponentInChildren<Normal.Realtime.RealtimeAvatar>();
-            if (realtimeAvatarInChildren != null)
-            {
-                return true;
-            }
-
-            // Method 2: Check for common player-related components in hierarchy
-            // Check all ancestors (self, parent, grandparent, etc.)
-            var allAncestorComponents = GetComponentsInParent<Component>(true);
-            foreach (var component in allAncestorComponents)
-            {
-                string typeName = component.GetType().Name;
-                if (typeName.Contains("Player") || typeName.Contains("Character") ||
-                    typeName.Contains("Avatar") || typeName.Contains("Rig"))
-                {
-                    return true;
-                }
-            }
-
-            // Check all descendants (children, grandchildren, etc.)
-            var childComponents = GetComponentsInChildren<Component>(true);
-            foreach (var component in childComponents)
-            {
-                string typeName = component.GetType().Name;
-                if (typeName.Contains("Player") || typeName.Contains("Character") ||
-                    typeName.Contains("Avatar") || typeName.Contains("Rig"))
-                {
-                    return true;
-                }
-            }
-
-            // Method 3: Check GameObject name patterns in hierarchy
+            // Method 2: Check GameObject name patterns in hierarchy
             // Check all ancestors (self, parent, grandparent, etc.)
             Transform currentTransform = transform;
             while (currentTransform != null)
