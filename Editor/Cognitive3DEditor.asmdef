@@ -87,7 +87,7 @@
         },
         {
             "name": "com.normalvr.normcore",
-            "expression": "",
+            "expression": "2.6.0",
             "define": "COGNITIVE3D_INCLUDE_NORMCORE"
         },
         {
