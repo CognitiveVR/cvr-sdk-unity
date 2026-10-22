@@ -104,7 +104,9 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<Passthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<SocialPlatform>();
+#pragma warning disable 0618 // MetaPhysicalRoomSize is obsolete (use RoomCapture); legacy window keeps it for Meta Core < v68
                 wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<MetaPhysicalRoomSize>();
+#pragma warning restore 0618
             }
 #endif
         }
@@ -152,7 +154,9 @@ namespace Cognitive3D
             {
                 wantPassthroughEnabled = Cognitive3D_Manager.Instance.GetComponent<Passthrough>();
                 wantSocialEnabled = Cognitive3D_Manager.Instance.GetComponent<SocialPlatform>();
+#pragma warning disable 0618
                 wantSceneApiEnabled = Cognitive3D_Manager.Instance.GetComponent<MetaPhysicalRoomSize>();
+#pragma warning restore 0618
             }
 #endif
         }
@@ -1055,11 +1059,13 @@ namespace Cognitive3D
             {
 #if !COGNITIVE3D_INCLUDE_META_CORE_65_OR_NEWER
                 // Do not modify OVRManager permissions
+#pragma warning disable 0618
                 var sceneApi = FindFirstObjectByType<MetaPhysicalRoomSize>();
                 if (sceneApi == null)
                 {
                     Cognitive3D_Manager.Instance.gameObject.AddComponent<MetaPhysicalRoomSize>();
                 }
+#pragma warning restore 0618
                 GameObject sceneManager = FindFirstObjectByType<OVRSceneManager>()?.gameObject;
                 if (sceneManager == null)
                 {
@@ -1111,11 +1117,13 @@ namespace Cognitive3D
                 // Do not modify OVRManager permissions
                 
                 // Component in C3D_Manager prefab
+#pragma warning disable 0618
                 var sceneApi = FindFirstObjectByType<MetaPhysicalRoomSize>();
                 if (sceneApi != null)
                 {
                     DestroyImmediate(sceneApi);
                 }
+#pragma warning restore 0618
 
                 // Scene manager that we created
                 GameObject sceneManager = GameObject.Find(SCENE_MANAGER_NAME);
