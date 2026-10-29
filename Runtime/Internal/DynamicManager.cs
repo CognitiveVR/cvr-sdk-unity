@@ -650,7 +650,7 @@ namespace Cognitive3D
                         sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
                         sb.Append("\":");
 
-                        if (ActiveDynamicObjectsArray[i].Properties[j].Value is string)
+                        if (ActiveDynamicObjectsArray[i].Properties[j].Value is string || ActiveDynamicObjectsArray[i].Properties[j].Value is char)
                         {
                             sb.Append("\"");
                             sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
@@ -775,7 +775,7 @@ namespace Cognitive3D
                             sb.Append(ActiveInputsArray[i].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (ActiveInputsArray[i].Properties[j].Value is string)
+                            if (ActiveInputsArray[i].Properties[j].Value is string || ActiveInputsArray[i].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(ActiveInputsArray[i].Properties[j].Value);
@@ -975,7 +975,7 @@ namespace Cognitive3D
                             sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (ActiveDynamicObjectsArray[i].Properties[j].Value is string)
+                            if (ActiveDynamicObjectsArray[i].Properties[j].Value is string || ActiveDynamicObjectsArray[i].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
@@ -1196,7 +1196,7 @@ namespace Cognitive3D
                             sb.Append(array[index].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (array[index].Properties[j].Value is string)
+                            if (array[index].Properties[j].Value is string || array[index].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(array[index].Properties[j].Value);
@@ -1345,7 +1345,7 @@ namespace Cognitive3D
                             sb.Append(array[inputIndex].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (array[inputIndex].Properties[j].Value is string)
+                            if (array[inputIndex].Properties[j].Value is string || array[inputIndex].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(array[inputIndex].Properties[j].Value);

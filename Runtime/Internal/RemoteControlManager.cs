@@ -93,7 +93,7 @@ namespace Cognitive3D
                 return (T)(object)boolValue;
             if (typeof(T) == typeof(int) || typeof(T) == typeof(long) || 
                 typeof(T) == typeof(float) || typeof(T) == typeof(double))
-                return (T)(object)intValue;
+                return (T)System.Convert.ChangeType(intValue, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
 
             return defaultValue;
         }
