@@ -19,11 +19,11 @@ namespace Cognitive3D
             var dynamic = instance.GetComponent<DynamicObject>();
             if (dynamic == null) { return; }
             dynamic.editorInstanceId = 0;
-            if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId))
+            if (dynamic.editorInstanceId != Util.GetInstanceId(dynamic) || string.IsNullOrEmpty(dynamic.CustomId))
             {
                 if (!string.IsNullOrEmpty(dynamic.CustomId))
                 {
-                    dynamic.editorInstanceId = dynamic.GetInstanceID();
+                    dynamic.editorInstanceId = Util.GetInstanceId(dynamic);
                     CheckCustomId();
                 }
             }
@@ -70,18 +70,18 @@ namespace Cognitive3D
             foreach (var t in serializedObject.targetObjects) //makes sure a custom id is valid
             {
                 var dynamic = t as DynamicObject;
-                if (dynamic.editorInstanceId != dynamic.GetInstanceID() || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
+                if (dynamic.editorInstanceId != Util.GetInstanceId(dynamic) || string.IsNullOrEmpty(dynamic.CustomId)) //only check if something has changed on a dynamic, or if the id is empty
                 {
                     if (dynamic.idSource == DynamicObject.IdSourceType.CustomID)
                     {
                         if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(dynamic.gameObject)))//scene asset
                         {
-                            dynamic.editorInstanceId = dynamic.GetInstanceID();
+                            dynamic.editorInstanceId = Util.GetInstanceId(dynamic);
                             CheckCustomId();
                         }
                         else //project asset
                         {
-                            dynamic.editorInstanceId = dynamic.GetInstanceID();
+                            dynamic.editorInstanceId = Util.GetInstanceId(dynamic);
                             if (string.IsNullOrEmpty(dynamic.CustomId))
                             {
                                 string s = System.Guid.NewGuid().ToString();

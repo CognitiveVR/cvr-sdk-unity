@@ -10,6 +10,16 @@ namespace Cognitive3D
 	{
         private const string LOG_TAG = "[COGNITIVE3D] ";
 
+        // Object.GetInstanceID is obsolete (as an error in Unity 6.6+). Returns an id that is unique per object for the current session
+        internal static int GetInstanceId(UnityEngine.Object obj)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return obj.GetEntityId().GetHashCode();
+#else
+            return obj.GetInstanceID();
+#endif
+        }
+
         internal static void logWarning(string msg, UnityEngine.Object context = null)
         {
             if (Cognitive3D_Preferences.Instance.EnableLogging)
