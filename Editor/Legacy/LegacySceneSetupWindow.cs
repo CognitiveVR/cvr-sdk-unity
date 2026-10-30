@@ -807,23 +807,8 @@ namespace Cognitive3D
             {
                 hasFoundSteamVRActionSet = false;
                 hasCheckedForSteamVRActionsSet = true;
-                string className = "Valve.VR.SteamVR_Input_ActionSet_C3D_Input";
-
-                System.Reflection.Assembly steamvrActionAssembly = null;
-                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var a in assemblies)
-                {
-                    if (a.GetName().Name == "SteamVR_Actions")
-                    {
-                        steamvrActionAssembly = a;
-                        break;
-                    }
-                }
-                if (steamvrActionAssembly == null)
-                {
-                    return false;
-                }
-                var t = steamvrActionAssembly.GetType(className);
+                //assembly-qualified name. returns null if the SteamVR_Actions assembly or the class doesn't exist
+                var t = System.Type.GetType("Valve.VR.SteamVR_Input_ActionSet_C3D_Input, SteamVR_Actions");
                 if (t == null)
                 {
                     return false;
