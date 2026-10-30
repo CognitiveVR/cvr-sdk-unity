@@ -248,6 +248,7 @@ namespace Cognitive3D
         public string listName;
         public bool showList = true;
         public Texture2D listItemIcon;
+        [NonSerialized]
         public List<ProjectValidationItem> items;
 
         public FoldableList(string name, Texture2D icon, List<ProjectValidationItem> items)

@@ -324,9 +324,9 @@ namespace Cognitive3D.Serialization
                 for (int i = 0; i < properties.Count; i++)
                 {
                     if (i != 0) { eventBuilder.Append(","); }
-                    if (properties[i].Value.GetType() == typeof(string))
+                    if (properties[i].Value.GetType() == typeof(string) || properties[i].Value.GetType() == typeof(char))
                     {
-                        JsonUtil.SetString(properties[i].Key, (string)properties[i].Value, eventBuilder);
+                        JsonUtil.SetString(properties[i].Key, properties[i].Value.ToString(), eventBuilder);
                     }
                     else if (properties[i].Value.GetType() == typeof(float))
                     {
@@ -1528,7 +1528,7 @@ namespace Cognitive3D.Serialization
                         foreach (var kvp in thisSubscription)
                         {
                             if (kvp.Value == null) { Util.logDevelopment("Subscription " + kvp.Key + " is NULL "); continue; }
-                            if (kvp.Value.GetType() == typeof(string))
+                            if (kvp.Value.GetType() == typeof(string) || kvp.Value.GetType() == typeof(char))
                             {
                                 JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
                             }
@@ -1577,9 +1577,9 @@ namespace Cognitive3D.Serialization
                 foreach (var kvp in GetAllSessionProperties(true))
                 {
                     if (kvp.Value == null) { Util.logDevelopment("Session Property " + kvp.Key + " is NULL "); continue; }
-                    if (kvp.Value.GetType() == typeof(string))
+                    if (kvp.Value.GetType() == typeof(string) || kvp.Value.GetType() == typeof(char))
                     {
-                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                        JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
                     }
                     else if (kvp.Value.GetType() == typeof(float))
                     {
@@ -1617,9 +1617,9 @@ namespace Cognitive3D.Serialization
                 foreach (var kvp in GetNewSessionProperties(true))
                 {
                     if (kvp.Value == null) { Util.logDevelopment("Session Property " + kvp.Key + " is NULL "); continue; }
-                    if (kvp.Value.GetType() == typeof(string))
+                    if (kvp.Value.GetType() == typeof(string) || kvp.Value.GetType() == typeof(char))
                     {
-                        JsonUtil.SetString(kvp.Key, (string)kvp.Value, gazebuilder);
+                        JsonUtil.SetString(kvp.Key, kvp.Value.ToString(), gazebuilder);
                     }
                     else if (kvp.Value.GetType() == typeof(float))
                     {

@@ -754,7 +754,7 @@ namespace Cognitive3D
             DebugInformationWindow.WriteDebugToFile(path + "debug.log");
 
             // Add Cognitive3D_Manager to the scene if it doesn't exist
-            var found = Object.FindFirstObjectByType<Cognitive3D_Manager>();
+            var found = Object.FindAnyObjectByType<Cognitive3D_Manager>();
             if (found == null)
             {
                 GameObject c3dManagerPrefab = EditorCore.GetCognitive3DManagerPrefab();

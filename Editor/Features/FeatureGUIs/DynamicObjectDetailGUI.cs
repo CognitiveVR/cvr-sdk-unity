@@ -23,7 +23,7 @@ namespace Cognitive3D
                 if (_cachedDynamics == null || _cachedDynamics.Length == 0)
                 {
 #if UNITY_2020_1_OR_NEWER
-                    _cachedDynamics = Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects ? GameObject.FindObjectsByType<DynamicObject>(FindObjectsInactive.Include, FindObjectsSortMode.None) : GameObject.FindObjectsByType<DynamicObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                    _cachedDynamics = Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects ? Util.FindObjects<DynamicObject>(FindObjectsInactive.Include) : Util.FindObjects<DynamicObject>(FindObjectsInactive.Exclude);
 #else
                     _cachedDynamics = FindObjectsOfType<DynamicObject>();
 #endif
@@ -35,8 +35,8 @@ namespace Cognitive3D
         private void CheckDynamicObjectChanges()
         {
             int currentCount = Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects
-            ? GameObject.FindObjectsByType<DynamicObject>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length
-            : GameObject.FindObjectsByType<DynamicObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Length;
+            ? Util.FindObjects<DynamicObject>(FindObjectsInactive.Include).Length
+            : Util.FindObjects<DynamicObject>(FindObjectsInactive.Exclude).Length;
             if (currentCount != lastDynamicCount)
             {
                 lastDynamicCount = currentCount;

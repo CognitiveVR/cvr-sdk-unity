@@ -36,7 +36,7 @@ namespace Cognitive3D
             {
                 if (cachedOVRFaceExpressions == null)
                 {
-                    cachedOVRFaceExpressions = UnityEngine.Object.FindFirstObjectByType<OVRFaceExpressions>();
+                    cachedOVRFaceExpressions = UnityEngine.Object.FindAnyObjectByType<OVRFaceExpressions>();
                     if (cachedOVRFaceExpressions == null)
                     {
                         Cognitive3D_Manager.Instance.gameObject.AddComponent<OVRFaceExpressions>();
@@ -134,7 +134,7 @@ namespace Cognitive3D
             {
                 if (_roomTrackingSpaceTransform == null)
                 {
-                    var roomTrackingSpace = GameObject.FindFirstObjectByType<RoomTrackingSpace>();
+                    var roomTrackingSpace = GameObject.FindAnyObjectByType<RoomTrackingSpace>();
                     _roomTrackingSpaceTransform = roomTrackingSpace != null ? roomTrackingSpace.transform : null;
                 }
                 return _roomTrackingSpaceTransform;
@@ -294,7 +294,7 @@ namespace Cognitive3D
             {
                 if (_cameraRig == null)
                 {
-                    _cameraRig = GameObject.FindFirstObjectByType<OVRCameraRig>();
+                    _cameraRig = GameObject.FindAnyObjectByType<OVRCameraRig>();
                 }
                 return _cameraRig;
             }
@@ -308,7 +308,7 @@ namespace Cognitive3D
             {
                 if (pvr_UnitySDKManager == null)
                 {
-                    pvr_UnitySDKManager = GameObject.FindFirstObjectByType<Pvr_UnitySDKManager>();
+                    pvr_UnitySDKManager = GameObject.FindAnyObjectByType<Pvr_UnitySDKManager>();
                 }
                 return pvr_UnitySDKManager;
             }
@@ -322,7 +322,7 @@ namespace Cognitive3D
             {
                 if (gliaBehaviour == null)
                 {
-                    gliaBehaviour = GameObject.FindFirstObjectByType<HP.Omnicept.Unity.GliaBehaviour>();
+                    gliaBehaviour = GameObject.FindAnyObjectByType<HP.Omnicept.Unity.GliaBehaviour>();
                 }
                 return gliaBehaviour;
             }
@@ -337,14 +337,14 @@ namespace Cognitive3D
             {
                 if (_playerRig == null)
                 {
-                    var player = GameObject.FindFirstObjectByType<Valve.VR.InteractionSystem.Player>();
+                    var player = GameObject.FindAnyObjectByType<Valve.VR.InteractionSystem.Player>();
                     if (player != null)
                     {
                         _playerRig = player.gameObject;
                     }
                     else
                     {
-                        var playArea = GameObject.FindFirstObjectByType<Valve.VR.SteamVR_PlayArea>();
+                        var playArea = GameObject.FindAnyObjectByType<Valve.VR.SteamVR_PlayArea>();
                         if (playArea != null)
                         {
                             _playerRig = playArea.gameObject;
@@ -365,7 +365,7 @@ namespace Cognitive3D
             {
                 if (_xrOrigin == null)
                 {
-                    _xrOrigin = GameObject.FindFirstObjectByType<Unity.XR.CoreUtils.XROrigin>();
+                    _xrOrigin = GameObject.FindAnyObjectByType<Unity.XR.CoreUtils.XROrigin>();
                 }
                 return _xrOrigin;
             }
@@ -380,7 +380,7 @@ namespace Cognitive3D
             {
                 if (_cameraOffset == null)
                 {
-                    _cameraOffset = GameObject.FindFirstObjectByType<UnityEditor.XR.LegacyInputHelpers.CameraOffset>();
+                    _cameraOffset = GameObject.FindAnyObjectByType<UnityEditor.XR.LegacyInputHelpers.CameraOffset>();
                 }
                 return _cameraOffset;
             }
@@ -395,7 +395,7 @@ namespace Cognitive3D
             {
                 if (_waveRig == null)
                 {
-                    _waveRig = GameObject.FindFirstObjectByType<Wave.Essence.WaveRig>();
+                    _waveRig = GameObject.FindAnyObjectByType<Wave.Essence.WaveRig>();
                 }
                 return _waveRig;
             }
@@ -421,7 +421,7 @@ namespace Cognitive3D
 #endif
 #if C3D_PICOVR
 //camera component is disabled, so it isn't returned with Camera.main
-                    foreach (var cam in UnityEngine.Object.FindObjectsOfType<Camera>())
+                    foreach (var cam in Util.FindObjects<Camera>())
                     {
                         if (cam.gameObject.CompareTag("MainCamera"))
                         {

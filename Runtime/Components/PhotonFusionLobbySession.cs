@@ -21,7 +21,7 @@ namespace Cognitive3D.Components
         {
             if (activeRunner == null)
             {
-                activeRunner = FindFirstObjectByType<NetworkRunner>();
+                activeRunner = FindAnyObjectByType<NetworkRunner>();
 
                 if (activeRunner == null)
                 {

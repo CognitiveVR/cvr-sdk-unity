@@ -19,7 +19,6 @@ namespace Cognitive3D.Components
         UnityEngine.XR.InputDevice currentHmd;
 
         // Assume the user is wearing the headset at session start so we don't emit an "equipped" event on the first frame
-        bool wasUserPresentPreviously = true;
         double? removedTimestamp;
 
         /// <summary>
@@ -54,6 +53,7 @@ namespace Cognitive3D.Components
         }
 
 #if !C3D_OCULUS
+        bool wasUserPresentPreviously = true;
         private void Cognitive3D_Manager_OnUpdate(float deltaTime)
         {
             if (!isActiveAndEnabled) { return; }

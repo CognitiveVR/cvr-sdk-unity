@@ -33,7 +33,7 @@ namespace Cognitive3D
         protected virtual void OnEnable()
         {
             if (GameplayReferences.HMD == null) { return; }
-            if (FindFirstObjectByType<ExitPollHolder>().Parameters.PointerType == ExitPollManager.PointerType.HMD)
+            if (FindAnyObjectByType<ExitPollHolder>().Parameters.PointerType == ExitPollManager.PointerType.HMD)
             {
                 buttonPrompt.text = "Hover To Record";
             }
