@@ -68,7 +68,7 @@ namespace Cognitive3D
 #if C3D_OCULUS
             if (hands.Count == 0)
             {
-                OVRHand[] foundHands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
+                OVRHand[] foundHands = Util.FindObjects<OVRHand>();
                 hands.Clear();
                 foreach (OVRHand hand in foundHands)
                 {

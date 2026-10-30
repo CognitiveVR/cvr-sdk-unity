@@ -458,11 +458,11 @@ namespace Cognitive3D
 #if UNITY_2020_1_OR_NEWER
                     if (Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects)
                     {
-                        _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                        _cachedDynamics = Util.FindObjects<DynamicObject>(FindObjectsInactive.Include);
                     }
                     else
                     {
-                        _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                        _cachedDynamics = Util.FindObjects<DynamicObject>(FindObjectsInactive.Exclude);
                     }
 #else
                     _cachedDynamics = FindObjectsOfType<DynamicObject>();
@@ -479,11 +479,11 @@ namespace Cognitive3D
 #if UNITY_2020_1_OR_NEWER
             if (Cognitive3D_Preferences.Instance.IncludeDisabledDynamicObjects)
             {
-                _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                _cachedDynamics = Util.FindObjects<DynamicObject>(FindObjectsInactive.Include);
             }
             else
             {
-                _cachedDynamics = FindObjectsByType<DynamicObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                _cachedDynamics = Util.FindObjects<DynamicObject>(FindObjectsInactive.Exclude);
             }
 #else
             _cachedDynamics = FindObjectsOfType<DynamicObject>();

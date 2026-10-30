@@ -551,7 +551,7 @@ namespace Cognitive3D
         #region Dynamic Objects Upload Tools
         internal static List<DynamicObject> GetDynamicObjectsInScene()
         {
-            return GameObject.FindObjectsByType<DynamicObject>(FindObjectsSortMode.None).ToList();
+            return Util.FindObjects<DynamicObject>().ToList();
         }
 
         internal static void ExportAllDynamicsInScene()

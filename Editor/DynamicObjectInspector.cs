@@ -396,7 +396,7 @@ namespace Cognitive3D
                 }
             }
             
-            var dynamics = FindObjectsByType<DynamicObject>(FindObjectsSortMode.None);
+            var dynamics = Util.FindObjects<DynamicObject>();
 
             for (int i = dynamics.Length - 1; i >= 0; i--) //loop backwards to adjust newest dynamics instead of oldest
             {

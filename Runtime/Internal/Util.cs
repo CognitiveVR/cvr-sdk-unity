@@ -20,6 +20,16 @@ namespace Cognitive3D
 #endif
         }
 
+        // FindObjectsSortMode is obsolete in Unity 6.6+. Returns all loaded objects of type T, unsorted
+        internal static T[] FindObjects<T>(FindObjectsInactive findObjectsInactive = FindObjectsInactive.Exclude) where T : UnityEngine.Object
+        {
+#if UNITY_6000_6_OR_NEWER
+            return UnityEngine.Object.FindObjectsByType<T>(findObjectsInactive);
+#else
+            return UnityEngine.Object.FindObjectsByType<T>(findObjectsInactive, FindObjectsSortMode.None);
+#endif
+        }
+
         internal static void logWarning(string msg, UnityEngine.Object context = null)
         {
             if (Cognitive3D_Preferences.Instance.EnableLogging)

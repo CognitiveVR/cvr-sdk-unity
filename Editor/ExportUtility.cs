@@ -259,16 +259,16 @@ namespace Cognitive3D
         /// <param name="path">used to bake terrain texture to file</param>
         static void BakeNonstandardRenderers(DynamicObject rootDynamic, List<BakeableMesh> meshes, string path)
         {
-            SkinnedMeshRenderer[] SkinnedMeshes = UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None);
-            Terrain[] Terrains = UnityEngine.Object.FindObjectsByType<Terrain>(FindObjectsSortMode.None);
-            Canvas[] Canvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
-            SpriteRenderer[] spriteRenderers= UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
-            UnityEngine.UI.Image[] uiImages = UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Image>(FindObjectsSortMode.None);
+            SkinnedMeshRenderer[] SkinnedMeshes = Util.FindObjects<SkinnedMeshRenderer>();
+            Terrain[] Terrains = Util.FindObjects<Terrain>();
+            Canvas[] Canvases = Util.FindObjects<Canvas>();
+            SpriteRenderer[] spriteRenderers= Util.FindObjects<SpriteRenderer>();
+            UnityEngine.UI.Image[] uiImages = Util.FindObjects<UnityEngine.UI.Image>();
             List<MeshFilter> ProceduralMeshFilters = new List<MeshFilter>();
-            CustomRenderExporter[] CustomRenders = UnityEngine.Object.FindObjectsByType<CustomRenderExporter>(FindObjectsSortMode.None);
+            CustomRenderExporter[] CustomRenders = Util.FindObjects<CustomRenderExporter>();
 #if C3D_TMPRO
-            TextMeshPro[] TextMeshPros = UnityEngine.Object.FindObjectsByType<TextMeshPro>(FindObjectsSortMode.None);
-            TMPro.TextMeshProUGUI[] TextMeshProUGUIs = UnityEngine.Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None);
+            TextMeshPro[] TextMeshPros = Util.FindObjects<TextMeshPro>();
+            TMPro.TextMeshProUGUI[] TextMeshProUGUIs = Util.FindObjects<TMPro.TextMeshProUGUI>();
 #endif
             deleteCustomRenders = new List<GameObject>();
 
@@ -293,7 +293,7 @@ namespace Cognitive3D
             }
             else
             {
-                var meshfilters = UnityEngine.Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None);
+                var meshfilters = Util.FindObjects<MeshFilter>();
                 foreach (var mf in meshfilters)
                 {
                     if (mf.sharedMesh != null && string.IsNullOrEmpty(UnityEditor.AssetDatabase.GetAssetPath(mf.sharedMesh)))
@@ -1682,7 +1682,7 @@ namespace Cognitive3D
         /// <returns>true if any dynamics are exported</returns>
         public static bool ExportAllDynamicsInScene()
         {
-            var dynamics = UnityEngine.Object.FindObjectsByType<DynamicObject>(FindObjectsSortMode.None);
+            var dynamics = Util.FindObjects<DynamicObject>();
             List<GameObject> gos = new List<GameObject>();
             foreach (var v in dynamics)
                 gos.Add(v.gameObject);

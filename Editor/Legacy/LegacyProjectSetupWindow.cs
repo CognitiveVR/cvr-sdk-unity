@@ -759,7 +759,7 @@ namespace Cognitive3D
 #if C3D_VIVEWAVE
             GUI.Label(steptitlerect, "REQUIRED PREFAB", "steptitle");
             //GUI.Label(new Rect(30, 30, 440, 440), "Add EyeManager to the scene.", "normallabel");
-            var eyeManager = Object.FindObjectOfType<Wave.Essence.Eye.EyeManager>();
+            var eyeManager = Object.FindAnyObjectByType<Wave.Essence.Eye.EyeManager>();
             bool eyeManagerExists = eyeManager != null;
 
             GUI.Label(new Rect(30, 30, 440, 440), "To utilise the WaveVR Eye Tracking features, the scene needs a WaveEyeManager object, which doesn't exist by default." +
