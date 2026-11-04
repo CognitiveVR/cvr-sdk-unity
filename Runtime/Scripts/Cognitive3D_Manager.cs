@@ -457,8 +457,6 @@ namespace Cognitive3D
 #if C3D_SRANIPAL
         SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
-#elif C3D_WINDOWSMR
-        SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
 #endif
         SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
         SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");

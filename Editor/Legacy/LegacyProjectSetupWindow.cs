@@ -404,9 +404,6 @@ namespace Cognitive3D
 #if C3D_PICOXR
         selectedsdks.Add("C3D_PICOXR");
 #endif
-#if C3D_WINDOWSMR
-            selectedsdks.Add("C3D_WINDOWSMR");
-#endif
 #if C3D_OMNICEPT
             selectedsdks.Add("C3D_OMNICEPT");
 #endif
@@ -449,7 +446,6 @@ namespace Cognitive3D
             new SDKDefine("Vive Wave 5.0.2","C3D_VIVEWAVE", "Adds Eye Tracking for Focus 3" ),
             new SDKDefine("Pico Unity XR Platform 2.1.3","C3D_PICOXR", "Adds Eye Tracking for Pico Neo 3 Eye" ),
             new SDKDefine("MRTK 2.5.4","C3D_MRTK", "Adds Eye Tracking for Hololens 2" ),
-            new SDKDefine("Windows Mixed Reality XR","C3D_WINDOWSMR", "Deprecated. Select 'Default'" ), //legacy
             new SDKDefine("Varjo VR","C3D_VARJOVR", "Prefer to upgrade to Varjo XR instead" ), //legacy
             new SDKDefine("PicoVR Unity SDK 2.8.12","C3D_PICOVR", "Prefer to upgrade to Pico XR instead" ), //legacy
         };
