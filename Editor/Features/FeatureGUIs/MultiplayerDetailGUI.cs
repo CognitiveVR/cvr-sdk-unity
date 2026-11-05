@@ -187,6 +187,20 @@ namespace Cognitive3D
             option.RemoveComponents();
             MultiplayerDefines.SetActiveFramework(MultiplayerDefines.MultiplayerFramework.None);
         }
+
+        /// <summary>
+        /// Returns the frameworks whose support component is on the Cognitive3D_Manager prefab.
+        /// Only frameworks with an installed package can be detected.
+        /// </summary>
+        internal static List<MultiplayerDefines.MultiplayerFramework> GetFrameworksWithComponent()
+        {
+            var frameworks = new List<MultiplayerDefines.MultiplayerFramework>();
+            foreach (var option in options)
+            {
+                if (option.HasComponent()) frameworks.Add(option.Framework);
+            }
+            return frameworks;
+        }
     }
 
     internal static class MultiplayerDefines
