@@ -1,13 +1,13 @@
 using UnityEngine;
 
-#if COGNITIVE3D_INCLUDE_NORMCORE
+#if C3D_NORMCORE && COGNITIVE3D_INCLUDE_NORMCORE
 using System.Collections.Generic;
 using Normal.Realtime;
 #endif
 
 namespace Cognitive3D
 {
-#if COGNITIVE3D_INCLUDE_NORMCORE
+#if C3D_NORMCORE && COGNITIVE3D_INCLUDE_NORMCORE
     /// <summary>
     /// Normcore-specific implementation of networked dynamic object tracking.
     /// Monitors Normcore RealtimeView validity and notifies DynamicObject when ready.

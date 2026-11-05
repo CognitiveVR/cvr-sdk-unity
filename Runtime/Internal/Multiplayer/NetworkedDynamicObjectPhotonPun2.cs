@@ -1,13 +1,13 @@
 using UnityEngine;
 
-#if C3D_PHOTON && PUN_2_0_OR_NEWER
+#if C3D_PHOTON_PUN_2 && PUN_2_0_OR_NEWER
 using Photon.Pun;
 using Photon.Realtime;
 #endif
 
 namespace Cognitive3D
 {
-#if C3D_PHOTON && PUN_2_0_OR_NEWER
+#if C3D_PHOTON_PUN_2 && PUN_2_0_OR_NEWER
     /// <summary>
     /// PUN2-specific implementation of networked dynamic object tracking.
     /// Monitors Photon PhotonView validity and notifies DynamicObject when ready.

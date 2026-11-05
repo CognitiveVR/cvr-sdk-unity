@@ -15,22 +15,22 @@ namespace Cognitive3D
 
         internal static bool IsNetworkedObject(GameObject obj)
         {
-#if FUSION2
+#if C3D_PHOTON_FUSION && FUSION2
             if (obj.GetComponent<Fusion.NetworkObject>() || obj.GetComponent<Fusion.NetworkTransform>())
             {
                 return true;
             }
-#elif C3D_PHOTON && PUN_2_0_OR_NEWER
+#elif C3D_PHOTON_PUN_2 && PUN_2_0_OR_NEWER
             if (obj.GetComponent<Photon.Pun.PhotonView>() || obj.GetComponent<Photon.Pun.PhotonTransformView>())
             {
                 return true;
             }
-#elif COGNITIVE3D_INCLUDE_UNITY_NETCODE
+#elif C3D_UNITY_NETCODE && COGNITIVE3D_INCLUDE_UNITY_NETCODE
             if (obj.GetComponent<Unity.Netcode.NetworkObject>() || obj.GetComponent<Unity.Netcode.Components.NetworkTransform>())
             {
                 return true;
             }
-#elif COGNITIVE3D_INCLUDE_NORMCORE
+#elif C3D_NORMCORE && COGNITIVE3D_INCLUDE_NORMCORE
             if (obj.GetComponent<Normal.Realtime.RealtimeView>())
             {
                 return true;
@@ -42,13 +42,13 @@ namespace Cognitive3D
         internal static void AddNetworkedDynamicObject(GameObject obj)
         {
             if (obj == null || obj.GetComponent<NetworkedDynamicObjectBase>()) return;
-#if FUSION2
+#if C3D_PHOTON_FUSION && FUSION2
             obj.AddComponent<NetworkedDynamicObjectPhotonFusion>();
-#elif C3D_PHOTON && PUN_2_0_OR_NEWER
+#elif C3D_PHOTON_PUN_2 && PUN_2_0_OR_NEWER
             obj.AddComponent<NetworkedDynamicObjectPhotonPun2>();
-#elif COGNITIVE3D_INCLUDE_UNITY_NETCODE
+#elif C3D_UNITY_NETCODE && COGNITIVE3D_INCLUDE_UNITY_NETCODE
             obj.AddComponent<NetworkedDynamicObjectNetcode>();
-#elif COGNITIVE3D_INCLUDE_NORMCORE
+#elif C3D_NORMCORE && COGNITIVE3D_INCLUDE_NORMCORE
             obj.AddComponent<NetworkedDynamicObjectNormcore>();
 #endif
         }

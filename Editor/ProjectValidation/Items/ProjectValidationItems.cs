@@ -1049,7 +1049,7 @@ namespace Cognitive3D
             }
 
             #region Multiplayer Support
-#if C3D_PHOTON
+#if C3D_PHOTON_PUN_2
 #if !PHOTON_UNITY_NETWORKING
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -1085,7 +1085,7 @@ namespace Cognitive3D
 #endif
 #endif
 
-#if C3D_PHOTON && PHOTON_UNITY_NETWORKING
+#if C3D_PHOTON_PUN_2 && PHOTON_UNITY_NETWORKING
             // Migration: for older versions that have a PhotonView on the Cognitive3D_Manager
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required,
@@ -1177,7 +1177,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if C3D_NETCODE
+#if C3D_UNITY_NETCODE
 #if !COGNITIVE3D_INCLUDE_UNITY_NETCODE
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 

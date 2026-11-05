@@ -8,7 +8,7 @@ namespace Cognitive3D
     /// Abstract base class for networked dynamic objects across different multiplayer frameworks.
     /// Handles registration and validation of network IDs for DynamicObject components.
     /// </summary>
-#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+#if C3D_UNITY_NETCODE && COGNITIVE3D_INCLUDE_UNITY_NETCODE
     public abstract class NetworkedDynamicObjectBase : Unity.Netcode.NetworkBehaviour
 #else
     public abstract class NetworkedDynamicObjectBase : MonoBehaviour

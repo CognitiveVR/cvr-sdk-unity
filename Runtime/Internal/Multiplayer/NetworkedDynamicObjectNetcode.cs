@@ -2,14 +2,14 @@ using UnityEngine;
 using Cognitive3D.Components;
 
 
-#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+#if C3D_UNITY_NETCODE && COGNITIVE3D_INCLUDE_UNITY_NETCODE
 using Unity.Netcode;
 using Unity.Netcode.Components;
 #endif
 
 namespace Cognitive3D
 {
-#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+#if C3D_UNITY_NETCODE && COGNITIVE3D_INCLUDE_UNITY_NETCODE
     /// <summary>
     /// Unity Netcode-specific implementation of networked dynamic object tracking.
     /// Monitors Unity Netcode NetworkObject validity and notifies DynamicObject when ready.

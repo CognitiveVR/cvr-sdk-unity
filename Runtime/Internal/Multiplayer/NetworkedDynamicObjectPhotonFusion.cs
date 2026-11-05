@@ -1,12 +1,12 @@
 using UnityEngine;
 
-#if FUSION2
+#if C3D_PHOTON_FUSION && FUSION2
 using Fusion;
 #endif
 
 namespace Cognitive3D
 {
-#if FUSION2
+#if C3D_PHOTON_FUSION && FUSION2
     /// <summary>
     /// Fusion2-specific implementation of networked dynamic object tracking.
     /// Monitors Fusion NetworkObject validity and notifies DynamicObject when ready.
