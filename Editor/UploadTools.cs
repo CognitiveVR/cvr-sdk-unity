@@ -392,6 +392,11 @@ namespace Cognitive3D
 
                     if (uploadSceneGeometry)
                     {
+                        if (RefuseIfSceneUploadInProgress(completeSceneUpload))
+                        {
+                            return;
+                        }
+
                         bool shouldProceed = true;
                         if (showPopups)
                         {
@@ -690,6 +695,11 @@ namespace Cognitive3D
                 return;
             }
 
+            if (RefuseIfSceneUploadInProgress(uploadComplete))
+            {
+                return;
+            }
+
             UploadSceneSettingsOptimized = settings;
             UploadCompleteOptimized = uploadComplete;
             UploadProgressCallbackOptimized = progressCallback;
@@ -818,6 +828,11 @@ namespace Cognitive3D
             {
                 Debug.LogError("Cannot force update: Scene must have existing SceneId and VersionNumber");
                 uploadComplete?.Invoke(0);
+                return;
+            }
+
+            if (RefuseIfSceneUploadInProgress(uploadComplete))
+            {
                 return;
             }
 
@@ -1342,6 +1357,34 @@ namespace Cognitive3D
         static System.Action<int> UploadCompleteOptimized;
         static System.Action<float> UploadProgressCallbackOptimized;
         static string[] AuxiliaryFilesForPhase2;
+
+        /// <summary>
+        /// True while a scene upload or force update has a request outstanding.
+        /// Derived from the pending requests, so no exit path (error, cancel, exception) can leave it set.
+        /// </summary>
+        internal static bool IsSceneUploadInProgress =>
+            EditorNetwork.IsRequestPending(PostSceneUploadResponsePhase1)
+            || EditorNetwork.IsRequestPending(PostSceneUploadResponsePhase2)
+            || EditorNetwork.IsRequestPending(PostSceneUpdateResponsePhase1)
+            || EditorNetwork.IsRequestPending(PostSceneUpdateResponsePhase2)
+            || EditorNetwork.IsRequestPending(PostSceneUploadResponse);
+
+        /// <summary>
+        /// Must run before any upload state is written: refusing must leave the running upload untouched.
+        /// </summary>
+        private static bool RefuseIfSceneUploadInProgress(System.Action<int> uploadComplete)
+        {
+            if (!IsSceneUploadInProgress)
+            {
+                return false;
+            }
+
+            const string message = "A scene upload is already in progress. Wait for it to finish before starting another.";
+            Debug.LogWarning(message);
+            EditorUtility.DisplayDialog("Upload In Progress", message, "Ok");
+            uploadComplete?.Invoke(0);
+            return true;
+        }
 
         /// <summary>
         /// Classifies export files into core scene files (gltf, bin, settings.json) and auxiliary files (textures, debug.log)
