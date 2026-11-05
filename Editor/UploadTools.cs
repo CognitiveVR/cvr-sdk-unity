@@ -392,7 +392,8 @@ namespace Cognitive3D
 
                     if (uploadSceneGeometry)
                     {
-                        if (RefuseIfSceneUploadInProgress(completeSceneUpload))
+                        // No completion callback: it would refresh scene versions under the running upload.
+                        if (RefuseIfSceneUploadInProgress(null))
                         {
                             return;
                         }
@@ -1485,6 +1486,11 @@ namespace Cognitive3D
         {
             //if uploadNewScene POST
             //else PUT to sceneexplorer/sceneid
+
+            if (RefuseIfSceneUploadInProgress(uploadComplete))
+            {
+                return;
+            }
 
             if (settings == null) { UploadSceneSettings = null; return; }
 
