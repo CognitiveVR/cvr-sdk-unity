@@ -395,7 +395,6 @@ namespace Cognitive3D
                         // No completion callback: it would refresh scene versions under the running upload.
                         if (RefuseIfSceneUploadInProgress(null))
                         {
-                            CompletedUpload = true;
                             return;
                         }
 
@@ -982,7 +981,7 @@ namespace Cognitive3D
                 Debug.Log("<color=green>Scene Update Complete!</color>");
                 SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
                 props.buttonName = "SceneSetupSceneUpdatePage";
-                props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber);
+                props.SetProperty("sceneVersion", UpdateVersionNumberOptimized);
                 SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Optimized", props);
 
                 CleanupOptimizedUploadState();
@@ -1051,7 +1050,7 @@ namespace Cognitive3D
             Debug.Log("<color=green>Scene Update Complete!</color>");
             SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
             props.buttonName = "SceneSetupSceneUpdatePage";
-            props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber);
+            props.SetProperty("sceneVersion", UpdateVersionNumberOptimized);
             SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Optimized", props);
 
             CleanupOptimizedUploadState();
