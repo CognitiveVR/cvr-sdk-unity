@@ -7,6 +7,105 @@ namespace Cognitive3D
 {
     public class MultiplayerDetailGUI : IFeatureDetailGUI
     {
+        private class FrameworkOption
+        {
+            public MultiplayerDefines.MultiplayerFramework Framework;
+            public string DisplayName;
+            public System.Func<bool> HasComponent;
+            public System.Action AddComponents;
+            public System.Action RemoveComponents;
+        }
+
+        private static readonly List<FrameworkOption> options = new List<FrameworkOption>
+        {
+             new FrameworkOption
+             {
+                Framework = MultiplayerDefines.MultiplayerFramework.PhotonFusion,
+                DisplayName = "Photon Fusion",
+#if FUSION2
+                HasComponent = () => FeatureLibrary.TryGetComponent<Cognitive3D.Components.PhotonFusionMultiplayer>(),
+                AddComponents = () => FeatureLibrary.AddComponent<Cognitive3D.Components.PhotonFusionMultiplayer>(),
+                RemoveComponents = () => FeatureLibrary.RemoveComponent<Cognitive3D.Components.PhotonFusionMultiplayer>()
+#else
+                HasComponent = () => false,
+                AddComponents = () => { },
+                RemoveComponents = () => { },
+#endif
+             },
+             new FrameworkOption
+             {
+                Framework = MultiplayerDefines.MultiplayerFramework.PhotonPun2,
+                DisplayName = "Photon PUN 2",
+#if PHOTON_UNITY_NETWORKING
+                HasComponent = () => FeatureLibrary.TryGetComponent<Cognitive3D.Components.PhotonPunMultiplayer>(),
+                AddComponents = () => FeatureLibrary.AddComponent<Cognitive3D.Components.PhotonPunMultiplayer>(),
+                RemoveComponents = () => FeatureLibrary.RemoveComponent<Cognitive3D.Components.PhotonPunMultiplayer>()
+#else
+                HasComponent = () => false,
+                AddComponents = () => { },
+                RemoveComponents = () => { },
+#endif
+             },
+             new FrameworkOption
+             {
+                Framework = MultiplayerDefines.MultiplayerFramework.Netcode,
+                DisplayName = "Netcode",
+#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+                HasComponent = () => FeatureLibrary.TryGetComponent<Cognitive3D.Components.NetcodeMultiplayer>(),
+                AddComponents = () => 
+                {
+                     FeatureLibrary.AddComponent<Cognitive3D.Components.NetcodeMultiplayer>();
+                     FeatureLibrary.AddComponent<Unity.Netcode.NetworkObject>();
+                },
+                RemoveComponents = () => 
+                {
+                     FeatureLibrary.RemoveComponent<Cognitive3D.Components.NetcodeMultiplayer>();
+                     FeatureLibrary.RemoveComponent<Unity.Netcode.NetworkObject>();
+                }
+#else
+                HasComponent = () => false,
+                AddComponents = () => { },
+                RemoveComponents = () => { },
+#endif
+             },
+             new FrameworkOption
+             {
+                Framework = MultiplayerDefines.MultiplayerFramework.Normcore,
+                DisplayName = "Normcore",
+#if COGNITIVE3D_INCLUDE_NORMCORE
+                HasComponent = () => FeatureLibrary.TryGetComponent<Cognitive3D.Components.NormcoreMultiplayer>(),
+                AddComponents = () => 
+                {
+                        FeatureLibrary.AddComponent<Cognitive3D.Components.NormcoreMultiplayer>();
+
+                        string localPath = "Assets/Resources/Cognitive3D_NormcoreSync.prefab";
+                        string folderPath = System.IO.Path.GetDirectoryName(localPath);
+                        if (!System.IO.Directory.Exists(folderPath)) System.IO.Directory.CreateDirectory(folderPath);
+
+                        if (!Resources.Load<GameObject>("Cognitive3D_NormcoreSync"))
+                        {
+                                GameObject temp = new GameObject("Cognitive3D_NormcoreSync");
+                                PrefabUtility.SaveAsPrefabAsset(temp, localPath);
+                                UnityEngine.Object.DestroyImmediate(temp);
+                        }
+
+                        GameObject prefab = Resources.Load<GameObject>("Cognitive3D_NormcoreSync");
+                        if (!prefab.GetComponent<Cognitive3D.NormcoreSync>())
+                        {
+                                prefab.AddComponent<Cognitive3D.NormcoreSync>();
+                                EditorUtility.SetDirty(prefab);
+                                AssetDatabase.SaveAssets();
+                        }
+                },
+                RemoveComponents = () => FeatureLibrary.RemoveComponent<Cognitive3D.Components.NormcoreMultiplayer>()
+#else
+                HasComponent = () => false,
+                AddComponents = () => { },
+                RemoveComponents = () => { },
+#endif
+             }
+        };   
+
         public void OnGUI()
         {
             GUILayout.BeginHorizontal();
@@ -127,7 +226,7 @@ namespace Cognitive3D
                     {
                         GameObject temp = new GameObject("Cognitive3D_NormcoreSync");
                         PrefabUtility.SaveAsPrefabAsset(temp, localPath);
-                        Object.DestroyImmediate(temp);
+                        UnityEngine.Object.DestroyImmediate(temp);
                     }
 
                     GameObject prefab = Resources.Load<GameObject>("Cognitive3D_NormcoreSync");
