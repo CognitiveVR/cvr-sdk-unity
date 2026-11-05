@@ -395,6 +395,7 @@ namespace Cognitive3D
                         // No completion callback: it would refresh scene versions under the running upload.
                         if (RefuseIfSceneUploadInProgress(null))
                         {
+                            CompletedUpload = true;
                             return;
                         }
 
@@ -840,6 +841,7 @@ namespace Cognitive3D
             UploadSceneSettingsOptimized = settings;
             UploadCompleteOptimized = uploadComplete;
             UploadProgressCallbackOptimized = progressCallback;
+            UpdateVersionNumberOptimized = settings.VersionNumber;
 
             string sceneName = settings.SceneName;
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
@@ -912,7 +914,7 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             // Always use PUT with force parameter for Phase 1
-            string url = CognitiveStatics.PostUpdateSceneForce(settings.SceneId, settings.VersionNumber);
+            string url = CognitiveStatics.PostUpdateSceneForce(settings.SceneId, UpdateVersionNumberOptimized);
             try
             {
                 EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase1, headers, true, "Update", "Force updating scene (Phase 1)", WrapProgressCallback(0.0f, 0.5f));
@@ -1010,7 +1012,7 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             // Always use PUT with force parameter for Phase 2
-            string url = CognitiveStatics.PostUpdateSceneForce(UploadSceneSettingsOptimized.SceneId, UploadSceneSettingsOptimized.VersionNumber);
+            string url = CognitiveStatics.PostUpdateSceneForce(UploadSceneSettingsOptimized.SceneId, UpdateVersionNumberOptimized);
             try
             {
                 EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase2, headers, true, "Update", "Force updating auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
@@ -1358,6 +1360,8 @@ namespace Cognitive3D
         static System.Action<int> UploadCompleteOptimized;
         static System.Action<float> UploadProgressCallbackOptimized;
         static string[] AuxiliaryFilesForPhase2;
+        // Captured at the start of a force update: version refreshes rewrite the shared settings' VersionNumber mid-upload.
+        static int UpdateVersionNumberOptimized;
 
         /// <summary>
         /// True while a scene upload or force update has a request outstanding.
