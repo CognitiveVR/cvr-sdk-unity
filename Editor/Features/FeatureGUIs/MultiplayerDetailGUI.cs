@@ -147,4 +147,85 @@ namespace Cognitive3D
             }
         }
     }
+
+    internal static class MultiplayerDefines
+    {
+        internal enum MultiplayerFramework
+        {
+            None,
+            PhotonFusion,
+            PhotonPun2,
+            Netcode,
+            Normcore
+        }
+
+        internal static readonly Dictionary<MultiplayerFramework, string> Symbols = new Dictionary<MultiplayerFramework, string>
+        {
+                { MultiplayerFramework.PhotonFusion, "C3D_PHOTON_FUSION" },
+                { MultiplayerFramework.PhotonPun2,   "C3D_PHOTON_PUN_2" },
+                { MultiplayerFramework.Netcode,      "C3D_UNITY_NETCODE" },
+                { MultiplayerFramework.Normcore,     "C3D_NORMCORE" },
+        };
+
+        internal static void SetActiveFramework(MultiplayerFramework framework)
+        {
+            foreach (var kvp in Symbols)
+            {
+                if (kvp.Key != framework)
+                {
+                    EditorCore.RemoveDefine(kvp.Value);
+                }
+            }
+            if (framework != MultiplayerFramework.None)
+            {
+                EditorCore.AddDefine(Symbols[framework]);
+            }
+        }
+
+        internal static MultiplayerFramework GetActiveFramework()
+        {
+            var defines = EditorCore.GetPlayerDefines(EditorCore.GetActiveNamedBuildTarget());
+            foreach (var kvp in Symbols)
+            {
+                if (defines.Contains(kvp.Value))
+                {
+                    return kvp.Key;
+                }
+            }
+            return MultiplayerFramework.None;
+        }
+
+        internal static bool IsPackageInstalled(MultiplayerFramework framework)
+        {
+            switch (framework)
+            {
+                case MultiplayerFramework.PhotonFusion:
+#if FUSION2
+                    return true;
+#else
+                    return false;
+#endif
+                case MultiplayerFramework.PhotonPun2:
+#if PHOTON_UNITY_NETWORKING
+                    return true;
+#else
+                    return false;
+#endif
+                case MultiplayerFramework.Netcode:
+#if COGNITIVE3D_INCLUDE_UNITY_NETCODE
+                    return true;
+#else
+                    return false;
+#endif
+                case MultiplayerFramework.Normcore:
+#if COGNITIVE3D_INCLUDE_NORMCORE
+                    return true;
+#else
+                    return false;
+#endif
+                default:
+                    return false;
+            }
+        }
+    }
 }
