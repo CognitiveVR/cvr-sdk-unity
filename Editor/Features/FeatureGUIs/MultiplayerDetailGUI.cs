@@ -126,14 +126,14 @@ namespace Cognitive3D
             GUILayout.EndHorizontal();
 
             GUILayout.Label(
-                "This feature adds extra analytics based on the multiplayer packages used in the project. It includes custom events for player connections and disconnections, as well as sensor data like Round-Trip Time (RTT/ping), and more.",
+                "Records multiplayer analytics for the framework used in the project, such as player connection and disconnection events and Round-Trip Time (RTT/ping). Sessions in the same room are linked by a shared lobby id, and Dynamic Objects on networked objects are matched across players' sessions.",
                 EditorStyles.wordWrappedLabel
             );
 
             EditorGUILayout.Space(10);
 
-            GUILayout.Label("Add to Cognitive3D_Manager prefab", EditorCore.styles.FeatureTitle);
-            GUILayout.Label("Adds the necessary components to the Cognitive3D_Manager prefab.", EditorStyles.wordWrappedLabel);
+            GUILayout.Label("Enable Multiplayer Support", EditorCore.styles.FeatureTitle);
+            GUILayout.Label("Adds the framework's components to the Cognitive3D_Manager prefab and its scripting define symbol to the active, Android and Standalone platforms. Only one framework can be enabled at a time.", EditorStyles.wordWrappedLabel);
 
             EditorGUILayout.Space(10);
 
