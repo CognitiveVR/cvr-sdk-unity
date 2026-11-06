@@ -11,6 +11,8 @@ namespace Cognitive3D
         public static string FileType = "gltf";
 
         public string Id;
+        public string SyncId;
+        public string OwnerId;
         public string Name;
         public string MeshName;
 
@@ -24,16 +26,20 @@ namespace Cognitive3D
         public bool isController;
         public string controllerType;
 
-        public DynamicObjectManifestEntry(string id, string name, string meshName)
+        public DynamicObjectManifestEntry(string id, string name, string meshName, string syncId = "", string ownerId = "")
         {
             this.Id = id;
+            this.SyncId = syncId;
+            this.OwnerId = ownerId;
             this.Name = name;
             this.MeshName = meshName;
         }
 
-        public DynamicObjectManifestEntry(string id, string name, string meshName, string props)
+        public DynamicObjectManifestEntry(string id, string name, string meshName, string props, string syncId = "", string ownerId = "")
         {
             this.Id = id;
+            this.SyncId = syncId;
+            this.OwnerId = ownerId;
             this.Name = name;
             this.MeshName = meshName;
             this.Properties = props;

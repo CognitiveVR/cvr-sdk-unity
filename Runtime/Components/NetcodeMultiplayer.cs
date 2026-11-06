@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
@@ -7,6 +6,7 @@ using System.Threading.Tasks;
 #if COGNITIVE3D_INCLUDE_UNITY_NETCODE
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+using Unity.Collections;
 
 namespace Cognitive3D.Components
 {
@@ -22,13 +22,119 @@ namespace Cognitive3D.Components
         private const float NETCODE_SENSOR_RECORDING_INTERVAL_IN_SECONDS = 1.0f;
         private float currentTime = 0;
 
-        private static string lobbyID = string.Empty;
+        // Authority-owned lobby ID, replicated to every client
+        public NetworkVariable<FixedString64Bytes> lobbyID = new(
+            new FixedString64Bytes(),
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Owner
+        );
+
+        // Optional lobby ID supplied by the game via SetLobbyId(). When present it is used
+        // instead of a generated GUID. Static so it can be set before this object spawns.
+        private static string externalLobbyId;
+
+        // Tracks the active instance so a late SetLobbyId() call can push the value onto
+        // the NetworkVariable once the object is spawned on the server.
+        private static NetcodeMultiplayer instance;
+
+        /// <summary>
+        /// Provide an authoritative lobby/room ID from your matchmaking layer
+        /// (for example <c>Lobby.Id</c> from Unity's Lobby service)
+        /// </summary>
+        /// <param name="lobbyId">The authoritative lobby ID, or null/empty to clear the override.</param>
+        public static void SetLobbyId(string lobbyId)
+        {
+            externalLobbyId = lobbyId;
+
+            // If the authority instance is already live, apply immediately so a late-arriving
+            if (!string.IsNullOrEmpty(lobbyId) && instance != null && instance.IsSpawned && instance.IsOwner)
+            {
+                instance.lobbyID.Value = lobbyId;
+            }
+        }
+
+        /// <summary>
+        /// Returns the game-supplied lobby ID when one was provided, otherwise a new GUID.
+        /// </summary>
+        private static string ResolveLobbyId()
+        {
+            return string.IsNullOrEmpty(externalLobbyId) ? Guid.NewGuid().ToString() : externalLobbyId;
+        }
+
+        /// <summary>
+        /// Authority-only (the owner: server in client-server, session owner in distributed
+        /// authority): assigns the replicated lobby ID once, if it hasn't been set yet.
+        /// </summary>
+        private void EnsureLobbyId()
+        {
+            if (IsOwner && string.IsNullOrEmpty(lobbyID.Value.ToString()))
+            {
+                lobbyID.Value = ResolveLobbyId();
+                Debug.Log($"Netcode lobby ID set: {lobbyID.Value}");
+            }
+        }
 
         protected void Awake()
         {
+            instance = this;
+
             Cognitive3D_Manager.OnSessionBegin += OnSessionBegin;
             Cognitive3D_Manager.OnUpdate += Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd += OnPreSessionEnd;
+
+            // Subscribe to lobby ID changes to sync with Cognitive3D_Manager
+            lobbyID.OnValueChanged += OnLobbyIDChanged;
+        }
+
+        /// <summary>
+        /// Called when the lobby ID NetworkVariable changes, syncing it to all clients
+        /// </summary>
+        private void OnLobbyIDChanged(FixedString64Bytes previousValue, FixedString64Bytes newValue)
+        {
+            string newValueStr = newValue.ToString();
+            if (!string.IsNullOrEmpty(newValueStr))
+            {
+                Cognitive3D_Manager.SetLobbyId(newValueStr);
+            }
+        }
+
+        /// <summary>
+        /// Spawned on every peer. The authority (server in client-server, session owner in
+        /// distributed authority) assigns the lobby ID here
+        /// </summary>
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (IsOwner)
+            {
+                EnsureLobbyId();
+            }
+            else
+            {
+                // Non-authority peers: adopt the already-replicated value for this session.
+                // OnValueChanged does not fire for the initial synchronized value.
+                string currentLobbyId = lobbyID.Value.ToString();
+                if (!string.IsNullOrEmpty(currentLobbyId))
+                {
+                    Cognitive3D_Manager.SetLobbyId(currentLobbyId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fires when this peer becomes the owner (e.g. session-owner promotion in distributed
+        /// authority after the previous owner leaves). Ensures the lobby ID exists on the new
+        /// authority; the existing value is preserved because EnsureLobbyId only assigns when empty.
+        /// </summary>
+        public override void OnGainedOwnership()
+        {
+            base.OnGainedOwnership();
+
+            if (IsOwner)
+            {
+                EnsureLobbyId();
+            }
         }
 
         protected void OnSessionBegin()
@@ -63,6 +169,7 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.OnSessionBegin -= OnSessionBegin;
             Cognitive3D_Manager.OnUpdate -= Cognitive3D_Manager_OnUpdate;
             Cognitive3D_Manager.OnPreSessionEnd -= OnPreSessionEnd;
+            lobbyID.OnValueChanged -= OnLobbyIDChanged;
 
             if (Unity.Netcode.NetworkManager.Singleton != null)
             {
@@ -97,7 +204,19 @@ namespace Cognitive3D.Components
         /// <param name="clientId"></param>
         protected void OnClientConnectedCallback(ulong clientId)
         {
-            SetLobbyIDServerRpc(clientId);
+            // Ask the authority (owner) to initialize the lobby ID if needed
+            RequestLobbyIDOwnerRpc();
+
+            // Clients need to sync the lobby ID when they first connect (OnValueChanged doesn't fire for initial sync)
+            if (IsClient && !IsServer)
+            {
+                string currentLobbyId = lobbyID.Value.ToString();
+                if (!string.IsNullOrEmpty(currentLobbyId))
+                {
+                    Cognitive3D_Manager.SetLobbyId(currentLobbyId);
+                }
+            }
+
             SetConnectedCountServerRPC();
             SetMultiplayerSessionProperties();
 
@@ -146,17 +265,21 @@ namespace Cognitive3D.Components
         }
 
         /// <summary>
-        /// Handles the callback when the server starts, sending a custom event to notify 
+        /// Handles the callback when the server starts, sending a custom event to notify
         /// that the server has successfully started.
         /// </summary>
         protected void OnServerStartedCallback()
         {
+            // Assign the lobby ID when the server starts (game-supplied ID if provided,
+            // otherwise a generated GUID). Covers dedicated servers with no host player.
+            EnsureLobbyId();
+
             new CustomEvent("c3d.multiplayer.server_started")
                     .Send();
         }
 
         /// <summary>
-        /// Handles the callback when the server stops, sending a custom event to notify 
+        /// Handles the callback when the server stops, sending a custom event to notify
         /// about the reason for the shutdown.
         /// </summary>
         /// <param name="isHostShutdown">indicating whether the shutdown was initiated by the host.</param>
@@ -174,7 +297,24 @@ namespace Cognitive3D.Components
                     .SetProperty("Reason", "Shutdown due to external reasons")
                     .Send();
             }
-            
+
+            // Clear the replicated lobby ID so the next room gets a fresh one. If the game
+            // supplied an ID via SetLobbyId(), it should set a new one (or SetLobbyId(null))
+            // before starting the next room, otherwise the previous override is reused.
+            if (IsOwner)
+            {
+                lobbyID.Value = new FixedString64Bytes();
+            }
+        }
+
+        public override void OnDestroy()
+        {
+            if (instance == this)
+            {
+                instance = null;
+            }
+
+            base.OnDestroy();
         }
 
         /// <summary>
@@ -195,41 +335,21 @@ namespace Cognitive3D.Components
             Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.port", port);
         }
 
-#region RPC
+        #region RPC
         /// <summary>
-        /// Sets the lobby ID on the server and sends to other clients
+        /// Requests the authority (owner) to generate a lobby ID if one doesn't exist
         /// </summary>
-        /// <param name="clientId"></param>
-        [ServerRpc (RequireOwnership = false)]
-        public void SetLobbyIDServerRpc(ulong clientId)
+        [Rpc(SendTo.Owner)]
+        private void RequestLobbyIDOwnerRpc()
         {
-            if (IsServer && string.IsNullOrEmpty(lobbyID))
-            {
-                lobbyID = System.Guid.NewGuid().ToString();
-            }
-
-            // Send the lobby ID from server to clients
-            SendLobbyIDToClientRPC(clientId, lobbyID);
-        }
-
-        /// <summary>
-        /// Sets the lobby ID for clients
-        /// </summary>
-        /// <param name="clientId"></param>
-        /// <param name="lobbyID"></param>
-        [ClientRpc]
-        private void SendLobbyIDToClientRPC(ulong clientId, string lobbyID)
-        {
-            if (IsClient && Unity.Netcode.NetworkManager.Singleton.LocalClientId == clientId)
-            {
-                Cognitive3D_Manager.SetLobbyId(lobbyID);
-            }
+            // Safety net for a peer that connected before the authority assigned the ID
+            EnsureLobbyId();
         }
 
         /// <summary>
         /// A client RPC that updates the local count of connected clients.
         /// </summary>
-        [ClientRpc]
+        [Rpc(SendTo.NotServer)]
         private void SetConnectedCountClientRPC(int clientsCount)
         {
             connectedClientsCount = clientsCount;
@@ -239,15 +359,15 @@ namespace Cognitive3D.Components
         /// A server RPC that updates the total count of connected clients and broadcasts it to all clients.
         /// After updating the count, it sends this value to all clients via the `SetConnectedCountClientRPC` method.
         /// </summary>
-        [ServerRpc (RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void SetConnectedCountServerRPC()
         {
-            if (IsServer)
+            if (Unity.Netcode.NetworkManager.Singleton)
             {
                 connectedClientsCount = Unity.Netcode.NetworkManager.Singleton.ConnectedClientsList.Count;
-            }
 
-            SetConnectedCountClientRPC(connectedClientsCount);
+                SetConnectedCountClientRPC(connectedClientsCount);
+            }
         }
 
         /// <summary>
@@ -256,7 +376,7 @@ namespace Cognitive3D.Components
         /// </summary>
         /// <param name="clientId">The ID of the newly connected client</param>
         /// <param name="clientsCount">The total number of clients connected to the server</param>
-        [ClientRpc]
+        [Rpc(SendTo.NotServer)]
         private void SendClientConnectedClientRPC(ulong clientId, int clientsCount)
         {
             if (Unity.Netcode.NetworkManager.Singleton.LocalClientId != clientId)
@@ -276,7 +396,7 @@ namespace Cognitive3D.Components
         /// </summary>
         /// <param name="clientId">The ID of the newly connected client.</param>
         /// <param name="clientsCount">The total number of clients connected to the server.</param>
-        [ServerRpc (RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void SendClientConnectedServerRPC(ulong clientId, int clientsCount)
         {
             if (IsServer)
@@ -292,7 +412,7 @@ namespace Cognitive3D.Components
         /// </summary>
         /// <param name="clientId">The ID of the disconnected client.</param>
         /// <param name="clientsCount">The current total number of connected clients after the disconnection.</param>
-        [ClientRpc]
+        [Rpc(SendTo.NotServer)]
         private void SendClientDisconnectedClientRPC(ulong clientId, int clientsCount)
         {
             if (Unity.Netcode.NetworkManager.Singleton.LocalClientId != clientId)
@@ -311,7 +431,7 @@ namespace Cognitive3D.Components
         /// </summary>
         /// <param name="clientId">The ID of the disconnected client.</param>
         /// <param name="clientsCount">The current total number of connected clients after the disconnection.</param>
-        [ServerRpc (RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void SendClientDisconnectedServerRPC(ulong clientId, int clientsCount)
         {
             if (IsServer)

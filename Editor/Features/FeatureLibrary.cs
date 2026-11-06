@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -343,6 +342,63 @@ namespace Cognitive3D
             {
                 prefabContents.AddComponent<T>();
             }
+
+            PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
+            PrefabUtility.UnloadPrefabContents(prefabContents);
+
+            AssetDatabase.Refresh();
+        }
+
+        internal static void AddComponent<T>() where T : Component
+        {
+            GameObject c3dPrefab = EditorCore.GetCognitive3DManagerPrefab();
+
+            if (c3dPrefab == null)
+            {
+                Debug.LogError("Cognitive3D Manager prefab not found in Resources folder!");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(c3dPrefab);
+
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(assetPath);
+
+            if (prefabContents.GetComponent<T>() != null)
+            {
+                PrefabUtility.UnloadPrefabContents(prefabContents);
+                return;
+            }
+
+            prefabContents.AddComponent<T>();
+
+            PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
+            PrefabUtility.UnloadPrefabContents(prefabContents);
+
+            AssetDatabase.Refresh();
+        }
+
+        internal static void RemoveComponent<T>() where T : Component
+        {
+            GameObject c3dPrefab = EditorCore.GetCognitive3DManagerPrefab();
+
+            if (c3dPrefab == null)
+            {
+                Debug.LogError("Cognitive3D Manager prefab not found in Resources folder!");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(c3dPrefab);
+
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(assetPath);
+
+            T component = prefabContents.GetComponent<T>();
+            if (component == null)
+            {
+                PrefabUtility.UnloadPrefabContents(prefabContents);
+                return;
+            }
+
+            UnityEngine.Object.DestroyImmediate(component);
 
             PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
             PrefabUtility.UnloadPrefabContents(prefabContents);
