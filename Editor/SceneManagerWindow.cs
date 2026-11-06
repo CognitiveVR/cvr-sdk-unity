@@ -16,6 +16,7 @@ namespace Cognitive3D
         private enum ConnectionStatus { Checking, Ok, MissingKey, RejectedKey, RequestFailed }
         private ConnectionStatus connectionStatus = ConnectionStatus.Checking;
         private int connectionResponseCode;
+        private bool lastUploadInProgress;
 
         // Status icon colors
         private static readonly Color StatusGreen = new Color(0.42f, 0.74f, 0.42f);
@@ -36,6 +37,16 @@ namespace Cognitive3D
         void OnEnable()
         {
             CheckConnection();
+        }
+
+        void OnInspectorUpdate()
+        {
+            bool uploadInProgress = UploadTools.IsSceneUploadInProgress;
+            if (uploadInProgress != lastUploadInProgress)
+            {
+                lastUploadInProgress = uploadInProgress;
+                Repaint();
+            }
         }
 
         void OnFocus()
@@ -321,14 +332,17 @@ namespace Cognitive3D
             // ─── Action buttons ───
             EditorGUILayout.BeginHorizontal();
 
-            // Export — always available
+            bool uploadInProgress = UploadTools.IsSceneUploadInProgress;
+
+            EditorGUI.BeginDisabledGroup(uploadInProgress);
             if (GUILayout.Button(exported ? "Re-Export Scene" : "Export Scene", GUILayout.Height(30)))
             {
                 ExportCurrentScene();
             }
+            EditorGUI.EndDisabledGroup();
 
             // Upload / Update — enabled after export
-            EditorGUI.BeginDisabledGroup(!exported);
+            EditorGUI.BeginDisabledGroup(!exported || uploadInProgress);
             if (GUILayout.Button("Upload Scene", GUILayout.Height(30)))
             {
                 UploadCurrentScene();
@@ -711,19 +725,23 @@ namespace Cognitive3D
                 }
             }
 
+            bool uploadInProgress = UploadTools.IsSceneUploadInProgress;
+
+            EditorGUI.BeginDisabledGroup(uploadInProgress);
             if (GUILayout.Button(new GUIContent("Export", "Exports the scene"), GUILayout.Width(80), GUILayout.Height(22)))
             {
                 ExportScene(entry);
             }
+            EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(!isExported);
+            EditorGUI.BeginDisabledGroup(!isExported || uploadInProgress);
             if (GUILayout.Button(new GUIContent("Upload New", "Uploads a new version of the scene"), GUILayout.Width(90), GUILayout.Height(22)))
             {
                 UploadScene(entry);
             }
             EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(!isExported || !isUploaded);
+            EditorGUI.BeginDisabledGroup(!isExported || !isUploaded || uploadInProgress);
             if (GUILayout.Button(new GUIContent("Update Version", "Updates the version of the scene"), GUILayout.Width(100), GUILayout.Height(22)))
             {
                 UpdateScene(entry);
@@ -1134,7 +1152,7 @@ namespace Cognitive3D
                                   selectedVersion >= 1 &&
                                   selectedVersion <= sceneEntry.versionNumber;
 
-                EditorGUI.BeginDisabledGroup(!canConfirm);
+                EditorGUI.BeginDisabledGroup(!canConfirm || UploadTools.IsSceneUploadInProgress);
                 if (GUILayout.Button("Update Version", GUILayout.Width(120)))
                 {
                     onConfirm?.Invoke(selectedVersion);

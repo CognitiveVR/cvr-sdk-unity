@@ -194,6 +194,18 @@ namespace Cognitive3D
             EditorApplication.update += EditorUpdate;
         }
 
+        internal static bool IsRequestPending(Response callback)
+        {
+            foreach (var webRequest in EditorWebRequests)
+            {
+                if (webRequest.Response == callback)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         //update all outstanding web requests
         static void EditorUpdate()
         {
