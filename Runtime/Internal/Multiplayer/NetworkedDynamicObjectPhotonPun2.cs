@@ -82,7 +82,7 @@ namespace Cognitive3D
         /// Checks if this PhotonView is a player avatar/rig. PUN2 has no built-in
         /// player-object registry, so detection uses two methods:
         /// 1. Match against a player's Player.TagObject (the app's avatar reference)
-        /// 2. Fall back to typical player/avatar components in the hierarchy
+        /// 2. Fall back to player/avatar GameObject names in the hierarchy
         /// </summary>
         /// <returns>True if this is a player avatar</returns>
         internal override bool IsPlayerAvatar()
@@ -113,16 +113,17 @@ namespace Cognitive3D
                 }
             }
 
-            // Method 2: heuristic fallback for projects that don't set TagObject
-            var allAncestorComponents = GetComponentsInParent<Component>(true);
-            foreach (var component in allAncestorComponents)
+            // Method 2: heuristic fallback for projects that don't set TagObject.
+            Transform currentTransform = transform;
+            while (currentTransform != null)
             {
-                string typeName = component.GetType().Name;
-                if (typeName.Contains("Player") || typeName.Contains("Character") ||
-                    typeName.Contains("Avatar") || typeName.Contains("Rig"))
+                string transformName = currentTransform.name.ToLower();
+                if (transformName.Contains("player") || transformName.Contains("avatar") ||
+                    transformName.Contains("rig") || transformName.Contains("character"))
                 {
                     return true;
                 }
+                currentTransform = currentTransform.parent;
             }
 
             return false;
