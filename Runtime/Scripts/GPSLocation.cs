@@ -10,6 +10,7 @@ using System.Collections.Generic;
 
 namespace Cognitive3D.Components
 {
+    [System.Obsolete("GPS location is now recorded by Cognitive3D_Manager as c3d.geo.origin session properties. Enable 'Record GPS Location' in Cognitive3D Preferences instead")]
     [AddComponentMenu("Cognitive3D/Components/GPS Location")]
     public class GPSLocation : Cognitive3D.Components.AnalyticsComponentBase
     {
@@ -45,19 +46,20 @@ namespace Cognitive3D.Components
 
         public override string GetDescription()
         {
-            if (!GameplayReferences.IsGPSLocationEnabled())
-            {
-                return "Records GPS Location as a Session Property\nGPS Location is not enabled\nAdd C3D_LOCATION to scripting define symbols in Project Settings";
-            }
-            else
-            {
-                return "Records GPS Location as a Session Property";
-            }
+#if !C3D_LOCATION
+            return "Records GPS Location as a Session Property\nGPS Location is not enabled\nAdd C3D_LOCATION to scripting define symbols in Project Settings";
+#else
+            return "Records GPS Location as a Session Property";
+#endif
         }
 
         public override bool GetWarning()
         {
-            return !GameplayReferences.IsGPSLocationEnabled();
+#if !C3D_LOCATION
+            return true;
+#else
+            return false;
+#endif
         }
     }
 }
