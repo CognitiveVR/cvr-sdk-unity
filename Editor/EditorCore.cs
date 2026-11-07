@@ -147,6 +147,21 @@ namespace Cognitive3D
             }
         }
 
+        internal static readonly Dictionary<string, string> AvailableXrSdks = new Dictionary<string, string>
+        {
+            { "MetaXR", "C3D_OCULUS" },
+            { "PicoXR", "C3D_PICOXR" },
+            { "ViveWave", "C3D_VIVEWAVE" },
+            { "SteamVR (OpenVR)", "C3D_STEAMVR2" },
+            { "SRAnipal", "C3D_SRANIPAL" },
+            { "Omnicept", "C3D_OMNICEPT" },
+            { "VarjoXR", "C3D_VARJOXR" },
+            { "MRTK", "C3D_MRTK" },
+            { "Default", "C3D_DEFAULT" },
+            { "PicoVR (legacy)", "C3D_PICOVR" },
+            { "VarjoVR (legacy)", "C3D_VARJOVR" }
+        };
+
         public static List<string> GetPlayerDefines()
         {
             string s = PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup));
@@ -206,7 +221,7 @@ namespace Cognitive3D
 
             foreach (var v in ExistingSymbols)
             {
-                if (v.StartsWith("C3D_"))
+                if (AvailableXrSdks.ContainsValue(v))
                 {
                     return true;
                 }
@@ -221,7 +236,7 @@ namespace Cognitive3D
 
             foreach (var v in ExistingSymbols)
             {
-                if (v.StartsWith("C3D_"))
+                if (AvailableXrSdks.ContainsValue(v))
                 {
                     C3DSymbols.Add(v);
                 }
@@ -236,18 +251,18 @@ namespace Cognitive3D
             string[] ExistingSymbols = s.Split(';');
 
             //categorizing definition symbols
-            List<string> ExistingNonC3DSymbols = new List<string>();
+            List<string> ExistingNonXrSdkSymbols = new List<string>();
             foreach (var v in ExistingSymbols)
             {
-                if (!v.StartsWith("C3D_"))
+                if (!AvailableXrSdks.ContainsValue(v))
                 {
-                    ExistingNonC3DSymbols.Add(v);
+                    ExistingNonXrSdkSymbols.Add(v);
                 }
             }
 
             //combine symbols
             List<string> finalDefines = new List<string>();
-            foreach (var v in ExistingNonC3DSymbols)
+            foreach (var v in ExistingNonXrSdkSymbols)
                 finalDefines.Add(v);
             foreach (var v in C3DSymbols)
                 finalDefines.Add(v);
@@ -271,18 +286,18 @@ namespace Cognitive3D
             string[] ExistingSymbols = s.Split(';');
 
             //categorizing definition symbols
-            List<string> ExistingNonC3DSymbols = new List<string>();
+            List<string> ExistingNonXrSdkSymbols = new List<string>();
             foreach (var v in ExistingSymbols)
             {
-                if (!v.StartsWith("C3D_"))
+                if (!AvailableXrSdks.ContainsValue(v))
                 {
-                    ExistingNonC3DSymbols.Add(v);
+                    ExistingNonXrSdkSymbols.Add(v);
                 }
             }
 
             //combine symbols
             List<string> finalDefines = new List<string>();
-            foreach (var v in ExistingNonC3DSymbols)
+            foreach (var v in ExistingNonXrSdkSymbols)
                 finalDefines.Add(v);
             
             // Add C3D define

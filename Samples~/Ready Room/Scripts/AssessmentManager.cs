@@ -17,7 +17,7 @@ namespace Cognitive3D.ReadyRoom
             {
                 if (_instance == null)
                 {
-                    _instance = FindObjectOfType<AssessmentManager>();
+                    _instance = FindAnyObjectByType<AssessmentManager>();
                 }
                 return _instance;
             }

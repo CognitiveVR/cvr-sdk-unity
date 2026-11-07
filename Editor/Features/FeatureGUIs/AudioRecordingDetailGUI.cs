@@ -22,7 +22,7 @@ namespace Cognitive3D
             {
                 if (_appAudioRecorders == null || _appAudioRecorders.Length == 0 || System.Array.Exists(_appAudioRecorders, x => x == null))
                 {
-                    _appAudioRecorders = GameObject.FindObjectsByType<AppAudioRecorder>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    _appAudioRecorders = Util.FindObjects<AppAudioRecorder>(FindObjectsInactive.Include);
                 }
                 return _appAudioRecorders;
             }

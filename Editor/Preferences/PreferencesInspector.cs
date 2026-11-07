@@ -61,7 +61,7 @@ namespace Cognitive3D
             disableGeoSettings = false;
 #endif
             EditorGUI.BeginDisabledGroup(disableGeoSettings);
-            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location with HMD Position", "Record GPS location and compass direction at the same rate as HMD position"), p.TrackGPSLocation);
+            p.TrackGPSLocation = EditorGUILayout.Toggle(new GUIContent("Record GPS Location", "Record the GPS location at session start as the c3d.geo.origin.latitude and c3d.geo.origin.longitude session properties"), p.TrackGPSLocation);
             p.GPSAccuracy = Mathf.Clamp(EditorGUILayout.FloatField(new GUIContent("GPS Accuracy", "Desired accuracy in meters. Using higher values like 500 may not require GPS and may save battery power"), p.GPSAccuracy), 1f, 500f);
             EditorGUI.EndDisabledGroup();
 
