@@ -308,6 +308,12 @@ namespace Cognitive3D
             }
 #endif
             SetSessionProperties();
+#if C3D_LOCATION
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                StartCoroutine(RecordGeoOrigin());
+            }
+#endif
             try
             {
                 InvokeSessionBeginEvent();
@@ -773,6 +779,31 @@ namespace Cognitive3D
             {
                 yield return playerSnapshotInverval;
                 InvokeTickEvent();
+            }
+        }
+
+        /// <summary>
+        /// Waits for location services, then records the session's starting GPS location
+        /// as c3d.geo.origin.latitude and c3d.geo.origin.longitude session properties
+        /// </summary>
+        private static IEnumerator RecordGeoOrigin()
+        {
+            YieldInstruction wait = new WaitForSeconds(1);
+            Vector4 geo = new Vector4();
+            while (IsInitialized)
+            {
+                yield return wait;
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+#if XRPF
+                    if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed)
+#endif
+                    {
+                        SetSessionProperty("c3d.geo.origin.latitude", geo.x);
+                        SetSessionProperty("c3d.geo.origin.longitude", geo.y);
+                    }
+                    break;
+                }
             }
         }
 
