@@ -178,10 +178,11 @@ namespace Cognitive3D
                 {
                     DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 }
-                catch
+                catch (System.Exception e)
                 {
                     //data cache can fail if multiple game instances are running at once on the same computer
-                    //for example, when testing multiplayer
+                    //for example, when testing multiplayer. only the first instance uses the local cache
+                    Util.logWarning("Local data cache is unavailable, possibly in use by another instance. Data will not be cached if uploads fail. " + e.Message);
                 }
             }
             GameObject networkGo = new GameObject("Cognitive Network");
