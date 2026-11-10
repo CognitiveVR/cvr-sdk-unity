@@ -94,9 +94,9 @@ namespace Cognitive3D
                 {
                     ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 }
-                catch (System.IO.IOException)
+                catch (System.Exception)
                 {
-                    //cache is in use by another instance (for example, a running build). it will be uploaded later
+                    //cache is unavailable, likely in use by another instance (for example, a running build). it will be uploaded later
                     return;
                 }
                 if (ic.HasContent())

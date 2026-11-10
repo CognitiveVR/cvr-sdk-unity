@@ -102,11 +102,23 @@ namespace Cognitive3D
             EditorGUI.EndDisabledGroup();
             if (GUILayout.Button("Upload Local Cache Data"))
             {
-                ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
-                if (ic.HasContent())
-                    new EditorDataUploader(ic);
-                else
-                    Debug.Log("No data in Local Cache to upload!");
+                try
+                {
+                    ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                    if (ic.HasContent())
+                    {
+                        new EditorDataUploader(ic);
+                    }
+                    else
+                    {
+                        ic.Close();
+                        Debug.Log("No data in Local Cache to upload!");
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning("Local Cache is unavailable, possibly in use by another instance or upload. Try again once it has finished. " + e.Message);
+                }
             }
             GUILayout.EndHorizontal();
             EditorGUI.BeginDisabledGroup(!p.LocalStorage);
