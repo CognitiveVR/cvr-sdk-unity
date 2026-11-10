@@ -87,10 +87,9 @@ namespace Cognitive3D
                 Clear();
             }
 
-            ic = new DualFileCache(path + "/");
-
             try
             {
+                ic = new DualFileCache(path + "/");
                 if (ic.HasContent())
                 {
                     Util.logDebug($"Sending data from: {path}");
@@ -156,6 +155,13 @@ namespace Cognitive3D
                         if (Cognitive3D_Preferences.Instance.EnableDevLogging)
                             Util.logDevelopment("EDITOR Upload From Cache " + destination + " " + content);
                     }
+                }
+                else
+                {
+                    //nothing valid left to upload. close the cache so its files aren't held open
+                    EditorApplication.update -= Editor_Update;
+                    Clear();
+                    EditorUtility.ClearProgressBar();
                 }
             }
             else if (uploadRequest.isDone)

@@ -89,7 +89,16 @@ namespace Cognitive3D
                 EditorApplication.update -= DelayUploadCache;
                 // Skip if a previous upload session still has the cache open
                 if (activeUploadCache != null) { return; }
-                ICache ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                ICache ic;
+                try
+                {
+                    ic = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
+                }
+                catch (System.IO.IOException)
+                {
+                    //cache is in use by another instance (for example, a running build). it will be uploaded later
+                    return;
+                }
                 if (ic.HasContent())
                 {
                     activeUploadCache = ic;

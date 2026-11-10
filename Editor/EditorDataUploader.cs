@@ -50,6 +50,11 @@ namespace Cognitive3D
 							Util.logDevelopment("EDITOR Upload From Cache " + destination + " " + content);
 					}
 				}
+				else
+				{
+					//nothing valid left to upload. close the cache so its files aren't held open
+					Finish();
+				}
 			}
 			else if (uploadRequest.isDone)
             {
@@ -93,18 +98,21 @@ namespace Cognitive3D
                 {
 					//everything has been attempted to be uploaded
 					Util.logDevelopment("Editor attempted to upload everything");
-					EditorApplication.update -= Editor_Update;
-					cacheSource.Close();
-					onComplete?.Invoke();
+					Finish();
 				}
-				if (!cacheSource.HasContent())
+				else if (!cacheSource.HasContent())
                 {
 					Util.logDevelopment("Editor has no more session data to upload");
-					EditorApplication.update -= Editor_Update;
-					cacheSource.Close();
-					onComplete?.Invoke();
+					Finish();
 				}
             }
         }
+
+		void Finish()
+		{
+			EditorApplication.update -= Editor_Update;
+			cacheSource.Close();
+			onComplete?.Invoke();
+		}
 	}
 }
