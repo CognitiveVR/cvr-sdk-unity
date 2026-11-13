@@ -249,7 +249,14 @@ namespace Cognitive3D.Components
         /// <param name="clientId">The ID of the disconnected client.</param>
         protected void OnClientDisconnectCallback(ulong clientId)
         {
-            SetConnectedCountServerRPC();
+            // This callback also fires on the client that is leaving and on a server that is shutting down.
+            // By then this NetworkBehaviour is despawned, and sending an RPC from it throws a NullReferenceException.
+            bool canSendRpc = CanSendRpc();
+
+            if (canSendRpc)
+            {
+                SetConnectedCountServerRPC();
+            }
 
             if (Unity.Netcode.NetworkManager.ServerClientId == clientId)
             {
@@ -258,10 +265,20 @@ namespace Cognitive3D.Components
                     .SetProperty("Number of connected players", connectedClientsCount - 1)
                     .Send();
             }
-            else
+            else if (canSendRpc)
             {
                 SendClientDisconnectedServerRPC(clientId, connectedClientsCount - 1);
             }
+        }
+
+        /// <summary>
+        /// Returns true when this NetworkBehaviour is spawned on a running, non-shutting-down NetworkManager,
+        /// which is required to send RPCs.
+        /// </summary>
+        private bool CanSendRpc()
+        {
+            var networkManager = Unity.Netcode.NetworkManager.Singleton;
+            return IsSpawned && networkManager != null && networkManager.IsListening && !networkManager.ShutdownInProgress;
         }
 
         /// <summary>
