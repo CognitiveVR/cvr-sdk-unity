@@ -54,8 +54,11 @@ namespace Cognitive3D
                 HasComponent = () => FeatureLibrary.TryGetComponent<Cognitive3D.Components.NetcodeMultiplayer>(),
                 AddComponents = () => 
                 {
-                    FeatureLibrary.AddComponent<Cognitive3D.Components.NetcodeMultiplayer>();
+                    // Netcode's NetworkBehaviour inspector moves NetworkObject above every NetworkBehaviour.
+                    // Unity blocks that reorder on prefab instances in a scene, so set the order on the prefab asset here.
                     FeatureLibrary.AddComponent<Unity.Netcode.NetworkObject>();
+                    FeatureLibrary.AddComponent<Cognitive3D.Components.NetcodeMultiplayer>();
+                    FeatureLibrary.MoveComponentAbove<Unity.Netcode.NetworkObject, Unity.Netcode.NetworkBehaviour>();
                 },
                 RemoveComponents = () => 
                 {

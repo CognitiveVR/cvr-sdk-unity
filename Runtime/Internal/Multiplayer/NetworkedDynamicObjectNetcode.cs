@@ -19,12 +19,6 @@ namespace Cognitive3D
         private NetworkObject networkObject;
         private NetworkTransform networkTransform;
 
-        public NetworkVariable<bool> IsPlayerAvatarVar = new(
-            false,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
-        );
-
         internal override void OnEnable()
         {
             networkObject = GetComponent<NetworkObject>();
@@ -102,8 +96,10 @@ namespace Cognitive3D
         }
 
         /// <summary>
-        /// Checks if this NetworkObject is a player avatar/rig.
-        /// Requests server verification and returns the cached NetworkVariable value.
+        /// Checks if this NetworkObject is a client's player object (the NetworkManager's
+        /// Player Prefab, or an object spawned with SpawnAsPlayerObject).
+        /// IsPlayerObject is synced to every client on spawn, so no server round trip is needed.
+        /// Objects a player only owns (e.g. a held item) are not player objects.
         /// </summary>
         internal override bool IsPlayerAvatar()
         {
@@ -113,38 +109,7 @@ namespace Cognitive3D
                 no = networkTransform.NetworkObject;
             }
 
-            if (no != null && no.IsSpawned && no.NetworkManager != null)
-            {
-                RequestIsPlayerAvatarServerRpc(no.NetworkObjectId);
-                return IsPlayerAvatarVar.Value;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Server RPC that determines if the specified network object is a player avatar
-        /// by checking if it matches any connected client's PlayerObject, then syncs the result
-        /// to all clients via the IsPlayerAvatarVar NetworkVariable.
-        /// </summary>
-        /// <param name="objectId">The NetworkObjectId to check</param>
-        [Rpc(SendTo.Server)]
-        void RequestIsPlayerAvatarServerRpc(ulong objectId)
-        {
-            bool result = false;
-            if (Unity.Netcode.NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out var networkObject))
-            {
-                foreach (var client in Unity.Netcode.NetworkManager.Singleton.ConnectedClients)
-                {
-                    if (client.Value.PlayerObject == networkObject)
-                    {
-                        result = true;
-                        break;
-                    }
-                }
-                // Server writes to NetworkVariable, which automatically syncs to all clients
-                IsPlayerAvatarVar.Value = result;
-            }
+            return no != null && no.IsSpawned && no.IsPlayerObject;
         }
     }
 #endif
