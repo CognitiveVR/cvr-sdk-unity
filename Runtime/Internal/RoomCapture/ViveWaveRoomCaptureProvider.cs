@@ -51,7 +51,7 @@ namespace Cognitive3D
         public void Start()
         {
             // Locate the Wave perception manager in the scene
-            manager = Object.FindFirstObjectByType<ScenePerceptionManager>();
+            manager = Object.FindAnyObjectByType<ScenePerceptionManager>();
             if (manager == null)
             {
                 Util.logWarning("ViveWaveRoomCaptureProvider: ScenePerceptionManager not found in scene. Room layout will not be captured.");

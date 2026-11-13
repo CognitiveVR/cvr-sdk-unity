@@ -1,6 +1,6 @@
 {
 	"name": "com.cognitive3d.c3d-sdk",
-	"version": "2.5.0",
+	"version": "2.6.0",
 	"displayName": "Cognitive3D Unity SDK",
 	"description": "Analytics Platform for VR/AR/MR",
 	"unity": "2021.3",
@@ -8,6 +8,7 @@
 	"changelogUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/releases/",
 	"licensesUrl": "https://github.com/CognitiveVR/cvr-sdk-unity/blob/master/LICENSE",
 	"dependencies": {
+		"com.unity.ugui": "1.0.0",
 		"com.unity.xr.legacyinputhelpers": "2.1.7",
 		"com.unity.xr.management": "4.2.1"
 	},

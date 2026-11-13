@@ -392,6 +392,12 @@ namespace Cognitive3D
 
                     if (uploadSceneGeometry)
                     {
+                        // No completion callback: it would refresh scene versions under the running upload.
+                        if (RefuseIfSceneUploadInProgress(null))
+                        {
+                            return;
+                        }
+
                         bool shouldProceed = true;
                         if (showPopups)
                         {
@@ -551,7 +557,7 @@ namespace Cognitive3D
         #region Dynamic Objects Upload Tools
         internal static List<DynamicObject> GetDynamicObjectsInScene()
         {
-            return GameObject.FindObjectsByType<DynamicObject>(FindObjectsSortMode.None).ToList();
+            return Util.FindObjects<DynamicObject>().ToList();
         }
 
         internal static void ExportAllDynamicsInScene()
@@ -690,6 +696,11 @@ namespace Cognitive3D
                 return;
             }
 
+            if (RefuseIfSceneUploadInProgress(uploadComplete))
+            {
+                return;
+            }
+
             UploadSceneSettingsOptimized = settings;
             UploadCompleteOptimized = uploadComplete;
             UploadProgressCallbackOptimized = progressCallback;
@@ -821,9 +832,15 @@ namespace Cognitive3D
                 return;
             }
 
+            if (RefuseIfSceneUploadInProgress(uploadComplete))
+            {
+                return;
+            }
+
             UploadSceneSettingsOptimized = settings;
             UploadCompleteOptimized = uploadComplete;
             UploadProgressCallbackOptimized = progressCallback;
+            UpdateVersionNumberOptimized = settings.VersionNumber;
 
             string sceneName = settings.SceneName;
             string sceneExportDirectory = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "Cognitive3D_SceneExplorerExport" + Path.DirectorySeparatorChar + settings.SceneName + Path.DirectorySeparatorChar;
@@ -896,7 +913,7 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             // Always use PUT with force parameter for Phase 1
-            string url = CognitiveStatics.PostUpdateSceneForce(settings.SceneId, settings.VersionNumber);
+            string url = CognitiveStatics.PostUpdateSceneForce(settings.SceneId, UpdateVersionNumberOptimized);
             try
             {
                 EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase1, headers, true, "Update", "Force updating scene (Phase 1)", WrapProgressCallback(0.0f, 0.5f));
@@ -964,7 +981,7 @@ namespace Cognitive3D
                 Debug.Log("<color=green>Scene Update Complete!</color>");
                 SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
                 props.buttonName = "SceneSetupSceneUpdatePage";
-                props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber);
+                props.SetProperty("sceneVersion", UpdateVersionNumberOptimized);
                 SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Optimized", props);
 
                 CleanupOptimizedUploadState();
@@ -994,7 +1011,7 @@ namespace Cognitive3D
             headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
 
             // Always use PUT with force parameter for Phase 2
-            string url = CognitiveStatics.PostUpdateSceneForce(UploadSceneSettingsOptimized.SceneId, UploadSceneSettingsOptimized.VersionNumber);
+            string url = CognitiveStatics.PostUpdateSceneForce(UploadSceneSettingsOptimized.SceneId, UpdateVersionNumberOptimized);
             try
             {
                 EditorNetwork.PutFile(url, tempMultipartPath, PostSceneUpdateResponsePhase2, headers, true, "Update", "Force updating auxiliary files (Phase 2)", WrapProgressCallback(0.5f, 1.0f));
@@ -1033,7 +1050,7 @@ namespace Cognitive3D
             Debug.Log("<color=green>Scene Update Complete!</color>");
             SegmentAnalytics.SegmentProperties props = new SegmentAnalytics.SegmentProperties();
             props.buttonName = "SceneSetupSceneUpdatePage";
-            props.SetProperty("sceneVersion", UploadSceneSettingsOptimized.VersionNumber);
+            props.SetProperty("sceneVersion", UpdateVersionNumberOptimized);
             SegmentAnalytics.TrackEvent("UpdatingSceneComplete_Optimized", props);
 
             CleanupOptimizedUploadState();
@@ -1342,6 +1359,36 @@ namespace Cognitive3D
         static System.Action<int> UploadCompleteOptimized;
         static System.Action<float> UploadProgressCallbackOptimized;
         static string[] AuxiliaryFilesForPhase2;
+        // Captured at the start of a force update: version refreshes rewrite the shared settings' VersionNumber mid-upload.
+        static int UpdateVersionNumberOptimized;
+
+        /// <summary>
+        /// True while a scene upload or force update has a request outstanding.
+        /// Derived from the pending requests, so no exit path (error, cancel, exception) can leave it set.
+        /// </summary>
+        internal static bool IsSceneUploadInProgress =>
+            EditorNetwork.IsRequestPending(PostSceneUploadResponsePhase1)
+            || EditorNetwork.IsRequestPending(PostSceneUploadResponsePhase2)
+            || EditorNetwork.IsRequestPending(PostSceneUpdateResponsePhase1)
+            || EditorNetwork.IsRequestPending(PostSceneUpdateResponsePhase2)
+            || EditorNetwork.IsRequestPending(PostSceneUploadResponse);
+
+        /// <summary>
+        /// Must run before any upload state is written: refusing must leave the running upload untouched.
+        /// </summary>
+        private static bool RefuseIfSceneUploadInProgress(System.Action<int> uploadComplete)
+        {
+            if (!IsSceneUploadInProgress)
+            {
+                return false;
+            }
+
+            const string message = "A scene upload is already in progress. Wait for it to finish before starting another.";
+            Debug.LogWarning(message);
+            EditorUtility.DisplayDialog("Upload In Progress", message, "Ok");
+            uploadComplete?.Invoke(0);
+            return true;
+        }
 
         /// <summary>
         /// Classifies export files into core scene files (gltf, bin, settings.json) and auxiliary files (textures, debug.log)
@@ -1442,6 +1489,11 @@ namespace Cognitive3D
         {
             //if uploadNewScene POST
             //else PUT to sceneexplorer/sceneid
+
+            if (RefuseIfSceneUploadInProgress(uploadComplete))
+            {
+                return;
+            }
 
             if (settings == null) { UploadSceneSettings = null; return; }
 

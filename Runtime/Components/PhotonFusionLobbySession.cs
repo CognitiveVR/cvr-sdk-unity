@@ -1,5 +1,5 @@
 using UnityEngine;
-# if FUSION2
+#if FUSION2
 using Fusion;
 
 namespace Cognitive3D.Components
@@ -21,7 +21,7 @@ namespace Cognitive3D.Components
         {
             if (activeRunner == null)
             {
-                activeRunner = FindFirstObjectByType<NetworkRunner>();
+                activeRunner = FindAnyObjectByType<NetworkRunner>();
 
                 if (activeRunner == null)
                 {

@@ -29,7 +29,7 @@ namespace Cognitive3D
     [DefaultExecutionOrder(-50)]
     public class Cognitive3D_Manager : MonoBehaviour
     {
-        public static readonly string SDK_VERSION = "2.5.0";
+        public static readonly string SDK_VERSION = "2.6.0";
     
         private static Cognitive3D_Manager instance;
         public static Cognitive3D_Manager Instance
@@ -38,7 +38,7 @@ namespace Cognitive3D
             {
                 if (instance == null)
                 {
-                    instance = FindFirstObjectByType<Cognitive3D_Manager>();
+                    instance = FindAnyObjectByType<Cognitive3D_Manager>();
                 }
                 return instance;
             }
@@ -178,10 +178,11 @@ namespace Cognitive3D
                 {
                     DataCache = new DualFileCache(Application.persistentDataPath + "/c3dlocal/");
                 }
-                catch
+                catch (System.Exception e)
                 {
                     //data cache can fail if multiple game instances are running at once on the same computer
-                    //for example, when testing multiplayer
+                    //for example, when testing multiplayer. only the first instance uses the local cache
+                    Util.logWarning("Local data cache is unavailable, possibly in use by another instance. Data will not be cached if uploads fail. " + e.Message);
                 }
             }
             GameObject networkGo = new GameObject("Cognitive Network");
@@ -308,6 +309,12 @@ namespace Cognitive3D
             }
 #endif
             SetSessionProperties();
+#if C3D_LOCATION
+            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
+            {
+                StartCoroutine(RecordGeoOrigin());
+            }
+#endif
             try
             {
                 InvokeSessionBeginEvent();
@@ -457,8 +464,6 @@ namespace Cognitive3D
 #if C3D_SRANIPAL
         SetSessionProperty("c3d.device.eyetracking.enabled", GameplayReferences.SDKSupportsEyeTracking);
         SetSessionProperty("c3d.app.sdktype", "Vive Pro Eye");
-#elif C3D_WINDOWSMR
-        SetSessionProperty("c3d.app.sdktype", "Windows Mixed Reality");
 #endif
         SetSessionPropertyIfEmpty("c3d.device.eyetracking.enabled", false);
         SetSessionPropertyIfEmpty("c3d.app.sdktype", "Default");
@@ -775,6 +780,31 @@ namespace Cognitive3D
             {
                 yield return playerSnapshotInverval;
                 InvokeTickEvent();
+            }
+        }
+
+        /// <summary>
+        /// Waits for location services, then records the session's starting GPS location
+        /// as c3d.geo.origin.latitude and c3d.geo.origin.longitude session properties
+        /// </summary>
+        private static IEnumerator RecordGeoOrigin()
+        {
+            YieldInstruction wait = new WaitForSeconds(1);
+            Vector4 geo = new Vector4();
+            while (IsInitialized)
+            {
+                yield return wait;
+                if (GameplayReferences.TryGetGPSLocation(ref geo))
+                {
+#if XRPF
+                    if (XRPF.PrivacyFramework.Agreement.IsAgreementComplete && XRPF.PrivacyFramework.Agreement.IsLocationDataAllowed)
+#endif
+                    {
+                        SetSessionProperty("c3d.geo.origin.latitude", geo.x);
+                        SetSessionProperty("c3d.geo.origin.longitude", geo.y);
+                    }
+                    break;
+                }
             }
         }
 

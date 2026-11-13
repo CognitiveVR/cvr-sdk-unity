@@ -46,7 +46,7 @@ namespace Cognitive3D
 
             EditorGUILayout.Space(10);
 
-            bool defineSet = EditorCore.GetPlayerDefines().Contains(HarmonEyesDefine);
+            bool defineSet = EditorCore.GetPlayerDefines(EditorCore.GetActiveNamedBuildTarget()).Contains(HarmonEyesDefine);
 
             // Step 1: scripting define symbol
             GUILayout.Label("1. Scripting define symbol", EditorCore.styles.FeatureTitle);
