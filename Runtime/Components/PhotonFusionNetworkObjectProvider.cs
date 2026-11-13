@@ -11,10 +11,6 @@ namespace Cognitive3D.Components
         // Values lower than this will fall through the default instantiation handling.
         internal const int C3D_PREFAB_FLAG = 200000;
 
-        // The NetworkObjectBaker class can be reused and is Runner independent.
-        private static NetworkObjectBaker _baker;
-        private static NetworkObjectBaker Baker => _baker ??= new NetworkObjectBaker();
-
         public override NetworkObjectAcquireResult AcquirePrefabInstance(NetworkRunner runner, in NetworkPrefabAcquireContext context, out NetworkObject result)
         {
             // Detect if this is a custom spawn by its high prefabID value we are passing.
@@ -27,7 +23,9 @@ namespace Cognitive3D.Components
                 go.AddComponent<PhotonFusionLobbySession>();
 
                 // Baking is required for the NetworkObject to be valid for spawning.
-                Baker.Bake(go);
+                // Create a new baker instance for each spawn to avoid state conflicts
+                var baker = new NetworkObjectBaker();
+                baker.Bake(go);
 
                 // Move the object to the applicable Runner Scene/PhysicsScene/DontDestroyOnLoad
                 // These implementations exist in the INetworkSceneManager assigned to the runner.

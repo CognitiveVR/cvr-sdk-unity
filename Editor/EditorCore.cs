@@ -162,57 +162,118 @@ namespace Cognitive3D
             { "VarjoVR (legacy)", "C3D_VARJOVR" }
         };
 
+        /// <summary>
+        /// Returns the build target the Editor is currently compiling for (the switched-to platform),
+        /// including the Dedicated Server sub-target, which has its own define list
+        /// </summary>
+        internal static UnityEditor.Build.NamedBuildTarget GetActiveNamedBuildTarget()
+        {
+            var activeGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
+            
+            if (activeGroup == BuildTargetGroup.Standalone &&
+                EditorUserBuildSettings.standaloneBuildSubtarget == StandaloneBuildSubtarget.Server)
+            {
+                return UnityEditor.Build.NamedBuildTarget.Server;
+            }
+
+            return UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(activeGroup);
+        }
+
+        /// <summary>
+        /// Returns the build targets that feature defines (multiplayer, HarmonEyes, ...) are written to:
+        /// the active platform, Android and Standalone, plus any targets passed in (e.g. Server).
+        /// </summary>
+        static HashSet<UnityEditor.Build.NamedBuildTarget> GetFeatureDefineTargets(params UnityEditor.Build.NamedBuildTarget[] addOnTargets)
+        {
+            var targets = new HashSet<UnityEditor.Build.NamedBuildTarget>
+            {
+                GetActiveNamedBuildTarget(),
+                UnityEditor.Build.NamedBuildTarget.Android,
+                UnityEditor.Build.NamedBuildTarget.Standalone
+            };
+            targets.UnionWith(addOnTargets);
+            return targets;
+        }
+
+        /// <summary>
+        /// Returns the scripting define symbols of the platform selected in Build Settings.
+        /// </summary>
         public static List<string> GetPlayerDefines()
         {
-            string s = PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup));
-            string[] ExistingSymbols = s.Split(';');
-            return new List<string>(ExistingSymbols);
+            return GetPlayerDefines(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup));
         }
 
-        public static void AddDefine(string symbol)
+        /// <summary>
+        /// Returns the scripting define symbols of the given build target.
+        /// </summary>
+        public static List<string> GetPlayerDefines(UnityEditor.Build.NamedBuildTarget buildTarget)
         {
-            var defines = GetPlayerDefines();
-            if (defines.Contains(symbol))
-            {
-                return;
-            }
-            defines.Add(symbol);
-
-            //rebuild symbols
-            string alldefines = "";
-            for (int i = 0; i < defines.Count; i++)
-            {
-                if (!string.IsNullOrEmpty(defines[i]))
-                {
-                    alldefines += defines[i] + ";";
-                }
-            }
-            PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup), alldefines);
+            string s = PlayerSettings.GetScriptingDefineSymbols(buildTarget);
+            return new List<string>(s.Split(';'));
         }
 
-        public static void RemoveDefine(string symbol)
+        /// <summary>
+        /// Adds a scripting define symbol to the active platform, Android and Standalone,
+        /// plus any extra targets passed in. Platforms that already have it are left unchanged.
+        /// </summary>
+        public static void AddDefine(string symbol, params UnityEditor.Build.NamedBuildTarget[] addOnTargets)
         {
-            string s = PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup));
-            string[] ExistingSymbols = s.Split(';');
-            List<string> finalDefines = new List<string>();
-            for(int i = 0; i<ExistingSymbols.Length;i++)
+            foreach (var target in GetFeatureDefineTargets(addOnTargets))
             {
-                if (ExistingSymbols[i] != symbol)
+                var defines = GetPlayerDefines(target);
+                if (defines.Contains(symbol))
                 {
-                    finalDefines.Add(ExistingSymbols[i]);
+                    continue;
                 }
-            }
+                defines.Add(symbol);
 
-            //rebuild symbols
-            string alldefines = "";
-            for (int i = 0; i < finalDefines.Count; i++)
-            {
-                if (!string.IsNullOrEmpty(finalDefines[i]))
+                //rebuild symbols
+                string alldefines = "";
+                for (int i = 0; i < defines.Count; i++)
                 {
-                    alldefines += finalDefines[i] + ";";
+                    if (!string.IsNullOrEmpty(defines[i]))
+                    {
+                        alldefines += defines[i] + ";";
+                    }
                 }
+                PlayerSettings.SetScriptingDefineSymbols(target, alldefines);
             }
-            PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup), alldefines);
+        }
+
+        /// <summary>
+        /// Removes a scripting define symbol from the active platform, Android and Standalone,
+        /// plus any extra targets passed in. Platforms that don't have it are left unchanged.
+        /// </summary>
+        public static void RemoveDefine(string symbol, params UnityEditor.Build.NamedBuildTarget[] addOnTargets)
+        {
+            foreach (var target in GetFeatureDefineTargets(addOnTargets))
+            {
+                string s = PlayerSettings.GetScriptingDefineSymbols(target);
+                if (string.IsNullOrEmpty(s) || !s.Contains(symbol))
+                {
+                    continue;
+                }
+                string[] ExistingSymbols = s.Split(';');
+                List<string> finalDefines = new List<string>();
+                for(int i = 0; i<ExistingSymbols.Length;i++)
+                {
+                    if (ExistingSymbols[i] != symbol)
+                    {
+                        finalDefines.Add(ExistingSymbols[i]);
+                    }
+                }
+
+                //rebuild symbols
+                string alldefines = "";
+                for (int i = 0; i < finalDefines.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(finalDefines[i]))
+                    {
+                        alldefines += finalDefines[i] + ";";
+                    }
+                }
+                PlayerSettings.SetScriptingDefineSymbols(target, alldefines);
+            }
         }
 
         public static bool HasC3DDefine()

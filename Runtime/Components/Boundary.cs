@@ -85,7 +85,7 @@ namespace Cognitive3D.Components
 
         void OnLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool didChangeSceneId)
         {
-            if (didChangeSceneId && Cognitive3D_Manager.TrackingScene != null)
+            if (didChangeSceneId && Cognitive3D_Manager.TrackingScene != null && isActiveAndEnabled)
             {
                 StartCoroutine(InitializeBoundaryRecordWithDelay());
             }
