@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -343,6 +342,111 @@ namespace Cognitive3D
             {
                 prefabContents.AddComponent<T>();
             }
+
+            PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
+            PrefabUtility.UnloadPrefabContents(prefabContents);
+
+            AssetDatabase.Refresh();
+        }
+
+        internal static void AddComponent<T>() where T : Component
+        {
+            GameObject c3dPrefab = EditorCore.GetCognitive3DManagerPrefab();
+
+            if (c3dPrefab == null)
+            {
+                Debug.LogError("Cognitive3D Manager prefab not found in Resources folder!");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(c3dPrefab);
+
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(assetPath);
+
+            if (prefabContents.GetComponent<T>() != null)
+            {
+                PrefabUtility.UnloadPrefabContents(prefabContents);
+                return;
+            }
+
+            prefabContents.AddComponent<T>();
+
+            PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
+            PrefabUtility.UnloadPrefabContents(prefabContents);
+
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// Moves the component of type T on the Cognitive3D_Manager prefab asset above the first component of type TBelow.
+        /// Component order can only be changed on the prefab asset, not on its instances in a scene.
+        /// </summary>
+        internal static void MoveComponentAbove<T, TBelow>() where T : Component where TBelow : Component
+        {
+            GameObject c3dPrefab = EditorCore.GetCognitive3DManagerPrefab();
+
+            if (c3dPrefab == null)
+            {
+                Debug.LogError("Cognitive3D Manager prefab not found in Resources folder!");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(c3dPrefab);
+
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(assetPath);
+
+            T component = prefabContents.GetComponent<T>();
+            Component[] components = prefabContents.GetComponents<Component>();
+            int componentIndex = System.Array.IndexOf(components, component);
+            int belowIndex = -1;
+            for (int i = 0; i < components.Length; i++)
+            {
+                if (components[i] is TBelow && components[i] != component)
+                {
+                    belowIndex = i;
+                    break;
+                }
+            }
+
+            if (component == null || belowIndex == -1 || componentIndex < belowIndex)
+            {
+                PrefabUtility.UnloadPrefabContents(prefabContents);
+                return;
+            }
+
+            for (int i = 0; i < componentIndex - belowIndex; i++)
+            {
+                if (!UnityEditorInternal.ComponentUtility.MoveComponentUp(component)) break;
+            }
+
+            PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
+            PrefabUtility.UnloadPrefabContents(prefabContents);
+
+            AssetDatabase.Refresh();
+        }
+
+        internal static void RemoveComponent<T>() where T : Component
+        {
+            GameObject c3dPrefab = EditorCore.GetCognitive3DManagerPrefab();
+
+            if (c3dPrefab == null)
+            {
+                Debug.LogError("Cognitive3D Manager prefab not found in Resources folder!");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(c3dPrefab);
+
+            GameObject prefabContents = PrefabUtility.LoadPrefabContents(assetPath);
+
+            T component = prefabContents.GetComponent<T>();
+            if (component == null)
+            {
+                PrefabUtility.UnloadPrefabContents(prefabContents);
+                return;
+            }
+
+            UnityEngine.Object.DestroyImmediate(component);
 
             PrefabUtility.SaveAsPrefabAsset(prefabContents, assetPath);
             PrefabUtility.UnloadPrefabContents(prefabContents);

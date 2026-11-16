@@ -1049,7 +1049,58 @@ namespace Cognitive3D
             }
 
             #region Multiplayer Support
-#if C3D_PHOTON
+            // Upgrade path: older SDK versions added the support component without a define symbol,
+            // so the multiplayer runtime code stays compiled out until the symbol is set
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required,
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "A multiplayer support component is on the Cognitive3D_Manager prefab, but its define symbol is not set, so multiplayer data is not recorded. Set the define symbol for this framework?",
+                fixmessage: "The multiplayer define symbol matches the support component on the Cognitive3D_Manager prefab.",
+                checkAction: () =>
+                {
+                    var frameworks = MultiplayerDetailGUI.GetFrameworksWithComponent();
+                    // None is fine, and more than one is reported by the item below
+                    if (frameworks.Count != 1) return true;
+                    return MultiplayerDefines.GetActiveFramework() == frameworks[0];
+                },
+                fixAction: () =>
+                {
+                    var frameworks = MultiplayerDetailGUI.GetFrameworksWithComponent();
+                    if (frameworks.Count == 1)
+                    {
+                        MultiplayerDefines.SetActiveFramework(frameworks[0]);
+                    }
+                }
+            );
+
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required,
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Support components for more than one multiplayer framework are on the Cognitive3D_Manager prefab. Only one framework is supported at a time. Choose one in Feature Builder > Multiplayer.",
+                fixmessage: "Only one multiplayer framework is set up on the Cognitive3D_Manager prefab.",
+                checkAction: () =>
+                {
+                    return MultiplayerDetailGUI.GetFrameworksWithComponent().Count <= 1;
+                }
+            );
+
+#if C3D_PHOTON_FUSION && !FUSION2
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required,
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.None,
+                message: "Photon Fusion 2 plugin is missing or not installed in this project. Please install it via the Package Manager or Asset Store.",
+                fixmessage: "Photon Fusion 2 plugin is installed in this project.",
+                checkAction: () =>
+                {
+                    return false;
+                }
+            );
+#endif
+
+#if C3D_PHOTON_PUN_2
 #if !PHOTON_UNITY_NETWORKING
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
@@ -1083,6 +1134,54 @@ namespace Cognitive3D
                 }
             );
 #endif
+#endif
+
+#if C3D_PHOTON_PUN_2 && PHOTON_UNITY_NETWORKING
+            // Migration: for older versions that have a PhotonView on the Cognitive3D_Manager
+            ProjectValidation.AddItem(
+                level: ProjectValidation.ItemLevel.Required,
+                category: CATEGORY,
+                actionType: ProjectValidation.ItemAction.Fix,
+                message: "An obsolete PhotonView is on the Cognitive3D_Manager. It is no longer used for Photon PUN 2 support and causes ViewID collisions on scene load. Remove it.",
+                fixmessage: "The obsolete PhotonView has been removed from the Cognitive3D_Manager.",
+                checkAction: () =>
+                {
+                    GameObject prefab = EditorCore.GetCognitive3DManagerPrefab();
+                    bool prefabHasView = prefab != null && prefab.GetComponent<Photon.Pun.PhotonView>() != null;
+                    bool sceneHasView = Cognitive3D_Manager.Instance != null
+                        && Cognitive3D_Manager.Instance.GetComponent<Photon.Pun.PhotonView>() != null;
+                    return !prefabHasView && !sceneHasView;
+                },
+                fixAction: () =>
+                {
+                    // Prefab asset (Feature Builder installs)
+                    GameObject prefab = EditorCore.GetCognitive3DManagerPrefab();
+                    if (prefab != null)
+                    {
+                        string assetPath = AssetDatabase.GetAssetPath(prefab);
+                        GameObject contents = PrefabUtility.LoadPrefabContents(assetPath);
+                        Photon.Pun.PhotonView prefabView = contents.GetComponent<Photon.Pun.PhotonView>();
+                        if (prefabView != null)
+                        {
+                            Object.DestroyImmediate(prefabView);
+                            PrefabUtility.SaveAsPrefabAsset(contents, assetPath);
+                        }
+                        PrefabUtility.UnloadPrefabContents(contents);
+                    }
+
+                    // Active-scene instance (legacy setup window installs)
+                    if (Cognitive3D_Manager.Instance != null)
+                    {
+                        Photon.Pun.PhotonView sceneView = Cognitive3D_Manager.Instance.GetComponent<Photon.Pun.PhotonView>();
+                        if (sceneView != null)
+                        {
+                            Object.DestroyImmediate(sceneView);
+                            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+                                Cognitive3D_Manager.Instance.gameObject.scene);
+                        }
+                    }
+                }
+            );
 #endif
 
 #if FUSION2
@@ -1129,7 +1228,7 @@ namespace Cognitive3D
             }
 #endif
 
-#if C3D_NETCODE
+#if C3D_UNITY_NETCODE
 #if !COGNITIVE3D_INCLUDE_UNITY_NETCODE
             ProjectValidation.AddItem(
                 level: ProjectValidation.ItemLevel.Required, 
