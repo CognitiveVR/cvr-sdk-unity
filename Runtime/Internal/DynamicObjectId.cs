@@ -14,12 +14,20 @@ namespace Cognitive3D
         public string MeshName;
         public bool MeshSet;
 
+        /// <summary>
+        /// Network identity of the object that first took this id (player avatar owner id or
+        /// network sync id). Empty for non-networked objects. A freed id is only reused by an
+        /// object with the same identity, so one player's avatar never inherits another's id.
+        /// </summary>
+        public string NetworkIdentity;
+
         public DynamicObjectId(string id)
         {
             Id = id;
             MeshName = string.Empty;
             MeshSet = false;
             Used = false;
+            NetworkIdentity = string.Empty;
         }
 
         public DynamicObjectId(string id, string meshName)
@@ -28,6 +36,7 @@ namespace Cognitive3D
             MeshName = meshName;
             MeshSet = true;
             Used = false;
+            NetworkIdentity = string.Empty;
         }
     }
 }
