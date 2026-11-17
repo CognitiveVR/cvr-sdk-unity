@@ -460,12 +460,22 @@ namespace Cognitive3D
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("X-HTTP-Method-Override", "POST");
             request.SetRequestHeader("Authorization", CognitiveStatics.ApplicationKey);
+            activeRequests.Add(request);
 #if UNITY_6000_0_OR_NEWER
-            await request.SendWebRequest();
+            try
+            {
+                await request.SendWebRequest();
+            }
+            catch (System.OperationCanceledException)
+            {
+                //Clean up here because returning skips AsyncWaitForFullResponse
+                activeRequests.Remove(request);
+                request.Dispose();
+                return;
+            }
 #else
             request.SendWebRequest();
 #endif
-            activeRequests.Add(request);
             await instance.AsyncWaitForFullResponse(request, stringcontent, instance.POSTResponseCallback, true);
 
             // Triggering cooldown process when the response code is either 500 or 0

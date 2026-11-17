@@ -196,7 +196,7 @@ namespace Cognitive3D
                 sb.AppendLine("No Main Camera in scene");
             }
 
-            var manager = FindFirstObjectByType<Cognitive3D_Manager>();
+            var manager = FindAnyObjectByType<Cognitive3D_Manager>();
             if (manager != null)
             {
                 sb.AppendLine("Manager Initialize On Start: " + manager.BeginSessionAutomatically);
@@ -214,7 +214,7 @@ namespace Cognitive3D
             sb.AppendLine("****CURRENT SCENE OBJECTS****");
             sb.AppendLine("*****************************");
 
-            var sceneDynamics = FindObjectsByType<DynamicObject>(FindObjectsSortMode.None);
+            var sceneDynamics = Util.FindObjects<DynamicObject>();
             sb.AppendLine("Dynamic Object Count: " + sceneDynamics.Length);
 
             for(int i = 0; i< sceneDynamics.Length;i++)

@@ -209,7 +209,11 @@ namespace Cognitive3D.ReadyRoom
             }
             if (forceRefresh || Grabbables == null || Grabbables.Contains(null))
             {
-                Grabbables = new List<GrabComponentsRequired>(FindObjectsOfType<GrabComponentsRequired>());
+#if UNITY_6000_6_OR_NEWER
+                Grabbables = new List<GrabComponentsRequired>(FindObjectsByType<GrabComponentsRequired>());
+#else
+                Grabbables = new List<GrabComponentsRequired>(FindObjectsByType<GrabComponentsRequired>(FindObjectsSortMode.None));
+#endif
             }
         }
 
@@ -345,7 +349,7 @@ namespace Cognitive3D.ReadyRoom
             }
 
             if (sceneSelect == null)
-                sceneSelect = FindObjectOfType<SceneSelectMenu>();
+                sceneSelect = FindAnyObjectByType<SceneSelectMenu>();
             if (sceneSelect == null)
             {
                 //display warning

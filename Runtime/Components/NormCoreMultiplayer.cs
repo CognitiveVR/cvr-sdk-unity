@@ -36,7 +36,7 @@ namespace Cognitive3D.Components
                 Util.logWarning("No Normcore Realtime component found in scene.");
             }
 
-            normcoreAvatarManagerComponent = FindObjectOfType<RealtimeAvatarManager>();
+            normcoreAvatarManagerComponent = FindAnyObjectByType<RealtimeAvatarManager>();
             if (normcoreAvatarManagerComponent != null)
             {
                 normcoreAvatarManagerComponent.avatarCreated += OnAvatarCreated;
@@ -74,7 +74,7 @@ namespace Cognitive3D.Components
                         realtimeComponent.didConnectToRoom += OnDidConnectToRoom;
                         realtimeComponent.didDisconnectFromRoom += OnDidDisconnectFromRoom;
 
-                        normcoreAvatarManagerComponent = FindObjectOfType<RealtimeAvatarManager>();
+                        normcoreAvatarManagerComponent = FindAnyObjectByType<RealtimeAvatarManager>();
                         if (normcoreAvatarManagerComponent != null)
                         {
                             normcoreAvatarManagerComponent.avatarCreated += OnAvatarCreated;
@@ -199,7 +199,7 @@ namespace Cognitive3D.Components
                 preventOwnershipTakeover = false,
                 destroyWhenLastClientLeaves = true
             };
-            var normcoreSync = FindObjectOfType<NormcoreSync>();
+            var normcoreSync = FindAnyObjectByType<NormcoreSync>();
 
             if (normcoreSync == null)
             {

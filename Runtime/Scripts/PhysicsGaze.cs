@@ -33,7 +33,7 @@ namespace Cognitive3D
             {
                 if (instance == null)
                 {
-                    instance = FindFirstObjectByType<PhysicsGaze>();
+                    instance = FindAnyObjectByType<PhysicsGaze>();
                 }
                 return instance;
             }
@@ -103,7 +103,7 @@ namespace Cognitive3D
             if (enableCanvasGaze && canvasCacheBehaviour == CanvasCacheBehaviour.FindEachSceneLoad)
             {
                 Cognitive3D_Manager.OnLevelLoaded += Cognitive3D_Manager_OnLevelLoaded;
-                var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+                var canvases = Util.FindObjects<Canvas>();
                 RefreshCanvasTransforms(canvases);
             }
 
@@ -112,7 +112,7 @@ namespace Cognitive3D
 
         private void Cognitive3D_Manager_OnLevelLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode, bool newSceneId)
         {
-            var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            var canvases = Util.FindObjects<Canvas>();
             RefreshCanvasTransforms(canvases);
             RefreshUIDynamics();
         }
@@ -392,7 +392,7 @@ namespace Cognitive3D
                         else if (canvasRefreshBehaviour == CanvasRefreshBehaviour.FindObjects)
                         {
                             // Find objects in the scene
-                            var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+                            var canvases = Util.FindObjects<Canvas>();
                             targetCanvases.Clear();
                             targetCanvases.AddRange(canvases);
                             RefreshCanvasTransforms(canvases);
@@ -402,7 +402,7 @@ namespace Cognitive3D
                 else if (canvasCacheBehaviour == CanvasCacheBehaviour.FindObjectsAlways)
                 {
                     // Find all canvases and update cache of rect transforms if different
-                    var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+                    var canvases = Util.FindObjects<Canvas>();
                     if (canvases.Length != cachedCanvasRectTransforms.Length)
                     {
                         targetCanvases.Clear();
@@ -528,7 +528,7 @@ namespace Cognitive3D
             canvasDynamics.Clear();
             canvasDynamicRectTransforms.Clear();
 
-            var allDynamics = FindObjectsByType<DynamicObject>(FindObjectsSortMode.None);
+            var allDynamics = Util.FindObjects<DynamicObject>();
             foreach (var dynamic in allDynamics)
             {
                 var rectTransform = dynamic.GetComponent<RectTransform>();

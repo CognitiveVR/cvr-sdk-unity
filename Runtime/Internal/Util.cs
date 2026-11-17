@@ -10,6 +10,26 @@ namespace Cognitive3D
 	{
         private const string LOG_TAG = "[COGNITIVE3D] ";
 
+        // Object.GetInstanceID is obsolete (as an error in Unity 6.6+). Returns an id that is unique per object for the current session
+        internal static int GetInstanceId(UnityEngine.Object obj)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return obj.GetEntityId().GetHashCode();
+#else
+            return obj.GetInstanceID();
+#endif
+        }
+
+        // FindObjectsSortMode is obsolete in Unity 6.6+. Returns all loaded objects of type T, unsorted
+        internal static T[] FindObjects<T>(FindObjectsInactive findObjectsInactive = FindObjectsInactive.Exclude) where T : UnityEngine.Object
+        {
+#if UNITY_6000_6_OR_NEWER
+            return UnityEngine.Object.FindObjectsByType<T>(findObjectsInactive);
+#else
+            return UnityEngine.Object.FindObjectsByType<T>(findObjectsInactive, FindObjectsSortMode.None);
+#endif
+        }
+
         internal static void logWarning(string msg, UnityEngine.Object context = null)
         {
             if (Cognitive3D_Preferences.Instance.EnableLogging)

@@ -32,7 +32,7 @@ namespace Cognitive3D.Components
         {
             if (string.IsNullOrEmpty(audioChannelName))
             {
-                audioChannelName = $"channel_{GetInstanceID()}";
+                audioChannelName = $"channel_{Util.GetInstanceId(this)}";
                 Util.logWarning($"AudioCapture: No channel specified, using: {audioChannelName}");
             }
         }

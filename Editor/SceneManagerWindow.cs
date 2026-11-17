@@ -11,7 +11,12 @@ namespace Cognitive3D
         private bool refreshList = true;
         private bool shouldFetchVersions = true;
         private SceneEntry expandedEntry;
-        private bool buttonsEnabled;
+
+        // Result of validating the developer key against the dashboard; the window is disabled unless Ok
+        private enum ConnectionStatus { Checking, Ok, MissingKey, RejectedKey, RequestFailed }
+        private ConnectionStatus connectionStatus = ConnectionStatus.Checking;
+        private int connectionResponseCode;
+        private bool lastUploadInProgress;
 
         // Status icon colors
         private static readonly Color StatusGreen = new Color(0.42f, 0.74f, 0.42f);
@@ -31,8 +36,61 @@ namespace Cognitive3D
 
         void OnEnable()
         {
+            CheckConnection();
+        }
+
+        void OnInspectorUpdate()
+        {
+            bool uploadInProgress = UploadTools.IsSceneUploadInProgress;
+            if (uploadInProgress != lastUploadInProgress)
+            {
+                lastUploadInProgress = uploadInProgress;
+                Repaint();
+            }
+        }
+
+        void OnFocus()
+        {
+            // Re-check when returning to the window (e.g. after fixing the key in Project Setup)
+            if (connectionStatus != ConnectionStatus.Ok && connectionStatus != ConnectionStatus.Checking)
+            {
+                CheckConnection();
+            }
+        }
+
+        private void CheckConnection()
+        {
+            connectionStatus = ConnectionStatus.Checking;
+
+            // With no scenes there's nothing to fetch, so verify the developer key directly
+            if (Cognitive3D_Preferences.Instance.sceneSettings.Count == 0)
+            {
+                EditorCore.CheckForExpiredDeveloperKey(VerifyDeveloperKeyResponse);
+                return;
+            }
+
             // Load scene list from preferences, then update existing scene version data from API
             EditorCore.UpdateExistingSceneVersions(UpdateExistingSceneVersionsResponse);
+        }
+
+        private void SetConnectionStatus(int responseCode)
+        {
+            connectionResponseCode = responseCode;
+            if (responseCode == 200)
+                connectionStatus = ConnectionStatus.Ok;
+            else if (!EditorCore.IsDeveloperKeyValid)
+                connectionStatus = ConnectionStatus.MissingKey;
+            else if (responseCode == 401 || responseCode == 403)
+                connectionStatus = ConnectionStatus.RejectedKey;
+            else
+                connectionStatus = ConnectionStatus.RequestFailed;
+        }
+
+        private void VerifyDeveloperKeyResponse(int responseCode, string error, string text)
+        {
+            SetConnectionStatus(responseCode);
+            RefreshSceneList(fetchVersions: false);
+            Repaint();
         }
 
         #region Visual Elements
@@ -50,7 +108,7 @@ namespace Cognitive3D
 
             EditorGUILayout.Space(8);
 
-            EditorGUI.BeginDisabledGroup(!buttonsEnabled);
+            EditorGUI.BeginDisabledGroup(connectionStatus != ConnectionStatus.Ok);
 
             // ─── Current Scene Panel ───
             DrawCurrentSceneSection();
@@ -93,9 +151,19 @@ namespace Cognitive3D
                 EditorStyles.wordWrappedLabel
             );
 
+            // Only one notice at a time: setup problems take priority over the additive scenes tip.
+            // Drawn outside the disabled group so its actions stay usable
+            if (!DrawSetupNotice())
+            {
+                DrawAdditiveScenesNotice();
+            }
+        }
+
+        private void DrawAdditiveScenesNotice()
+        {
             GUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding);
-            // Warning icon
-            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.Width(35), GUILayout.Height(35));
+            // Info icon
+            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon"), GUILayout.Width(35), GUILayout.Height(35));
             GUILayout.Label(
                 "For additive scenes, make sure to follow the setup instructions in the documentation.",
                 EditorCore.styles.HelpBoxLabel
@@ -107,6 +175,92 @@ namespace Cognitive3D
             }
             GUILayout.FlexibleSpace(); // Push content to the left
             GUILayout.EndHorizontal();
+        }
+
+        // Draws the most important setup problem, if any. Returns true if a notice was drawn
+        private bool DrawSetupNotice()
+        {
+            switch (connectionStatus)
+            {
+                case ConnectionStatus.Ok:
+                    // The application key isn't needed to export or upload scenes, only to record sessions at runtime,
+                    // so this warns without disabling anything
+                    if (Cognitive3D_Preferences.Instance.IsApplicationKeyValid)
+                    {
+                        return false;
+                    }
+                    DrawNotice("console.warnicon", "Application Key not set",
+                        "You can still export and upload scenes, but sessions won't be recorded until you add it in Project Setup.",
+                        showProjectSetup: true, showRetry: false);
+                    break;
+                case ConnectionStatus.Checking:
+                    DrawNotice("console.infoicon", "Checking connection",
+                        "Verifying your Developer Key and scenes with the Cognitive3D dashboard...",
+                        showProjectSetup: false, showRetry: false);
+                    break;
+                case ConnectionStatus.MissingKey:
+                    DrawNotice("console.warnicon", "Developer Key not set",
+                        "Scene Manager is disabled until you enter your Developer Key in Project Setup.",
+                        showProjectSetup: true, showRetry: true);
+                    break;
+                case ConnectionStatus.RejectedKey:
+                    DrawNotice("console.warnicon", "Developer Key rejected",
+                        "The dashboard didn't accept your Developer Key (code " + connectionResponseCode + "). It may be invalid or expired. Update it in Project Setup.",
+                        showProjectSetup: true, showRetry: true);
+                    break;
+                default:
+                    DrawNotice("console.warnicon", "Can't reach the dashboard",
+                        "Scene Manager couldn't connect to Cognitive3D (code " + connectionResponseCode + "). Check your internet connection and try again.",
+                        showProjectSetup: false, showRetry: true);
+                    break;
+            }
+            return true;
+        }
+
+        // Notice box matching the additive scenes notice: icon, bold title and description on the left,
+        // actions on the right, all vertically centered
+        private void DrawNotice(string iconName, string title, string message, bool showProjectSetup, bool showRetry)
+        {
+            EditorGUILayout.BeginHorizontal(EditorCore.styles.HelpBoxPadding, GUILayout.MinHeight(44));
+            {
+                EditorGUILayout.BeginVertical(GUILayout.Width(35));
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(EditorGUIUtility.IconContent(iconName), GUILayout.Width(35), GUILayout.Height(35));
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndVertical();
+
+                GUILayout.Space(4);
+
+                EditorGUILayout.BeginVertical();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(title, EditorStyles.boldLabel);
+                GUILayout.Label(message, EditorStyles.wordWrappedMiniLabel);
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndVertical();
+
+                if (showProjectSetup || showRetry)
+                {
+                    GUILayout.Space(8);
+
+                    EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false));
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.BeginHorizontal();
+                    if (showProjectSetup && GUILayout.Button("Project Setup", GUILayout.Width(100), GUILayout.Height(24)))
+                    {
+                        ProjectSetupWindow.Init();
+                    }
+                    if (showRetry && GUILayout.Button("Retry", GUILayout.Width(60), GUILayout.Height(24)))
+                    {
+                        CheckConnection();
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.EndVertical();
+
+                    GUILayout.Space(4);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         private void DrawCurrentSceneSection()
@@ -178,14 +332,17 @@ namespace Cognitive3D
             // ─── Action buttons ───
             EditorGUILayout.BeginHorizontal();
 
-            // Export — always available
+            bool uploadInProgress = UploadTools.IsSceneUploadInProgress;
+
+            EditorGUI.BeginDisabledGroup(uploadInProgress);
             if (GUILayout.Button(exported ? "Re-Export Scene" : "Export Scene", GUILayout.Height(30)))
             {
                 ExportCurrentScene();
             }
+            EditorGUI.EndDisabledGroup();
 
             // Upload / Update — enabled after export
-            EditorGUI.BeginDisabledGroup(!exported);
+            EditorGUI.BeginDisabledGroup(!exported || uploadInProgress);
             if (GUILayout.Button("Upload Scene", GUILayout.Height(30)))
             {
                 UploadCurrentScene();
@@ -338,11 +495,22 @@ namespace Cognitive3D
             DrawLegendDot(StatusGray, "Not Exported");
             GUILayout.Space(12);
 
+            // Keep refresh usable while the rest of the window is disabled, so the connection can be retried
+            bool wasEnabled = GUI.enabled;
+            GUI.enabled = connectionStatus != ConnectionStatus.Checking;
             if (GUILayout.Button(new GUIContent(EditorCore.RefreshIcon, "Refresh List and Update Scene Versions from Dashboard"), EditorStyles.toolbarButton, GUILayout.Width(30)))
             {
-                // Full refresh - load from preferences AND fetch latest versions from API
-                RefreshSceneList();
+                if (connectionStatus == ConnectionStatus.Ok)
+                {
+                    // Full refresh - load from preferences AND fetch latest versions from API
+                    RefreshSceneList();
+                }
+                else
+                {
+                    CheckConnection();
+                }
             }
+            GUI.enabled = wasEnabled;
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(4);
@@ -557,19 +725,23 @@ namespace Cognitive3D
                 }
             }
 
+            bool uploadInProgress = UploadTools.IsSceneUploadInProgress;
+
+            EditorGUI.BeginDisabledGroup(uploadInProgress);
             if (GUILayout.Button(new GUIContent("Export", "Exports the scene"), GUILayout.Width(80), GUILayout.Height(22)))
             {
                 ExportScene(entry);
             }
+            EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(!isExported);
+            EditorGUI.BeginDisabledGroup(!isExported || uploadInProgress);
             if (GUILayout.Button(new GUIContent("Upload New", "Uploads a new version of the scene"), GUILayout.Width(90), GUILayout.Height(22)))
             {
                 UploadScene(entry);
             }
             EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(!isExported || !isUploaded);
+            EditorGUI.BeginDisabledGroup(!isExported || !isUploaded || uploadInProgress);
             if (GUILayout.Button(new GUIContent("Update Version", "Updates the version of the scene"), GUILayout.Width(100), GUILayout.Height(22)))
             {
                 UpdateScene(entry);
@@ -754,7 +926,7 @@ namespace Cognitive3D
             DebugInformationWindow.WriteDebugToFile(path + "debug.log");
 
             // Add Cognitive3D_Manager to the scene if it doesn't exist
-            var found = Object.FindFirstObjectByType<Cognitive3D_Manager>();
+            var found = Object.FindAnyObjectByType<Cognitive3D_Manager>();
             if (found == null)
             {
                 GameObject c3dManagerPrefab = EditorCore.GetCognitive3DManagerPrefab();
@@ -838,7 +1010,7 @@ namespace Cognitive3D
 
         private void UpdateExistingSceneVersionsResponse(int responseCode, string error, string text)
         {
-            buttonsEnabled = responseCode == 200;
+            SetConnectionStatus(responseCode);
             RefreshSceneList(fetchVersions: false);
             Repaint();
 
@@ -980,7 +1152,7 @@ namespace Cognitive3D
                                   selectedVersion >= 1 &&
                                   selectedVersion <= sceneEntry.versionNumber;
 
-                EditorGUI.BeginDisabledGroup(!canConfirm);
+                EditorGUI.BeginDisabledGroup(!canConfirm || UploadTools.IsSceneUploadInProgress);
                 if (GUILayout.Button("Update Version", GUILayout.Width(120)))
                 {
                     onConfirm?.Invoke(selectedVersion);

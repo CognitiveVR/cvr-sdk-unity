@@ -29,6 +29,7 @@ namespace Cognitive3D.ActiveSession
             public Text MinValue;
             public Text MaxValue;
             public Material Material;
+            [System.NonSerialized]
             public List<SensorDataPoint> TimesValues = new List<SensorDataPoint>();
             public float minValue = 0;
             public float maxValue = 0;

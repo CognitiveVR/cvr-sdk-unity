@@ -16,7 +16,12 @@ namespace Cognitive3D.Identify
                 PanelColorScheme scheme = (PanelColorScheme)target;
 
                 // Refresh every panel in the scene that uses this scheme (QR, PIN, Verbal, Confirmation)
-                foreach (var mb in Object.FindObjectsOfType<MonoBehaviour>(true))
+#if UNITY_6000_6_OR_NEWER
+                var allBehaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
+#else
+                var allBehaviours = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#endif
+                foreach (var mb in allBehaviours)
                 {
                     if (!(mb is IPanelColorScheme applier)) continue;
 

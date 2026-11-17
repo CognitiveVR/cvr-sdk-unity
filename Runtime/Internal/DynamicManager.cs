@@ -650,7 +650,7 @@ namespace Cognitive3D
                         sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
                         sb.Append("\":");
 
-                        if (ActiveDynamicObjectsArray[i].Properties[j].Value is string)
+                        if (ActiveDynamicObjectsArray[i].Properties[j].Value is string || ActiveDynamicObjectsArray[i].Properties[j].Value is char)
                         {
                             sb.Append("\"");
                             sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
@@ -775,7 +775,7 @@ namespace Cognitive3D
                             sb.Append(ActiveInputsArray[i].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (ActiveInputsArray[i].Properties[j].Value is string)
+                            if (ActiveInputsArray[i].Properties[j].Value is string || ActiveInputsArray[i].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(ActiveInputsArray[i].Properties[j].Value);
@@ -975,7 +975,7 @@ namespace Cognitive3D
                             sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (ActiveDynamicObjectsArray[i].Properties[j].Value is string)
+                            if (ActiveDynamicObjectsArray[i].Properties[j].Value is string || ActiveDynamicObjectsArray[i].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(ActiveDynamicObjectsArray[i].Properties[j].Value);
@@ -1196,7 +1196,7 @@ namespace Cognitive3D
                             sb.Append(array[index].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (array[index].Properties[j].Value is string)
+                            if (array[index].Properties[j].Value is string || array[index].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(array[index].Properties[j].Value);
@@ -1345,7 +1345,7 @@ namespace Cognitive3D
                             sb.Append(array[inputIndex].Properties[j].Key);
                             sb.Append("\":");
 
-                            if (array[inputIndex].Properties[j].Value is string)
+                            if (array[inputIndex].Properties[j].Value is string || array[inputIndex].Properties[j].Value is char)
                             {
                                 sb.Append("\"");
                                 sb.Append(array[inputIndex].Properties[j].Value);
@@ -1451,14 +1451,22 @@ namespace Cognitive3D
                         }
                     }
                 }
-
-                SendData(false); //not 100% necessary. immediately sends dynamic manifest and snapshot to new scene
             }
         }
 
         static int lastValidId;
         internal static string GetUniqueObjectId(string meshname)
         {
+            return GetUniqueObjectId(meshname, string.Empty);
+        }
+
+        /// <param name="networkIdentity">Avatar owner id or network sync id for networked objects, empty otherwise.
+        /// A freed id is only reused when both the mesh name and this identity match, so multiplayer
+        /// objects (e.g. two players' avatars with the same meshes) never share an id within a session.</param>
+        internal static string GetUniqueObjectId(string meshname, string networkIdentity)
+        {
+            if (networkIdentity == null) { networkIdentity = string.Empty; }
+
             for (int i = 0; i < DynamicObjectIdArray.Length; i++)
             {
                 if (!DynamicObjectIdArray[i].MeshSet) //there's an id that does not have a mesh set (ie, never been used)
@@ -1466,11 +1474,14 @@ namespace Cognitive3D
                     DynamicObjectIdArray[i].MeshSet = true;
                     DynamicObjectIdArray[i].Used = true;
                     DynamicObjectIdArray[i].MeshName = meshname;
+                    DynamicObjectIdArray[i].NetworkIdentity = networkIdentity;
                     lastValidId++;
                     DynamicObjectIdArray[i].Id = lastValidId.ToString();
                     return DynamicObjectIdArray[i].Id;
                 }
-                else if (DynamicObjectIdArray[i].Used == false && DynamicObjectIdArray[i].MeshName == meshname) //an unused id with a matching mesh name
+                else if (DynamicObjectIdArray[i].Used == false
+                    && DynamicObjectIdArray[i].MeshName == meshname
+                    && (DynamicObjectIdArray[i].NetworkIdentity ?? string.Empty) == networkIdentity) //an unused id with a matching mesh name and network identity
                 {
                     DynamicObjectIdArray[i].Used = true;
                     return DynamicObjectIdArray[i].Id;
@@ -1484,6 +1495,7 @@ namespace Cognitive3D
             DynamicObjectIdArray[nextFreeIndex].MeshSet = true;
             DynamicObjectIdArray[nextFreeIndex].Used = true;
             DynamicObjectIdArray[nextFreeIndex].MeshName = meshname;
+            DynamicObjectIdArray[nextFreeIndex].NetworkIdentity = networkIdentity;
             lastValidId++;
             DynamicObjectIdArray[nextFreeIndex].Id = lastValidId.ToString();
             return DynamicObjectIdArray[nextFreeIndex].Id;

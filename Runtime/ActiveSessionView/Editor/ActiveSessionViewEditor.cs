@@ -47,7 +47,7 @@ namespace Cognitive3D.ActiveSession
                 }
                 if (eventSystem == null)
                 {
-                    eventSystem = FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
+                    eventSystem = FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>();
                 }
                 if (eventSystem == null)
                 {
@@ -253,7 +253,7 @@ namespace Cognitive3D.ActiveSession
             if (activeSessionView == null) { return; }
 #if C3D_STEAMVR2
             
-            var playarea = FindObjectOfType<Valve.VR.SteamVR_PlayArea>();
+            var playarea = FindAnyObjectByType<Valve.VR.SteamVR_PlayArea>();
             if (playarea != null)
             {
                 var cam = playarea.GetComponentInChildren<Camera>();

@@ -95,7 +95,7 @@ namespace Cognitive3D.Components
 #elif C3D_VIVEWAVE
             if (waveRig == null)
             {
-                waveRig = FindObjectOfType<WaveRig>();
+                waveRig = FindAnyObjectByType<WaveRig>();
             }
 
             if (waveRig == null)
@@ -118,7 +118,7 @@ namespace Cognitive3D.Components
 #if COGNITIVE3D_INCLUDE_COREUTILITIES
             if (xrOrigin == null)
             {
-                xrOrigin = FindFirstObjectByType<XROrigin>();
+                xrOrigin = FindAnyObjectByType<XROrigin>();
             }
 
             if (xrOrigin != null)
@@ -138,7 +138,7 @@ namespace Cognitive3D.Components
 #if COGNITIVE3D_INCLUDE_LEGACYINPUTHELPERS
             if (cameraOffset == null)
             {
-                cameraOffset = FindFirstObjectByType<CameraOffset>();
+                cameraOffset = FindAnyObjectByType<CameraOffset>();
             }
 
             if (cameraOffset != null)

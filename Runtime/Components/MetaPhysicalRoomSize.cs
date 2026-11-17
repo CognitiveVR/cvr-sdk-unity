@@ -22,7 +22,7 @@ namespace Cognitive3D.Components
 
         private void Start()
         {
-            sceneManager = FindObjectOfType<OVRSceneManager>();
+            sceneManager = FindAnyObjectByType<OVRSceneManager>();
             if (sceneManager != null )
             {
                 sceneManager.SceneModelLoadedSuccessfully += SetRoomDimensionsAsSessionProperty;
@@ -32,7 +32,7 @@ namespace Cognitive3D.Components
 
         private void SetRoomDimensionsAsSessionProperty()
         {
-            OVRSceneRoom room = FindObjectOfType<OVRSceneRoom>();
+            OVRSceneRoom room = FindAnyObjectByType<OVRSceneRoom>();
             if (room != null)
             {
                 OVRScenePlane floor = room.Floor;
@@ -65,7 +65,7 @@ namespace Cognitive3D.Components
         MRUK mixedRealityUtility;
         private void Start()
         {
-            mixedRealityUtility = FindFirstObjectByType<MRUK>();
+            mixedRealityUtility = FindAnyObjectByType<MRUK>();
             if (mixedRealityUtility != null )
             {
                 mixedRealityUtility.RegisterSceneLoadedCallback(MrukLoaded);

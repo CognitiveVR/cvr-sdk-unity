@@ -125,7 +125,7 @@ namespace Cognitive3D.Components
 
             if (passthroughLayerRef == null)
             {
-                passthroughLayerRef = GameObject.FindFirstObjectByType<OVRPassthroughLayer>();
+                passthroughLayerRef = GameObject.FindAnyObjectByType<OVRPassthroughLayer>();
                 return 0f;
             }
             else

@@ -103,7 +103,7 @@ namespace Cognitive3D
 
             EditorGUILayout.Space(5);
 
-            bool defineSet = EditorCore.GetPlayerDefines().Contains(WAVE_SCENEPERCEPTION_DEFINE);
+            bool defineSet = EditorCore.GetPlayerDefines(EditorCore.GetActiveNamedBuildTarget()).Contains(WAVE_SCENEPERCEPTION_DEFINE);
 
             GUI.enabled = viveWaveDetected;
             var waveLabel = !viveWaveDetected

@@ -111,10 +111,13 @@ namespace Cognitive3D.Serialization
             return builder;
         }
 
-        /// <returns>"name":"null value"</returns>
+        /// <returns>"name":null</returns>
         public static StringBuilder SetNull(string name, StringBuilder builder)
         {
-            builder.Append("null");
+            builder.Append("\"");
+            name = EscapeString(name);
+            builder.Append(name);
+            builder.Append("\":null");
             return builder;
         }
 

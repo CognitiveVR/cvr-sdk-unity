@@ -94,14 +94,7 @@ namespace Cognitive3D
             bool validFloor = GetFloorPosition(ref floorPos);
 
             Vector4 geo = new Vector4();
-            bool useGeo = false;
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                if (GameplayReferences.TryGetGPSLocation(ref geo))
-                {
-                    useGeo = true;
-                }
-            }
+            bool useGeo = false; //GPS is recorded once as c3d.geo.origin session properties, not with gaze
 
             CoreInterface.RecordSkyGaze(hmdpoint, hmdrotation, timestamp, floorPos, validFloor, geo, useGeo);
 
@@ -131,14 +124,7 @@ namespace Cognitive3D
             bool validFloor = GetFloorPosition(ref floorPos);
 
             Vector4 geo = new Vector4();
-            bool useGeo = false;
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                if (GameplayReferences.TryGetGPSLocation(ref geo))
-                {
-                    useGeo = true;
-                }
-            }
+            bool useGeo = false; //GPS is recorded once as c3d.geo.origin session properties, not with gaze
 
             CoreInterface.RecordDynamicGaze(hmdpoint, hmdrotation, localgazepoint, objectid, timestamp, floorPos, validFloor, geo, useGeo);
 
@@ -168,14 +154,7 @@ namespace Cognitive3D
             bool validFloor = GetFloorPosition(ref floorPos);
 
             Vector4 geo = new Vector4();
-            bool useGeo = false;
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                if (GameplayReferences.TryGetGPSLocation(ref geo))
-                {
-                    useGeo = true;
-                }
-            }
+            bool useGeo = false; //GPS is recorded once as c3d.geo.origin session properties, not with gaze
 
             CoreInterface.RecordRoomAnchorGaze(hmdpoint, hmdrotation, localgazepoint, anchorId, timestamp, floorPos, validFloor, geo, useGeo);
         }
@@ -203,14 +182,7 @@ namespace Cognitive3D
             bool validFloor = GetFloorPosition(ref floorPos);
 
             Vector4 geo = new Vector4();
-            bool useGeo = false;
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                if (GameplayReferences.TryGetGPSLocation(ref geo))
-                {
-                    useGeo = true;
-                }
-            }
+            bool useGeo = false; //GPS is recorded once as c3d.geo.origin session properties, not with gaze
 
             CoreInterface.RecordWorldGaze(hmdpoint, hmdrotation, gazepoint, timestamp, floorPos, validFloor, geo, useGeo);
 
@@ -241,14 +213,7 @@ namespace Cognitive3D
             bool validFloor = GetFloorPosition(ref floorPos);
 
             Vector4 geo = new Vector4();
-            bool useGeo = false;
-            if (Cognitive3D_Preferences.Instance.TrackGPSLocation)
-            {
-                if (GameplayReferences.TryGetGPSLocation(ref geo))
-                {
-                    useGeo = true;
-                }
-            }
+            bool useGeo = false; //GPS is recorded once as c3d.geo.origin session properties, not with gaze
 
             CoreInterface.RecordMediaGaze(hmdpoint, hmdrotation, localgazepoint, objectid, mediasource, timestamp, mediatimeMs, uvs, floorPos, validFloor, geo, useGeo);
 

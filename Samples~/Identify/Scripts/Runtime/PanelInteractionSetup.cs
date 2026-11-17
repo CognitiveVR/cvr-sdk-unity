@@ -179,9 +179,9 @@ namespace Cognitive3D.Identify
             }
 
 #if UNITY_2023_1_OR_NEWER
-            var sceneVisualizer = Object.FindFirstObjectByType<PointerVisualizer>(FindObjectsInactive.Include);
+            var sceneVisualizer = Object.FindAnyObjectByType<PointerVisualizer>(FindObjectsInactive.Include);
             if (sceneVisualizer != null) return sceneVisualizer.gameObject;
-            var sceneHandler = Object.FindFirstObjectByType<PointerInputHandler>(FindObjectsInactive.Include);
+            var sceneHandler = Object.FindAnyObjectByType<PointerInputHandler>(FindObjectsInactive.Include);
             return sceneHandler != null ? sceneHandler.gameObject : null;
 #else
             var sceneVisualizer = Object.FindObjectOfType<PointerVisualizer>(true);

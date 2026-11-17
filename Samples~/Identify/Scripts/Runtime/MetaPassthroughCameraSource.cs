@@ -124,7 +124,11 @@ namespace Cognitive3D.Identify
 
         private static PassthroughCameraAccess FindExisting(PassthroughCameraAccess.CameraPositionType position)
         {
+#if UNITY_6000_6_OR_NEWER
+            var all = UnityEngine.Object.FindObjectsByType<PassthroughCameraAccess>();
+#else
             var all = UnityEngine.Object.FindObjectsByType<PassthroughCameraAccess>(FindObjectsSortMode.None);
+#endif
             foreach (var a in all)
             {
                 if (a.CameraPosition == position)

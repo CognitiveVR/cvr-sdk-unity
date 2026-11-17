@@ -20,7 +20,7 @@ namespace Cognitive3D.ReadyRoom
 #if C3D_STEAMVR
     public Bounds CalculateBounds()
     {
-        var playArea = FindObjectOfType<SteamVR_PlayArea>();
+        var playArea = FindAnyObjectByType<SteamVR_PlayArea>();
 
         var bounds = new Bounds();
         for (int i = 0; i < 4; i++)

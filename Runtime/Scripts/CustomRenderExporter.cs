@@ -97,7 +97,7 @@ namespace Cognitive3D
             tempMeshCollider.sharedMesh = cr.meshdata;
 
             //render texture
-            var textureOut = RenderCameraToTexture(uv2copy, PixelSamplesPerMeter, OutputResolution, GetInstanceID());
+            var textureOut = RenderCameraToTexture(uv2copy, PixelSamplesPerMeter, OutputResolution, Util.GetInstanceId(this));
 
             //apply texture and material to meshrenderer
             if (UniversalPipeline)
