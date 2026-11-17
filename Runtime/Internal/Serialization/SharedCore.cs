@@ -324,7 +324,11 @@ namespace Cognitive3D.Serialization
                 for (int i = 0; i < properties.Count; i++)
                 {
                     if (i != 0) { eventBuilder.Append(","); }
-                    if (properties[i].Value.GetType() == typeof(string) || properties[i].Value.GetType() == typeof(char))
+                    if (properties[i].Value == null)
+                    {
+                        JsonUtil.SetNull(properties[i].Key, eventBuilder);
+                    }
+                    else if (properties[i].Value.GetType() == typeof(string) || properties[i].Value.GetType() == typeof(char))
                     {
                         JsonUtil.SetString(properties[i].Key, properties[i].Value.ToString(), eventBuilder);
                     }
@@ -347,10 +351,6 @@ namespace Cognitive3D.Serialization
                     else if (properties[i].Value.GetType() == typeof(bool))
                     {
                         JsonUtil.SetBool(properties[i].Key, (bool)properties[i].Value, eventBuilder);
-                    }
-                    else if (properties[i].Value.GetType() == null)
-                    {
-                        JsonUtil.SetNull(properties[i].Key, eventBuilder);
                     }
                     else
                     {
