@@ -68,7 +68,10 @@ namespace Cognitive3D
         {
             if (string.IsNullOrEmpty(customid))
             {
-                Id = Cognitive3D.DynamicManager.GetUniqueObjectId(meshname);
+                string networkIdentity = !string.IsNullOrEmpty(ownerId) ? "owner:" + ownerId
+                    : !string.IsNullOrEmpty(syncId) ? "sync:" + syncId
+                    : string.Empty;
+                Id = Cognitive3D.DynamicManager.GetUniqueObjectId(meshname, networkIdentity);
                 UseCustomId = false;
             }
             else
