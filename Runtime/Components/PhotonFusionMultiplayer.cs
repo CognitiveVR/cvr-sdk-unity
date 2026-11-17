@@ -213,14 +213,42 @@ namespace Cognitive3D.Components
                         .Send();
                 }
 
-                if (PhotonFusionLobbySession.Instance == null) return;
-                // Only the StateAuthority is allowed to call this RPC
-                if (PhotonFusionLobbySession.Instance.HasStateAuthority)
+                // Every client gets this callback for every player, so each one records it itself (no RPC)
+                RememberPlayersAlreadyHere(runner);
+                if (player.PlayerId != runner.LocalPlayer.PlayerId && !playersAlreadyHere.Contains(player.PlayerId))
                 {
-                    PhotonFusionLobbySession.Instance.RPC_SendCustomEventOnJoin(player.PlayerId);
-                    PhotonFusionLobbySession.Instance.RPC_CalculateNumberConnections();
+                    new CustomEvent("c3d.multiplayer.aNewPlayerJoinedThisRoom")
+                        .SetProperty("Player ID", player.PlayerId)
+                        .SetProperty("Number of players in room", runner.SessionInfo.PlayerCount)
+                        .Send();
                 }
+                UpdateMaxConnections(runner);
             }
+        }
+
+        // Players who were in the room when this client arrived: a late joiner also gets OnPlayerJoined for them,
+        // but they didn't join "this room" from its point of view (the old RPC never reached it for them either)
+        readonly System.Collections.Generic.HashSet<int> playersAlreadyHere = new System.Collections.Generic.HashSet<int>();
+        NetworkRunner playersAlreadyHereRunner;
+        int maxPlayersConnected;
+
+        void RememberPlayersAlreadyHere(NetworkRunner runner)
+        {
+            if (playersAlreadyHereRunner == runner) return;
+            playersAlreadyHereRunner = runner;
+            playersAlreadyHere.Clear();
+            maxPlayersConnected = 0;
+            foreach (var p in runner.ActivePlayers)
+                if (p.PlayerId != runner.LocalPlayer.PlayerId) playersAlreadyHere.Add(p.PlayerId);
+        }
+
+        void UpdateMaxConnections(NetworkRunner runner)
+        {
+            if (runner.SessionInfo == null) return;
+            int count = runner.SessionInfo.PlayerCount;
+            if (count <= maxPlayersConnected) return;
+            maxPlayersConnected = count;
+            Cognitive3D_Manager.SetSessionProperty("c3d.multiplayer.maxNumberConnections", maxPlayersConnected);
         }
 
         public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -235,13 +263,18 @@ namespace Cognitive3D.Components
                         .Send();
                 }
 
-                if (PhotonFusionLobbySession.Instance == null) return;
-                // Only the StateAuthority is allowed to call this RPC
-                if (PhotonFusionLobbySession.Instance.HasStateAuthority)
+                if (player.PlayerId != runner.LocalPlayer.PlayerId)
                 {
-                    // Added a 1-second delay before sending the leave event 
-                    // to ensure the player count is correctly updated after a player leaves the session.
-                    StartCoroutine(DelayCoroutine(() => PhotonFusionLobbySession.Instance.RPC_SendCustomEventOnLeave(player.PlayerId), 1));
+                    playersAlreadyHere.Remove(player.PlayerId);
+                    // 1-second delay so the player count is updated after a player leaves the session
+                    StartCoroutine(DelayCoroutine(() =>
+                    {
+                        if (runner == null || runner.SessionInfo == null) return;
+                        new CustomEvent("c3d.multiplayer.aPlayerLeftThisRoom")
+                            .SetProperty("Player ID", player.PlayerId)
+                            .SetProperty("Number of players in room", runner.SessionInfo.PlayerCount)
+                            .Send();
+                    }, 1));
                 }
             }
         }
