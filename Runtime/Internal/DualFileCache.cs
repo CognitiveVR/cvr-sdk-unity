@@ -20,7 +20,7 @@ namespace Cognitive3D
         //number of bytes in the READ file (including line breaks)
         long readLineLengthTotal;
         //number of bytes in a line break
-        int eolByteCount;
+        readonly int eolByteCount;
 
         FileStream read_filestream;
         StreamReader read_reader;

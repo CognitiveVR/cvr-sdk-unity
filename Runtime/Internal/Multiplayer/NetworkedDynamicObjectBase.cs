@@ -14,7 +14,7 @@ namespace Cognitive3D
     public abstract class NetworkedDynamicObjectBase : MonoBehaviour
 #endif
     {
-        protected bool hasRegistered = false;
+        protected bool hasRegistered;
 
         internal virtual void OnEnable()
         {
